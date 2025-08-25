@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { CND2_CONFIG } from "@/config/cnd2.config";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });

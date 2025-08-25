@@ -61,3 +61,4 @@ export function BackgroundEffects() {
     </div>
   );
 }
+export default BackgroundEffects;

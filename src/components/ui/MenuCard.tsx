@@ -35,3 +35,4 @@ export function MenuCard({ href, icon, title, description, delay = 0 }: MenuCard
     </motion.div>
   );
 }
+export default MenuCard;

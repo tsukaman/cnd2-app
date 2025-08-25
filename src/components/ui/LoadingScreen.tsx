@@ -53,3 +53,4 @@ export function LoadingScreen() {
     </div>
   );
 }
+export default LoadingScreen;

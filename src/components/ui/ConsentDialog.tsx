@@ -54,3 +54,4 @@ export function ConsentDialog({ onConsent }: ConsentDialogProps) {
     </motion.div>
   );
 }
+export default ConsentDialog;
