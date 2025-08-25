@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: `${CND2_CONFIG.app.name} - ${CND2_CONFIG.app.tagline}`,
   description: "CloudNative Days Winter 2025 相性診断アプリ。Prairie Cardで出会いを二乗でスケール！",
   keywords: ["CloudNative Days", "CND²", "CNDxCnD", "Prairie Card", "相性診断"],

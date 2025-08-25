@@ -12,7 +12,7 @@ interface PrairieCardInputProps {
   label?: string;
 }
 
-export function PrairieCardInput({ 
+export default function PrairieCardInput({ 
   onProfileLoaded, 
   placeholder = "https://my.prairie.cards/u/username",
   label = "Prairie Card URL"
