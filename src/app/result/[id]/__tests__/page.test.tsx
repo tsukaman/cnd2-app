@@ -10,7 +10,7 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/lib/result-storage');
 
 jest.mock('@/components/diagnosis/DiagnosisResult', () => ({
-  DiagnosisResultComponent: ({ result }: any) => (
+  DiagnosisResultComponent: ({ result }: { result: unknown }) => (
     <div data-testid="diagnosis-result">{JSON.stringify(result)}</div>
   ),
 }));

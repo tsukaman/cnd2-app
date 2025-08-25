@@ -3,21 +3,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
-import LoadingAnimation from '@/components/effects/LoadingAnimation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import type { PrairieProfile } from '@/types';
-import { cnd2Config } from '@/config/cnd2.config';
 
 export default function DuoPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
-  const { parseProfile, loading: parsingLoading, error: parseError } = usePrairieCard();
-  const { generateDuoDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
+  const { loading: parsingLoading, error: parseError } = usePrairieCard();
+  const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
 
   const handleProfileParsed = (profile: PrairieProfile, index: 0 | 1) => {
     const newProfiles = [...profiles] as [PrairieProfile | null, PrairieProfile | null];
@@ -39,7 +37,7 @@ export default function DuoPage() {
 
   const handleStartDiagnosis = async () => {
     if (profiles[0] && profiles[1]) {
-      const result = await generateDuoDiagnosis([profiles[0], profiles[1]]);
+      const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
       if (result) {
         router.push(`/result/${result.id}`);
       }
@@ -127,7 +125,7 @@ export default function DuoPage() {
                     className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
                   >
                     <p className="text-green-800 font-semibold">
-                      ✅ {profiles[0].name}さんのカードを読み込みました
+                      ✅ {profiles[0].basic.name}さんのカードを読み込みました
                     </p>
                   </motion.div>
                 )}
@@ -187,7 +185,7 @@ export default function DuoPage() {
                     className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
                   >
                     <p className="text-green-800 font-semibold">
-                      ✅ {profiles[1].name}さんのカードを読み込みました
+                      ✅ {profiles[1].basic.name}さんのカードを読み込みました
                     </p>
                   </motion.div>
                 )}
@@ -253,13 +251,13 @@ export default function DuoPage() {
                 <div className={`p-4 rounded-lg ${profiles[0] ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
                   <p className="text-sm text-gray-600 mb-1">1人目</p>
                   <p className="font-semibold">
-                    {profiles[0] ? profiles[0].name : '未設定'}
+                    {profiles[0] ? profiles[0].basic.name : '未設定'}
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg ${profiles[1] ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50 border border-gray-200'}`}>
                   <p className="text-sm text-gray-600 mb-1">2人目</p>
                   <p className="font-semibold">
-                    {profiles[1] ? profiles[1].name : '未設定'}
+                    {profiles[1] ? profiles[1].basic.name : '未設定'}
                   </p>
                 </div>
               </div>

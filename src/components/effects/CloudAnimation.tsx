@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Cloud, Float, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -17,14 +17,10 @@ function AnimatedCloud({ position, scale }: { position: [number, number, number]
   
   return (
     <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
-      <group ref={cloudRef} position={position}>
+      <group ref={cloudRef} position={position} scale={scale}>
         <Cloud
-          scale={scale}
           opacity={0.5}
           speed={0.4}
-          width={10}
-          depth={1.5}
-          segments={20}
         />
       </group>
     </Float>

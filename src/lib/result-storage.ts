@@ -80,11 +80,12 @@ export class ResultStorage {
         const stored = localStorage.getItem('cnd2_results');
         if (stored) {
           const storageResults = JSON.parse(stored);
-          Object.values(storageResults).forEach((result: any) => {
+          Object.values(storageResults).forEach((result: unknown) => {
+            const diagnosisResult = result as DiagnosisResult;
             // 重複チェック
-            if (!results.find(r => r.id === result.id)) {
-              result.createdAt = new Date(result.createdAt);
-              results.push(result);
+            if (!results.find(r => r.id === diagnosisResult.id)) {
+              diagnosisResult.createdAt = new Date(diagnosisResult.createdAt);
+              results.push(diagnosisResult);
             }
           });
         }

@@ -32,21 +32,6 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
     return () => clearTimeout(timer);
   }, []);
 
-  const shareToTwitter = () => {
-    const text = `【CND²診断結果】
-相性タイプ：${result.type}
-相性スコア：${result.score}/100
-
-${result.shareTag}
-
-診断はこちら → https://cdn2.cloudnativedays.jp
-
-#CNDxCnD #CNDW2025 #PrairieCard`;
-
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-  };
-
   const copyToClipboard = () => {
     const url = `https://cdn2.cloudnativedays.jp/result/${result.id}`;
     navigator.clipboard.writeText(url);
@@ -138,7 +123,7 @@ ${result.shareTag}
               {result.message}
             </p>
             <p className="text-md text-purple-400 font-semibold">
-              "Scaling Together² - 出会いを二乗でスケール！"
+              &quot;Scaling Together² - 出会いを二乗でスケール！&quot;
             </p>
           </motion.div>
 

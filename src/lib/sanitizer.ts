@@ -38,7 +38,6 @@ export class Sanitizer {
       FORCE_BODY: true,
       RETURN_DOM: false,
       RETURN_DOM_FRAGMENT: false,
-      RETURN_DOM_IMPORT: false,
       RETURN_TRUSTED_TYPE: false,
       SANITIZE_DOM: true,
       KEEP_CONTENT: true,
@@ -155,10 +154,10 @@ export class Sanitizer {
   /**
    * Prairie Cardプロフィール用のサニタイズ
    */
-  sanitizePrairieProfile(data: any): any {
+  sanitizePrairieProfile(data: unknown): unknown {
     if (!data) return data;
 
-    const sanitized = { ...data };
+    const sanitized = { ...(data as Record<string, unknown>) };
 
     // 文字列フィールドをサニタイズ
     const textFields = ['name', 'company', 'organization', 'role', 'bio', 'location'];
@@ -188,9 +187,10 @@ export class Sanitizer {
 
     // カスタムフィールドをサニタイズ
     if (sanitized.customFields && typeof sanitized.customFields === 'object') {
-      for (const [key, value] of Object.entries(sanitized.customFields)) {
+      const customFields = sanitized.customFields as Record<string, unknown>;
+      for (const [key, value] of Object.entries(customFields)) {
         if (typeof value === 'string') {
-          sanitized.customFields[key] = this.sanitizeText(value);
+          customFields[key] = this.sanitizeText(value);
         }
       }
     }

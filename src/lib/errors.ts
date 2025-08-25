@@ -7,7 +7,7 @@ export class CND2Error extends Error {
     message: string,
     public code: string,
     public statusCode: number = 500,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'CND2Error';
@@ -15,35 +15,35 @@ export class CND2Error extends Error {
 }
 
 export class NetworkError extends CND2Error {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 'NETWORK_ERROR', 503, details);
     this.name = 'NetworkError';
   }
 }
 
 export class ParseError extends CND2Error {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 'PARSE_ERROR', 422, details);
     this.name = 'ParseError';
   }
 }
 
 export class ValidationError extends CND2Error {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 'VALIDATION_ERROR', 400, details);
     this.name = 'ValidationError';
   }
 }
 
 export class RateLimitError extends CND2Error {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 'RATE_LIMIT_ERROR', 429, details);
     this.name = 'RateLimitError';
   }
 }
 
 export class ConfigurationError extends CND2Error {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 'CONFIGURATION_ERROR', 500, details);
     this.name = 'ConfigurationError';
   }

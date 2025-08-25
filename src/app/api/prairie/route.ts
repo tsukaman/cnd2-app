@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 }
 
 // キャッシュクリアのエンドポイント
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     const parser = PrairieCardParser.getInstance();
     parser.clearCache();

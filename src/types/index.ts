@@ -23,7 +23,7 @@ export interface PrairieProfile {
     qiita?: string;
     zenn?: string;
   };
-  custom: Record<string, any>;
+  custom: Record<string, unknown>;
   meta: {
     createdAt?: Date;
     updatedAt?: Date;

@@ -2,21 +2,20 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Sparkles, ArrowLeft, Loader2, Plus, X, UserPlus } from 'lucide-react';
+import { Users, Sparkles, ArrowLeft, Loader2, X, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import type { PrairieProfile } from '@/types';
-import { cnd2Config } from '@/config/cnd2.config';
 
 export default function GroupPage() {
   const router = useRouter();
   const [profiles, setProfiles] = useState<(PrairieProfile | null)[]>([null, null, null]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { parseProfile, loading: parsingLoading, error: parseError } = usePrairieCard();
-  const { generateGroupDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
+  const { loading: parsingLoading, error: parseError } = usePrairieCard();
+  const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
 
   const handleProfileParsed = (profile: PrairieProfile, index: number) => {
     const newProfiles = [...profiles];
@@ -50,7 +49,7 @@ export default function GroupPage() {
   const handleStartDiagnosis = async () => {
     const validProfiles = profiles.filter((p): p is PrairieProfile => p !== null);
     if (validProfiles.length >= 3) {
-      const result = await generateGroupDiagnosis(validProfiles);
+      const result = await generateDiagnosis(validProfiles, 'group');
       if (result) {
         router.push(`/result/${result.id}`);
       }
@@ -166,7 +165,7 @@ export default function GroupPage() {
                         className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200"
                       >
                         <p className="text-green-800 font-semibold">
-                          ✅ {profiles[currentIndex]?.name}さんのカードを読み込みました
+                          ✅ {profiles[currentIndex]?.basic.name}さんのカードを読み込みました
                         </p>
                       </motion.div>
                     )}
@@ -213,11 +212,11 @@ export default function GroupPage() {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold">
-                            {profile ? profile.name : '未設定'}
+                            {profile ? profile.basic.name : '未設定'}
                           </p>
                           {profile && (
                             <p className="text-sm text-gray-600">
-                              {profile.company || profile.organization}
+                              {profile.basic.company}
                             </p>
                           )}
                         </div>
