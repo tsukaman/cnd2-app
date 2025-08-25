@@ -19,92 +19,72 @@ describe('ShareButton', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('shows share options when clicked', () => {
+  it('shows share modal when clicked', () => {
     render(<ShareButton {...defaultProps} />);
     
     const button = screen.getByText('結果をシェア');
     fireEvent.click(button);
     
-    expect(screen.getByText('X (Twitter)')).toBeInTheDocument();
-    expect(screen.getByText('Facebook')).toBeInTheDocument();
-    expect(screen.getByText('LINE')).toBeInTheDocument();
-    expect(screen.getByText('URLをコピー')).toBeInTheDocument();
+    // Modal header
+    expect(screen.getAllByText('結果をシェア')[1]).toBeInTheDocument();
+    // Share options in modal
+    expect(screen.getByText('リンクをコピー')).toBeInTheDocument();
+    expect(screen.getByText('QRコードを読み取って結果を確認')).toBeInTheDocument();
   });
 
-  it('hides share options when clicked outside', async () => {
+  it('hides share modal when clicked outside', async () => {
     render(<ShareButton {...defaultProps} />);
     
     const button = screen.getByText('結果をシェア');
     fireEvent.click(button);
     
-    expect(screen.getByText('X (Twitter)')).toBeInTheDocument();
+    expect(screen.getByText('リンクをコピー')).toBeInTheDocument();
     
-    // Click outside
-    fireEvent.click(document.body);
+    // Click outside (on the backdrop)
+    const backdrop = document.querySelector('.fixed.inset-0');
+    if (backdrop) {
+      fireEvent.click(backdrop);
+    }
     
     await waitFor(() => {
-      expect(screen.queryByText('X (Twitter)')).not.toBeInTheDocument();
+      expect(screen.queryByText('リンクをコピー')).not.toBeInTheDocument();
     });
   });
 
-  it('opens Twitter share link when Twitter option is clicked', () => {
-    const mockOpen = jest.fn();
-    window.open = mockOpen;
-    
+  it('has correct Twitter share link', () => {
     render(<ShareButton {...defaultProps} />);
     
     const button = screen.getByText('結果をシェア');
     fireEvent.click(button);
     
-    const twitterButton = screen.getByText('X (Twitter)').closest('button');
-    if (twitterButton) {
-      fireEvent.click(twitterButton);
-      
-      expect(mockOpen).toHaveBeenCalledWith(
-        expect.stringContaining('https://twitter.com/intent/tweet'),
-        '_blank'
-      );
-    }
+    // Find the Twitter/X link by its text content
+    const twitterLink = screen.getByText('𝕏').closest('a');
+    expect(twitterLink).toHaveAttribute('href', expect.stringContaining('https://twitter.com/intent/tweet'));
+    expect(twitterLink).toHaveAttribute('target', '_blank');
   });
 
-  it('opens Facebook share link when Facebook option is clicked', () => {
-    const mockOpen = jest.fn();
-    window.open = mockOpen;
-    
+  it('has correct Facebook share link', () => {
     render(<ShareButton {...defaultProps} />);
     
     const button = screen.getByText('結果をシェア');
     fireEvent.click(button);
     
-    const facebookButton = screen.getByText('Facebook').closest('button');
-    if (facebookButton) {
-      fireEvent.click(facebookButton);
-      
-      expect(mockOpen).toHaveBeenCalledWith(
-        expect.stringContaining('https://www.facebook.com/sharer'),
-        '_blank'
-      );
-    }
+    // Find the Facebook link by its text content
+    const facebookLink = screen.getByText('f').closest('a');
+    expect(facebookLink).toHaveAttribute('href', expect.stringContaining('https://www.facebook.com/sharer'));
+    expect(facebookLink).toHaveAttribute('target', '_blank');
   });
 
-  it('opens LINE share link when LINE option is clicked', () => {
-    const mockOpen = jest.fn();
-    window.open = mockOpen;
-    
+  it('has correct LINE share link', () => {
     render(<ShareButton {...defaultProps} />);
     
     const button = screen.getByText('結果をシェア');
     fireEvent.click(button);
     
-    const lineButton = screen.getByText('LINE').closest('button');
-    if (lineButton) {
-      fireEvent.click(lineButton);
-      
-      expect(mockOpen).toHaveBeenCalledWith(
-        expect.stringContaining('https://social-plugins.line.me/lineit/share'),
-        '_blank'
-      );
-    }
+    // Find the LINE link by its text content
+    const lineLink = screen.getByText('L').closest('a');
+    expect(lineLink).toHaveAttribute('href', expect.stringContaining('https://line.me/R/msg/text'));
+    expect(lineLink).toHaveAttribute('target', '_blank');
   });
 
   it('copies URL to clipboard when copy option is clicked', async () => {
@@ -120,16 +100,16 @@ describe('ShareButton', () => {
     const button = screen.getByText('結果をシェア');
     fireEvent.click(button);
     
-    const copyButton = screen.getByText('URLをコピー').closest('button');
+    const copyButton = screen.getByText('リンクをコピー').closest('button');
     if (copyButton) {
       fireEvent.click(copyButton);
       
       expect(mockWriteText).toHaveBeenCalledWith(
-        'https://cdn2.cloudnativedays.jp/result/test-123'
+        expect.stringContaining('/result/test-123')
       );
       
       await waitFor(() => {
-        expect(screen.getByText('コピーしました！')).toBeInTheDocument();
+        expect(screen.getByText('コピーしました')).toBeInTheDocument();
       });
     }
   });
@@ -147,7 +127,7 @@ describe('ShareButton', () => {
     const button = screen.getByText('結果をシェア');
     fireEvent.click(button);
     
-    const nativeShareButton = screen.getByText('その他').closest('button');
+    const nativeShareButton = screen.getByText('他のアプリでシェア').closest('button');
     if (nativeShareButton) {
       fireEvent.click(nativeShareButton);
       
@@ -160,7 +140,7 @@ describe('ShareButton', () => {
   });
 
   it('handles native share error gracefully', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
     const mockShare = jest.fn().mockRejectedValue(new Error('Share failed'));
     Object.defineProperty(navigator, 'share', {
       value: mockShare,
@@ -173,16 +153,16 @@ describe('ShareButton', () => {
     const button = screen.getByText('結果をシェア');
     fireEvent.click(button);
     
-    const nativeShareButton = screen.getByText('その他').closest('button');
+    const nativeShareButton = screen.getByText('他のアプリでシェア').closest('button');
     if (nativeShareButton) {
       fireEvent.click(nativeShareButton);
       
       await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalledWith('Share failed:', expect.any(Error));
+        expect(consoleLogSpy).toHaveBeenCalledWith('Share cancelled or failed');
       });
     }
     
-    consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
     delete (navigator as { share?: unknown }).share;
   });
 });

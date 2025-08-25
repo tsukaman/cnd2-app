@@ -8,9 +8,7 @@ jest.mock('@/hooks/usePrairieCard');
 describe('PrairieCardInput', () => {
   const mockFetchProfile = jest.fn();
   const defaultProps = {
-    value: 'testuser',
-    onChange: jest.fn(),
-    onFetch: jest.fn(),
+    onProfileLoaded: jest.fn(),
   };
 
   beforeEach(() => {
@@ -27,16 +25,16 @@ describe('PrairieCardInput', () => {
     
     const input = screen.getByRole('textbox');
     expect(input).toBeInTheDocument();
-    expect(input).toHaveValue('testuser');
+    expect(input).toHaveValue(''); // Initially empty
   });
 
-  it('calls onChange when input value changes', () => {
+  it('updates input value when user types', () => {
     render(<PrairieCardInput {...defaultProps} />);
     
     const input = screen.getByRole('textbox');
-    fireEvent.change(input, { target: { value: 'newuser' } });
+    fireEvent.change(input, { target: { value: 'https://prairie-card.cloudnativedays.jp/u/newuser' } });
     
-    expect(defaultProps.onChange).toHaveBeenCalledWith('newuser');
+    expect(input).toHaveValue('https://prairie-card.cloudnativedays.jp/u/newuser');
   });
 
   it('shows loading state when fetching', () => {
@@ -50,7 +48,7 @@ describe('PrairieCardInput', () => {
     
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
-    expect(screen.getByText('読み込み中...')).toBeInTheDocument();
+    expect(screen.getByText('Prairie Card読み込み中...')).toBeInTheDocument();
   });
 
   it('shows error state when there is an error', () => {
@@ -65,9 +63,9 @@ describe('PrairieCardInput', () => {
     expect(screen.getByText('Failed to fetch')).toBeInTheDocument();
   });
 
-  it('calls fetchProfile and onFetch when button is clicked', async () => {
+  it('calls fetchProfile and onProfileLoaded when form is submitted', async () => {
     const mockProfile = {
-      basic: { name: 'Test User', company: 'Test Co', role: 'Engineer' },
+      basic: { name: 'Test User', company: 'Test Co', role: 'Engineer', title: '', avatar: '' },
       skills: ['JavaScript'],
       social: {},
     };
@@ -76,46 +74,60 @@ describe('PrairieCardInput', () => {
     
     render(<PrairieCardInput {...defaultProps} />);
     
-    const button = screen.getByRole('button');
-    fireEvent.click(button);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'https://prairie-card.cloudnativedays.jp/u/testuser' } });
     
-    expect(mockFetchProfile).toHaveBeenCalledWith('testuser');
+    const form = screen.getByRole('textbox').closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
+    
+    expect(mockFetchProfile).toHaveBeenCalledWith('https://prairie-card.cloudnativedays.jp/u/testuser');
     
     await waitFor(() => {
-      expect(defaultProps.onFetch).toHaveBeenCalledWith(mockProfile);
+      expect(defaultProps.onProfileLoaded).toHaveBeenCalledWith(mockProfile);
     });
   });
 
-  it('does not call onFetch when fetchProfile returns null', async () => {
+  it('does not call onProfileLoaded when fetchProfile returns null', async () => {
     mockFetchProfile.mockResolvedValue(null);
     
     render(<PrairieCardInput {...defaultProps} />);
     
-    const button = screen.getByRole('button');
-    fireEvent.click(button);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'https://prairie-card.cloudnativedays.jp/u/testuser' } });
     
-    expect(mockFetchProfile).toHaveBeenCalledWith('testuser');
+    const form = input.closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
+    
+    expect(mockFetchProfile).toHaveBeenCalledWith('https://prairie-card.cloudnativedays.jp/u/testuser');
     
     await waitFor(() => {
-      expect(defaultProps.onFetch).not.toHaveBeenCalled();
+      expect(defaultProps.onProfileLoaded).not.toHaveBeenCalled();
     });
   });
 
-  it('disables button when value is empty', () => {
-    render(<PrairieCardInput {...defaultProps} value="" />);
+  it('disables button when input is empty', () => {
+    render(<PrairieCardInput {...defaultProps} />);
     
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
   });
 
-  it('trims input value when fetching', async () => {
-    const props = { ...defaultProps, value: '  testuser  ' };
+  it('does not submit when input contains only whitespace', async () => {
+    render(<PrairieCardInput {...defaultProps} />);
     
-    render(<PrairieCardInput {...props} />);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: '   ' } });
     
-    const button = screen.getByRole('button');
-    fireEvent.click(button);
+    const form = input.closest('form');
+    if (form) {
+      fireEvent.submit(form);
+    }
     
-    expect(mockFetchProfile).toHaveBeenCalledWith('testuser');
+    // Should not call fetchProfile when input is only whitespace
+    expect(mockFetchProfile).not.toHaveBeenCalled();
   });
 });
