@@ -1,0 +1,249 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { DiagnosisResult } from "@/types";
+import { CND2_CONFIG } from "@/config/cnd2.config";
+import { Share2, Download, RefreshCw, Trophy, MessageCircle, Sparkles } from "lucide-react";
+import Confetti from "react-confetti";
+import { useState, useEffect } from "react";
+
+interface DiagnosisResultProps {
+  result: DiagnosisResult;
+  onReset?: () => void;
+}
+
+export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultProps) {
+  const [showConfetti, setShowConfetti] = useState(true);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    // ウィンドウサイズを取得
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+
+    // 5秒後にコンフェッティを停止
+    const timer = setTimeout(() => setShowConfetti(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const shareToTwitter = () => {
+    const text = `【CND²診断結果】
+相性タイプ：${result.type}
+相性スコア：${result.score}/100
+
+${result.shareTag}
+
+診断はこちら → https://cdn2.cloudnativedays.jp
+
+#CNDxCnD #CNDW2025 #PrairieCard`;
+
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const copyToClipboard = () => {
+    const url = `https://cdn2.cloudnativedays.jp/result/${result.id}`;
+    navigator.clipboard.writeText(url);
+    // TODO: Toast通知を追加
+  };
+
+  // スコアに応じた色を決定
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "from-yellow-400 to-orange-500"; // ゴールド
+    if (score >= 80) return "from-purple-500 to-pink-500";   // パープル
+    if (score >= 70) return "from-blue-500 to-cyan-500";     // ブルー
+    return "from-green-500 to-emerald-500";                   // グリーン
+  };
+
+  return (
+    <>
+      {/* コンフェッティ効果 */}
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.1}
+        />
+      )}
+
+      <motion.div
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", duration: 1 }}
+        className="max-w-4xl mx-auto p-4"
+      >
+        {/* CND²ロゴアニメーション */}
+        <motion.div className="text-center mb-6">
+          <motion.span 
+            className="text-6xl font-bold text-cyan-400"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              rotate: [0, 5, -5, 0]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            CND²
+          </motion.span>
+        </motion.div>
+
+        {/* 結果カード */}
+        <div className="glass-effect rounded-3xl p-8 relative overflow-hidden">
+          {/* 背景のグラデーション効果 */}
+          <div className="absolute inset-0 opacity-10">
+            <div className={`absolute inset-0 bg-gradient-to-br ${getScoreColor(result.score)}`} />
+          </div>
+
+          {/* スコア表示 */}
+          <motion.div 
+            className="relative text-center mb-8"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
+          >
+            <div className="inline-flex items-center justify-center">
+              <Trophy className="w-8 h-8 text-yellow-500 mr-2" />
+              <span className="text-5xl font-bold text-white">{result.score}</span>
+              <span className="text-2xl text-white/80 ml-1">/100</span>
+            </div>
+            <div className="text-sm text-white/60 mt-2">相性スコア</div>
+          </motion.div>
+
+          {/* 診断タイプ */}
+          <motion.h2 
+            className={`text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r ${getScoreColor(result.score)} bg-clip-text text-transparent`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            {result.type}
+          </motion.h2>
+
+          {/* 診断メッセージ */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            className="text-center mb-8"
+          >
+            <p className="text-lg md:text-xl text-white mb-4">
+              {result.message}
+            </p>
+            <p className="text-md text-purple-400 font-semibold">
+              "Scaling Together² - 出会いを二乗でスケール！"
+            </p>
+          </motion.div>
+
+          {/* 会話のきっかけ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1 }}
+            className="mb-8"
+          >
+            <div className="flex items-center mb-4">
+              <MessageCircle className="w-5 h-5 text-cyan-400 mr-2" />
+              <h3 className="text-lg font-semibold text-white">会話のきっかけ</h3>
+            </div>
+            <div className="space-y-2">
+              {result.conversationStarters.map((starter, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.2 + index * 0.1 }}
+                  className="flex items-start"
+                >
+                  <span className="text-cyan-400 mr-2">•</span>
+                  <span className="text-white/80">{starter}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* 隠れた共通点 */}
+          {result.hiddenGems && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5 }}
+              className="mb-8"
+            >
+              <div className="flex items-center mb-3">
+                <Sparkles className="w-5 h-5 text-yellow-400 mr-2" />
+                <h3 className="text-lg font-semibold text-white">意外な発見</h3>
+              </div>
+              <p className="text-white/80 bg-white/10 rounded-xl p-4">
+                {result.hiddenGems}
+              </p>
+            </motion.div>
+          )}
+
+          {/* アクションボタン */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.7 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <motion.button
+              onClick={shareToTwitter}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Share2 className="w-5 h-5" />
+              #CNDxCnD でシェア
+            </motion.button>
+
+            <motion.button
+              onClick={copyToClipboard}
+              className="px-6 py-3 bg-white/10 backdrop-blur text-white rounded-xl font-semibold flex items-center justify-center gap-2 border border-white/20"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Download className="w-5 h-5" />
+              URLをコピー
+            </motion.button>
+
+            {onReset && (
+              <motion.button
+                onClick={onReset}
+                className="px-6 py-3 bg-white/10 backdrop-blur text-white rounded-xl font-semibold flex items-center justify-center gap-2 border border-white/20"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <RefreshCw className="w-5 h-5" />
+                もう一度診断
+              </motion.button>
+            )}
+          </motion.div>
+
+          {/* ハッシュタグ促進 */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.9 }}
+            className="text-center mt-8 text-white/60"
+          >
+            結果を {CND2_CONFIG.app.hashtag} でシェアして、出会いを二乗でスケールしよう！
+          </motion.p>
+        </div>
+
+        {/* 参加者情報 */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="mt-6 text-center text-white/60 text-sm"
+        >
+          <p>診断参加者：{result.participants.map(p => p.basic.name).join(' × ')}</p>
+          <p className="mt-1">診断日時：{new Date(result.createdAt).toLocaleString('ja-JP')}</p>
+        </motion.div>
+      </motion.div>
+    </>
+  );
+}
