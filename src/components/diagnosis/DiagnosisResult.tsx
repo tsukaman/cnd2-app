@@ -1,10 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { DiagnosisResult } from "@/types";
 import { CND2_CONFIG } from "@/config/cnd2.config";
-import { Download, RefreshCw, Trophy, MessageCircle, Sparkles } from "lucide-react";
+import { Download, RefreshCw, Trophy, MessageCircle, Sparkles, QrCode } from "lucide-react";
 import ShareButton from '@/components/share/ShareButton';
+import { QRCodeModal } from '@/components/share/QRCodeModal';
 import Confetti from "react-confetti";
 import { useState, useEffect } from "react";
 
@@ -16,6 +17,8 @@ interface DiagnosisResultProps {
 export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultProps) {
   const [showConfetti, setShowConfetti] = useState(true);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     // ウィンドウサイズを取得
@@ -47,7 +50,8 @@ ${result.shareTag}
   const copyToClipboard = () => {
     const url = `https://cdn2.cloudnativedays.jp/result/${result.id}`;
     navigator.clipboard.writeText(url);
-    // TODO: Toast通知を追加
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
   // スコアに応じた色を決定
@@ -193,6 +197,16 @@ ${result.shareTag}
             <ShareButton resultId={result.id} score={result.score} />
 
             <motion.button
+              onClick={() => setShowQRModal(true)}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <QrCode className="w-5 h-5" />
+              QRコード
+            </motion.button>
+
+            <motion.button
               onClick={copyToClipboard}
               className="px-6 py-3 bg-white/10 backdrop-blur text-white rounded-xl font-semibold flex items-center justify-center gap-2 border border-white/20"
               whileHover={{ scale: 1.05 }}
@@ -237,6 +251,30 @@ ${result.shareTag}
           <p className="mt-1">診断日時：{new Date(result.createdAt).toLocaleString('ja-JP')}</p>
         </motion.div>
       </motion.div>
+
+      {/* QRコードモーダル */}
+      <QRCodeModal
+        isOpen={showQRModal}
+        onClose={() => setShowQRModal(false)}
+        resultId={result.id}
+        score={result.score}
+      />
+
+      {/* Toast notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="bg-green-500/90 backdrop-blur text-white px-6 py-3 rounded-xl shadow-lg">
+              ✓ URLをコピーしました
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

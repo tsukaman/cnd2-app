@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import DiagnosisResult from '@/components/diagnosis/DiagnosisResult';
+import { DiagnosisResultComponent } from '@/components/diagnosis/DiagnosisResult';
 import { ResultStorage } from '@/lib/result-storage';
 
 interface PageProps {
@@ -15,5 +15,5 @@ export default async function ResultPage({ params }: PageProps) {
     notFound();
   }
   
-  return <DiagnosisResult result={result} />;
+  return <DiagnosisResultComponent result={result} />;
 }
