@@ -1,4 +1,4 @@
-import { env, getPublicEnv, getApiConfig, getFeatureFlags } from '@/lib/env';
+import { getPublicEnv, getApiConfig, getFeatureFlags } from '@/lib/env';
 
 const publicEnv = getPublicEnv();
 const apiConfig = getApiConfig();
@@ -6,12 +6,12 @@ const features = getFeatureFlags();
 
 export const CND2_CONFIG = {
   app: {
-    name: 'CND²',
+    name: process.env.NEXT_PUBLIC_APP_NAME || 'CND²',
     displayName: 'CND Squared',
     version: '4.0.0',
     tagline: 'CND × CnD = Your Connection²',
-    hashtag: '#CNDxCnD',
-    hashtagRaw: 'CNDxCnD',
+    hashtag: process.env.NEXT_PUBLIC_HASHTAG || '#CNDxCnD',
+    hashtagRaw: (process.env.NEXT_PUBLIC_HASHTAG || '#CNDxCnD').replace('#', ''),
     poweredBy: 'Prairie Card'
   },
   
@@ -22,13 +22,13 @@ export const CND2_CONFIG = {
   },
   
   api: {
-    openai: env.OPENAI_API_KEY,
+    // OpenAI key is accessed server-side only via getServerConfig()
     prairieCard: process.env.PRAIRIE_CARD_BASE_URL || 'https://prairie-card.cloudnativedays.jp',
     cnd2Endpoint: process.env.NEXT_PUBLIC_CND2_API || '/api',
     timeouts: apiConfig.timeouts,
     rateLimiting: apiConfig.rateLimiting,
     cors: apiConfig.cors,
-    security: apiConfig.security
+    // Security config should be accessed server-side only
   },
   
   features: {

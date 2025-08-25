@@ -10,6 +10,12 @@ const envSchema = z.object({
   // Next.js
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
+  NEXT_PUBLIC_APP_NAME: z.string().default('CND²'),
+  NEXT_PUBLIC_HASHTAG: z.string().default('#CNDxCnD'),
+  NEXT_PUBLIC_CND2_API: z.string().default('/api'),
+  
+  // Prairie Card API
+  PRAIRIE_CARD_BASE_URL: z.string().default('https://prairie-card.cloudnativedays.jp'),
   
   // OpenAI（将来の実装用）
   OPENAI_API_KEY: z.string().optional(),
@@ -23,16 +29,16 @@ const envSchema = z.object({
   
   // Rate Limiting
   RATE_LIMIT_ENABLED: z.string().transform(val => val === 'true').default('false'),
-  RATE_LIMIT_WINDOW_MS: z.string().transform(val => parseInt(val)).default('60000'),
-  RATE_LIMIT_MAX_REQUESTS: z.string().transform(val => parseInt(val)).default('100'),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
+  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(100),
   
   // Security
   API_SECRET_KEY: z.string().optional(),
   CORS_ALLOWED_ORIGINS: z.string().optional(),
   
   // External Services
-  PRAIRIE_API_TIMEOUT: z.string().transform(val => parseInt(val)).default('10000'),
-  DIAGNOSIS_TIMEOUT: z.string().transform(val => parseInt(val)).default('15000'),
+  PRAIRIE_API_TIMEOUT: z.coerce.number().int().positive().default(10000),
+  DIAGNOSIS_TIMEOUT: z.coerce.number().int().positive().default(15000),
   
   // Feature Flags
   ENABLE_ANALYTICS: z.string().transform(val => val === 'true').default('false'),
@@ -67,7 +73,7 @@ function validateEnv(): Env {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors.map(e => e.path.join('.')).join(', ');
-      throw new Error(`環境変数の検証エラー: ${missingVars}`);
+      throw new Error(`Environment validation error: ${missingVars}`);
     }
     throw error;
   }
@@ -92,6 +98,9 @@ export function getPublicEnv() {
   };
 }
 
+// Cache parsed CORS origins
+const parsedCorsOrigins = env.CORS_ALLOWED_ORIGINS?.split(',').map(origin => origin.trim()) || ['*'];
+
 /**
  * API設定を取得
  */
@@ -107,7 +116,7 @@ export function getApiConfig() {
       diagnosis: env.DIAGNOSIS_TIMEOUT,
     },
     cors: {
-      allowedOrigins: env.CORS_ALLOWED_ORIGINS?.split(',') || ['*'],
+      allowedOrigins: parsedCorsOrigins,
     },
     security: {
       apiKey: env.API_SECRET_KEY,
@@ -123,6 +132,30 @@ export function getFeatureFlags() {
     analytics: env.ENABLE_ANALYTICS,
     errorReporting: env.ENABLE_ERROR_REPORTING,
     cache: env.ENABLE_CACHE,
+  };
+}
+
+/**
+ * Get server-only configuration
+ * This should NEVER be imported in client components
+ */
+export function getServerConfig() {
+  if (typeof window !== 'undefined') {
+    throw new Error('getServerConfig() cannot be called on the client side');
+  }
+  
+  return {
+    openai: {
+      apiKey: env.OPENAI_API_KEY,
+      model: env.OPENAI_MODEL,
+    },
+    database: {
+      url: env.DATABASE_URL,
+    },
+    redis: {
+      url: env.REDIS_URL,
+    },
+    api: getApiConfig(),
   };
 }
 
