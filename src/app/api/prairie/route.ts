@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrairieCardParser } from '@/lib/prairie-parser';
 import { withErrorHandler, validateRequestBody, withTimeout } from '@/lib/api-middleware';
-import { ApiError } from '@/lib/api-errors';
+import { ApiError, ApiErrorCode } from '@/lib/api-errors';
 import { z } from 'zod';
 
 // リクエストボディのスキーマ
@@ -19,12 +19,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     parser.parseProfile(url),
     10000
   ).catch((error) => {
-    if (error.message.includes('404')) {
+    // Check for ApiError timeout first
+    if (error instanceof ApiError && error.code === ApiErrorCode.TIMEOUT_ERROR) {
+      throw error; // Re-throw the timeout error as-is
+    }
+    // Check for 404 in error message
+    if (error.message?.includes('404')) {
       throw ApiError.notFound('Prairie Card');
     }
-    if (error.message.includes('timeout')) {
-      throw ApiError.timeoutError('Prairie Cardの取得がタイムアウトしました');
-    }
+    // Other errors are external service errors
     throw ApiError.externalServiceError('Prairie Card', error.message);
   });
   

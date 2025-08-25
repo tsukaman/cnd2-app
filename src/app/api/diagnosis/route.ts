@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DiagnosisEngine } from '@/lib/diagnosis-engine';
 import { PrairieProfile } from '@/types';
 import { withErrorHandler, validateRequestBody, withTimeout } from '@/lib/api-middleware';
-import { ApiError } from '@/lib/api-errors';
+import { ApiError, ApiErrorCode } from '@/lib/api-errors';
 import { z } from 'zod';
 
 // Prairie Profileのスキーマ
@@ -74,8 +74,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       : engine.generateGroupDiagnosis(profiles),
     15000
   ).catch((error) => {
-    if (error.message.includes('timeout')) {
-      throw ApiError.timeoutError('診断の生成がタイムアウトしました');
+    // Check for ApiError timeout first
+    if (error instanceof ApiError && error.code === ApiErrorCode.TIMEOUT_ERROR) {
+      throw error; // Re-throw the timeout error as-is
     }
     throw ApiError.internalServerError('診断の生成に失敗しました');
   });

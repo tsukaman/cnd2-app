@@ -17,10 +17,10 @@ export function withErrorHandler<T = unknown>(
   handler: ApiHandler<T>
 ): ApiHandler<T> {
   return async (request: NextRequest, context?: T) => {
+    // リクエストIDを生成（トレーシング用）
+    const requestId = crypto.randomUUID();
+    
     try {
-      // リクエストIDを生成（トレーシング用）
-      const requestId = crypto.randomUUID();
-      
       // ハンドラーを実行
       const response = await handler(request, context);
       
@@ -29,11 +29,18 @@ export function withErrorHandler<T = unknown>(
       
       return response;
     } catch (error) {
-      console.error('[API Error]', error);
+      // Structured logging with sensitive data filtering
+      console.error('[API Error]', {
+        requestId,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        code: error instanceof ApiError ? error.code : 'UNKNOWN',
+        path: request.nextUrl.pathname,
+        method: request.method,
+      });
       
       // ApiErrorの場合
       if (error instanceof ApiError) {
-        const errorResponse = createErrorResponse(error);
+        const errorResponse = createErrorResponse(error, requestId);
         return NextResponse.json(errorResponse, { 
           status: error.statusCode 
         });
@@ -45,7 +52,7 @@ export function withErrorHandler<T = unknown>(
           'リクエストの検証に失敗しました',
           error.errors
         );
-        const errorResponse = createErrorResponse(apiError);
+        const errorResponse = createErrorResponse(apiError, requestId);
         return NextResponse.json(errorResponse, { 
           status: 422 
         });
@@ -53,7 +60,7 @@ export function withErrorHandler<T = unknown>(
       
       // その他のエラー
       const apiError = ApiError.internalServerError();
-      const errorResponse = createErrorResponse(apiError);
+      const errorResponse = createErrorResponse(apiError, requestId);
       return NextResponse.json(errorResponse, { 
         status: 500 
       });
@@ -87,11 +94,7 @@ export function validateQueryParams<T>(
   schema: z.ZodSchema<T>
 ): T {
   const searchParams = request.nextUrl.searchParams;
-  const params: Record<string, string> = {};
-  
-  searchParams.forEach((value, key) => {
-    params[key] = value;
-  });
+  const params = Object.fromEntries(searchParams.entries());
   
   return schema.parse(params);
 }
