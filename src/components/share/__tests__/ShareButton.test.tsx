@@ -156,7 +156,7 @@ describe('ShareButton', () => {
       });
     }
     
-    delete (navigator as any).share;
+    delete (navigator as { share?: unknown }).share;
   });
 
   it('handles native share error gracefully', async () => {
@@ -183,6 +183,6 @@ describe('ShareButton', () => {
     }
     
     consoleErrorSpy.mockRestore();
-    delete (navigator as any).share;
+    delete (navigator as { share?: unknown }).share;
   });
 });

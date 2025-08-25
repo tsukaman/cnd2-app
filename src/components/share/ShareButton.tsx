@@ -45,7 +45,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
   };
   
   const handleNativeShare = async () => {
-    if (navigator.share) {
+    if ('share' in navigator) {
       try {
         await navigator.share({
           title: 'CND²相性診断',
@@ -62,7 +62,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
     if ('NDEFReader' in window) {
       setNfcWriting(true);
       try {
-        // @ts-ignore - NDEFReader is not in TypeScript types yet
+        // @ts-expect-error - NDEFReader is not in TypeScript types yet
         const ndef = new NDEFReader();
         await ndef.write({
           records: [
@@ -164,7 +164,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
                 </motion.button>
                 
                 {/* Native Share (if available) */}
-                {navigator.share && (
+                {typeof navigator !== 'undefined' && 'share' in navigator && (
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

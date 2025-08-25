@@ -3,11 +3,12 @@ import { ResultStorage } from '@/lib/result-storage';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const storage = ResultStorage.getInstance();
-    const result = storage.getResult(params.id);
+    const result = storage.getResult(id);
     
     if (!result) {
       return NextResponse.json(

@@ -28,7 +28,7 @@ describe('useDiagnosis', () => {
       title: 'Designer',
       skills: ['Figma', 'CSS'],
     },
-  ] as any;
+  ] as PrairieProfile[];
 
   it('initializes with correct default state', () => {
     const { result } = renderHook(() => useDiagnosis());

@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Output configuration for Cloudflare Pages
-  output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
+  // Note: 'export' mode doesn't support API routes, so we use default for now
+  // output: process.env.NODE_ENV === 'production' ? 'export' : undefined,
   
   // Enable React strict mode for better development experience
   reactStrictMode: true,
@@ -22,7 +23,7 @@ const nextConfig = {
   
   // Reduce bundle size
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled due to critters module issue
   },
   
   // Enable SWC minification

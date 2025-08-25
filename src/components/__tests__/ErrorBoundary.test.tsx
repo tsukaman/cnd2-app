@@ -98,8 +98,8 @@ describe('ErrorBoundary', () => {
 
   it('navigates to home when home button is clicked', () => {
     // Mock window.location.href
-    delete (window as any).location;
-    window.location = { href: '' } as any;
+    delete (window as unknown as { location?: Location }).location;
+    window.location = { href: '' } as unknown as Location;
     
     render(
       <ErrorBoundary>

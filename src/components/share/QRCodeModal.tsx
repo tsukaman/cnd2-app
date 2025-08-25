@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import QRCode from "qrcode";
 import { X, Download, Share2 } from "lucide-react";
-import Image from "next/image";
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -116,7 +115,7 @@ export function QRCodeModal({ isOpen, onClose, resultId, score }: QRCodeModalPro
                   QRコード保存
                 </motion.button>
 
-                {navigator.share && (
+                {typeof navigator !== 'undefined' && 'share' in navigator && (
                   <motion.button
                     onClick={shareQRCode}
                     className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2"

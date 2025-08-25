@@ -70,7 +70,7 @@ export default function Home() {
             CND²
           </h1>
           <p className="text-lg md:text-xl text-gray-300 font-semibold mb-4">
-            CloudNative Days × Connect 'n' Discover
+            CloudNative Days × Connect &apos;n&apos; Discover
           </p>
           <motion.p 
             initial={{ opacity: 0 }}

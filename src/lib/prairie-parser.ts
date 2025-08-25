@@ -53,7 +53,7 @@ export class PrairieCardParser {
       const profile = this.extractProfile(html, normalizedUrl);
       
       // XSS対策: プロフィールデータをサニタイズ
-      const sanitizedProfile = sanitizer.sanitizePrairieProfile(profile);
+      const sanitizedProfile = sanitizer.sanitizePrairieProfile(profile) as PrairieProfile;
       
       // CND²メタデータを追加
       sanitizedProfile.meta.connectedBy = 'CND²';
@@ -95,7 +95,7 @@ export class PrairieCardParser {
     return response.text();
   }
 
-  private extractProfile(html: string, url: string): PrairieProfile {
+  private extractProfile(html: string, _url: string): PrairieProfile {
     const $ = cheerio.load(html);
     
     return {
@@ -240,8 +240,8 @@ export class PrairieCardParser {
     }
   }
 
-  private extractCustomFields($: cheerio.CheerioAPI): Record<string, any> {
-    const custom: Record<string, any> = {};
+  private extractCustomFields($: cheerio.CheerioAPI): Record<string, unknown> {
+    const custom: Record<string, unknown> = {};
     
     // カスタムフィールドを探す
     $('[data-custom-field]').each((_, elem) => {
