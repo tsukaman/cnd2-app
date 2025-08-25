@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  /* CND² Brand Colors */
+  --cnd-blue: #326CE5;
+  --squared-purple: #9B59B6;
+  --connect-cyan: #00D4FF;
+  
+  /* Gradients */
+  --gradient-main: linear-gradient(135deg, #3B82F6, #9333EA, #00D4FF);
+  --gradient-squared: linear-gradient(135deg, #A855F7, #EC4899);
+  --gradient-accent: linear-gradient(135deg, #10B981, #3B82F6);
+  
+  /* Dark Theme Base */
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  
+  /* Glass Effect */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+/* CND² Custom Utilities */
+.gradient-text {
+  background: var(--gradient-main);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-effect {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+}
+
+.squared-shadow {
+  box-shadow: 
+    0 4px 6px -1px rgba(155, 89, 182, 0.1),
+    0 2px 4px -1px rgba(155, 89, 182, 0.06),
+    0 0 40px rgba(155, 89, 182, 0.2);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 20s linear infinite;
+}
