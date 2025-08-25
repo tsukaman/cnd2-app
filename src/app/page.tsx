@@ -1,12 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
 import { MenuCard } from "@/components/ui/MenuCard";
 import { ConsentDialog } from "@/components/ui/ConsentDialog";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { BackgroundEffects } from "@/components/effects/BackgroundEffects";
+import dynamic from 'next/dynamic';
+
+// Dynamic import for 3D components to avoid SSR issues
+const CloudAnimation = dynamic(() => import('@/components/effects/CloudAnimation'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 -z-10 bg-gradient-to-br from-blue-50 to-purple-50" />
+});
 
 export default function Home() {
   const [isReady, setIsReady] = useState(false);
@@ -41,6 +48,9 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 relative overflow-hidden">
       {/* 背景エフェクト */}
       <BackgroundEffects />
+      <Suspense fallback={null}>
+        <CloudAnimation />
+      </Suspense>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* CND²ロゴ */}

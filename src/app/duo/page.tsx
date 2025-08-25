@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Sparkles, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { Users, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
+import LoadingAnimation from '@/components/effects/LoadingAnimation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
@@ -64,16 +65,16 @@ export default function DuoPage() {
               className="text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Ûüàk;‹</span>
+              <span>ï¿½ï¿½ï¿½k;ï¿½</span>
             </motion.div>
           </Link>
           
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            2ºnø':­
+            2ï¿½nï¿½':ï¿½
           </h1>
           <p className="text-gray-600 flex items-center justify-center gap-2">
             <Users className="w-5 h-5" />
-            Prairie CardK‰ø'’:­W~Y
+            Prairie CardKï¿½ï¿½'ï¿½:ï¿½W~Y
           </p>
         </motion.div>
 
@@ -91,10 +92,10 @@ export default function DuoPage() {
           </div>
           <div className="flex justify-between mt-2">
             <span className={`text-sm ${step >= 1 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-              1ºîn«üÉ
+              1ï¿½ï¿½nï¿½ï¿½ï¿½
             </span>
             <span className={`text-sm ${step >= 2 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-              2ºîn«üÉ
+              2ï¿½ï¿½nï¿½ï¿½ï¿½
             </span>
           </div>
         </div>
@@ -112,7 +113,7 @@ export default function DuoPage() {
               <div className="bg-white rounded-2xl shadow-xl p-8">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <span className="text-2xl">=d</span>
-                  1ºînPrairie Card
+                  1ï¿½ï¿½nPrairie Card
                 </h2>
                 
                 <PrairieCardInput
@@ -127,7 +128,7 @@ export default function DuoPage() {
                     className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
                   >
                     <p className="text-green-800 font-semibold">
-                       {profiles[0].name}U“n«üÉ’­¼~W_
+                       {profiles[0].name}Uï¿½nï¿½ï¿½É’ï¿½ï¿½~W_
                     </p>
                   </motion.div>
                 )}
@@ -173,7 +174,7 @@ export default function DuoPage() {
               <div className="bg-white rounded-2xl shadow-xl p-8">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <span className="text-2xl">=e</span>
-                  2ºînPrairie Card
+                  2ï¿½ï¿½nPrairie Card
                 </h2>
                 
                 <PrairieCardInput
@@ -188,7 +189,7 @@ export default function DuoPage() {
                     className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
                   >
                     <p className="text-green-800 font-semibold">
-                       {profiles[1].name}U“n«üÉ’­¼~W_
+                       {profiles[1].name}Uï¿½nï¿½ï¿½É’ï¿½ï¿½~W_
                     </p>
                   </motion.div>
                 )}
@@ -212,7 +213,7 @@ export default function DuoPage() {
                     className="px-6 py-3 rounded-full font-semibold flex items-center gap-2 border-2 border-gray-300 hover:border-gray-400 transition-all"
                   >
                     <ArrowLeft className="w-5 h-5" />
-                    ;‹
+                    ;ï¿½
                   </motion.button>
                   
                   <motion.button
@@ -229,12 +230,12 @@ export default function DuoPage() {
                     {diagnosisLoading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        :­-...
+                        :ï¿½-...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5" />
-                        :­‹Ë
+                        :ï¿½ï¿½ï¿½
                       </>
                     )}
                   </motion.button>
@@ -252,18 +253,18 @@ export default function DuoPage() {
             className="max-w-2xl mx-auto mt-8"
           >
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-semibold mb-4">:­þa</h3>
+              <h3 className="text-lg font-semibold mb-4">:ï¿½ï¿½a</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className={`p-4 rounded-lg ${profiles[0] ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
-                  <p className="text-sm text-gray-600 mb-1">1ºî</p>
+                  <p className="text-sm text-gray-600 mb-1">1ï¿½ï¿½</p>
                   <p className="font-semibold">
-                    {profiles[0] ? profiles[0].name : '*-š'}
+                    {profiles[0] ? profiles[0].name : '*-ï¿½'}
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg ${profiles[1] ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50 border border-gray-200'}`}>
-                  <p className="text-sm text-gray-600 mb-1">2ºî</p>
+                  <p className="text-sm text-gray-600 mb-1">2ï¿½ï¿½</p>
                   <p className="font-semibold">
-                    {profiles[1] ? profiles[1].name : '*-š'}
+                    {profiles[1] ? profiles[1].name : '*-ï¿½'}
                   </p>
                 </div>
               </div>

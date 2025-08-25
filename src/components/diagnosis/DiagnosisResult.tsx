@@ -3,7 +3,8 @@
 import { motion } from "framer-motion";
 import { DiagnosisResult } from "@/types";
 import { CND2_CONFIG } from "@/config/cnd2.config";
-import { Share2, Download, RefreshCw, Trophy, MessageCircle, Sparkles } from "lucide-react";
+import { Download, RefreshCw, Trophy, MessageCircle, Sparkles } from "lucide-react";
+import ShareButton from '@/components/share/ShareButton';
 import Confetti from "react-confetti";
 import { useState, useEffect } from "react";
 
@@ -189,15 +190,7 @@ ${result.shareTag}
             transition={{ delay: 1.7 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <motion.button
-              onClick={shareToTwitter}
-              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Share2 className="w-5 h-5" />
-              #CNDxCnD でシェア
-            </motion.button>
+            <ShareButton resultId={result.id} score={result.score} />
 
             <motion.button
               onClick={copyToClipboard}
