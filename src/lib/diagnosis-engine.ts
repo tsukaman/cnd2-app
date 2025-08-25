@@ -13,12 +13,16 @@ export class DiagnosisEngine {
   private static instance: DiagnosisEngine;
 
   private constructor() {
-    // OpenAI APIキーの確認
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (apiKey && apiKey !== 'your_openai_api_key_here') {
-      this.openai = new OpenAI({
-        apiKey: apiKey,
-      });
+    // サーバーサイドでのみOpenAI APIキーを使用
+    if (typeof window === 'undefined') {
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (apiKey && apiKey !== 'your_openai_api_key_here') {
+        this.openai = new OpenAI({
+          apiKey: apiKey,
+        });
+      } else {
+        console.warn('[CND²] OpenAI APIキーが設定されていません。モック診断を使用します。');
+      }
     }
   }
 

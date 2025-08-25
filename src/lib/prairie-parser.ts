@@ -3,6 +3,8 @@ import { PrairieProfile } from '@/types';
 import { RateLimiter } from './rate-limiter';
 import { CacheManager } from './cache-manager';
 import { CND2_CONFIG } from '@/config/cnd2.config';
+import { NetworkError, ParseError, ValidationError, ErrorHandler } from './errors';
+import { sanitizer } from './sanitizer';
 
 export class PrairieCardParser {
   private rateLimiter: RateLimiter;
@@ -29,7 +31,7 @@ export class PrairieCardParser {
     // URLの正規化と検証
     const normalizedUrl = this.normalizeUrl(url);
     if (!this.isValidPrairieUrl(normalizedUrl)) {
-      throw new Error('有効なPrairie Card URLを入力してください');
+      throw new ValidationError('有効なPrairie Card URLを入力してください', { url });
     }
 
     // キャッシュチェック（二乗効果）
@@ -50,17 +52,30 @@ export class PrairieCardParser {
       // パース処理
       const profile = this.extractProfile(html, normalizedUrl);
       
+      // XSS対策: プロフィールデータをサニタイズ
+      const sanitizedProfile = sanitizer.sanitizePrairieProfile(profile);
+      
       // CND²メタデータを追加
-      profile.meta.connectedBy = 'CND²';
-      profile.meta.hashtag = CND2_CONFIG.app.hashtag;
+      sanitizedProfile.meta.connectedBy = 'CND²';
+      sanitizedProfile.meta.hashtag = CND2_CONFIG.app.hashtag;
       
       // キャッシュに保存
-      await this.cacheManager.save(normalizedUrl, profile);
+      await this.cacheManager.save(normalizedUrl, sanitizedProfile);
       
-      return profile;
+      return sanitizedProfile;
     } catch (error) {
-      console.error('[CND²] Prairie Card解析エラー:', error);
-      throw new Error('Prairie Cardの情報を取得できませんでした。URLをご確認ください。');
+      // エラーを適切に分類して再スロー
+      const mappedError = ErrorHandler.mapError(error);
+      ErrorHandler.logError(mappedError, 'PrairieCardParser.parseProfile');
+      
+      // ユーザー向けメッセージを設定
+      if (mappedError instanceof NetworkError) {
+        throw new NetworkError('Prairie Cardサーバーに接続できません。しばらく待ってから再試行してください。');
+      } else if (mappedError instanceof ParseError) {
+        throw new ParseError('Prairie CardのHTMLフォーマットが変更された可能性があります。');
+      }
+      
+      throw mappedError;
     }
   }
 

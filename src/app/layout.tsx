@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { CND2_CONFIG } from "@/config/cnd2.config";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,7 +32,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${inter.className} antialiased`}>
-        {children}
+        <ErrorBoundary>
+          {children}
+          <Toaster position="top-center" richColors />
+        </ErrorBoundary>
       </body>
     </html>
   );
