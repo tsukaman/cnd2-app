@@ -1,12 +1,31 @@
 {
   "name": "cnd2-app",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "CND² - CloudNative Days × Connect 'n' Discover - エンジニアの出会いを、データで可視化する相性診断アプリ",
+  "author": "つかまん <tsukaman@mac.com>",
+  "license": "MIT",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tsukaman/cnd2-app.git"
+  },
+  "keywords": [
+    "cloudnative",
+    "cndw2025",
+    "prairie-card",
+    "compatibility",
+    "diagnosis",
+    "nextjs",
+    "typescript"
+  ],
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.4",
@@ -29,6 +48,9 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
@@ -36,6 +58,8 @@
     "@types/three": "^0.179.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.0",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

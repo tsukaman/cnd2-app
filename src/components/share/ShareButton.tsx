@@ -18,7 +18,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
   const [nfcWriting, setNfcWriting] = useState(false);
   
   const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2.cloudnativedays.jp'}/result/${resultId}`;
-  const shareText = `CND�g�':�W~W_���: ${score}% #CNDxCnD`;
+  const shareText = `CND²相性診断結果: ${score}% #CNDxCnD`;
   
   const handleShare = async () => {
     setShowModal(true);
@@ -40,7 +40,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(shareUrl);
     setCopied(true);
-    toast.success('�󯒳��W~W_');
+    toast.success('リンクをコピーしました');
     setTimeout(() => setCopied(false), 2000);
   };
   
@@ -48,7 +48,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'CND� :�P�',
+          title: 'CND²相性診断',
           text: shareText,
           url: shareUrl,
         });
@@ -76,15 +76,15 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
             },
           ],
         });
-        toast.success('NFC��k�M�~W_');
+        toast.success('NFCタグに書き込みました');
       } catch (error) {
         console.error('NFC write failed:', error);
-        toast.error('NFC�M�k1WW~W_');
+        toast.error('NFCの書き込みに失敗しました');
       } finally {
         setNfcWriting(false);
       }
     } else {
-      toast.error('Sn�馶oNFCk��WfD~[�');
+      toast.error('このデバイスはNFCに対応していません');
     }
   };
   
@@ -97,7 +97,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
         className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-semibold flex items-center gap-2 hover:shadow-lg transition-all"
       >
         <Share2 className="w-5 h-5" />
-        P�����
+        結果をシェア
       </motion.button>
       
       <AnimatePresence>
@@ -118,7 +118,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold">P�����</h3>
+                <h3 className="text-2xl font-bold">結果をシェア</h3>
                 <button
                   onClick={() => setShowModal(false)}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -137,7 +137,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
                   )}
                 </div>
                 <p className="text-sm text-gray-600 mt-3 text-center">
-                  QR��ɒ����WfP����
+                  QRコードを読み取って結果を確認
                 </p>
               </div>
               
@@ -153,12 +153,12 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
                   {copied ? (
                     <>
                       <Check className="w-5 h-5 text-green-600" />
-                      <span className="text-green-600">���W~W_</span>
+                      <span className="text-green-600">コピーしました</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-5 h-5" />
-                      �󯒳��
+                      リンクをコピー
                     </>
                   )}
                 </motion.button>
@@ -172,7 +172,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
                     className="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition-all"
                   >
                     <Share2 className="w-5 h-5" />
-                    �n���g���
+                    他のアプリでシェア
                   </motion.button>
                 )}
                 
@@ -186,14 +186,14 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                   >
                     <Smartphone className="w-5 h-5" />
-                    {nfcWriting ? 'NFC��k�M�-...' : 'NFC��k�M��'}
+                    {nfcWriting ? 'NFCタグに書き込み中...' : 'NFCタグに書き込む'}
                   </motion.button>
                 )}
               </div>
               
               {/* Social Media Links */}
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-3">SNSg���</p>
+                <p className="text-sm text-gray-600 mb-3">SNSでシェア</p>
                 <div className="flex gap-3">
                   <motion.a
                     whileHover={{ scale: 1.1 }}
@@ -203,7 +203,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
                     rel="noopener noreferrer"
                     className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors"
                   >
-                    5O
+                    𝕏
                   </motion.a>
                   
                   <motion.a

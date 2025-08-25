@@ -26,10 +26,10 @@ export function MenuCard({ href, icon, title, description, delay = 0 }: MenuCard
       whileTap={{ scale: 0.95 }}
     >
       <Link href={href}>
-        <div className="glass-effect rounded-3xl p-8 text-center cursor-pointer squared-shadow hover:shadow-2xl transition-all duration-300">
-          <div className="text-6xl mb-4">{icon}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
-          <p className="text-white/80">{description}</p>
+        <div className="card-dark p-8 text-center cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:glow-purple">
+          <div className="text-6xl mb-4 filter drop-shadow-lg animate-float">{icon}</div>
+          <h3 className="text-2xl font-bold gradient-text mb-2">{title}</h3>
+          <p className="text-gray-400 font-medium">{description}</p>
         </div>
       </Link>
     </motion.div>

@@ -63,7 +63,7 @@ export default function GroupPage() {
   const canStartDiagnosis = validProfilesCount >= 3 && !isLoading;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+    <div className="min-h-screen stars-bg">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
@@ -75,19 +75,19 @@ export default function GroupPage() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
+              className="text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-2 font-medium"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Ûüàk;‹</span>
+              <span>ãƒ›ãƒ¼ãƒ ã«æˆ»ã‚‹</span>
             </motion.div>
           </Link>
           
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-            °ëü×ø':­
+          <h1 className="text-4xl font-bold gradient-text mb-2">
+            ã‚°ãƒ«ãƒ¼ãƒ—ç›¸æ€§è¨ºæ–­
           </h1>
-          <p className="text-gray-600 flex items-center justify-center gap-2">
+          <p className="text-gray-400 flex items-center justify-center gap-2">
             <Users className="w-5 h-5" />
-            36ºnPrairie CardK‰ø'’:­W~Y
+            3ã€œ6äººã®Prairie Cardã‹ã‚‰ç›¸æ€§ã‚’è¨ºæ–­ã—ã¾ã™
           </p>
         </motion.div>
 
@@ -96,20 +96,20 @@ export default function GroupPage() {
           <div className="grid md:grid-cols-2 gap-6">
             {/* Left Column - Input */}
             <div>
-              <div className="bg-white rounded-2xl shadow-xl p-6">
+              <div className="card-dark p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold">
-                    áóĞü {currentIndex + 1} / {profiles.length}
+                    ãƒ¡ãƒ³ãƒãƒ¼ {currentIndex + 1} / {profiles.length}
                   </h2>
                   {profiles.length < 6 && (
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleAddSlot}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-semibold flex items-center gap-2 hover:shadow-lg transition-all"
+                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-orange-500 text-white rounded-full font-semibold flex items-center gap-2 hover:shadow-lg transition-all"
                     >
                       <UserPlus className="w-4 h-4" />
-                      áóĞüı 
+                      ãƒ¡ãƒ³ãƒãƒ¼è¿½åŠ 
                     </motion.button>
                   )}
                 </div>
@@ -124,14 +124,14 @@ export default function GroupPage() {
                       onClick={() => setCurrentIndex(index)}
                       className={`px-4 py-2 rounded-full font-semibold transition-all flex items-center gap-2 ${
                         currentIndex === index
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                          ? 'bg-gradient-to-r from-purple-600 to-orange-500 text-white'
                           : profile
                           ? 'bg-green-100 text-green-800 border-2 border-green-300'
                           : 'bg-gray-100 text-gray-600 border-2 border-gray-300'
                       }`}
                     >
                       <span>{index + 1}</span>
-                      {profile && <span className="text-xs"></span>}
+                      {profile && <span className="text-xs">âœ“</span>}
                       {profiles.length > 3 && (
                         <button
                           onClick={(e) => {
@@ -156,9 +156,7 @@ export default function GroupPage() {
                     exit={{ opacity: 0, x: -20 }}
                   >
                     <PrairieCardInput
-                      onProfileParsed={(profile) => handleProfileParsed(profile, currentIndex)}
-                      disabled={isLoading}
-                      initialUrl={profiles[currentIndex]?.prairieUrl}
+                      onProfileLoaded={(profile) => handleProfileParsed(profile, currentIndex)}
                     />
                     
                     {profiles[currentIndex] && (
@@ -168,7 +166,7 @@ export default function GroupPage() {
                         className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200"
                       >
                         <p className="text-green-800 font-semibold">
-                           {profiles[currentIndex]?.name}U“n«üÉ’­¼~W_
+                          âœ… {profiles[currentIndex]?.name}ã•ã‚“ã®ã‚«ãƒ¼ãƒ‰ã‚’èª­ã¿è¾¼ã¿ã¾ã—ãŸ
                         </p>
                       </motion.div>
                     )}
@@ -189,8 +187,8 @@ export default function GroupPage() {
             
             {/* Right Column - Summary */}
             <div>
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h3 className="text-xl font-bold mb-6">:­áóĞü</h3>
+              <div className="card-dark p-6">
+                <h3 className="text-xl font-bold mb-6">è¨ºæ–­ãƒ¡ãƒ³ãƒãƒ¼</h3>
                 
                 <div className="space-y-3 mb-6">
                   {profiles.map((profile, index) => (
@@ -208,14 +206,14 @@ export default function GroupPage() {
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
                           profile
-                            ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                            ? 'bg-gradient-to-r from-purple-600 to-orange-500'
                             : 'bg-gray-400'
                         }`}>
                           {index + 1}
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold">
-                            {profile ? profile.name : '*-š'}
+                            {profile ? profile.name : 'æœªè¨­å®š'}
                           </p>
                           {profile && (
                             <p className="text-sm text-gray-600">
@@ -231,12 +229,12 @@ export default function GroupPage() {
                 {/* Progress Bar */}
                 <div className="mb-6">
                   <div className="flex justify-between text-sm text-gray-600 mb-2">
-                    <span>2W</span>
-                    <span>{validProfilesCount} / {profiles.length} º</span>
+                    <span>é€²æ—</span>
+                    <span>{validProfilesCount} / {profiles.length} äºº</span>
                   </div>
                   <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                      className="h-full bg-gradient-to-r from-purple-600 to-orange-500"
                       initial={{ width: 0 }}
                       animate={{ width: `${(validProfilesCount / profiles.length) * 100}%` }}
                       transition={{ duration: 0.5 }}
@@ -252,26 +250,26 @@ export default function GroupPage() {
                   disabled={!canStartDiagnosis}
                   className={`w-full px-6 py-4 rounded-full font-bold flex items-center justify-center gap-2 transition-all ${
                     canStartDiagnosis
-                      ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white hover:shadow-lg'
+                      ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white hover:shadow-lg'
                       : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }`}
                 >
                   {diagnosisLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      :­-...
+                      è¨ºæ–­ä¸­...
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      °ëü×:­’‹Ë
+                      ã‚°ãƒ«ãƒ¼ãƒ—è¨ºæ–­ã‚’é–‹å§‹
                     </>
                   )}
                 </motion.button>
                 
                 {validProfilesCount < 3 && (
                   <p className="text-sm text-gray-500 text-center mt-3">
-                     N3ºn×íÕ£üëLÅgY
+                    æœ€ä½3äººã®ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«ãŒå¿…è¦ã§ã™
                   </p>
                 )}
               </div>

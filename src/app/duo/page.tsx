@@ -50,7 +50,7 @@ export default function DuoPage() {
   const error = parseError || diagnosisError;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen stars-bg">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
@@ -62,17 +62,17 @@ export default function DuoPage() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
+              className="text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-2 font-medium"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>ホームに戻る</span>
             </motion.div>
           </Link>
           
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold gradient-text mb-2">
             2人の相性診断
           </h1>
-          <p className="text-gray-600 flex items-center justify-center gap-2">
+          <p className="text-gray-400 flex items-center justify-center gap-2">
             <Users className="w-5 h-5" />
             Prairie Cardから相性を診断します
           </p>
@@ -83,7 +83,7 @@ export default function DuoPage() {
           <div className="flex items-center justify-between">
             <div className={`flex-1 h-2 bg-gray-200 rounded-full overflow-hidden`}>
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
                 initial={{ width: '0%' }}
                 animate={{ width: step === 1 ? '50%' : '100%' }}
                 transition={{ duration: 0.5 }}
@@ -91,10 +91,10 @@ export default function DuoPage() {
             </div>
           </div>
           <div className="flex justify-between mt-2">
-            <span className={`text-sm ${step >= 1 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
+            <span className={`text-sm ${step >= 1 ? 'text-blue-400 font-semibold' : 'text-gray-500'}`}>
               1人目のカード
             </span>
-            <span className={`text-sm ${step >= 2 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
+            <span className={`text-sm ${step >= 2 ? 'text-blue-400 font-semibold' : 'text-gray-500'}`}>
               2人目のカード
             </span>
           </div>
@@ -110,15 +110,14 @@ export default function DuoPage() {
               exit={{ opacity: 0, x: -100 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="card-dark p-8">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <span className="text-2xl">👤</span>
                   1人目のPrairie Card
                 </h2>
                 
                 <PrairieCardInput
-                  onProfileParsed={(profile) => handleProfileParsed(profile, 0)}
-                  disabled={isLoading}
+                  onProfileLoaded={(profile) => handleProfileParsed(profile, 0)}
                 />
                 
                 {profiles[0] && (
@@ -151,7 +150,7 @@ export default function DuoPage() {
                     disabled={!profiles[0] || isLoading}
                     className={`px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all ${
                       profiles[0] && !isLoading
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg'
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg'
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
                   >
@@ -171,15 +170,14 @@ export default function DuoPage() {
               exit={{ opacity: 0, x: -100 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="card-dark p-8">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <span className="text-2xl">👥</span>
                   2人目のPrairie Card
                 </h2>
                 
                 <PrairieCardInput
-                  onProfileParsed={(profile) => handleProfileParsed(profile, 1)}
-                  disabled={isLoading}
+                  onProfileLoaded={(profile) => handleProfileParsed(profile, 1)}
                 />
                 
                 {profiles[1] && (
@@ -223,7 +221,7 @@ export default function DuoPage() {
                     disabled={!profiles[1] || isLoading}
                     className={`px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all ${
                       profiles[1] && !isLoading
-                        ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white hover:shadow-lg'
+                        ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white hover:shadow-lg'
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
                   >

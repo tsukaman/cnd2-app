@@ -10,10 +10,10 @@ interface LogoProps {
 
 export function Logo({ size = "lg", animate = true }: LogoProps) {
   const sizeClasses = {
-    sm: "text-2xl",
-    md: "text-4xl",
-    lg: "text-6xl md:text-8xl",
-    xl: "text-8xl md:text-9xl",
+    sm: "text-xl",
+    md: "text-3xl",
+    lg: "text-4xl md:text-5xl",
+    xl: "text-6xl md:text-7xl",
   };
 
   return (
@@ -21,7 +21,7 @@ export function Logo({ size = "lg", animate = true }: LogoProps) {
       <motion.h1
         className={`${sizeClasses[size]} font-black mb-4`}
         style={{
-          background: "linear-gradient(45deg, #00D4FF, #9B59B6, #00FF88)",
+          background: "linear-gradient(45deg, #1E3A8A, #0284C7, #6D28D9)",
           backgroundClip: "text",
           WebkitBackgroundClip: "text",
           color: "transparent",
@@ -39,7 +39,7 @@ export function Logo({ size = "lg", animate = true }: LogoProps) {
       </motion.h1>
       
       <motion.p 
-        className="text-xl md:text-2xl text-white mb-2"
+        className="text-xl md:text-2xl text-gray-700 mb-2"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -48,7 +48,7 @@ export function Logo({ size = "lg", animate = true }: LogoProps) {
       </motion.p>
       
       <motion.p 
-        className="text-lg md:text-xl text-cyan-400"
+        className="text-lg md:text-xl text-blue-600"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
@@ -57,7 +57,7 @@ export function Logo({ size = "lg", animate = true }: LogoProps) {
       </motion.p>
       
       <motion.p 
-        className="text-sm text-white/60 mt-4"
+        className="text-sm text-gray-600 mt-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}

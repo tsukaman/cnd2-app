@@ -57,7 +57,7 @@ export default function PrairieCardInput({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-white/80 mb-2">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
             {label}
           </label>
           
@@ -70,16 +70,16 @@ export default function PrairieCardInput({
               disabled={loading}
               className={`
                 w-full px-4 py-3 pr-12 
-                bg-white/10 backdrop-blur-xl 
+                bg-gray-800/50 backdrop-blur-sm
                 border rounded-xl
-                text-white placeholder-white/50
+                text-gray-200 placeholder-gray-500
                 focus:outline-none focus:ring-2 
                 transition-all duration-300
                 ${isValid === true 
                   ? 'border-green-500 focus:ring-green-500' 
                   : isValid === false 
                   ? 'border-red-500 focus:ring-red-500'
-                  : 'border-white/20 focus:ring-cyan-500'
+                  : 'border-gray-300 focus:ring-blue-500'
                 }
                 ${loading ? 'opacity-50 cursor-not-allowed' : ''}
               `}
@@ -88,7 +88,7 @@ export default function PrairieCardInput({
             {/* ステータスアイコン */}
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               {loading && (
-                <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+                <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
               )}
               {!loading && isValid === true && (
                 <motion.div
@@ -109,7 +109,7 @@ export default function PrairieCardInput({
                 </motion.div>
               )}
               {!loading && isValid === null && url === "" && (
-                <User className="w-5 h-5 text-white/30" />
+                <User className="w-5 h-5 text-gray-400" />
               )}
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function PrairieCardInput({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-4 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20"
+            className="p-4 bg-blue-50 rounded-xl border border-blue-200"
           >
             <div className="flex items-center gap-3">
               {profile.basic.avatar && (
@@ -143,12 +143,12 @@ export default function PrairieCardInput({
                 />
               )}
               <div>
-                <p className="text-white font-semibold">{profile.basic.name}</p>
+                <p className="text-gray-900 font-semibold">{profile.basic.name}</p>
                 {profile.basic.title && (
-                  <p className="text-white/60 text-sm">{profile.basic.title}</p>
+                  <p className="text-gray-600 text-sm">{profile.basic.title}</p>
                 )}
                 {profile.basic.company && (
-                  <p className="text-white/60 text-sm">{profile.basic.company}</p>
+                  <p className="text-gray-600 text-sm">{profile.basic.company}</p>
                 )}
               </div>
             </div>
@@ -165,7 +165,7 @@ export default function PrairieCardInput({
             transition-all duration-300
             ${loading || !url.trim()
               ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700'
+              : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
             }
           `}
           whileHover={!loading && url.trim() ? { scale: 1.02 } : {}}

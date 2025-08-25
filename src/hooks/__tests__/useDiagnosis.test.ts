@@ -1,0 +1,172 @@
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { useDiagnosis } from '../useDiagnosis';
+import { PrairieProfile } from '@/types';
+
+// Mock fetch and localStorage
+global.fetch = jest.fn();
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  clear: jest.fn(),
+};
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+describe('useDiagnosis', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    localStorageMock.getItem.mockReturnValue('{}');
+  });
+
+  const mockProfiles: PrairieProfile[] = [
+    {
+      name: 'User 1',
+      title: 'Developer',
+      skills: ['React', 'TypeScript'],
+    },
+    {
+      name: 'User 2',
+      title: 'Designer',
+      skills: ['Figma', 'CSS'],
+    },
+  ] as any;
+
+  it('initializes with correct default state', () => {
+    const { result } = renderHook(() => useDiagnosis());
+    
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+    expect(result.current.result).toBeNull();
+  });
+
+  it('successfully generates a duo diagnosis', async () => {
+    const mockResult = {
+      id: 'test-id',
+      mode: 'duo',
+      profiles: mockProfiles,
+      compatibility: 85,
+      createdAt: new Date().toISOString(),
+    };
+
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        result: mockResult,
+      }),
+    });
+
+    const { result } = renderHook(() => useDiagnosis());
+
+    let diagnosis;
+    await act(async () => {
+      diagnosis = await result.current.generateDiagnosis(mockProfiles, 'duo');
+    });
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.result).toEqual(mockResult);
+      expect(diagnosis).toEqual(mockResult);
+    });
+
+    expect(fetch).toHaveBeenCalledWith('/api/diagnosis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ profiles: mockProfiles, mode: 'duo' }),
+    });
+
+    // Check localStorage was updated
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      'cnd2_results',
+      expect.stringContaining('test-id')
+    );
+  });
+
+  it('handles diagnosis errors correctly', async () => {
+    const errorMessage = '診断の生成に失敗しました';
+    
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({
+        success: false,
+        error: errorMessage,
+      }),
+    });
+
+    const { result } = renderHook(() => useDiagnosis());
+
+    let diagnosis;
+    await act(async () => {
+      diagnosis = await result.current.generateDiagnosis(mockProfiles, 'duo');
+    });
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBe(errorMessage);
+      expect(result.current.result).toBeNull();
+      expect(diagnosis).toBeNull();
+    });
+  });
+
+  it('handles localStorage errors gracefully', async () => {
+    const mockResult = {
+      id: 'test-id',
+      mode: 'duo',
+      profiles: mockProfiles,
+      compatibility: 85,
+      createdAt: new Date().toISOString(),
+    };
+
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        result: mockResult,
+      }),
+    });
+
+    // Simulate localStorage error
+    localStorageMock.setItem.mockImplementationOnce(() => {
+      throw new Error('Storage full');
+    });
+
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const { result } = renderHook(() => useDiagnosis());
+
+    await act(async () => {
+      await result.current.generateDiagnosis(mockProfiles, 'duo');
+    });
+
+    await waitFor(() => {
+      expect(result.current.result).toEqual(mockResult);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[useDiagnosis] 結果保存エラー:',
+        expect.any(Error)
+      );
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it('clears error when clearError is called', () => {
+    const { result } = renderHook(() => useDiagnosis());
+    
+    act(() => {
+      result.current.clearError();
+    });
+
+    expect(result.current.error).toBeNull();
+  });
+
+  it('clears result when clearResult is called', () => {
+    const { result } = renderHook(() => useDiagnosis());
+    
+    act(() => {
+      result.current.clearResult();
+    });
+
+    expect(result.current.result).toBeNull();
+  });
+});
