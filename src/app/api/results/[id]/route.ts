@@ -1,38 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ResultStorage } from '@/lib/result-storage';
+import { withErrorHandler } from '@/lib/api-middleware';
+import { ApiError } from '@/lib/api-errors';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(async () => {
     const { id } = await params;
+    
+    if (!id) {
+      throw ApiError.badRequest('結果IDが指定されていません');
+    }
+    
     const storage = ResultStorage.getInstance();
     const result = storage.getResult(id);
     
     if (!result) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: '診断結果が見つかりません' 
-        },
-        { status: 404 }
-      );
+      throw ApiError.notFound('診断結果');
     }
     
     return NextResponse.json({
       success: true,
       result,
     });
-  } catch (error) {
-    console.error('[API] 結果取得エラー:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false,
-        error: '結果の取得に失敗しました' 
-      },
-      { status: 500 }
-    );
-  }
+  })(request);
 }
