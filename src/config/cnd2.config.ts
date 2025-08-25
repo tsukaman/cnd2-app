@@ -1,3 +1,9 @@
+import { env, getPublicEnv, getApiConfig, getFeatureFlags } from '@/lib/env';
+
+const publicEnv = getPublicEnv();
+const apiConfig = getApiConfig();
+const features = getFeatureFlags();
+
 export const CND2_CONFIG = {
   app: {
     name: 'CND²',
@@ -12,13 +18,17 @@ export const CND2_CONFIG = {
   domains: {
     development: 'http://localhost:3000',
     staging: 'https://dev.tsukaman.com/cnd2',
-    production: 'https://cdn2.cloudnativedays.jp'
+    production: publicEnv.APP_URL || 'https://cdn2.cloudnativedays.jp'
   },
   
   api: {
-    openai: process.env.OPENAI_API_KEY,
-    prairieCard: process.env.NEXT_PUBLIC_PRAIRIE_URL || 'https://my.prairie.cards',
-    cnd2Endpoint: process.env.NEXT_PUBLIC_CND2_API || '/api'
+    openai: env.OPENAI_API_KEY,
+    prairieCard: process.env.PRAIRIE_CARD_BASE_URL || 'https://prairie-card.cloudnativedays.jp',
+    cnd2Endpoint: process.env.NEXT_PUBLIC_CND2_API || '/api',
+    timeouts: apiConfig.timeouts,
+    rateLimiting: apiConfig.rateLimiting,
+    cors: apiConfig.cors,
+    security: apiConfig.security
   },
   
   features: {
@@ -26,14 +36,18 @@ export const CND2_CONFIG = {
     enableQR: true,
     enableGroupDiagnosis: true,
     maxGroupSize: 6,  // 6² = 36の相性
-    enableSquaredEffects: true
+    enableSquaredEffects: true,
+    analytics: features.analytics,
+    errorReporting: features.errorReporting,
+    cache: features.cache
   },
   
   cache: {
+    enabled: features.cache,
     ttl: {
-      memory: 3600,      // 1時間
-      browser: 7200,     // 2時間（二乗っぽく）
-      kv: 604800        // 7日間
+      memory: features.cache ? 3600 : 0,      // 1時間
+      browser: features.cache ? 7200 : 0,     // 2時間（二乗っぽく）
+      kv: features.cache ? 604800 : 0        // 7日間
     }
   },
   
