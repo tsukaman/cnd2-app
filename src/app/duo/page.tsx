@@ -65,16 +65,16 @@ export default function DuoPage() {
               className="text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-2"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>���k;�</span>
+              <span>ホームに戻る</span>
             </motion.div>
           </Link>
           
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            2�n�':�
+            2人の相性診断
           </h1>
           <p className="text-gray-600 flex items-center justify-center gap-2">
             <Users className="w-5 h-5" />
-            Prairie CardK��'�:�W~Y
+            Prairie Cardから相性を診断します
           </p>
         </motion.div>
 
@@ -92,10 +92,10 @@ export default function DuoPage() {
           </div>
           <div className="flex justify-between mt-2">
             <span className={`text-sm ${step >= 1 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-              1��n���
+              1人目のカード
             </span>
             <span className={`text-sm ${step >= 2 ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
-              2��n���
+              2人目のカード
             </span>
           </div>
         </div>
@@ -112,8 +112,8 @@ export default function DuoPage() {
             >
               <div className="bg-white rounded-2xl shadow-xl p-8">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <span className="text-2xl">=d</span>
-                  1��nPrairie Card
+                  <span className="text-2xl">👤</span>
+                  1人目のPrairie Card
                 </h2>
                 
                 <PrairieCardInput
@@ -128,7 +128,7 @@ export default function DuoPage() {
                     className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
                   >
                     <p className="text-green-800 font-semibold">
-                       {profiles[0].name}U�n��ɒ��~W_
+                      ✅ {profiles[0].name}さんのカードを読み込みました
                     </p>
                   </motion.div>
                 )}
@@ -155,7 +155,7 @@ export default function DuoPage() {
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    !x
+                    次へ
                     <ArrowRight className="w-5 h-5" />
                   </motion.button>
                 </div>
@@ -173,8 +173,8 @@ export default function DuoPage() {
             >
               <div className="bg-white rounded-2xl shadow-xl p-8">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <span className="text-2xl">=e</span>
-                  2��nPrairie Card
+                  <span className="text-2xl">👥</span>
+                  2人目のPrairie Card
                 </h2>
                 
                 <PrairieCardInput
@@ -189,7 +189,7 @@ export default function DuoPage() {
                     className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
                   >
                     <p className="text-green-800 font-semibold">
-                       {profiles[1].name}U�n��ɒ��~W_
+                      ✅ {profiles[1].name}さんのカードを読み込みました
                     </p>
                   </motion.div>
                 )}
@@ -213,7 +213,7 @@ export default function DuoPage() {
                     className="px-6 py-3 rounded-full font-semibold flex items-center gap-2 border-2 border-gray-300 hover:border-gray-400 transition-all"
                   >
                     <ArrowLeft className="w-5 h-5" />
-                    ;�
+                    戻る
                   </motion.button>
                   
                   <motion.button
@@ -228,14 +228,11 @@ export default function DuoPage() {
                     }`}
                   >
                     {diagnosisLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        :�-...
-                      </>
+                      '診断中...'
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5" />
-                        :���
+                        診断開始
                       </>
                     )}
                   </motion.button>
@@ -253,18 +250,18 @@ export default function DuoPage() {
             className="max-w-2xl mx-auto mt-8"
           >
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-semibold mb-4">:��a</h3>
+              <h3 className="text-lg font-semibold mb-4">診断対象</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className={`p-4 rounded-lg ${profiles[0] ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
-                  <p className="text-sm text-gray-600 mb-1">1��</p>
+                  <p className="text-sm text-gray-600 mb-1">1人目</p>
                   <p className="font-semibold">
-                    {profiles[0] ? profiles[0].name : '*-�'}
+                    {profiles[0] ? profiles[0].name : '未設定'}
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg ${profiles[1] ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50 border border-gray-200'}`}>
-                  <p className="text-sm text-gray-600 mb-1">2��</p>
+                  <p className="text-sm text-gray-600 mb-1">2人目</p>
                   <p className="font-semibold">
-                    {profiles[1] ? profiles[1].name : '*-�'}
+                    {profiles[1] ? profiles[1].name : '未設定'}
                   </p>
                 </div>
               </div>
