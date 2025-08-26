@@ -16,13 +16,38 @@ export const PRAIRIE_CARD_URL_PATTERN = /https?:\/\/[^\s]+prairie[^\s]*/i;
 // Prairie Card URL validation helper
 export function isPrairieCardUrl(text: string): boolean {
   if (!text) return false;
-  // Check if text contains prairie.cards or prairie-cards
-  return text.includes('prairie.cards') || text.includes('prairie-cards');
+  
+  // Strict URL validation - same logic as backend
+  try {
+    const url = new URL(text);
+    const validHosts: readonly string[] = PRAIRIE_CARD_HOSTS;
+    return validHosts.includes(url.hostname) || 
+           url.hostname.endsWith('.prairie.cards');
+  } catch {
+    // If not a valid URL, check if text contains prairie.cards
+    // (for backward compatibility with clipboard/NFC partial text)
+    return text.includes('prairie.cards') || text.includes('prairie-cards');
+  }
 }
 
 export function extractPrairieCardUrl(text: string): string | null {
   const match = text.match(PRAIRIE_CARD_URL_PATTERN);
-  return match ? match[0] : null;
+  if (!match) return null;
+  
+  const url = match[0];
+  // Validate the extracted URL
+  try {
+    const parsed = new URL(url);
+    const validHosts: readonly string[] = PRAIRIE_CARD_HOSTS;
+    if (validHosts.includes(parsed.hostname) || 
+        parsed.hostname.endsWith('.prairie.cards')) {
+      return url;
+    }
+  } catch {
+    // Invalid URL
+  }
+  
+  return null;
 }
 
 // Error messages

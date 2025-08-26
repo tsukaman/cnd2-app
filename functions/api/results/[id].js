@@ -1,7 +1,8 @@
 // Results API for Cloudflare Functions
-export async function onRequestGet({ params, env }) {
+export async function onRequestGet({ params, env, request }) {
   const { id } = params;
-  const corsHeaders = getCorsHeaders();
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
   
   try {
     // Fetch from KV if available
@@ -52,9 +53,10 @@ export async function onRequestGet({ params, env }) {
   }
 }
 
-export async function onRequestDelete({ params, env }) {
+export async function onRequestDelete({ params, env, request }) {
   const { id } = params;
-  const corsHeaders = getCorsHeaders();
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
   
   try {
     // Delete from KV if available
@@ -94,8 +96,9 @@ export async function onRequestDelete({ params, env }) {
   }
 }
 
-export async function onRequestOptions() {
-  const corsHeaders = getCorsHeaders();
+export async function onRequestOptions({ request }) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
   
   return new Response(null, {
     status: 200,
@@ -103,9 +106,17 @@ export async function onRequestOptions() {
   });
 }
 
-function getCorsHeaders() {
+function getCorsHeaders(requestOrigin) {
+  const allowedOrigins = [
+    'https://cnd2-app.pages.dev',
+    'https://cnd2.cloudnativedays.jp',
+    'http://localhost:3000',
+  ];
+  
+  const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
+  
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
