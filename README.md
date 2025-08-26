@@ -9,6 +9,7 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
   [![Jest](https://img.shields.io/badge/Jest-30.0-C21325?logo=jest)](https://jestjs.io/)
+  [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
   
   **#CNDxCnD**
 </div>
@@ -22,8 +23,8 @@
 - **2人診断モード**: 2人のエンジニアの相性を詳細に分析
 - **グループ診断モード**: 3-6人のチームの相性と協働可能性を評価（6人なら6²=36通りの相性）
 - **Prairie Card連携**: Prairie Cardから自動的にプロフィール情報を取得
-- **AI診断**: OpenAI GPT-4o-miniを使用した高度な相性分析
-- **結果共有**: QRコードやURLでの診断結果シェア機能
+- **AI診断**: OpenAI GPT-4を使用した高度な相性分析（フォールバック機構付き）
+- **結果共有**: QRコードやNFC、URLでの診断結果シェア機能
 - **美しいUI**: ダークテーマベースの洗練されたデザイン
 - **プライバシー配慮**: 診断結果は7日後に自動削除
 
@@ -33,165 +34,247 @@
 - **Framework**: Next.js 15.5.0 (App Router + Turbopack)
 - **Language**: TypeScript 5.0
 - **Styling**: Tailwind CSS 4.0
-- **Animation**: Framer Motion 12.23, Three.js
+- **Animation**: Framer Motion 12.23, Three.js, GSAP 3.13
 - **Icons**: Lucide React
+- **Validation**: Zod 3.25
 
 ### バックエンド
 - **API Routes**: Next.js App Router API
-- **AI Integration**: OpenAI API (GPT-4o-mini)
+- **AI Integration**: OpenAI API (GPT-4-turbo-preview)
 - **Data Parsing**: Cheerio for Prairie Card scraping
+- **Rate Limiting**: カスタムミドルウェア実装
+- **Error Handling**: 構造化エラーハンドリング
 
 ### テスティング
 - **Test Runner**: Jest 30.0
 - **Testing Library**: React Testing Library 16.3
-- **Coverage**: Unit tests for hooks and components
+- **Coverage**: 63テスト、包括的なカバレージ
 
-### インフラ
-- **Hosting**: Cloudflare Pages/Workers
-- **Domain**: https://cdn2.cloudnativedays.jp (本番環境)
+### インフラ・セキュリティ
+- **Hosting**: Cloudflare Pages/Workers対応
+- **Environment Validation**: Zodによる型安全な環境変数
+- **API Security**: レート制限、CORS、リクエストID追跡
+- **Secrets Management**: サーバーサイドのみでのAPIキー管理
 
 ## 📦 インストール
 
+### 前提条件
+- Node.js 20.0.0以上
+- npm 10.0.0以上
+
+### セットアップ
+
 ```bash
-# リポジトリのクローン
+# リポジトリをクローン
 git clone https://github.com/tsukaman/cnd2-app.git
 cd cnd2-app
 
-# 依存関係のインストール
+# 依存関係をインストール
 npm install
 
-# 環境変数の設定
+# 環境変数を設定
 cp .env.example .env.local
-# .env.localにOpenAI APIキーを設定
+# .env.localを編集して必要な値を設定
 ```
 
-### 環境変数
+### 環境変数の設定
 
 `.env.local`ファイルに以下の環境変数を設定してください：
 
-```env
-# OpenAI API設定
-OPENAI_API_KEY=your_openai_api_key_here
+```bash
+# OpenAI API（必須）
+OPENAI_API_KEY=your-api-key-here
 
-# アプリケーション設定
-NEXT_PUBLIC_APP_NAME=CND²
-NEXT_PUBLIC_HASHTAG=#CNDxCnD
-NEXT_PUBLIC_PRAIRIE_URL=https://my.prairie.cards
-NEXT_PUBLIC_CND2_API=http://localhost:3000/api
+# アプリケーションURL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# その他の設定は.env.exampleを参照
 ```
 
-## 🛠️ 開発
+## 🔧 開発
 
 ```bash
-# 開発サーバーの起動 (Turbopack使用)
+# 開発サーバーを起動（Turbopack使用）
 npm run dev
 
-# プロダクションビルド
-npm run build
+# テストを実行
+npm test
 
-# プロダクションサーバーの起動
-npm start
+# テストカバレージを確認
+npm test -- --coverage
 
-# Lintの実行
+# リント実行
 npm run lint
 
-# テストの実行
-npm test
+# 型チェック
+npm run type-check
 
-# テストをwatchモードで実行
-npm run test:watch
+# ビルド
+npm run build
 
-# カバレッジレポートの生成
-npm run test:coverage
+# プロダクションモードで起動
+npm start
 ```
 
-## 🧪 テスト
+## 🏗️ アーキテクチャ
 
-現在、以下のテストが実装されています：
-
-- ✅ `MenuCard`コンポーネントのユニットテスト
-- ✅ `usePrairieCard`フックのテスト（100%カバレッジ）
-- ✅ `useDiagnosis`フックのテスト（100%カバレッジ）
-
-```bash
-# テスト実行
-npm test
-
-# カバレッジ確認
-npm run test:coverage
-```
-
-## 📁 プロジェクト構造
+### ディレクトリ構造
 
 ```
 cnd2-app/
 ├── src/
-│   ├── app/                  # Next.js App Router
-│   │   ├── api/              # API Routes
-│   │   │   ├── diagnosis/    # 診断API
-│   │   │   ├── prairie/      # Prairie Card取得API
-│   │   │   └── results/      # 結果取得API
-│   │   ├── duo/              # 2人診断ページ
-│   │   ├── group/            # グループ診断ページ
-│   │   ├── result/           # 結果表示ページ
-│   │   └── page.tsx          # ホームページ
-│   ├── components/           # Reactコンポーネント
-│   │   ├── ui/               # UIコンポーネント
-│   │   ├── effects/          # アニメーション効果
-│   │   ├── prairie/          # Prairie Card関連
-│   │   ├── diagnosis/        # 診断結果表示
-│   │   └── share/            # 共有機能
-│   ├── hooks/                # カスタムフック
-│   ├── lib/                  # ユーティリティ関数
-│   ├── types/                # TypeScript型定義
-│   └── config/               # 設定ファイル
-├── public/                   # 静的ファイル
-│   └── images/              # ロゴ・画像
-├── jest.config.js           # Jest設定
-├── tailwind.config.ts       # Tailwind CSS設定
-└── next.config.ts           # Next.js設定
+│   ├── app/                    # Next.js App Router
+│   │   ├── api/                # APIルート
+│   │   │   ├── diagnosis/      # 診断API
+│   │   │   └── prairie/        # Prairie Card API
+│   │   ├── (main)/            # メインレイアウト
+│   │   ├── result/            # 結果ページ
+│   │   └── layout.tsx         # ルートレイアウト
+│   ├── components/             # Reactコンポーネント
+│   │   ├── diagnosis/         # 診断関連
+│   │   ├── prairie/           # Prairie Card関連
+│   │   ├── share/             # 共有機能
+│   │   └── ui/                # 汎用UIコンポーネント
+│   ├── hooks/                  # カスタムフック
+│   ├── lib/                    # ユーティリティ
+│   │   ├── api-middleware.ts  # APIミドルウェア
+│   │   ├── api-errors.ts      # エラーハンドリング
+│   │   ├── env.ts             # 環境変数検証
+│   │   └── rate-limit.ts      # レート制限
+│   └── types/                  # TypeScript型定義
+├── public/                     # 静的ファイル
+├── __tests__/                  # テストファイル
+└── package.json
 ```
 
-## 🎨 デザインシステム
+### 主要な実装
 
-### カラーパレット
+#### APIミドルウェア
+- リクエスト/レスポンスロギング
+- エラーハンドリング
+- レート制限（100リクエスト/分）
+- リクエストID追跡
 
-- **Primary**: Orange gradient (#FBBF24 → #FB923C → #F97316 → #DC2626)
-- **Secondary**: Purple (#C084FC)
-- **Accent**: Blue (#60A5FA)
-- **Background**: Dark navy gradient (#0F172A → #1E1B4B → #1E293B)
-- **Text**: Light gray (#F1F5F9) on dark backgrounds
+#### 診断エンジン
+- AI診断（OpenAI GPT-4）
+- ルールベース診断（フォールバック）
+- キャッシュ機構
+- 並列処理対応
 
-### 主要コンポーネント
+#### Prairie Card連携
+- プロフィール自動取得
+- データ正規化
+- エラー処理
 
-- グラデーションテキスト効果
-- ガラスモーフィズムカード
-- アニメーション背景効果（星空パターン）
-- レスポンシブレイアウト
+## 🧪 テスト
 
-### アクセシビリティ
+```bash
+# 全テストを実行
+npm test
 
-- WCAG準拠のコントラスト比
-- キーボードナビゲーション対応
-- モーション設定を尊重（prefers-reduced-motion）
+# 特定のテストファイルを実行
+npm test -- src/lib/__tests__/api-middleware.test.ts
 
-## 🗓 開発スケジュール
+# ウォッチモードで実行
+npm test -- --watch
 
-- **2025年8月**: プロジェクト開始、UI/UXデザイン完成
-- **2025年9月**: コア機能実装、Prairie Card連携
-- **2025年10月**: テスト自動化、パフォーマンス最適化
-- **2025年11月上旬**: 本番環境準備、負荷テスト
-- **2025年11月18-19日**: CloudNative Days Winter 2025で本番稼働
+# カバレージレポートを生成
+npm test -- --coverage
+```
 
-## 🤝 コントリビューション
+### テストカバレージ
+- コンポーネントテスト: ✅
+- フックテスト: ✅
+- APIミドルウェアテスト: ✅
+- 環境変数検証テスト: ✅
 
-プルリクエストを歓迎します！大きな変更の場合は、まずissueを開いて変更内容について議論してください。
+## 📚 API仕様
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### POST /api/diagnosis
+Prairie Cardのプロフィール情報から相性診断を生成
+
+```typescript
+// リクエスト
+{
+  profiles: PrairieProfile[],
+  mode: 'duo' | 'group'
+}
+
+// レスポンス
+{
+  success: true,
+  data: {
+    result: DiagnosisResult,
+    aiPowered: boolean
+  }
+}
+```
+
+### POST /api/prairie
+Prairie CardのURLからプロフィール情報を取得
+
+```typescript
+// リクエスト
+{
+  url: string
+}
+
+// レスポンス
+{
+  success: true,
+  data: {
+    profile: PrairieProfile,
+    cacheStats: CacheStats
+  }
+}
+```
+
+## 🔒 セキュリティ
+
+- **環境変数検証**: Zodによる厳密な型チェック
+- **APIキー保護**: サーバーサイドのみでアクセス可能
+- **レート制限**: 悪用防止のための制限機構
+- **CORS設定**: 適切なオリジン制御
+- **XSS対策**: React標準のエスケープ処理
+- **CSRFトークン**: Next.jsの標準実装
+
+## 🚀 デプロイ
+
+### Vercel（推奨）
+```bash
+# Vercel CLIをインストール
+npm i -g vercel
+
+# デプロイ
+vercel
+```
+
+### Cloudflare Pages
+```bash
+# ビルド
+npm run build
+
+# outディレクトリをCloudflare Pagesにアップロード
+```
+
+### Docker
+```bash
+# イメージをビルド
+docker build -t cnd2-app .
+
+# コンテナを起動
+docker run -p 3000:3000 cnd2-app
+```
+
+## 🤝 貢献
+
+貢献を歓迎します！詳細は[CONTRIBUTING.md](./CONTRIBUTING.md)をご覧ください。
+
+1. フォーク
+2. 機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'feat: Add amazing feature'`)
+4. プッシュ (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成
 
 ## 👨‍💻 作者
 
@@ -205,27 +288,19 @@ cnd2-app/
 
 - [CloudNative Days Committee](https://cloudnativedays.jp/) - イベント主催
 - [Prairie Card](https://prairie.cards/) - プロフィールシステム提供（Powered by Prairie Card）
+- [Claude](https://claude.ai) - AI開発アシスタント
 - すべてのコントリビューターとテスター
 
-## 🔗 関連リンク
+## 📊 プロジェクトステータス
 
-- [CloudNative Days Winter 2025](https://event.cloudnativedays.jp/cndw2025)
-- [Prairie Card](https://my.prairie.cards)
-- [#CNDxCnD](https://twitter.com/hashtag/CNDxCnD)
-
-## 📧 お問い合わせ
-
-- **開発者**: つかまん
-- **Prairie Card**: https://my.prairie.cards/u/tsukaman
-- **Email**: tsukaman@mac.com
-- **Issue Tracker**: [GitHub Issues](https://github.com/tsukaman/cnd2-app/issues)
+- **バージョン**: 1.0.0
+- **ステータス**: Production Ready
+- **最終更新**: 2025年8月26日
+- **テスト**: 全63テスト合格 ✅
+- **ビルド**: 成功 ✅
 
 ---
 
 <div align="center">
   Made with ❤️ for CloudNative Days Winter 2025
-  
-  **Connect Your Future | Discover Your Match | Scale Your Network | Code × Community**
-  
-  **#CNDxCnD #CNDW2025**
 </div>
