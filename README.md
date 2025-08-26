@@ -44,11 +44,14 @@
 - **Validation**: Zod 3.25
 
 ### バックエンド
-- **API Routes**: Next.js App Router API
-- **AI Integration**: OpenAI API (GPT-4-turbo-preview)
-- **Data Parsing**: Cheerio for Prairie Card scraping
+- **API Routes**: Next.js App Router API (Edge Runtime)
+- **Edge Functions**: Cloudflare Workers Functions対応
+- **AI Integration**: OpenAI API (GPT-4o-mini) with 10s timeout
+- **Data Storage**: Cloudflare Workers KV (7日間自動削除)
+- **Data Parsing**: Edge-compatible Prairie Card parser
 - **Rate Limiting**: カスタムミドルウェア実装
-- **Error Handling**: 構造化エラーハンドリング
+- **Error Handling**: 構造化エラーハンドリング + 環境別ログレベル制御
+- **CORS**: 複数オリジンサポート（環境変数設定可能）
 
 ### テスティング
 - **Test Runner**: Jest 30.0
@@ -57,10 +60,14 @@
 
 ### インフラ・モニタリング
 - **Hosting**: Cloudflare Pages/Workers (推奨)
-- **Storage**: Cloudflare Workers KV (診断結果の永続化)
+- **Storage**: Cloudflare Workers KV (診断結果の永続化、LocalStorageフォールバック付き)
 - **Monitoring**: Sentry (エラートラッキング、パフォーマンス監視)
+- **Logging**: 環境別ログレベル制御（本番環境で機密情報自動サニタイズ）
 - **Environment Validation**: Zodによる型安全な環境変数
-- **API Security**: レート制限、CORS、リクエストID追跡
+- **API Security**: 
+  - レート制限、リクエストID追跡
+  - CORS（複数オリジンサポート）
+  - APIタイムアウト（10秒）
 - **Secrets Management**: サーバーサイドのみでのAPIキー管理
 - **CSP**: Content Security Policy設定（XSS対策強化）
 
@@ -103,6 +110,12 @@ OPENAI_API_KEY=your-api-key-here
 # アプリケーションURL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
+# CORS設定（オプション、カンマ区切り）
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+
+# 環境設定
+NODE_ENV=development  # development | production
+
 # Sentry設定（オプション）
 SENTRY_DSN=your-sentry-dsn
 NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
@@ -137,6 +150,25 @@ npm run analyze
 # プロダクションモードで起動
 npm start
 ```
+
+## 🚧 APIエンドポイント
+
+### `/api/diagnosis` - 診断実行
+- **Method**: POST
+- **Body**: `{ mode: 'duo' | 'group', participants: [...] }`
+- **Response**: 診断結果（AIフォールバック付き）
+- **Features**: 10秒タイムアウト、KV保存
+
+### `/api/prairie` - Prairie Card解析
+- **Method**: POST  
+- **Body**: `{ url: string } | { html: string }`
+- **Response**: プロフィール情報
+- **Features**: Edge Runtime対応パーサー
+
+### `/api/results/[id]` - 結果取得/削除
+- **Methods**: GET, DELETE
+- **Response**: 保存された診断結果
+- **Features**: KVまたはLocalStorageから取得
 
 ## 🏗️ アーキテクチャ
 
@@ -335,6 +367,15 @@ docker run -p 3000:3000 cnd2-app
 
 このプロジェクトはApache License 2.0の下で公開されています。詳細は[LICENSE](./LICENSE)ファイルをご覧ください。
 
+## 🌟 最近の更新
+
+### v1.1.0 (2025-01-27)
+- 🚀 Cloudflare Workers Functions API実装
+- 💾 Workers KVによる結果永続化（7日間自動削除）
+- 🔒 セキュリティ強化（CORS、ログサニタイズ）
+- ⚡ APIタイムアウト設定（10秒）
+- 📝 環境別ログレベル制御
+
 ## 🙏 謝辞
 
 - [CloudNative Days Committee](https://cloudnativedays.jp/) - イベント主催
@@ -344,12 +385,16 @@ docker run -p 3000:3000 cnd2-app
 
 ## 📊 プロジェクトステータス
 
-- **バージョン**: 1.0.0
+- **バージョン**: 1.1.0
 - **ステータス**: Production Ready
-- **最終更新**: 2025年8月26日
+- **最終更新**: 2025年1月27日
 - **テスト**: 全63テスト合格 ✅
 - **ビルド**: 成功 ✅
-- **セキュリティ**: CSP強化済み ✅
+- **API**: Cloudflare Workers Functions実装済み ✅
+- **セキュリティ**: 
+  - CSP強化済み ✅
+  - CORS設定最適化 ✅
+  - 機密情報サニタイズ ✅
 - **モニタリング**: Sentry統合済み ✅
 
 ---
