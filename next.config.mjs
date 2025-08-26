@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Output configuration for Cloudflare Pages
-  // Static export for simpler deployment
-  output: 'export',
+  // Note: Using standard build, will deploy with @cloudflare/next-on-pages adapter
   
   // Enable React strict mode for better development experience
   reactStrictMode: true,
