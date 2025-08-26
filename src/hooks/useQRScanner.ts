@@ -1,4 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { 
+  QR_SCAN_INTERVAL_MS, 
+  QR_CAMERA_WIDTH_IDEAL,
+  QR_CAMERA_HEIGHT_IDEAL,
+  VIDEO_READY_STATE,
+  PRAIRIE_CARD_HOSTS,
+  CAMERA_ERROR_MESSAGES 
+} from '@/constants/scanner';
 
 interface UseQRScannerReturn {
   isSupported: boolean;
@@ -18,7 +26,7 @@ export function useQRScanner(): UseQRScannerReturn {
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Check if camera API is supported
@@ -37,15 +45,15 @@ export function useQRScanner(): UseQRScannerReturn {
 
     const video = videoRef.current;
     
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    if (video.readyState === VIDEO_READY_STATE.HAVE_ENOUGH_DATA) {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       
       try {
         // Use the BarcodeDetector API if available
-        if ('BarcodeDetector' in window) {
-          const barcodeDetector = new (window as any).BarcodeDetector({
+        if (window.BarcodeDetector) {
+          const barcodeDetector = new window.BarcodeDetector({
             formats: ['qr_code']
           });
           const barcodes = await barcodeDetector.detect(canvas);
@@ -67,15 +75,15 @@ export function useQRScanner(): UseQRScannerReturn {
       }
     }
     
-    // Continue scanning
+    // Continue scanning with frame rate control
     if (isScanning) {
-      animationFrameRef.current = requestAnimationFrame(detectQRCode);
+      scanTimeoutRef.current = setTimeout(detectQRCode, QR_SCAN_INTERVAL_MS);
     }
   }, [isScanning]);
 
   const startScan = useCallback(async () => {
     if (!isSupported) {
-      setError('カメラアクセスがサポートされていません');
+      setError(CAMERA_ERROR_MESSAGES.NOT_SUPPORTED);
       return;
     }
 
@@ -86,8 +94,8 @@ export function useQRScanner(): UseQRScannerReturn {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment', // Use back camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: QR_CAMERA_WIDTH_IDEAL },
+          height: { ideal: QR_CAMERA_HEIGHT_IDEAL }
         }
       });
 
@@ -105,16 +113,16 @@ export function useQRScanner(): UseQRScannerReturn {
       
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          setError('カメラへのアクセスが拒否されました。設定でカメラの権限を許可してください。');
+          setError(CAMERA_ERROR_MESSAGES.PERMISSION_DENIED);
         } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-          setError('カメラが見つかりません。');
+          setError(CAMERA_ERROR_MESSAGES.NOT_FOUND);
         } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-          setError('カメラが他のアプリケーションで使用されています。');
+          setError(CAMERA_ERROR_MESSAGES.IN_USE);
         } else {
           setError(`カメラアクセスエラー: ${err.message}`);
         }
       } else {
-        setError('カメラの起動に失敗しました');
+        setError(CAMERA_ERROR_MESSAGES.GENERIC);
       }
       
       setIsScanning(false);
@@ -135,10 +143,10 @@ export function useQRScanner(): UseQRScannerReturn {
       videoRef.current.srcObject = null;
     }
     
-    // Cancel animation frame
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
+    // Cancel scan timeout
+    if (scanTimeoutRef.current) {
+      clearTimeout(scanTimeoutRef.current);
+      scanTimeoutRef.current = null;
     }
   }, []);
 

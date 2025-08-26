@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-
-interface NFCReadResult {
-  url: string | null;
-  error: string | null;
-}
+import { 
+  NFC_ERROR_MESSAGES,
+  PRAIRIE_CARD_URL_PATTERN 
+} from '@/constants/scanner';
 
 interface UseNFCReturn {
   isSupported: boolean;
@@ -15,11 +14,7 @@ interface UseNFCReturn {
   clearError: () => void;
 }
 
-declare global {
-  interface Window {
-    NDEFReader?: any;
-  }
-}
+// TypeScript definitions are now in types/barcode.d.ts
 
 export function useNFC(): UseNFCReturn {
   const [isSupported, setIsSupported] = useState(false);
@@ -30,14 +25,15 @@ export function useNFC(): UseNFCReturn {
 
   useEffect(() => {
     // Check if Web NFC API is supported
-    if ('NDEFReader' in window) {
+    // Web NFC is only available on Android Chrome/Edge with HTTPS
+    if (window.NDEFReader) {
       setIsSupported(true);
     }
   }, []);
 
   const startScan = useCallback(async () => {
     if (!isSupported) {
-      setError('NFC is not supported on this device');
+      setError(NFC_ERROR_MESSAGES.NOT_SUPPORTED);
       return;
     }
 
@@ -45,13 +41,13 @@ export function useNFC(): UseNFCReturn {
     setIsScanning(true);
 
     try {
-      const ndef = new (window as any).NDEFReader();
+      const ndef = new window.NDEFReader!();
       const controller = new AbortController();
       setAbortController(controller);
 
       await ndef.scan({ signal: controller.signal });
 
-      ndef.addEventListener('reading', ({ message }: any) => {
+      ndef.addEventListener('reading', ({ message }: NDEFReadingEvent) => {
         console.log(`> NFC Message received from ${message.serialNumber}`);
         
         // Process NFC records
@@ -93,7 +89,7 @@ export function useNFC(): UseNFCReturn {
               const data = textDecoder.decode(record.data);
               
               // Try to extract URL from the data
-              const urlMatch = data.match(/https?:\/\/[^\s]+prairie[^\s]*/i);
+              const urlMatch = data.match(PRAIRIE_CARD_URL_PATTERN);
               if (urlMatch) {
                 setLastReadUrl(urlMatch[0]);
                 setIsScanning(false);
@@ -108,7 +104,7 @@ export function useNFC(): UseNFCReturn {
       });
 
       ndef.addEventListener('readingerror', () => {
-        setError('Cannot read NFC tag. Please try again.');
+        setError(NFC_ERROR_MESSAGES.READ_ERROR);
         setIsScanning(false);
       });
 
@@ -117,17 +113,17 @@ export function useNFC(): UseNFCReturn {
       
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError') {
-          setError('NFC permission denied. Please enable NFC in your browser settings.');
+          setError(NFC_ERROR_MESSAGES.PERMISSION_DENIED);
         } else if (err.name === 'NotSupportedError') {
-          setError('NFC is not supported on this device or browser.');
+          setError(NFC_ERROR_MESSAGES.NOT_SUPPORTED_BROWSER);
         } else if (err.name === 'AbortError') {
           // Scan was aborted, not an error
           console.log('NFC scan aborted');
         } else {
-          setError(`NFC scan failed: ${err.message}`);
+          setError(`${NFC_ERROR_MESSAGES.SCAN_FAILED}: ${err.message}`);
         }
       } else {
-        setError('An unknown error occurred while scanning NFC');
+        setError(NFC_ERROR_MESSAGES.UNKNOWN);
       }
       
       setIsScanning(false);

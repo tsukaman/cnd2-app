@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { PRAIRIE_CARD_URL_PATTERN } from '@/constants/scanner';
 
 interface UseClipboardPasteReturn {
   isSupported: boolean;
@@ -51,7 +52,7 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
       const text = e.clipboardData?.getData('text');
       
       if (text && isPrairieCardUrl(text)) {
-        const urlMatch = text.match(/https?:\/\/[^\s]+prairie[^\s]*/i);
+        const urlMatch = text.match(PRAIRIE_CARD_URL_PATTERN);
         if (urlMatch) {
           setLastPastedUrl(urlMatch[0]);
         }
