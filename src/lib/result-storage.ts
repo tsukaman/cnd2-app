@@ -28,7 +28,7 @@ export class ResultStorage {
         const results = JSON.parse(stored);
         results[id] = {
           ...result,
-          createdAt: result.createdAt.toISOString(),
+          createdAt: result.createdAt,
         };
         localStorage.setItem('cnd2_results', JSON.stringify(results));
       } catch (error) {
@@ -54,8 +54,7 @@ export class ResultStorage {
           const results = JSON.parse(stored);
           if (results[id]) {
             const result = results[id];
-            // 日付を復元
-            result.createdAt = new Date(result.createdAt);
+            // createdAt is already a string ISO format
             return result;
           }
         }
@@ -84,7 +83,7 @@ export class ResultStorage {
             const diagnosisResult = result as DiagnosisResult;
             // 重複チェック
             if (!results.find(r => r.id === diagnosisResult.id)) {
-              diagnosisResult.createdAt = new Date(diagnosisResult.createdAt);
+              // createdAt is already a string ISO format
               results.push(diagnosisResult);
             }
           });
@@ -104,7 +103,7 @@ export class ResultStorage {
     
     // メモリから削除
     this.results.forEach((result, id) => {
-      if (result.createdAt.getTime() < sevenDaysAgo) {
+      if (new Date(result.createdAt).getTime() < sevenDaysAgo) {
         this.results.delete(id);
         console.log(`[CND²] 古い結果を削除: ${id}`);
       }
@@ -155,7 +154,7 @@ export class ResultStorage {
     const oneDayAgo = now - (24 * 60 * 60 * 1000);
     
     const recentCount = all.filter(r => 
-      r.createdAt.getTime() > oneDayAgo
+      new Date(r.createdAt).getTime() > oneDayAgo
     ).length;
     
     return {

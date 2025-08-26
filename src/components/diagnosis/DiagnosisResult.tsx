@@ -253,7 +253,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
         resultId={result.id}
-        score={result.score}
+        score={result.compatibility ?? result.score ?? 85}
       />
 
       {/* Toast notification */}
