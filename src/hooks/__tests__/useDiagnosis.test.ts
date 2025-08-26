@@ -19,16 +19,42 @@ describe('useDiagnosis', () => {
 
   const mockProfiles: PrairieProfile[] = [
     {
-      name: 'User 1',
-      title: 'Developer',
-      skills: ['React', 'TypeScript'],
+      basic: {
+        name: 'User 1',
+        title: 'Developer',
+        company: 'Tech Corp',
+        bio: 'Developer bio',
+      },
+      details: {
+        tags: [],
+        skills: ['React', 'TypeScript'],
+        interests: [],
+        certifications: [],
+        communities: [],
+      },
+      social: {},
+      custom: {},
+      meta: {},
     },
     {
-      name: 'User 2',
-      title: 'Designer',
-      skills: ['Figma', 'CSS'],
+      basic: {
+        name: 'User 2',
+        title: 'Designer',
+        company: 'Design Studio',
+        bio: 'Designer bio',
+      },
+      details: {
+        tags: [],
+        skills: ['Figma', 'CSS'],
+        interests: [],
+        certifications: [],
+        communities: [],
+      },
+      social: {},
+      custom: {},
+      meta: {},
     },
-  ] as PrairieProfile[];
+  ];
 
   it('initializes with correct default state', () => {
     const { result } = renderHook(() => useDiagnosis());
@@ -57,7 +83,7 @@ describe('useDiagnosis', () => {
 
     const { result } = renderHook(() => useDiagnosis());
 
-    let diagnosis;
+    let diagnosis: any;
     await act(async () => {
       diagnosis = await result.current.generateDiagnosis(mockProfiles, 'duo');
     });
@@ -97,7 +123,7 @@ describe('useDiagnosis', () => {
 
     const { result } = renderHook(() => useDiagnosis());
 
-    let diagnosis;
+    let diagnosis: any;
     await act(async () => {
       diagnosis = await result.current.generateDiagnosis(mockProfiles, 'duo');
     });

@@ -43,8 +43,8 @@ async function generateAIDiagnosis(
 
   // Prepare profile summaries for the prompt
   const profileSummaries = profiles.map((profile, index) => {
-    const skills = profile.skills?.join(', ') || 'スキル情報なし';
-    const interests = profile.interests?.join(', ') || '興味分野なし';
+    const skills = profile.details.skills?.join(', ') || 'スキル情報なし';
+    const interests = profile.details.interests?.join(', ') || '興味分野なし';
     const bio = profile.basic.bio || '自己紹介なし';
     
     return `
@@ -113,9 +113,9 @@ async function generateAIDiagnosis(
     
     return {
       score: fallbackResult.score,
-      summary: fallbackResult.summary,
-      details: fallbackResult.analysis.details.join('\n'),
-      advice: fallbackResult.advice.join('\n'),
+      summary: fallbackResult.message,
+      details: fallbackResult.conversationStarters.join('\n'),
+      advice: fallbackResult.hiddenGems,
     };
   }
 }
@@ -143,19 +143,17 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       // Use AI-powered diagnosis
       const aiResult = await generateAIDiagnosis(profiles, mode);
       
-      // Structure the result to match expected format
+      // Structure the result to match DiagnosisResult format
       result = {
         id: crypto.randomUUID(),
+        type: 'AI-Powered診断',
         score: aiResult.score,
-        summary: aiResult.summary,
-        analysis: {
-          strengths: [],
-          opportunities: [],
-          challenges: [],
-          details: aiResult.details.split('\n').filter(Boolean),
-        },
-        advice: aiResult.advice.split('\n').filter(Boolean),
-        createdAt: new Date().toISOString(),
+        message: aiResult.summary,
+        conversationStarters: aiResult.details.split('\n').filter(Boolean),
+        hiddenGems: aiResult.advice,
+        shareTag: `相性${aiResult.score}%！ #CNDxCnD で出会いを二乗でスケール中！`,
+        participants: profiles,
+        createdAt: new Date(),
       };
     } else {
       // Fall back to rule-based engine
