@@ -39,7 +39,6 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
           NODE_ENV: production
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        continue-on-error: true # Allow build errors for now
           
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1

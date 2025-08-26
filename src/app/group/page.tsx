@@ -51,7 +51,10 @@ export default function GroupPage() {
     if (validProfiles.length >= 3) {
       const result = await generateDiagnosis(validProfiles, 'group');
       if (result) {
-        router.push(`/result/${result.id}`);
+        // Store result in localStorage for now (until deployment is fixed)
+        localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
+        // Navigate to home with result in state
+        router.push(`/?result=${result.id}&mode=group`);
       }
     }
   };

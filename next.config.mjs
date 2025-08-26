@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Output configuration for Cloudflare Pages
-  // Note: Using standard build to enable API routes with Cloudflare Functions
-  // Will deploy with @cloudflare/next-on-pages adapter
+  // Static export for Cloudflare Pages
+  // API routes deployed as Cloudflare Functions
+  output: 'export',
+  
+  // Disable trailing slash to match Cloudflare Pages routing
+  trailingSlash: false,
   
   // Enable React strict mode for better development experience
   reactStrictMode: true,
