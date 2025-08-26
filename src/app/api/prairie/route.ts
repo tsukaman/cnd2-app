@@ -1,48 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrairieCardParser } from '@/lib/prairie-card-parser';
+import { ApiError } from '@/lib/api-errors';
 
-// Edge Runtimeを使用
 export const runtime = 'edge';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { url, html } = body;
+    const { url, html } = await request.json();
     
     if (!url && !html) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Either url or html must be provided',
-        },
-        { status: 400 }
-      );
+      throw ApiError.validation('URL or HTML content is required');
     }
     
     const parser = new PrairieCardParser();
     let prairieData;
     
     if (html) {
-      // HTMLから直接解析
+      // HTMLから直接パース
       prairieData = await parser.parseFromHTML(html);
     } else {
-      // URLから取得して解析
+      // URLから取得してパース
       prairieData = await parser.parseFromURL(url);
     }
     
     return NextResponse.json({
       success: true,
       data: prairieData,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Prairie API] Error:', error);
+    console.error('Prairie API error:', error);
+    
+    if (error instanceof ApiError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
     
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to parse Prairie Card',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { success: false, error: 'Failed to parse Prairie Card' },
       { status: 500 }
     );
   }

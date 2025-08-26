@@ -1,44 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateDiagnosisRequest } from '@/lib/validators/diagnosis';
-import { DiagnosisEngine } from '@/lib/diagnosis-engine-v2';
+import { ApiError } from '@/lib/api-errors';
 
-// Edge Runtimeを使用
 export const runtime = 'edge';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    
-    // リクエストのバリデーション
+    // リクエストの検証
+    const body = await request.json();
     const validatedData = validateDiagnosisRequest(body);
     
-    // 診断エンジンの実行
+    // 診断エンジンの実行（動的インポート）
+    const { DiagnosisEngine } = await import('@/lib/diagnosis-engine-v2');
     const engine = new DiagnosisEngine();
     const result = await engine.diagnose(validatedData);
     
     return NextResponse.json({
       success: true,
-      data: result,
+      result,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Diagnosis API] Error:', error);
+    console.error('Diagnosis API error:', error);
     
-    if (error instanceof Error && error.message.includes('validation')) {
+    if (error instanceof ApiError) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid request data',
-          details: error.message,
-        },
-        { status: 400 }
+        { success: false, error: error.message },
+        { status: error.statusCode }
       );
     }
     
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to process diagnosis',
-      },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
