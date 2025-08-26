@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import * as cheerio from 'cheerio';
 
 // Prairie Card URL validation - strict security
 const ALLOWED_PRAIRIE_HOSTS = new Set([
@@ -34,51 +33,55 @@ function escapeHtml(unsafe: string | undefined): string {
 }
 
 
-// Parse Prairie Card HTML using cheerio for security
+// Parse Prairie Card HTML using regex for Edge Runtime compatibility
 function parseFromHTML(html: string) {
-  const $ = cheerio.load(html, {
-    scriptingEnabled: false,
-    xml: false
-  });
+  // Remove script tags and their content for security
+  const cleanHtml = html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
   
-  // Safely extract text content
-  const extractText = (selector: string): string => {
-    return $(selector).first().text().trim() || '';
+  // Extract text content safely using regex
+  const extractText = (pattern: RegExp): string => {
+    const match = cleanHtml.match(pattern);
+    if (match && match[1]) {
+      // Remove HTML tags from extracted content
+      return match[1].replace(/<[^>]+>/g, '').trim();
+    }
+    return '';
   };
   
-  const extractArray = (selector: string): string[] => {
-    const items: string[] = [];
-    $(selector).each((_, elem) => {
-      const text = $(elem).text().trim();
-      if (text) items.push(text);
-    });
-    return items;
+  const extractArray = (pattern: RegExp): string[] => {
+    const matches = Array.from(cleanHtml.matchAll(pattern));
+    return matches.map(m => {
+      if (m[1]) {
+        // Remove HTML tags from extracted content
+        return m[1].replace(/<[^>]+>/g, '').trim();
+      }
+      return '';
+    }).filter(Boolean);
   };
   
   // Extract social URLs safely
   const extractSocialLink = (domain: string): string | undefined => {
-    let url: string | undefined;
-    $('a[href]').each((_, elem) => {
-      const href = $(elem).attr('href');
-      if (href && href.includes(domain)) {
-        url = href;
-        return false; // break the loop
-      }
-    });
-    return url;
+    const pattern = new RegExp(
+      `https?://(?:www\\.)?${domain.replace('.', '\\.')}[^"'\\s<>]+`,
+      'i'
+    );
+    const match = cleanHtml.match(pattern);
+    return match ? match[0] : undefined;
   };
   
   return {
-    name: extractText('h1') || 'CloudNative Enthusiast',
-    bio: extractText('.bio, [class*="bio"]') || 'クラウドネイティブ技術に情熱を注ぐエンジニア',
-    title: extractText('.title, [class*="title"]') || '',
-    company: extractText('.company, [class*="company"]') || '',
-    interests: extractArray('.interest, [class*="interest"]').length > 0 
-      ? extractArray('.interest, [class*="interest"]')
+    name: escapeHtml(extractText(/<h1[^>]*>([^<]+)<\/h1>/i)) || 'CloudNative Enthusiast',
+    bio: escapeHtml(extractText(/<div[^>]*class="[^"]*bio[^"]*"[^>]*>([^<]+)<\/div>/i)) || 'クラウドネイティブ技術に情熱を注ぐエンジニア',
+    title: escapeHtml(extractText(/<div[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
+    company: escapeHtml(extractText(/<div[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
+    interests: extractArray(/<span[^>]*class="[^"]*interest[^"]*"[^>]*>([^<]+)<\/span>/gi).map(escapeHtml).filter(Boolean).length > 0
+      ? extractArray(/<span[^>]*class="[^"]*interest[^"]*"[^>]*>([^<]+)<\/span>/gi).map(escapeHtml).filter(Boolean)
       : ['Kubernetes', 'Docker', 'CI/CD', 'Observability'],
-    skills: extractArray('.skill, [class*="skill"]'),
-    tags: extractArray('.tag, [class*="tag"]').length > 0
-      ? extractArray('.tag, [class*="tag"]')
+    skills: extractArray(/<span[^>]*class="[^"]*skill[^"]*"[^>]*>([^<]+)<\/span>/gi).map(escapeHtml).filter(Boolean),
+    tags: extractArray(/<span[^>]*class="[^"]*tag[^"]*"[^>]*>([^<]+)<\/span>/gi).map(escapeHtml).filter(Boolean).length > 0
+      ? extractArray(/<span[^>]*class="[^"]*tag[^"]*"[^>]*>([^<]+)<\/span>/gi).map(escapeHtml).filter(Boolean)
       : ['#CloudNative', '#DevOps', '#SRE'],
     twitter: extractSocialLink('twitter.com') || extractSocialLink('x.com'),
     github: extractSocialLink('github.com'),
