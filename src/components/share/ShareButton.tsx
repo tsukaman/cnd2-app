@@ -59,23 +59,12 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
   };
   
   const handleNfcWrite = async () => {
-    if ('NDEFReader' in window) {
+    if (window.NDEFReader) {
       setNfcWriting(true);
       try {
-        // @ts-expect-error - NDEFReader is not in TypeScript types yet
-        const ndef = new NDEFReader();
-        await ndef.write({
-          records: [
-            {
-              recordType: 'url',
-              data: shareUrl,
-            },
-            {
-              recordType: 'text',
-              data: shareText,
-            },
-          ],
-        });
+        const ndef = new window.NDEFReader!();
+        // Write URL directly as a string
+        await ndef.write(shareUrl);
         toast.success('NFCタグに書き込みました');
       } catch (error) {
         console.error('NFC write failed:', error);

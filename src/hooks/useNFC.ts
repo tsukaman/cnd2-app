@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-
-interface NFCReadResult {
-  url: string | null;
-  error: string | null;
-}
+import { 
+  NFC_ERROR_MESSAGES,
+  PRAIRIE_CARD_URL_PATTERN,
+  isPrairieCardUrl,
+  extractPrairieCardUrl
+} from '@/constants/scanner';
+import { logger } from '@/lib/logger';
 
 interface UseNFCReturn {
   isSupported: boolean;
@@ -15,11 +17,7 @@ interface UseNFCReturn {
   clearError: () => void;
 }
 
-declare global {
-  interface Window {
-    NDEFReader?: any;
-  }
-}
+// TypeScript definitions are now in types/barcode.d.ts
 
 export function useNFC(): UseNFCReturn {
   const [isSupported, setIsSupported] = useState(false);
@@ -30,14 +28,15 @@ export function useNFC(): UseNFCReturn {
 
   useEffect(() => {
     // Check if Web NFC API is supported
-    if ('NDEFReader' in window) {
+    // Web NFC is only available on Android Chrome/Edge with HTTPS
+    if (window.NDEFReader) {
       setIsSupported(true);
     }
   }, []);
 
   const startScan = useCallback(async () => {
     if (!isSupported) {
-      setError('NFC is not supported on this device');
+      setError(NFC_ERROR_MESSAGES.NOT_SUPPORTED);
       return;
     }
 
@@ -45,19 +44,20 @@ export function useNFC(): UseNFCReturn {
     setIsScanning(true);
 
     try {
-      const ndef = new (window as any).NDEFReader();
+      const ndef = new window.NDEFReader!();
       const controller = new AbortController();
       setAbortController(controller);
 
       await ndef.scan({ signal: controller.signal });
 
-      ndef.addEventListener('reading', ({ message }: any) => {
-        console.log(`> NFC Message received from ${message.serialNumber}`);
+      ndef.onreading = (event: NDEFReadingEvent) => {
+        const { message, serialNumber } = event;
+        logger.debug(`NFC Message received from ${serialNumber || 'unknown'}`);
         
         // Process NFC records
         for (const record of message.records) {
-          console.log(`> Record type: ${record.recordType}`);
-          console.log(`> Record data: ${record.data}`);
+          logger.debug(`Record type: ${record.recordType}`);
+          logger.debug(`Record data:`, record.data);
           
           // Handle text records
           if (record.recordType === 'text') {
@@ -65,7 +65,7 @@ export function useNFC(): UseNFCReturn {
             const text = textDecoder.decode(record.data);
             
             // Check if it's a Prairie Card URL
-            if (text.includes('prairie.cards') || text.includes('prairie-cards')) {
+            if (isPrairieCardUrl(text)) {
               setLastReadUrl(text);
               setIsScanning(false);
               controller.abort();
@@ -78,7 +78,7 @@ export function useNFC(): UseNFCReturn {
             const textDecoder = new TextDecoder();
             const url = textDecoder.decode(record.data);
             
-            if (url.includes('prairie.cards') || url.includes('prairie-cards')) {
+            if (isPrairieCardUrl(url)) {
               setLastReadUrl(url);
               setIsScanning(false);
               controller.abort();
@@ -93,41 +93,41 @@ export function useNFC(): UseNFCReturn {
               const data = textDecoder.decode(record.data);
               
               // Try to extract URL from the data
-              const urlMatch = data.match(/https?:\/\/[^\s]+prairie[^\s]*/i);
+              const urlMatch = extractPrairieCardUrl(data);
               if (urlMatch) {
-                setLastReadUrl(urlMatch[0]);
+                setLastReadUrl(urlMatch);
                 setIsScanning(false);
                 controller.abort();
                 break;
               }
             } catch (e) {
-              console.error('Error decoding NFC data:', e);
+              logger.error('Error decoding NFC data', e);
             }
           }
         }
-      });
+      };
 
-      ndef.addEventListener('readingerror', () => {
-        setError('Cannot read NFC tag. Please try again.');
+      ndef.onreadingerror = () => {
+        setError(NFC_ERROR_MESSAGES.READ_ERROR);
         setIsScanning(false);
-      });
+      };
 
     } catch (err) {
-      console.error('NFC Scan error:', err);
+      logger.error('NFC Scan error', err);
       
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError') {
-          setError('NFC permission denied. Please enable NFC in your browser settings.');
+          setError(NFC_ERROR_MESSAGES.PERMISSION_DENIED);
         } else if (err.name === 'NotSupportedError') {
-          setError('NFC is not supported on this device or browser.');
+          setError(NFC_ERROR_MESSAGES.NOT_SUPPORTED_BROWSER);
         } else if (err.name === 'AbortError') {
           // Scan was aborted, not an error
-          console.log('NFC scan aborted');
+          logger.debug('NFC scan aborted');
         } else {
-          setError(`NFC scan failed: ${err.message}`);
+          setError(`${NFC_ERROR_MESSAGES.SCAN_FAILED}: ${err.message}`);
         }
       } else {
-        setError('An unknown error occurred while scanning NFC');
+        setError(NFC_ERROR_MESSAGES.UNKNOWN);
       }
       
       setIsScanning(false);

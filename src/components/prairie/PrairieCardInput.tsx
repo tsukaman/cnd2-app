@@ -4,8 +4,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrairieCard } from "@/hooks/usePrairieCard";
 import { useNFC } from "@/hooks/useNFC";
+import { useQRScanner } from "@/hooks/useQRScanner";
+import { useClipboardPaste } from "@/hooks/useClipboardPaste";
 import { PrairieProfile } from "@/types";
-import { Loader2, Check, AlertCircle, User, Smartphone, X } from "lucide-react";
+import { detectPlatform, getRecommendedInputMethod } from "@/lib/platform";
+import { Loader2, Check, AlertCircle, User, Smartphone, X, QrCode, Clipboard, Camera } from "lucide-react";
 
 interface PrairieCardInputProps {
   onProfileLoaded: (profile: PrairieProfile) => void;
@@ -20,25 +23,71 @@ export default function PrairieCardInput({
 }: PrairieCardInputProps) {
   const [url, setUrl] = useState("");
   const [isValid, setIsValid] = useState<boolean | null>(null);
+  const [platform] = useState(() => detectPlatform());
+  const [inputMethod, setInputMethod] = useState<'manual' | 'nfc' | 'qr' | 'clipboard'>('manual');
+  
   const { loading, error, profile, fetchProfile, clearError } = usePrairieCard();
+  
+  // NFC Hook (Android only)
   const { 
     isSupported: nfcSupported, 
-    isScanning, 
-    lastReadUrl, 
+    isScanning: nfcScanning, 
+    lastReadUrl: nfcUrl, 
     error: nfcError, 
-    startScan, 
-    stopScan,
+    startScan: startNFC, 
+    stopScan: stopNFC,
     clearError: clearNFCError 
   } = useNFC();
   
+  // QR Scanner Hook
+  const {
+    isSupported: qrSupported,
+    isScanning: qrScanning,
+    lastScannedUrl: qrUrl,
+    error: qrError,
+    videoRef,
+    startScan: startQR,
+    stopScan: stopQR,
+    clearError: clearQRError
+  } = useQRScanner();
+  
+  // Clipboard Hook
+  const {
+    isSupported: clipboardSupported,
+    lastPastedUrl: pastedUrl,
+    checkClipboard,
+    clearPastedUrl
+  } = useClipboardPaste();
+  
   // Handle NFC URL when read
   useEffect(() => {
-    if (lastReadUrl) {
-      setUrl(lastReadUrl);
-      // Automatically fetch profile when NFC URL is read
-      handleFetchProfile(lastReadUrl);
+    if (nfcUrl) {
+      setUrl(nfcUrl);
+      handleFetchProfile(nfcUrl);
     }
-  }, [lastReadUrl]);
+  }, [nfcUrl]);
+  
+  // Handle QR URL when scanned
+  useEffect(() => {
+    if (qrUrl) {
+      setUrl(qrUrl);
+      handleFetchProfile(qrUrl);
+      setInputMethod('manual');
+    }
+  }, [qrUrl]);
+  
+  // Handle pasted URL
+  useEffect(() => {
+    if (pastedUrl && !url) {
+      setUrl(pastedUrl);
+      // Show confirmation before auto-loading
+      const shouldLoad = window.confirm(`Prairie Card URLを検出しました:\n${pastedUrl}\n\n読み込みますか？`);
+      if (shouldLoad) {
+        handleFetchProfile(pastedUrl);
+      }
+      clearPastedUrl();
+    }
+  }, [pastedUrl]);
 
   const handleFetchProfile = async (profileUrl: string) => {
     if (!profileUrl.trim()) {
@@ -70,14 +119,29 @@ export default function PrairieCardInput({
     setIsValid(null);
     if (error) clearError();
     if (nfcError) clearNFCError();
+    if (qrError) clearQRError();
   };
 
   const handleNFCScan = async () => {
-    if (isScanning) {
-      stopScan();
+    if (nfcScanning) {
+      stopNFC();
     } else {
-      await startScan();
+      await startNFC();
     }
+  };
+  
+  const handleQRScan = async () => {
+    if (qrScanning) {
+      stopQR();
+      setInputMethod('manual');
+    } else {
+      setInputMethod('qr');
+      await startQR();
+    }
+  };
+  
+  const handleClipboardPaste = async () => {
+    await checkClipboard();
   };
 
   return (
@@ -92,25 +156,67 @@ export default function PrairieCardInput({
             <label className="text-sm font-medium text-gray-300">
               {label}
             </label>
-            {nfcSupported && (
-              <motion.button
-                type="button"
-                onClick={handleNFCScan}
-                className={`
-                  flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
-                  transition-all duration-300
-                  ${isScanning 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }
-                `}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Smartphone className={`w-4 h-4 ${isScanning ? 'animate-pulse' : ''}`} />
-                {isScanning ? 'NFCスキャン中...' : 'NFCで読み取る'}
-              </motion.button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* NFC Button (Android only) */}
+              {nfcSupported && platform === 'android' && (
+                <motion.button
+                  type="button"
+                  onClick={handleNFCScan}
+                  className={`
+                    flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
+                    transition-all duration-300
+                    ${nfcScanning 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }
+                  `}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="NFCタグを読み取る"
+                >
+                  <Smartphone className={`w-4 h-4 ${nfcScanning ? 'animate-pulse' : ''}`} />
+                  NFC
+                </motion.button>
+              )}
+              
+              {/* QR Code Button (iOS and Android) */}
+              {qrSupported && (platform === 'ios' || platform === 'android') && (
+                <motion.button
+                  type="button"
+                  onClick={handleQRScan}
+                  className={`
+                    flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
+                    transition-all duration-300
+                    ${qrScanning || inputMethod === 'qr'
+                      ? 'bg-purple-600 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }
+                  `}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="QRコードを読み取る"
+                >
+                  <QrCode className={`w-4 h-4 ${qrScanning ? 'animate-pulse' : ''}`} />
+                  QR
+                </motion.button>
+              )}
+              
+              {/* Clipboard Button (All platforms) */}
+              {clipboardSupported && (
+                <motion.button
+                  type="button"
+                  onClick={handleClipboardPaste}
+                  className="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
+                    bg-gray-700 text-gray-300 hover:bg-gray-600 transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="クリップボードから貼り付け"
+                >
+                  <Clipboard className="w-4 h-4" />
+                  貼付
+                </motion.button>
+              )}
+            </div>
           </div>
           
           <div className="relative">
@@ -167,8 +273,45 @@ export default function PrairieCardInput({
           </div>
         </div>
 
+        {/* QRスキャナー表示 */}
+        {inputMethod === 'qr' && qrScanning && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="relative rounded-xl overflow-hidden bg-black"
+          >
+            <video
+              ref={videoRef}
+              className="w-full h-64 object-cover"
+              playsInline
+              muted
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-48 h-48 border-2 border-purple-400 rounded-lg">
+                <div className="w-full h-full border-2 border-purple-400 rounded-lg animate-pulse" />
+              </div>
+            </div>
+            <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+              <div className="bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2">
+                <p className="text-white text-sm font-semibold flex items-center gap-2">
+                  <Camera className="w-4 h-4" />
+                  QRコードを枠内に合わせてください
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={stopQR}
+                className="p-2 bg-black/70 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+        
         {/* NFCスキャン中の表示 */}
-        {isScanning && (
+        {nfcScanning && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -185,7 +328,7 @@ export default function PrairieCardInput({
               </div>
               <button
                 type="button"
-                onClick={stopScan}
+                onClick={stopNFC}
                 className="p-2 rounded-full hover:bg-gray-700 transition-colors"
               >
                 <X className="w-4 h-4 text-gray-400" />
@@ -195,14 +338,14 @@ export default function PrairieCardInput({
         )}
 
         {/* エラーメッセージ */}
-        {(error || nfcError) && (
+        {(error || nfcError || qrError) && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 text-red-400 text-sm"
           >
             <AlertCircle className="w-4 h-4" />
-            <span>{error || nfcError}</span>
+            <span>{error || nfcError || qrError}</span>
           </motion.div>
         )}
 

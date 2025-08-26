@@ -39,7 +39,10 @@ export default function DuoPage() {
     if (profiles[0] && profiles[1]) {
       const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
       if (result) {
-        router.push(`/result/${result.id}`);
+        // Store result in localStorage for now (until deployment is fixed)
+        localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
+        // Navigate to home with result in state
+        router.push(`/?result=${result.id}&mode=duo`);
       }
     }
   };
