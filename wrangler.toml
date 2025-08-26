@@ -1,77 +1,9 @@
 name = "cnd2-app"
 compatibility_date = "2025-01-25"
-pages_build_output_dir = "out"
+pages_build_output_dir = ".next"
 
-# Environment-specific configuration
-[env.production]
-route = "cdn2.cloudnativedays.jp/*"
-
-[env.preview]
-route = "preview.cdn2.cloudnativedays.jp/*"
-
-# Headers configuration for security and performance
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
-    X-XSS-Protection = "1; mode=block"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.openai.com https://my.prairie.cards https://*.sentry.io; report-uri https://o4508811871485952.ingest.us.sentry.io/api/4508811873779712/security/?sentry_key=69ffd0d14fb96e0c59c2e97be44dd88d"
-
-# Immutable assets with long cache
-[[headers]]
-  for = "/_next/static/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/*.css"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/*.woff2"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-# Images with moderate cache
-[[headers]]
-  for = "/images/*"
-  [headers.values]
-    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
-
-# HTML files should not be cached aggressively
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-
-# API routes should not be cached
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-# Build configuration
-[build]
-command = "npm run build"
-publish = "out"
-
-# Redirects (if needed)
-[[redirects]]
-  from = "/prairie"
-  to = "/duo"
-  status = 301
-
-# Function bindings for Workers KV (future enhancement)
-# [[kv_namespaces]]
-# binding = "CND2_RESULTS"
-# id = "your-kv-namespace-id"
-# preview_id = "your-preview-kv-namespace-id"
+# Function bindings for Workers KV
+[[kv_namespaces]]
+binding = "CND2_RESULTS"
+id = "623832c2612f48948daa625eacf29792"
+preview_id = "b9f1e0af78a14ebcbfab872fb4764281"
