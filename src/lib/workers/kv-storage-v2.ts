@@ -3,26 +3,51 @@
  * Edge-compatible storage with automatic expiration
  */
 
+import { DiagnosisResult } from '@/types/diagnosis';
+
 export class KVStorage {
   private kv: KVNamespace | null = null;
+  private isAvailable: boolean = false;
   
   constructor() {
     // Cloudflare Workers環境でのKV取得
-    if (typeof globalThis !== 'undefined' && 'CND2_RESULTS' in globalThis) {
-      this.kv = (globalThis as any).CND2_RESULTS;
+    this.initializeKV();
+  }
+
+  private initializeKV(): void {
+    try {
+      // Cloudflare Workers環境のチェック
+      if (typeof globalThis !== 'undefined') {
+        const env = (globalThis as { env?: { CND2_RESULTS?: KVNamespace }; CND2_RESULTS?: KVNamespace }).env || (globalThis as { CND2_RESULTS?: KVNamespace });
+        
+        // KV Namespaceの存在を確認
+        if (env.CND2_RESULTS && typeof env.CND2_RESULTS === 'object') {
+          this.kv = env.CND2_RESULTS as KVNamespace;
+          this.isAvailable = true;
+          console.log('[KV] Storage initialized successfully');
+        } else if ('CND2_RESULTS' in globalThis) {
+          this.kv = (globalThis as { CND2_RESULTS?: KVNamespace }).CND2_RESULTS as KVNamespace;
+          this.isAvailable = true;
+          console.log('[KV] Storage initialized from globalThis');
+        }
+      }
+      
+      if (!this.isAvailable) {
+        console.warn('[KV] Storage not available in current environment');
+      }
+    } catch (error) {
+      console.error('[KV] Failed to initialize storage:', error);
+      this.isAvailable = false;
     }
   }
 
   /**
    * 診断結果を保存（7日間の有効期限付き）
    */
-  async save(id: string, data: any, options?: SaveOptions): Promise<void> {
-    if (!this.kv) {
-      console.warn('[KV] Storage not available, using in-memory fallback');
-      // フォールバック: LocalStorageやメモリに保存
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(`cnd2_result_${id}`, JSON.stringify(data));
-      }
+  async save(id: string, data: DiagnosisResult, options?: SaveOptions): Promise<void> {
+    if (!this.isAvailable || !this.kv) {
+      console.warn('[KV] Storage not available, using fallback');
+      await this.saveFallback(id, data);
       return;
     }
 
@@ -45,14 +70,9 @@ export class KVStorage {
   /**
    * 診断結果を取得
    */
-  async get(id: string): Promise<any | null> {
-    if (!this.kv) {
-      // フォールバック
-      if (typeof localStorage !== 'undefined') {
-        const data = localStorage.getItem(`cnd2_result_${id}`);
-        return data ? JSON.parse(data) : null;
-      }
-      return null;
+  async get(id: string): Promise<DiagnosisResult | null> {
+    if (!this.isAvailable || !this.kv) {
+      return this.getFallback(id);
     }
 
     const key = `result:${id}`;
@@ -74,10 +94,8 @@ export class KVStorage {
    * 診断結果を削除
    */
   async delete(id: string): Promise<void> {
-    if (!this.kv) {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem(`cnd2_result_${id}`);
-      }
+    if (!this.isAvailable || !this.kv) {
+      await this.deleteFallback(id);
       return;
     }
 
@@ -143,7 +161,7 @@ export class KVStorage {
   /**
    * インデックスに追加
    */
-  private async addToIndex(id: string, metadata: any): Promise<void> {
+  private async addToIndex(id: string, metadata: IndexMetadata): Promise<void> {
     if (!this.kv) return;
 
     const indexKey = 'index:recent';
@@ -220,6 +238,42 @@ export class KVStorage {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
+
+  /**
+   * LocalStorageフォールバック
+   */
+  private async saveFallback(id: string, data: DiagnosisResult): Promise<void> {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(`cnd2_result_${id}`, JSON.stringify(data));
+      } catch (error) {
+        console.error('[KV] Fallback save failed:', error);
+      }
+    }
+  }
+
+  private getFallback(id: string): DiagnosisResult | null {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const data = localStorage.getItem(`cnd2_result_${id}`);
+        return data ? JSON.parse(data) : null;
+      } catch (error) {
+        console.error('[KV] Fallback get failed:', error);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private async deleteFallback(id: string): Promise<void> {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem(`cnd2_result_${id}`);
+      } catch (error) {
+        console.error('[KV] Fallback delete failed:', error);
+      }
+    }
+  }
 }
 
 // Types
@@ -231,6 +285,12 @@ interface IndexEntry {
   id: string;
   createdAt: string;
   expiresAt: string;
+}
+
+interface IndexMetadata {
+  createdAt: string;
+  expiresAt: string;
+  version: string;
 }
 
 interface RecentResult {
@@ -249,8 +309,25 @@ interface StorageStats {
 declare global {
   interface KVNamespace {
     get(key: string): Promise<string | null>;
-    put(key: string, value: string, options?: any): Promise<void>;
+    put(key: string, value: string, options?: KVPutOptions): Promise<void>;
     delete(key: string): Promise<void>;
-    list(options?: any): Promise<any>;
+    list(options?: KVListOptions): Promise<KVListResult>;
+  }
+
+  interface KVPutOptions {
+    expirationTtl?: number;
+    metadata?: Record<string, unknown>;
+  }
+
+  interface KVListOptions {
+    prefix?: string;
+    limit?: number;
+    cursor?: string;
+  }
+
+  interface KVListResult {
+    keys: Array<{ name: string; expiration?: number; metadata?: unknown }>;
+    list_complete: boolean;
+    cursor?: string;
   }
 }
