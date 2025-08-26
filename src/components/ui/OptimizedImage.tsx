@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { toBase64 } from '@/lib/utils/edge-compat';
 
 interface OptimizedImageProps {
   src: string;
@@ -35,7 +36,7 @@ export default function OptimizedImage({
     const svg = `<svg width="${width || 400}" height="${height || 300}" xmlns="http://www.w3.org/2000/svg">
       <rect width="100%" height="100%" fill="#f3f4f6"/>
     </svg>`;
-    return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    return `data:image/svg+xml;base64,${toBase64(svg)}`;
   }, [width, height]);
 
   if (error) {

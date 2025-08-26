@@ -48,6 +48,11 @@ export class KVStorage {
    * Store diagnosis result
    */
   async storeDiagnosis(id: string, result: Record<string, unknown>): Promise<void> {
+    if (!this.kv) {
+      console.warn('[KV] KV namespace not initialized');
+      return;
+    }
+    
     const key = this.getKey(`diagnosis:${id}`);
     const value = JSON.stringify({
       ...result,
@@ -68,6 +73,11 @@ export class KVStorage {
    * Retrieve diagnosis result
    */
   async getDiagnosis(id: string): Promise<Record<string, unknown> | null> {
+    if (!this.kv) {
+      console.warn('[KV] KV namespace not initialized');
+      return null;
+    }
+    
     const key = this.getKey(`diagnosis:${id}`);
     const value = await this.kv.get(key);
 
@@ -87,6 +97,11 @@ export class KVStorage {
    * Delete diagnosis result
    */
   async deleteDiagnosis(id: string): Promise<void> {
+    if (!this.kv) {
+      console.warn('[KV] KV namespace not initialized');
+      return;
+    }
+    
     const key = this.getKey(`diagnosis:${id}`);
     await this.kv.delete(key);
   }
@@ -95,6 +110,11 @@ export class KVStorage {
    * List all diagnosis results
    */
   async listDiagnoses(limit: number = 100, cursor?: string): Promise<KVListResult> {
+    if (!this.kv) {
+      console.warn('[KV] KV namespace not initialized');
+      return { keys: [], list_complete: true };
+    }
+    
     return await this.kv.list({
       prefix: this.getKey('diagnosis:'),
       limit,
@@ -106,7 +126,14 @@ export class KVStorage {
    * Store Prairie Card profile cache
    */
   async storePrairieProfile(url: string, profile: Record<string, unknown>): Promise<void> {
-    const key = this.getKey(`prairie:${Buffer.from(url).toString('base64')}`);
+    if (!this.kv) {
+      console.warn('[KV] KV namespace not initialized');
+      return;
+    }
+    
+    // Use Edge-compatible base64 encoding
+    const { toBase64 } = await import('@/lib/utils/edge-compat');
+    const key = this.getKey(`prairie:${toBase64(url)}`);
     const value = JSON.stringify({
       ...profile,
       cachedAt: new Date().toISOString(),
@@ -126,7 +153,14 @@ export class KVStorage {
    * Retrieve Prairie Card profile from cache
    */
   async getPrairieProfile(url: string): Promise<Record<string, unknown> | null> {
-    const key = this.getKey(`prairie:${Buffer.from(url).toString('base64')}`);
+    if (!this.kv) {
+      console.warn('[KV] KV namespace not initialized');
+      return null;
+    }
+    
+    // Use Edge-compatible base64 encoding
+    const { toBase64 } = await import('@/lib/utils/edge-compat');
+    const key = this.getKey(`prairie:${toBase64(url)}`);
     const value = await this.kv.get(key);
 
     if (!value) {
@@ -134,20 +168,20 @@ export class KVStorage {
     }
 
     try {
-      const data = JSON.parse(value);
+      const parsed = JSON.parse(value);
       
       // Check if cache is still valid (24 hours)
-      const cachedAt = new Date(data.cachedAt);
+      const cachedAt = new Date(parsed.cachedAt);
       const now = new Date();
       const hoursSinceCached = (now.getTime() - cachedAt.getTime()) / (1000 * 60 * 60);
       
       if (hoursSinceCached > 24) {
-        // Cache expired, delete and return null
+        // Cache expired, delete it
         await this.kv.delete(key);
         return null;
       }
-
-      return data;
+      
+      return parsed;
     } catch (error) {
       console.error('[KV] Failed to parse Prairie profile:', error);
       return null;
@@ -158,6 +192,11 @@ export class KVStorage {
    * Store rate limit data
    */
   async incrementRateLimit(identifier: string, windowMinutes: number = 15): Promise<number> {
+    if (!this.kv) {
+      console.warn('[KV] KV namespace not initialized');
+      return 0;
+    }
+    
     try {
       const now = new Date();
       const window = Math.floor(now.getTime() / (windowMinutes * 60 * 1000));

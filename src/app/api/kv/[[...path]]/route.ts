@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { KVStorage } from '@/lib/workers/kv-storage';
+import { StoreDiagnosisSchema } from '@/lib/validators/kv';
 
 // This route is for Cloudflare Workers KV operations
 export const runtime = 'edge';
@@ -95,14 +96,21 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const { id, result } = body;
-
-    if (!id || !result) {
+    
+    // Validate request body with Zod
+    const validationResult = StoreDiagnosisSchema.safeParse(body);
+    
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'ID and result are required' },
+        { 
+          error: 'Invalid request data',
+          details: validationResult.error.flatten() 
+        },
         { status: 400 }
       );
     }
+    
+    const { id, result } = validationResult.data;
 
     await kv.storeDiagnosis(id, result);
 
