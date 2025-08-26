@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrairieCardParser } from '@/lib/prairie-card-parser';
 import { ApiError } from '@/lib/api-errors';
+import { getCorsHeaders } from '@/lib/cors';
 
 export const runtime = 'edge';
 
@@ -45,16 +46,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function OPTIONS() {
-  const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2-app.pages.dev';
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
   
   return new NextResponse(null, {
     status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': allowedOrigin,
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Credentials': 'true',
-    },
+    headers: corsHeaders,
   });
 }

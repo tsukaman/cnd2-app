@@ -5,6 +5,7 @@ import { DiagnosisRequest } from './validators/diagnosis';
 import { KVStorage } from './workers/kv-storage-v2';
 import { nanoid } from 'nanoid';
 import { DiagnosisResult, AIResponse } from '@/types/diagnosis';
+import { logger } from './logger';
 
 export class DiagnosisEngine {
   private kvStorage: KVStorage;
@@ -53,6 +54,10 @@ export class DiagnosisEngine {
       return this.generateMockResponse(request);
     }
     
+    // タイムアウト設定（10秒）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -76,7 +81,10 @@ export class DiagnosisEngine {
           max_tokens: 500,
           response_format: { type: 'json_object' },
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`OpenAI API error: ${response.status}`);
@@ -91,7 +99,15 @@ export class DiagnosisEngine {
       
       return JSON.parse(content);
     } catch (error) {
-      console.error('OpenAI API error:', error);
+      clearTimeout(timeoutId);
+      
+      // タイムアウトエラーの判別
+      if (error instanceof Error && error.name === 'AbortError') {
+        logger.warn('OpenAI API timeout after 10 seconds');
+      } else {
+        logger.error('OpenAI API call failed, using fallback', error);
+      }
+      
       return this.generateMockResponse(request);
     }
   }

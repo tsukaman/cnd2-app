@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { KVStorage } from '@/lib/workers/kv-storage-v2';
 import { ApiError } from '@/lib/api-errors';
+import { getCorsHeaders } from '@/lib/cors';
 
 export const runtime = 'edge';
 
@@ -83,16 +84,15 @@ export async function DELETE(
   }
 }
 
-export async function OPTIONS() {
-  const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2-app.pages.dev';
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
   
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': allowedOrigin,
-      'Access-Control-Allow-Methods': 'GET, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Credentials': 'true',
+      ...corsHeaders,
+      'Access-Control-Allow-Methods': 'GET, DELETE, OPTIONS', // カスタムメソッド
     },
   });
 }
