@@ -4,8 +4,8 @@ import {
   QR_CAMERA_WIDTH_IDEAL,
   QR_CAMERA_HEIGHT_IDEAL,
   VIDEO_READY_STATE,
-  PRAIRIE_CARD_HOSTS,
-  CAMERA_ERROR_MESSAGES 
+  CAMERA_ERROR_MESSAGES,
+  isPrairieCardUrl
 } from '@/constants/scanner';
 
 interface UseQRScannerReturn {
@@ -63,7 +63,7 @@ export function useQRScanner(): UseQRScannerReturn {
             const url = qrCode.rawValue;
             
             // Check if it's a Prairie Card URL
-            if (url && (url.includes('prairie.cards') || url.includes('prairie-cards'))) {
+            if (url && isPrairieCardUrl(url)) {
               setLastScannedUrl(url);
               stopScan();
               return;

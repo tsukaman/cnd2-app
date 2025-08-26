@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   NFC_ERROR_MESSAGES,
-  PRAIRIE_CARD_URL_PATTERN 
+  PRAIRIE_CARD_URL_PATTERN,
+  isPrairieCardUrl,
+  extractPrairieCardUrl
 } from '@/constants/scanner';
 
 interface UseNFCReturn {
@@ -47,8 +49,9 @@ export function useNFC(): UseNFCReturn {
 
       await ndef.scan({ signal: controller.signal });
 
-      ndef.addEventListener('reading', ({ message }: NDEFReadingEvent) => {
-        console.log(`> NFC Message received from ${message.serialNumber}`);
+      ndef.onreading = (event: NDEFReadingEvent) => {
+        const { message, serialNumber } = event;
+        console.log(`> NFC Message received from ${serialNumber || 'unknown'}`);
         
         // Process NFC records
         for (const record of message.records) {
@@ -61,7 +64,7 @@ export function useNFC(): UseNFCReturn {
             const text = textDecoder.decode(record.data);
             
             // Check if it's a Prairie Card URL
-            if (text.includes('prairie.cards') || text.includes('prairie-cards')) {
+            if (isPrairieCardUrl(text)) {
               setLastReadUrl(text);
               setIsScanning(false);
               controller.abort();
@@ -74,7 +77,7 @@ export function useNFC(): UseNFCReturn {
             const textDecoder = new TextDecoder();
             const url = textDecoder.decode(record.data);
             
-            if (url.includes('prairie.cards') || url.includes('prairie-cards')) {
+            if (isPrairieCardUrl(url)) {
               setLastReadUrl(url);
               setIsScanning(false);
               controller.abort();
@@ -89,9 +92,9 @@ export function useNFC(): UseNFCReturn {
               const data = textDecoder.decode(record.data);
               
               // Try to extract URL from the data
-              const urlMatch = data.match(PRAIRIE_CARD_URL_PATTERN);
+              const urlMatch = extractPrairieCardUrl(data);
               if (urlMatch) {
-                setLastReadUrl(urlMatch[0]);
+                setLastReadUrl(urlMatch);
                 setIsScanning(false);
                 controller.abort();
                 break;
@@ -101,12 +104,12 @@ export function useNFC(): UseNFCReturn {
             }
           }
         }
-      });
+      };
 
-      ndef.addEventListener('readingerror', () => {
+      ndef.onreadingerror = () => {
         setError(NFC_ERROR_MESSAGES.READ_ERROR);
         setIsScanning(false);
-      });
+      };
 
     } catch (err) {
       console.error('NFC Scan error:', err);

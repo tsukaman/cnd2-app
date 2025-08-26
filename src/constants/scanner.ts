@@ -13,6 +13,17 @@ export const VIDEO_READY_STATE = {
 // Prairie Card URL patterns
 export const PRAIRIE_CARD_HOSTS = ['prairie.cards', 'my.prairie.cards'] as const;
 export const PRAIRIE_CARD_URL_PATTERN = /https?:\/\/[^\s]+prairie[^\s]*/i;
+// Prairie Card URL validation helper
+export function isPrairieCardUrl(text: string): boolean {
+  if (!text) return false;
+  // Check if text contains prairie.cards or prairie-cards
+  return text.includes('prairie.cards') || text.includes('prairie-cards');
+}
+
+export function extractPrairieCardUrl(text: string): string | null {
+  const match = text.match(PRAIRIE_CARD_URL_PATTERN);
+  return match ? match[0] : null;
+}
 
 // Error messages
 export const CAMERA_ERROR_MESSAGES = {

@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { PRAIRIE_CARD_URL_PATTERN } from '@/constants/scanner';
+import { 
+  PRAIRIE_CARD_URL_PATTERN,
+  isPrairieCardUrl as isPrairieCardUrlHelper,
+  extractPrairieCardUrl
+} from '@/constants/scanner';
 
 interface UseClipboardPasteReturn {
   isSupported: boolean;
@@ -20,7 +24,7 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
   }, []);
 
   const isPrairieCardUrl = (text: string): boolean => {
-    return text.includes('prairie.cards') || text.includes('prairie-cards');
+    return isPrairieCardUrlHelper(text);
   };
 
   const checkClipboard = useCallback(async () => {
@@ -31,9 +35,9 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
       
       if (text && isPrairieCardUrl(text)) {
         // Extract URL from text (might contain other text)
-        const urlMatch = text.match(/https?:\/\/[^\s]+prairie[^\s]*/i);
-        if (urlMatch) {
-          setLastPastedUrl(urlMatch[0]);
+        const url = extractPrairieCardUrl(text);
+        if (url) {
+          setLastPastedUrl(url);
         }
       }
     } catch (err) {
@@ -52,9 +56,9 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
       const text = e.clipboardData?.getData('text');
       
       if (text && isPrairieCardUrl(text)) {
-        const urlMatch = text.match(PRAIRIE_CARD_URL_PATTERN);
-        if (urlMatch) {
-          setLastPastedUrl(urlMatch[0]);
+        const url = extractPrairieCardUrl(text);
+        if (url) {
+          setLastPastedUrl(url);
         }
       }
     };
