@@ -77,10 +77,11 @@ export class DiagnosisEngine {
       
       return {
         ...result,
+        mode: 'duo' as const,
         participants: profiles,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
         id: nanoid(10),
-      };
+      } as DiagnosisResult;
     } catch (error) {
       console.error('[CND²] AI診断生成エラー:', error);
       
@@ -127,10 +128,11 @@ export class DiagnosisEngine {
       
       return {
         ...result,
+        mode: 'group' as const,
         participants: profiles,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
         id: nanoid(10),
-      };
+      } as DiagnosisResult;
     } catch (error) {
       console.error('[CND²] グループAI診断生成エラー:', error);
       
@@ -163,7 +165,25 @@ export class DiagnosisEngine {
     const randomScore = 70 + Math.floor(Math.random() * 30); // 70-99
 
     return {
+      id: nanoid(10),
+      mode: 'duo' as const,
       type: randomType,
+      compatibility: randomScore,
+      summary: randomMessage,
+      strengths: [
+        `${profiles[0].basic.name}さんと${profiles[1]?.basic.name || 'みなさん'}の共通のスキルが多い`,
+        'CloudNative技術への情熱を共有',
+        '学習意欲が高い組み合わせ'
+      ],
+      opportunities: [
+        '共同でOSSプロジェクトに貢献',
+        '技術ブログの共同執筆',
+        'ハッカソンでのチーム参加'
+      ],
+      advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
+      participants: profiles,
+      createdAt: new Date().toISOString(),
+      // Legacy fields for backward compatibility
       score: randomScore,
       message: randomMessage,
       conversationStarters: [
@@ -173,9 +193,6 @@ export class DiagnosisEngine {
       ],
       hiddenGems: 'お二人とも技術への情熱が素晴らしく、学習意欲が高いところが共通しています！',
       shareTag: `相性${randomScore}%！ ${randomType}の二人が #CNDxCnD で出会いを二乗でスケール中！`,
-      participants: profiles,
-      createdAt: new Date(),
-      id: nanoid(10),
     };
   }
 
@@ -192,7 +209,25 @@ export class DiagnosisEngine {
     const randomScore = 75 + Math.floor(Math.random() * 25); // 75-99
 
     return {
+      id: nanoid(10),
+      mode: 'group' as const,
       type: randomType,
+      compatibility: randomScore,
+      summary: `${profiles.length}人のグループは${randomType}として完璧に機能します！`,
+      strengths: [
+        'グループ全員が学習意欲が高い',
+        '多様な技術スタックをカバー',
+        'お互いを高め合える関係'
+      ],
+      opportunities: [
+        'グループでハッカソンに参加',
+        '技術勉強会の開催',
+        'オープンソースプロジェクトの立ち上げ'
+      ],
+      advice: 'それぞれの専門分野を活かして、革新的なプロジェクトに挑戦してみましょう。',
+      participants: profiles,
+      createdAt: new Date().toISOString(),
+      // Legacy fields for backward compatibility
       score: randomScore,
       message: `${profiles.length}人のグループは${randomType}として完璧に機能します！${profiles.length}² = ${profiles.length * profiles.length}通りの相性が見事に調和し、Scaling Together²を実現！`,
       conversationStarters: [
@@ -202,9 +237,6 @@ export class DiagnosisEngine {
       ],
       hiddenGems: 'グループ全員が学習意欲が高く、お互いを高め合える関係です！',
       shareTag: `${profiles.length}人で相性${randomScore}%！ ${randomType}として #CNDxCnD で二乗の出会い！`,
-      participants: profiles,
-      createdAt: new Date(),
-      id: nanoid(10),
     };
   }
 }
