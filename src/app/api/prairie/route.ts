@@ -1,61 +1,64 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { PrairieCardParser } from '@/lib/prairie-parser';
+import { withApiMiddleware, validateRequestBody, createSuccessResponse } from '@/lib/api-middleware';
+import { ApiError } from '@/lib/api-errors';
 
-export async function POST(request: NextRequest) {
+// Request validation schema
+const prairieRequestSchema = z.object({
+  url: z.string().url('有効なURLを入力してください'),
+});
+
+export const POST = withApiMiddleware(async (request: NextRequest) => {
+  // Validate request body
+  const { url } = await validateRequestBody(request, prairieRequestSchema);
+  
   try {
-    const { url } = await request.json();
-    
-    if (!url) {
-      return NextResponse.json(
-        { error: 'URLが指定されていません' },
-        { status: 400 }
-      );
-    }
-
     const parser = PrairieCardParser.getInstance();
     const profile = await parser.parseProfile(url);
     
-    return NextResponse.json({
-      success: true,
+    if (!profile) {
+      throw ApiError.notFound('Prairie Card');
+    }
+    
+    return createSuccessResponse({
       profile,
       cacheStats: parser.getCacheStats(),
     });
   } catch (error) {
-    console.error('[API] Prairie Card取得エラー:', error);
+    console.error('[Prairie API] Error:', error);
     
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : 'Prairie Cardの取得に失敗しました';
+    if (error instanceof ApiError) {
+      throw error;
+    }
     
-    return NextResponse.json(
-      { 
-        success: false,
-        error: errorMessage 
-      },
-      { status: 500 }
-    );
+    // Check for network errors
+    if (error instanceof Error) {
+      if (error.message.includes('fetch') || error.message.includes('network')) {
+        throw ApiError.externalService('Prairie Card', error);
+      }
+      
+      if (error.message.includes('timeout')) {
+        throw ApiError.timeout('Prairie Cardの取得がタイムアウトしました');
+      }
+    }
+    
+    throw ApiError.internal('Prairie Cardの取得に失敗しました');
   }
-}
+});
 
-// キャッシュクリアのエンドポイント
-export async function DELETE(_request: NextRequest) {
+// Cache clear endpoint
+export const DELETE = withApiMiddleware(async (_request: NextRequest) => {
   try {
     const parser = PrairieCardParser.getInstance();
     parser.clearCache();
     
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       message: 'キャッシュをクリアしました',
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[API] キャッシュクリアエラー:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'キャッシュのクリアに失敗しました' 
-      },
-      { status: 500 }
-    );
+    console.error('[Prairie API] Cache clear error:', error);
+    throw ApiError.internal('キャッシュのクリアに失敗しました');
   }
-}
+});
