@@ -18,17 +18,55 @@ describe('usePrairieCard', () => {
   });
 
   it('successfully fetches a profile', async () => {
-    const mockProfile = {
+    const mockData = {
       name: 'Test User',
       title: 'Developer',
+      company: 'Test Company',
+      bio: 'Test bio',
       skills: ['React', 'TypeScript'],
+      tags: ['dev'],
+      interests: ['coding'],
+    };
+
+    const expectedProfile = {
+      basic: {
+        name: 'Test User',
+        title: 'Developer',
+        company: 'Test Company',
+        bio: 'Test bio',
+        avatar: undefined,
+      },
+      details: {
+        tags: ['dev'],
+        skills: ['React', 'TypeScript'],
+        interests: ['coding'],
+        certifications: [],
+        communities: [],
+        motto: undefined,
+      },
+      social: {
+        twitter: undefined,
+        github: undefined,
+        linkedin: undefined,
+        website: undefined,
+        blog: undefined,
+        qiita: undefined,
+        zenn: undefined,
+      },
+      custom: {},
+      meta: {
+        createdAt: undefined,
+        updatedAt: undefined,
+        connectedBy: undefined,
+        hashtag: undefined,
+      },
     };
 
     (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         success: true,
-        profile: mockProfile,
+        data: mockData,
       }),
     });
 
@@ -42,8 +80,8 @@ describe('usePrairieCard', () => {
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
       expect(result.current.error).toBeNull();
-      expect(result.current.profile).toEqual(mockProfile);
-      expect(fetchedProfile).toEqual(mockProfile);
+      expect(result.current.profile).toEqual(expectedProfile);
+      expect(fetchedProfile).toEqual(expectedProfile);
     });
 
     expect(fetch).toHaveBeenCalledWith('/api/prairie', {

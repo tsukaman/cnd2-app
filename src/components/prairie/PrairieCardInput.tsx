@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePrairieCard } from "@/hooks/usePrairieCard";
+import { useNFC } from "@/hooks/useNFC";
 import { PrairieProfile } from "@/types";
-import { Loader2, Check, AlertCircle, User } from "lucide-react";
+import { Loader2, Check, AlertCircle, User, Smartphone, X } from "lucide-react";
 
 interface PrairieCardInputProps {
   onProfileLoaded: (profile: PrairieProfile) => void;
@@ -20,16 +21,32 @@ export default function PrairieCardInput({
   const [url, setUrl] = useState("");
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const { loading, error, profile, fetchProfile, clearError } = usePrairieCard();
+  const { 
+    isSupported: nfcSupported, 
+    isScanning, 
+    lastReadUrl, 
+    error: nfcError, 
+    startScan, 
+    stopScan,
+    clearError: clearNFCError 
+  } = useNFC();
+  
+  // Handle NFC URL when read
+  useEffect(() => {
+    if (lastReadUrl) {
+      setUrl(lastReadUrl);
+      // Automatically fetch profile when NFC URL is read
+      handleFetchProfile(lastReadUrl);
+    }
+  }, [lastReadUrl]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!url.trim()) {
+  const handleFetchProfile = async (profileUrl: string) => {
+    if (!profileUrl.trim()) {
       setIsValid(false);
       return;
     }
 
-    const result = await fetchProfile(url);
+    const result = await fetchProfile(profileUrl);
     if (result) {
       setIsValid(true);
       onProfileLoaded(result);
@@ -43,10 +60,24 @@ export default function PrairieCardInput({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleFetchProfile(url);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
     setIsValid(null);
     if (error) clearError();
+    if (nfcError) clearNFCError();
+  };
+
+  const handleNFCScan = async () => {
+    if (isScanning) {
+      stopScan();
+    } else {
+      await startScan();
+    }
   };
 
   return (
@@ -57,9 +88,30 @@ export default function PrairieCardInput({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            {label}
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium text-gray-300">
+              {label}
+            </label>
+            {nfcSupported && (
+              <motion.button
+                type="button"
+                onClick={handleNFCScan}
+                className={`
+                  flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
+                  transition-all duration-300
+                  ${isScanning 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }
+                `}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Smartphone className={`w-4 h-4 ${isScanning ? 'animate-pulse' : ''}`} />
+                {isScanning ? 'NFCスキャン中...' : 'NFCで読み取る'}
+              </motion.button>
+            )}
+          </div>
           
           <div className="relative">
             <input
@@ -115,15 +167,42 @@ export default function PrairieCardInput({
           </div>
         </div>
 
+        {/* NFCスキャン中の表示 */}
+        {isScanning && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/30 backdrop-blur-sm"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Smartphone className="w-6 h-6 text-blue-400 animate-pulse" />
+                <div>
+                  <p className="text-blue-400 font-semibold">NFCスキャン中...</p>
+                  <p className="text-gray-400 text-sm">NFCタグまたはカードを近づけてください</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={stopScan}
+                className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* エラーメッセージ */}
-        {error && (
+        {(error || nfcError) && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 text-red-400 text-sm"
           >
             <AlertCircle className="w-4 h-4" />
-            <span>{error}</span>
+            <span>{error || nfcError}</span>
           </motion.div>
         )}
 

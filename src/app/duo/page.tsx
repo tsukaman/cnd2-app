@@ -122,9 +122,9 @@ export default function DuoPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
+                    className="mt-6 p-4 bg-green-500/10 rounded-lg border border-green-500/30 backdrop-blur-sm"
                   >
-                    <p className="text-green-800 font-semibold">
+                    <p className="text-green-400 font-semibold">
                       ✅ {profiles[0].basic.name}さんのカードを読み込みました
                     </p>
                   </motion.div>
