@@ -8,12 +8,9 @@
  * Replaces Buffer.from(str).toString('base64')
  */
 export function toBase64(str: string): string {
-  if (typeof window !== 'undefined' && typeof btoa === 'function') {
-    // Browser/Edge environment
-    return btoa(unescape(encodeURIComponent(str)));
-  }
-  // Node.js environment (fallback)
-  return Buffer.from(str).toString('base64');
+  // Use btoa for Edge Runtime compatibility
+  // btoa is available in both Edge Runtime and modern browsers
+  return btoa(unescape(encodeURIComponent(str)));
 }
 
 /**
@@ -21,12 +18,9 @@ export function toBase64(str: string): string {
  * Replaces Buffer.from(base64, 'base64').toString()
  */
 export function fromBase64(base64: string): string {
-  if (typeof window !== 'undefined' && typeof atob === 'function') {
-    // Browser/Edge environment
-    return decodeURIComponent(escape(atob(base64)));
-  }
-  // Node.js environment (fallback)
-  return Buffer.from(base64, 'base64').toString();
+  // Use atob for Edge Runtime compatibility
+  // atob is available in both Edge Runtime and modern browsers
+  return decodeURIComponent(escape(atob(base64)));
 }
 
 /**
@@ -55,17 +49,11 @@ export function generateRandomString(length: number = 16): string {
  * Hash a string using SHA-256 (Edge Runtime compatible)
  */
 export async function sha256(str: string): Promise<string> {
-  if (typeof crypto !== 'undefined' && crypto.subtle) {
-    // Web Crypto API (Edge Runtime)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hash = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hash))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
-  
-  // Node.js fallback
-  const nodeCrypto = await import('crypto');
-  return nodeCrypto.createHash('sha256').update(str).digest('hex');
+  // Always use Web Crypto API for Edge Runtime compatibility
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }
