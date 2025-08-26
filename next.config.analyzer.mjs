@@ -18,6 +18,7 @@ const nextConfig = {
       exclude: ['error', 'warn'],
     } : false,
   },
+  swcMinify: true,
   
   // Performance optimizations
   experimental: {

@@ -9,13 +9,8 @@ interface CloudflareContext {
   env?: {
     CND2_RESULTS?: KVNamespace;
   };
-  waitUntil?: (promise: Promise<unknown>) => void;
+  waitUntil?: (promise: Promise<any>) => void;
 }
-
-// Next.js 15.5 route context type
-type RouteContext = {
-  params: Promise<{ path?: string[] }>;
-} & CloudflareContext;
 
 /**
  * Helper to get KV storage instance with proper type safety
@@ -25,7 +20,7 @@ function getKVStorage(context?: CloudflareContext): KVStorage | null {
   if (!kvNamespace) {
     return null;
   }
-  return new KVStorage(kvNamespace);
+  return new KVStorage(kvNamespace as any);
 }
 
 /**
@@ -33,7 +28,7 @@ function getKVStorage(context?: CloudflareContext): KVStorage | null {
  */
 export async function GET(
   request: NextRequest,
-  context: RouteContext
+  { params, ...context }: { params: { path?: string[] } } & CloudflareContext
 ) {
   const kv = getKVStorage(context);
   
@@ -44,7 +39,6 @@ export async function GET(
     );
   }
 
-  const params = await context.params;
   const path = params.path || [];
   
   // Handle diagnosis retrieval
@@ -82,7 +76,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  context: RouteContext
+  context: CloudflareContext
 ) {
   const kv = getKVStorage(context);
   
@@ -124,7 +118,7 @@ export async function POST(
  */
 export async function DELETE(
   request: NextRequest,
-  context: RouteContext
+  { params, ...context }: { params: { path?: string[] } } & CloudflareContext
 ) {
   const kv = getKVStorage(context);
   
@@ -135,7 +129,6 @@ export async function DELETE(
     );
   }
 
-  const params = await context.params;
   const path = params.path || [];
   
   if (path[0] === 'diagnosis' && path[1]) {

@@ -26,6 +26,9 @@ const nextConfig = {
     // optimizeCss: true, // Disabled due to critters module issue
   },
   
+  // Enable SWC minification
+  swcMinify: true,
+  
   // Headers for security
   async headers() {
     return [
