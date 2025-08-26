@@ -13,7 +13,7 @@ export interface KVNamespace {
 interface KVPutOptions {
   expirationTtl?: number; // TTL in seconds
   expiration?: number; // Unix timestamp
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface KVListOptions {
@@ -23,7 +23,7 @@ interface KVListOptions {
 }
 
 interface KVListResult {
-  keys: Array<{ name: string; metadata?: Record<string, any> }>;
+  keys: Array<{ name: string; metadata?: Record<string, unknown> }>;
   list_complete: boolean;
   cursor?: string;
 }
@@ -47,7 +47,7 @@ export class KVStorage {
   /**
    * Store diagnosis result
    */
-  async storeDiagnosis(id: string, result: any): Promise<void> {
+  async storeDiagnosis(id: string, result: Record<string, unknown>): Promise<void> {
     const key = this.getKey(`diagnosis:${id}`);
     const value = JSON.stringify({
       ...result,
@@ -67,7 +67,7 @@ export class KVStorage {
   /**
    * Retrieve diagnosis result
    */
-  async getDiagnosis(id: string): Promise<any | null> {
+  async getDiagnosis(id: string): Promise<Record<string, unknown> | null> {
     const key = this.getKey(`diagnosis:${id}`);
     const value = await this.kv.get(key);
 
@@ -105,7 +105,7 @@ export class KVStorage {
   /**
    * Store Prairie Card profile cache
    */
-  async storePrairieProfile(url: string, profile: any): Promise<void> {
+  async storePrairieProfile(url: string, profile: Record<string, unknown>): Promise<void> {
     const key = this.getKey(`prairie:${Buffer.from(url).toString('base64')}`);
     const value = JSON.stringify({
       ...profile,
@@ -125,7 +125,7 @@ export class KVStorage {
   /**
    * Retrieve Prairie Card profile from cache
    */
-  async getPrairieProfile(url: string): Promise<any | null> {
+  async getPrairieProfile(url: string): Promise<Record<string, unknown> | null> {
     const key = this.getKey(`prairie:${Buffer.from(url).toString('base64')}`);
     const value = await this.kv.get(key);
 
