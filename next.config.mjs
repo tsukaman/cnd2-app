@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Output configuration for Cloudflare Pages
-  // Using default output to support API routes with Cloudflare Pages Functions
-  // output will be handled by @cloudflare/next-on-pages adapter
+  // Standard build for Next.js app
   
   // Enable React strict mode for better development experience
   reactStrictMode: true,
