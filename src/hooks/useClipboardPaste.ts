@@ -4,6 +4,7 @@ import {
   isPrairieCardUrl as isPrairieCardUrlHelper,
   extractPrairieCardUrl
 } from '@/constants/scanner';
+import { logger } from '@/lib/logger';
 
 interface UseClipboardPasteReturn {
   isSupported: boolean;
@@ -42,7 +43,7 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
       }
     } catch (err) {
       // Permission denied or other error
-      console.log('Clipboard access denied or error:', err);
+      logger.debug('Clipboard access denied or error', err);
     }
   }, [isSupported]);
 

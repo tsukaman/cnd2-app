@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { PrairieProfile, DiagnosisResult } from '@/types';
+import { logger } from '@/lib/logger';
 
 interface UseDiagnosisReturn {
   loading: boolean;
@@ -49,7 +50,7 @@ export function useDiagnosis(): UseDiagnosisReturn {
         };
         localStorage.setItem('cnd2_results', JSON.stringify(results));
       } catch (storageError) {
-        console.error('[useDiagnosis] 結果保存エラー:', storageError);
+        logger.warn('[useDiagnosis] 結果保存エラー', storageError);
       }
       
       return data.result;
@@ -59,7 +60,7 @@ export function useDiagnosis(): UseDiagnosisReturn {
         : '診断中にエラーが発生しました';
       
       setError(errorMessage);
-      console.error('[useDiagnosis] エラー:', err);
+      logger.error('[useDiagnosis] エラー', err);
       return null;
     } finally {
       setLoading(false);

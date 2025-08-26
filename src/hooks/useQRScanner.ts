@@ -7,6 +7,7 @@ import {
   CAMERA_ERROR_MESSAGES,
   isPrairieCardUrl
 } from '@/constants/scanner';
+import { logger } from '@/lib/logger';
 
 interface UseQRScannerReturn {
   isSupported: boolean;
@@ -65,13 +66,21 @@ export function useQRScanner(): UseQRScannerReturn {
             // Check if it's a Prairie Card URL
             if (url && isPrairieCardUrl(url)) {
               setLastScannedUrl(url);
-              stopScan();
+              // Stop scanning after successful detection
+              setIsScanning(false);
+              if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
+              }
+              if (videoRef.current) {
+                videoRef.current.srcObject = null;
+              }
               return;
             }
           }
         }
       } catch (err) {
-        console.log('QR detection error:', err);
+        logger.debug('QR detection error', err);
       }
     }
     
@@ -109,7 +118,7 @@ export function useQRScanner(): UseQRScannerReturn {
         detectQRCode();
       }
     } catch (err) {
-      console.error('Camera access error:', err);
+      logger.error('Camera access error', err);
       
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {

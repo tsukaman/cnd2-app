@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { PrairieProfile } from '@/types';
+import { logger } from '@/lib/logger';
 
 interface UsePrairieCardReturn {
   loading: boolean;
@@ -76,7 +77,7 @@ export function usePrairieCard(): UsePrairieCardReturn {
         : 'Prairie Cardの取得中にエラーが発生しました';
       
       setError(errorMessage);
-      console.error('[usePrairieCard] エラー:', err);
+      logger.error('[usePrairieCard] エラー', err);
       return null;
     } finally {
       setLoading(false);

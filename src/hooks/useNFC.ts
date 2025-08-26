@@ -5,6 +5,7 @@ import {
   isPrairieCardUrl,
   extractPrairieCardUrl
 } from '@/constants/scanner';
+import { logger } from '@/lib/logger';
 
 interface UseNFCReturn {
   isSupported: boolean;
@@ -51,12 +52,12 @@ export function useNFC(): UseNFCReturn {
 
       ndef.onreading = (event: NDEFReadingEvent) => {
         const { message, serialNumber } = event;
-        console.log(`> NFC Message received from ${serialNumber || 'unknown'}`);
+        logger.debug(`NFC Message received from ${serialNumber || 'unknown'}`);
         
         // Process NFC records
         for (const record of message.records) {
-          console.log(`> Record type: ${record.recordType}`);
-          console.log(`> Record data: ${record.data}`);
+          logger.debug(`Record type: ${record.recordType}`);
+          logger.debug(`Record data:`, record.data);
           
           // Handle text records
           if (record.recordType === 'text') {
@@ -100,7 +101,7 @@ export function useNFC(): UseNFCReturn {
                 break;
               }
             } catch (e) {
-              console.error('Error decoding NFC data:', e);
+              logger.error('Error decoding NFC data', e);
             }
           }
         }
@@ -112,7 +113,7 @@ export function useNFC(): UseNFCReturn {
       };
 
     } catch (err) {
-      console.error('NFC Scan error:', err);
+      logger.error('NFC Scan error', err);
       
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError') {
@@ -121,7 +122,7 @@ export function useNFC(): UseNFCReturn {
           setError(NFC_ERROR_MESSAGES.NOT_SUPPORTED_BROWSER);
         } else if (err.name === 'AbortError') {
           // Scan was aborted, not an error
-          console.log('NFC scan aborted');
+          logger.debug('NFC scan aborted');
         } else {
           setError(`${NFC_ERROR_MESSAGES.SCAN_FAILED}: ${err.message}`);
         }
