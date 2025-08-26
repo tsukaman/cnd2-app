@@ -1,23 +1,30 @@
 name = "cnd2-app"
 compatibility_date = "2025-01-25"
+pages_build_output_dir = "out"
 
-[site]
-bucket = "./out"
-
+# Environment-specific configuration
 [env.production]
 route = "cdn2.cloudnativedays.jp/*"
 
 [env.preview]
 route = "preview.cdn2.cloudnativedays.jp/*"
 
-# Headers configuration
+# Headers configuration for security and performance
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.openai.com https://my.prairie.cards"
+
+# Immutable assets with long cache
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
   for = "/*.js"
@@ -34,7 +41,37 @@ route = "preview.cdn2.cloudnativedays.jp/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Images with moderate cache
 [[headers]]
   for = "/images/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+# HTML files should not be cached aggressively
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# API routes should not be cached
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Build configuration
+[build]
+command = "npm run build"
+publish = "out"
+
+# Redirects (if needed)
+[[redirects]]
+  from = "/prairie"
+  to = "/duo"
+  status = 301
+
+# Function bindings for Workers KV (future enhancement)
+# [[kv_namespaces]]
+# binding = "CND2_RESULTS"
+# id = "your-kv-namespace-id"
+# preview_id = "your-preview-kv-namespace-id"

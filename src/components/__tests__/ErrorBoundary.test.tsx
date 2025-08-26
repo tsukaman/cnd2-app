@@ -47,7 +47,7 @@ describe('ErrorBoundary', () => {
 
   it('shows error details in development mode', () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
     
     render(
       <ErrorBoundary>
@@ -63,12 +63,12 @@ describe('ErrorBoundary', () => {
     const preElement = errorDetails.closest('details')?.querySelector('pre');
     expect(preElement?.textContent).toContain('Error: Test error');
     
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, writable: true });
   });
 
   it('does not show error details in production mode', () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
     
     render(
       <ErrorBoundary>
@@ -78,7 +78,7 @@ describe('ErrorBoundary', () => {
     
     expect(screen.queryByText('Error: Test error')).not.toBeInTheDocument();
     
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, writable: true });
   });
 
   it('resets error state when reset button is clicked', () => {
@@ -152,7 +152,7 @@ describe('ErrorBoundary', () => {
 
   it('logs error to console in development', () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
     
     const consoleErrorSpy = jest.spyOn(console, 'error');
     
@@ -164,7 +164,7 @@ describe('ErrorBoundary', () => {
     
     expect(consoleErrorSpy).toHaveBeenCalled();
     
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, writable: true });
   });
 
   it('renders custom fallback if provided', () => {

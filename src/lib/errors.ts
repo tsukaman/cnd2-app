@@ -145,7 +145,16 @@ export class ErrorHandler {
     } else {
       // 本番環境では簡潔なログ
       console.error(`[CND²] ${error.code}: ${error.message}`);
-      // TODO: 外部ログサービスに送信
+      // Send to Sentry if configured
+      if (typeof window !== 'undefined' && (window as any).Sentry) {
+        (window as any).Sentry.captureException(error, {
+          level: 'error',
+          tags: {
+            context,
+            errorCode: error.code,
+          },
+        });
+      }
     }
   }
 }

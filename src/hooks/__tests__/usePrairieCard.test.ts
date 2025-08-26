@@ -34,7 +34,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile;
+    let fetchedProfile: any;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://example.com/profile');
     });
@@ -68,7 +68,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile;
+    let fetchedProfile: any;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://example.com/profile');
     });
@@ -86,7 +86,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile;
+    let fetchedProfile: any;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://example.com/profile');
     });

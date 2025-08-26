@@ -40,7 +40,16 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
     // 本番環境では外部サービスにエラーを送信
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Sentryなどのエラー追跡サービスに送信
+      // Send to Sentry if configured
+      if (typeof window !== 'undefined' && (window as any).Sentry) {
+        (window as any).Sentry.captureException(error, {
+          contexts: {
+            react: {
+              componentStack: errorInfo.componentStack,
+            },
+          },
+        });
+      }
       console.error('Error caught by boundary:', {
         error: error.toString(),
         componentStack: errorInfo.componentStack,

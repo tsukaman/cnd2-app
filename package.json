@@ -24,14 +24,17 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build --config next.config.analyzer.mjs",
+    "build:analyze": "npm run analyze && open .next/analyze/__bundle_analysis.json"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.4",
     "@react-three/fiber": "^9.3.0",
+    "@sentry/nextjs": "^10.5.0",
     "@types/dompurify": "^3.0.5",
     "cheerio": "^1.1.2",
     "clsx": "^2.1.1",
@@ -52,6 +55,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^15.5.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
