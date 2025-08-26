@@ -158,7 +158,7 @@ describe('useDiagnosis', () => {
       throw new Error('Storage full');
     });
 
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
     const { result } = renderHook(() => useDiagnosis());
 
     await act(async () => {
@@ -168,7 +168,7 @@ describe('useDiagnosis', () => {
     await waitFor(() => {
       expect(result.current.result).toEqual(mockResult);
       expect(consoleSpy).toHaveBeenCalledWith(
-        '[useDiagnosis] 結果保存エラー:',
+        '[useDiagnosis] 結果保存エラー',
         expect.any(Error)
       );
     });
