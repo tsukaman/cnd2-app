@@ -3,6 +3,19 @@ import OpenAI from 'openai';
 import { PrairieProfile, DiagnosisResult } from '@/types';
 import { logger } from '@/lib/logger';
 
+// Constants for diagnosis generation
+const COMPATIBILITY_RANGE = {
+  MIN: 70,
+  MAX: 100,
+  RANDOM_SPREAD: 30 // Generates 70-100%
+} as const;
+
+const AI_CONFIG = {
+  MODEL: 'gpt-4o-mini',
+  TEMPERATURE: 0.7,
+  MAX_TOKENS: 800
+} as const;
+
 // Initialize OpenAI client
 const openai = process.env.OPENAI_API_KEY 
   ? new OpenAI({
@@ -29,9 +42,9 @@ async function generateAIDiagnosis(
     title: p.basic.title,
     company: p.basic.company,
     bio: p.basic.bio,
-    interests: p.interests?.join(', '),
-    skills: p.skills?.join(', '),
-    tags: p.tags?.join(' '),
+    interests: (p as any).interests?.join(', ') || '',
+    skills: (p as any).skills?.join(', ') || '',
+    tags: (p as any).tags?.join(' ') || '',
   }));
 
   const prompt = `あなたはCloudNative Days Tokyoのイベントで使用される相性診断システムです。
@@ -72,9 +85,9 @@ Bio: ${p.bio || '未設定'}
           content: prompt,
         },
       ],
-      model: 'gpt-4o-mini',
-      temperature: 0.7,
-      max_tokens: 800,
+      model: AI_CONFIG.MODEL,
+      temperature: AI_CONFIG.TEMPERATURE,
+      max_tokens: AI_CONFIG.MAX_TOKENS,
       response_format: { type: 'json_object' },
     });
 
@@ -84,7 +97,10 @@ Bio: ${p.bio || '未設定'}
       id: generateId(),
       mode,
       type: aiResult.type || 'クラウドネイティブ・パートナー',
-      compatibility: Math.min(100, Math.max(70, aiResult.compatibility || 85)),
+      compatibility: Math.min(
+        COMPATIBILITY_RANGE.MAX, 
+        Math.max(COMPATIBILITY_RANGE.MIN, aiResult.compatibility || 85)
+      ),
       summary: aiResult.summary || `${profiles[0].basic.name}さんと${profiles[1]?.basic.name || 'チーム'}は、クラウドネイティブ技術への情熱を共有する素晴らしいパートナーです。`,
       strengths: aiResult.strengths || [
         '技術的な興味の共通点が多い',
@@ -113,7 +129,9 @@ function generateSimpleDiagnosis(
   profiles: PrairieProfile[],
   mode: 'duo' | 'group'
 ): DiagnosisResult {
-  const compatibility = Math.floor(Math.random() * 30) + 70; // 70-100%
+  const compatibility = Math.floor(
+    Math.random() * COMPATIBILITY_RANGE.RANDOM_SPREAD
+  ) + COMPATIBILITY_RANGE.MIN;
   
   return {
     id: generateId(),

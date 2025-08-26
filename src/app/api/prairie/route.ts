@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import * as cheerio from 'cheerio';
 
-// Prairie Card URL validation
+// Prairie Card URL validation - strict security
+const ALLOWED_PRAIRIE_HOSTS = new Set([
+  'prairie.cards',
+  'my.prairie.cards'
+]);
+
 function validatePrairieCardUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    const validHosts = ['prairie.cards', 'my.prairie.cards'];
-    return validHosts.includes(parsed.hostname) || 
-           parsed.hostname.endsWith('.prairie.cards');
+    // Only allow HTTPS protocol
+    if (parsed.protocol !== 'https:') {
+      return false;
+    }
+    // Only allow explicitly listed domains
+    return ALLOWED_PRAIRIE_HOSTS.has(parsed.hostname);
   } catch {
     return false;
   }
@@ -24,36 +33,56 @@ function escapeHtml(unsafe: string | undefined): string {
     .replace(/'/g, "&#039;");
 }
 
-// Extract social URL from HTML
-function extractSocialUrl(html: string, domain: string): string | undefined {
-  const pattern = new RegExp(`https?://(?:www\\.)?${domain.replace('.', '\\.')}[^"'\\s>]+`, 'i');
-  const match = html.match(pattern);
-  return match ? match[0] : undefined;
-}
 
-// Parse Prairie Card HTML
+// Parse Prairie Card HTML using cheerio for security
 function parseFromHTML(html: string) {
-  const extractText = (pattern: RegExp): string => {
-    const match = html.match(pattern);
-    return match ? match[1].trim() : '';
+  const $ = cheerio.load(html, {
+    scriptingEnabled: false,
+    xml: false
+  });
+  
+  // Safely extract text content
+  const extractText = (selector: string): string => {
+    return $(selector).first().text().trim() || '';
   };
   
-  const extractArray = (pattern: RegExp): string[] => {
-    const matches = html.matchAll(pattern);
-    return Array.from(matches).map(m => m[1].trim());
+  const extractArray = (selector: string): string[] => {
+    const items: string[] = [];
+    $(selector).each((_, elem) => {
+      const text = $(elem).text().trim();
+      if (text) items.push(text);
+    });
+    return items;
+  };
+  
+  // Extract social URLs safely
+  const extractSocialLink = (domain: string): string | undefined => {
+    let url: string | undefined;
+    $('a[href]').each((_, elem) => {
+      const href = $(elem).attr('href');
+      if (href && href.includes(domain)) {
+        url = href;
+        return false; // break the loop
+      }
+    });
+    return url;
   };
   
   return {
-    name: escapeHtml(extractText(/<h1[^>]*>([^<]+)<\/h1>/i)) || 'CloudNative Enthusiast',
-    bio: escapeHtml(extractText(/<div[^>]*class="[^"]*bio[^"]*"[^>]*>([^<]+)<\/div>/i)) || 'クラウドネイティブ技術に情熱を注ぐエンジニア',
-    title: escapeHtml(extractText(/<div[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
-    company: escapeHtml(extractText(/<div[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
-    interests: ['Kubernetes', 'Docker', 'CI/CD', 'Observability'],
-    skills: extractArray(/<span[^>]*class="[^"]*skill[^"]*"[^>]*>([^<]+)<\/span>/gi),
-    tags: ['#CloudNative', '#DevOps', '#SRE'],
-    twitter: extractSocialUrl(html, 'twitter.com') || extractSocialUrl(html, 'x.com'),
-    github: extractSocialUrl(html, 'github.com'),
-    linkedin: extractSocialUrl(html, 'linkedin.com'),
+    name: extractText('h1') || 'CloudNative Enthusiast',
+    bio: extractText('.bio, [class*="bio"]') || 'クラウドネイティブ技術に情熱を注ぐエンジニア',
+    title: extractText('.title, [class*="title"]') || '',
+    company: extractText('.company, [class*="company"]') || '',
+    interests: extractArray('.interest, [class*="interest"]').length > 0 
+      ? extractArray('.interest, [class*="interest"]')
+      : ['Kubernetes', 'Docker', 'CI/CD', 'Observability'],
+    skills: extractArray('.skill, [class*="skill"]'),
+    tags: extractArray('.tag, [class*="tag"]').length > 0
+      ? extractArray('.tag, [class*="tag"]')
+      : ['#CloudNative', '#DevOps', '#SRE'],
+    twitter: extractSocialLink('twitter.com') || extractSocialLink('x.com'),
+    github: extractSocialLink('github.com'),
+    linkedin: extractSocialLink('linkedin.com'),
   };
 }
 

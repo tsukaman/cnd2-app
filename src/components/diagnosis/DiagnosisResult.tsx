@@ -190,7 +190,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             transition={{ delay: 1.7 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <ShareButton resultId={result.id} score={result.compatibility || result.score || 85} />
+            <ShareButton resultId={result.id} score={result.compatibility ?? result.score ?? 85} />
 
             <motion.button
               onClick={() => setShowQRModal(true)}
