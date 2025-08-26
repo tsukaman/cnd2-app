@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Output configuration for Cloudflare Pages
-  // Static export for simpler deployment
-  output: 'export',
+  // Removed static export to enable API routes with Cloudflare Functions
+  // output: 'export',
   
   // Enable React strict mode for better development experience
   reactStrictMode: true,
