@@ -5,9 +5,9 @@ import * as Sentry from '@sentry/nextjs';
  * Filters out non-critical errors and noise
  */
 export function filterSentryError(
-  event: Sentry.Event,
+  event: Sentry.ErrorEvent,
   hint: Sentry.EventHint
-): Sentry.Event | null {
+): Sentry.ErrorEvent | null {
   // Get the original exception
   const error = hint.originalException || hint.syntheticException;
   const errorMessage = error?.toString() || '';
