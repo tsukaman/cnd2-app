@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-// DiagnosisEngine is imported dynamically below
 import { validateDiagnosisRequest } from '@/lib/validators/diagnosis';
 import { ApiError } from '@/lib/api-errors';
 
@@ -11,9 +10,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = validateDiagnosisRequest(body);
     
-    // 診断エンジンの実行（新しいバージョンを使用）
-    const { DiagnosisEngine: DiagnosisEngineV2 } = await import('@/lib/diagnosis-engine-v2');
-    const engine = new DiagnosisEngineV2();
+    // 診断エンジンの実行（動的インポート）
+    const { DiagnosisEngine } = await import('@/lib/diagnosis-engine-v2');
+    const engine = new DiagnosisEngine();
     const result = await engine.diagnose(validatedData);
     
     return NextResponse.json({

@@ -48,12 +48,47 @@ export async function GET(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  context: RouteContext
+) {
+  try {
+    const { id } = await context.params;
+    
+    if (!id || typeof id !== 'string') {
+      throw ApiError.validation('Invalid result ID');
+    }
+    
+    const storage = new KVStorage();
+    await storage.delete(id);
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Result deleted successfully',
+    });
+  } catch (error) {
+    console.error('Results API delete error:', error);
+    
+    if (error instanceof ApiError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.statusCode }
+      );
+    }
+    
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete result' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
