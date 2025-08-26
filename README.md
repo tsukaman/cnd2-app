@@ -193,9 +193,13 @@ cnd2-app/
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+## 👨‍💻 作者
+
+**つかまん** - [@tsukaman](https://twitter.com/tsukaman)
+
 ## 📄 ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。
+このプロジェクトはApache License 2.0の下で公開されています。詳細は[LICENSE](./LICENSE)ファイルをご覧ください。
 
 ## 🙏 謝辞
 

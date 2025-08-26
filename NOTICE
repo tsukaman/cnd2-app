@@ -1,0 +1,21 @@
+CND² - CloudNative Days × Connect 'n' Discover
+Copyright 2025 Masataka Tsukamoto
+
+This product includes software developed at
+CloudNative Days Winter 2025 (https://cloudnativedays.jp/).
+
+== Third-party Software ==
+
+This software includes the following third-party components:
+
+- Next.js (MIT License) - https://github.com/vercel/next.js
+- React (MIT License) - https://github.com/facebook/react
+- TypeScript (Apache-2.0 License) - https://github.com/microsoft/TypeScript
+- Tailwind CSS (MIT License) - https://github.com/tailwindlabs/tailwindcss
+- Framer Motion (MIT License) - https://github.com/framer/motion
+- Three.js (MIT License) - https://github.com/mrdoob/three.js
+- OpenAI SDK (MIT License) - https://github.com/openai/openai-node
+- Zod (MIT License) - https://github.com/colinhacks/zod
+- Jest (MIT License) - https://github.com/jestjs/jest
+
+For full license information of dependencies, see package.json and package-lock.json.
