@@ -6,7 +6,7 @@
   **エンジニアの出会いを、データで可視化する**
   
   [![Next.js](https://img.shields.io/badge/Next.js-15.5.0-black?logo=next.js)](https://nextjs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%20strict-blue?logo=typescript)](https://www.typescriptlang.org/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
   [![Jest](https://img.shields.io/badge/Jest-30.0-C21325?logo=jest)](https://jestjs.io/)
   [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -22,11 +22,13 @@
 
 - **2人診断モード**: 2人のエンジニアの相性を詳細に分析
 - **グループ診断モード**: 3-6人のチームの相性と協働可能性を評価（6人なら6²=36通りの相性）
-- **Prairie Card連携**: Prairie Cardから自動的にプロフィール情報を取得
-- **AI診断**: OpenAI GPT-4を使用した高度な相性分析（フォールバック機構付き）
+- **Prairie Card連携**: Edge Runtime対応の高速パーサーで自動プロフィール取得
+- **AI診断**: OpenAI GPT-4o-miniを使用した高度な相性分析（フォールバック機構付き）
 - **結果共有**: QRコードやNFC、URLでの診断結果シェア機能
 - **美しいUI**: ダークテーマベースの洗練されたデザイン
 - **プライバシー配慮**: 診断結果は7日後に自動削除
+- **セキュリティ対策**: HTML sanitization & XSS protection完備
+- **レート制限**: 10 requests/minute per IP（悪用防止）
 
 ## 🔧 開発ガイドライン
 
@@ -37,26 +39,29 @@
 
 ### フロントエンド
 - **Framework**: Next.js 15.5.0 (App Router + Turbopack)
-- **Language**: TypeScript 5.0
+- **Language**: TypeScript 5.0 with strict mode enabled
 - **Styling**: Tailwind CSS 4.0
 - **Animation**: Framer Motion 12.23, Three.js, GSAP 3.13
 - **Icons**: Lucide React
 - **Validation**: Zod 3.25
 
 ### バックエンド
-- **API Routes**: Next.js App Router API (Edge Runtime)
-- **Edge Functions**: Cloudflare Workers Functions対応
+- **Dual API Implementation**: 
+  - Next.js API Routes (src/app/api/*) for development
+  - Cloudflare Pages Functions (functions/*) for production
+- **Runtime**: Edge Runtime compatible
 - **AI Integration**: OpenAI API (GPT-4o-mini) with 10s timeout
 - **Data Storage**: Cloudflare Workers KV (7日間自動削除)
-- **Data Parsing**: Edge-compatible Prairie Card parser
-- **Rate Limiting**: カスタムミドルウェア実装
+- **Data Parsing**: Edge Runtime compatible Prairie Card parser
+- **Rate Limiting**: 10 requests/minute per IP (in-memory store for Edge compatibility)
+- **Security**: HTML sanitization with DOMPurify, XSS protection
 - **Error Handling**: 構造化エラーハンドリング + 環境別ログレベル制御
 - **CORS**: 複数オリジンサポート（環境変数設定可能）
 
 ### テスティング
 - **Test Runner**: Jest 30.0
 - **Testing Library**: React Testing Library 16.3
-- **Coverage**: 63テスト、包括的なカバレージ
+- **Coverage**: 76テスト、包括的なカバレージ
 
 ### インフラ・モニタリング
 - **Hosting**: Cloudflare Pages/Workers (推奨)
@@ -65,7 +70,8 @@
 - **Logging**: 環境別ログレベル制御（本番環境で機密情報自動サニタイズ）
 - **Environment Validation**: Zodによる型安全な環境変数
 - **API Security**: 
-  - レート制限、リクエストID追跡
+  - レート制限（10 requests/minute per IP）、リクエストID追跡
+  - HTML sanitization（DOMPurify）、XSS protection
   - CORS（複数オリジンサポート）
   - APIタイムアウト（10秒）
 - **Secrets Management**: サーバーサイドのみでのAPIキー管理
@@ -153,22 +159,38 @@ npm start
 
 ## 🚧 APIエンドポイント
 
+### Next.js API Routes (Development)
+Located in `src/app/api/*` - Used for local development
+
 ### `/api/diagnosis` - 診断実行
 - **Method**: POST
-- **Body**: `{ mode: 'duo' | 'group', participants: [...] }`
-- **Response**: 診断結果（AIフォールバック付き）
-- **Features**: 10秒タイムアウト、KV保存
+- **Body**: `{ profiles: PrairieProfile[], mode: 'duo' | 'group' }`
+- **Response**: 診断結果（OpenAI GPT-4o-mini powered with fallback）
+- **Features**: 
+  - 10 requests/minute rate limiting per IP
+  - 10秒APIタイムアウト
+  - Edge Runtime compatible
+  - HTML sanitization & XSS protection
 
 ### `/api/prairie` - Prairie Card解析
 - **Method**: POST  
 - **Body**: `{ url: string } | { html: string }`
-- **Response**: プロフィール情報
-- **Features**: Edge Runtime対応パーサー
+- **Response**: サニタイズされたプロフィール情報
+- **Features**: 
+  - Edge Runtime対応高速パーサー
+  - DOMPurify HTML sanitization
+  - キャッシュ機構付き
 
 ### `/api/results/[id]` - 結果取得/削除
 - **Methods**: GET, DELETE
 - **Response**: 保存された診断結果
-- **Features**: KVまたはLocalStorageから取得
+- **Features**: KVストレージから取得（7日間自動削除）
+
+### Cloudflare Pages Functions (Production)
+Located in `functions/*` - Used for production deployment on Cloudflare Pages
+- **Runtime**: Cloudflare Workers Runtime
+- **KV Storage**: Cloudflare Workers KV bindings
+- **Edge Deployment**: Global edge network deployment
 
 ## 🏗️ アーキテクチャ
 
@@ -209,19 +231,22 @@ cnd2-app/
 #### APIミドルウェア
 - リクエスト/レスポンスロギング
 - エラーハンドリング
-- レート制限（100リクエスト/分）
+- レート制限（10 requests/minute per IP）
 - リクエストID追跡
+- HTML sanitization & XSS protection
 
 #### 診断エンジン
-- AI診断（OpenAI GPT-4）
+- AI診断（OpenAI GPT-4o-mini）
 - ルールベース診断（フォールバック）
 - キャッシュ機構
 - 並列処理対応
+- Edge Runtime compatibility
 
 #### Prairie Card連携
-- プロフィール自動取得
-- データ正規化
+- プロフィール自動取得（Edge Runtime対応）
+- データ正規化 & DOMPurify sanitization
 - エラー処理
+- キャッシュ機構付き
 
 ## 🧪 テスト
 
@@ -290,11 +315,17 @@ Prairie CardのURLからプロフィール情報を取得
 
 - **環境変数検証**: Zodによる厳密な型チェック
 - **APIキー保護**: サーバーサイドのみでアクセス可能
-- **レート制限**: 悪用防止のための制限機構（100req/分）
+- **レート制限**: 悪用防止のための制限機構（10 requests/minute per IP）
 - **CORS設定**: 適切なオリジン制御
-- **XSS対策**: React標準のエスケープ処理 + CSP設定
+- **XSS対策**: 
+  - DOMPurify HTML sanitization
+  - React標準のエスケープ処理
+  - CSP設定（unsafe-eval不使用）
+- **HTML Sanitization**: 
+  - Prairie Card data sanitization
+  - Allowed tags: p, br, strong, em, h1-h6, ul, ol, li, etc.
+  - Dangerous protocol blocking: javascript:, data:, vbscript:
 - **CSRFトークン**: Next.jsの標準実装
-- **CSP**: Content Security Policy（unsafe-eval不使用）
 - **セキュリティヘッダー**: X-Frame-Options、X-Content-Type-Options等
 
 ## 📊 モニタリング・監視
@@ -312,7 +343,20 @@ Prairie CardのURLからプロフィール情報を取得
 
 ## 🚀 デプロイ
 
-### Cloudflare Pages（推奨）
+### Development (ローカル開発)
+```bash
+# 開発環境セットアップ
+npm install
+cp .env.example .env.local
+# .env.localに環境変数を設定
+
+# 開発サーバー起動（Next.js API Routes使用）
+npm run dev
+```
+
+### Production - Cloudflare Pages（推奨）
+本プロジェクトは静的エクスポート + Cloudflare Pages Functions で本番運用
+
 ```bash
 # ビルド（静的エクスポート）
 npm run build
@@ -327,7 +371,12 @@ npx wrangler pages deploy out
 - **ビルドコマンド**: `npm run build`
 - **出力ディレクトリ**: `out`
 - **Node.jsバージョン**: 20.x
+- **Functions**: `functions/` ディレクトリが自動デプロイ
+- **KV Namespace**: `DIAGNOSIS_KV` binding必須
 - **環境変数**: Cloudflare Dashboardで設定
+  - `OPENAI_API_KEY`
+  - `ALLOWED_ORIGINS`
+  - `KV_NAMESPACE`
 
 ### Vercel（代替）
 ```bash
@@ -369,12 +418,15 @@ docker run -p 3000:3000 cnd2-app
 
 ## 🌟 最近の更新
 
-### v1.1.0 (2025-01-27)
-- 🚀 Cloudflare Workers Functions API実装
-- 💾 Workers KVによる結果永続化（7日間自動削除）
-- 🔒 セキュリティ強化（CORS、ログサニタイズ）
-- ⚡ APIタイムアウト設定（10秒）
-- 📝 環境別ログレベル制御
+### v1.2.0 (2025-08-26)
+- 🤖 AI diagnosis with OpenAI GPT-4o-mini integration
+- 🛡️ HTML sanitization & XSS protection with DOMPurify
+- ⚡ Prairie Card parsing with Edge Runtime compatibility
+- 🚦 Rate limiting (10 requests/minute per IP)
+- 🔄 Dual API implementation (Next.js Routes + Cloudflare Functions)
+- 📝 TypeScript strict mode enabled
+- ✅ Test suite expanded to 76 tests
+- 🚀 Static export for Cloudflare Pages deployment
 
 ## 🙏 謝辞
 
@@ -385,16 +437,23 @@ docker run -p 3000:3000 cnd2-app
 
 ## 📊 プロジェクトステータス
 
-- **バージョン**: 1.1.0
+- **バージョン**: 1.2.0
 - **ステータス**: Production Ready
-- **最終更新**: 2025年1月27日
-- **テスト**: 全63テスト合格 ✅
-- **ビルド**: 成功 ✅
-- **API**: Cloudflare Workers Functions実装済み ✅
+- **最終更新**: 2025年8月26日
+- **テスト**: 全76テスト合格 ✅
+- **ビルド**: 静的エクスポート成功 ✅
+- **API**: 
+  - Next.js API Routes (development) ✅
+  - Cloudflare Pages Functions (production) ✅
+- **AI Integration**: OpenAI GPT-4o-mini診断 ✅
 - **セキュリティ**: 
+  - HTML sanitization & XSS protection ✅
+  - Rate limiting (10 req/min per IP) ✅
   - CSP強化済み ✅
   - CORS設定最適化 ✅
   - 機密情報サニタイズ ✅
+- **Runtime**: Edge Runtime compatibility ✅
+- **TypeScript**: Strict mode enabled ✅
 - **モニタリング**: Sentry統合済み ✅
 
 ---
