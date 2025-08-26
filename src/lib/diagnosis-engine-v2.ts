@@ -4,6 +4,7 @@
 import { DiagnosisRequest } from './validators/diagnosis';
 import { KVStorage } from './workers/kv-storage-v2';
 import { nanoid } from 'nanoid';
+import { DiagnosisResult, AIResponse } from '@/types/diagnosis';
 
 export class DiagnosisEngine {
   private kvStorage: KVStorage;
@@ -45,7 +46,7 @@ export class DiagnosisEngine {
   }
 
   private async callOpenAI(request: DiagnosisRequest): Promise<AIResponse> {
-    const apiKey = (globalThis as any).OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+    const apiKey = this.getApiKey();
     
     if (!apiKey || apiKey === 'dummy') {
       // モックレスポンス（開発用）
@@ -199,27 +200,19 @@ CloudNative技術とコミュニティの観点から、相性と交流のアド
     date.setDate(date.getDate() + 7);
     return date.toISOString();
   }
-}
 
-interface DiagnosisResult {
-  id: string;
-  mode: 'duo' | 'group';
-  type: string;
-  compatibility: number;
-  description: string;
-  tips: string[];
-  hashtag: string;
-  participants: any[];
-  metadata: {
-    createdAt: string;
-    expiresAt: string;
-    version: string;
-  };
-}
-
-interface AIResponse {
-  type: string;
-  compatibility: number;
-  description: string;
-  tips: string[];
+  private getApiKey(): string | undefined {
+    // Edge Runtime互換のAPIキー取得
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.OPENAI_API_KEY;
+    }
+    
+    // Cloudflare Workers環境の場合
+    if (typeof globalThis !== 'undefined') {
+      const env = (globalThis as { env?: { OPENAI_API_KEY?: string }; OPENAI_API_KEY?: string }).env || (globalThis as { OPENAI_API_KEY?: string });
+      return env.OPENAI_API_KEY;
+    }
+    
+    return undefined;
+  }
 }
