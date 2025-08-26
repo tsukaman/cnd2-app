@@ -25,17 +25,20 @@ const RATE_LIMIT = {
 // Simple in-memory rate limiter (for Edge Runtime compatibility)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-// Clean up old entries periodically
-setInterval(() => {
+// Clean up old entries on each request instead of using setInterval (Edge Runtime compatible)
+function cleanupRateLimit(): void {
   const now = Date.now();
   for (const [ip, limit] of rateLimitMap.entries()) {
     if (now > limit.resetTime) {
       rateLimitMap.delete(ip);
     }
   }
-}, RATE_LIMIT.WINDOW_MS);
+}
 
 function checkRateLimit(ip: string): boolean {
+  // Clean up expired entries on each check
+  cleanupRateLimit();
+  
   const now = Date.now();
   const limit = rateLimitMap.get(ip);
   
@@ -141,7 +144,13 @@ Bio: ${p.bio || '未設定'}
       response_format: { type: 'json_object' },
     });
 
-    const aiResult = JSON.parse(completion.choices[0].message.content || '{}');
+    let aiResult;
+    try {
+      aiResult = JSON.parse(completion.choices[0].message.content || '{}');
+    } catch (parseError) {
+      logger.warn('[AI Diagnosis] JSON parse failed, using fallback:', parseError);
+      return generateSimpleDiagnosis(profiles, mode);
+    }
     
     return {
       id: generateId(),
