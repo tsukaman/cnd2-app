@@ -35,10 +35,14 @@ function escapeHtml(unsafe: string | undefined): string {
 
 // Parse Prairie Card HTML using regex for Edge Runtime compatibility
 function parseFromHTML(html: string) {
-  // Remove script tags and their content for security
+  // Remove dangerous tags and event handlers for security
   const cleanHtml = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/<iframe\b[^>]*>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers like onclick, onload, etc.
+    .replace(/on\w+='[^']*'/gi, '');
   
   // Extract text content safely using regex
   const extractText = (pattern: RegExp): string => {

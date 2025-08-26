@@ -8,6 +8,9 @@ updates:
       day: "monday"
       time: "04:00"
     open-pull-requests-limit: 10
+    ignore:
+      # @types/dompurify is deprecated as DOMPurify now includes its own types
+      - dependency-name: "@types/dompurify"
     groups:
       dependencies:
         patterns:

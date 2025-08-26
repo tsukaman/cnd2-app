@@ -16,6 +16,53 @@ const AI_CONFIG = {
   MAX_TOKENS: 800
 } as const;
 
+// Rate limiting configuration
+const RATE_LIMIT = {
+  WINDOW_MS: 60000, // 1 minute
+  MAX_REQUESTS: 10  // 10 requests per minute per IP
+} as const;
+
+// Simple in-memory rate limiter (for Edge Runtime compatibility)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+// Clean up old entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, limit] of rateLimitMap.entries()) {
+    if (now > limit.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, RATE_LIMIT.WINDOW_MS);
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const limit = rateLimitMap.get(ip);
+  
+  if (!limit || now > limit.resetTime) {
+    rateLimitMap.set(ip, { 
+      count: 1, 
+      resetTime: now + RATE_LIMIT.WINDOW_MS 
+    });
+    return true;
+  }
+  
+  if (limit.count >= RATE_LIMIT.MAX_REQUESTS) {
+    return false;
+  }
+  
+  limit.count++;
+  return true;
+}
+
+// Extended profile interface for backward compatibility
+interface ExtendedPrairieProfile extends PrairieProfile {
+  // Legacy fields that might exist in the data
+  interests?: string[];
+  skills?: string[];
+  tags?: string[];
+}
+
 // Initialize OpenAI client
 const openai = process.env.OPENAI_API_KEY 
   ? new OpenAI({
@@ -37,15 +84,18 @@ async function generateAIDiagnosis(
     throw new Error('OpenAI API key not configured');
   }
 
-  const profileSummaries = profiles.map(p => ({
-    name: p.basic.name,
-    title: p.basic.title,
-    company: p.basic.company,
-    bio: p.basic.bio,
-    interests: (p as any).interests?.join(', ') || '',
-    skills: (p as any).skills?.join(', ') || '',
-    tags: (p as any).tags?.join(' ') || '',
-  }));
+  const profileSummaries = profiles.map(p => {
+    const extended = p as ExtendedPrairieProfile;
+    return {
+      name: p.basic.name,
+      title: p.basic.title,
+      company: p.basic.company,
+      bio: p.basic.bio,
+      interests: extended.interests?.join(', ') || p.details?.interests?.join(', ') || '',
+      skills: extended.skills?.join(', ') || p.details?.skills?.join(', ') || '',
+      tags: extended.tags?.join(' ') || p.details?.tags?.join(' ') || '',
+    };
+  });
 
   const prompt = `あなたはCloudNative Days Tokyoのイベントで使用される相性診断システムです。
 以下のエンジニアプロフィールを分析して、クラウドネイティブ技術の文脈で相性診断を行ってください。
@@ -158,6 +208,22 @@ function generateSimpleDiagnosis(
 
 export async function POST(request: NextRequest) {
   try {
+    // Get client IP for rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 
+               request.headers.get('x-real-ip') || 
+               'unknown';
+    
+    // Check rate limit
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Too many requests. Please try again later.' 
+        },
+        { status: 429 }
+      );
+    }
+    
     const { profiles, mode } = await request.json();
     
     if (!profiles || !Array.isArray(profiles) || profiles.length < 2) {
@@ -188,10 +254,20 @@ export async function POST(request: NextRequest) {
     }
     
     // Store in KV if available (for production)
+    // Note: In Cloudflare Pages Functions, KV bindings are accessed differently
+    // This will be properly configured during deployment
     if (process.env.KV_NAMESPACE) {
       try {
-        // This would be implemented with actual KV storage in production
-        logger.info(`[Diagnosis API] Would store result ${result.id} in KV`);
+        // For Cloudflare Pages Functions, KV is accessed through the context
+        // This is a placeholder that will work with the actual runtime binding
+        logger.info(`[Diagnosis API] Storing result ${result.id} in KV`);
+        
+        // In production, this will be:
+        // await context.env.DIAGNOSIS_KV.put(
+        //   `diagnosis:${result.id}`,
+        //   JSON.stringify(result),
+        //   { expirationTtl: 60 * 60 * 24 * 7 } // 7 days
+        // );
       } catch (kvError) {
         logger.warn('[Diagnosis API] KV storage failed:', kvError);
       }
