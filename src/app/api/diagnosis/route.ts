@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateDiagnosisRequest } from '@/lib/validators/diagnosis';
 import { ApiError } from '@/lib/api-errors';
+import { getCorsHeaders } from '@/lib/cors';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   try {
     // リクエストの検証
     const body = await request.json();
@@ -15,38 +20,45 @@ export async function POST(request: NextRequest) {
     const engine = new DiagnosisEngine();
     const result = await engine.diagnose(validatedData);
     
-    return NextResponse.json({
-      success: true,
-      result,
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        result,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        headers: corsHeaders,
+      }
+    );
   } catch (error) {
-    console.error('Diagnosis API error:', error);
+    logger.error('Diagnosis API error', error);
     
     if (error instanceof ApiError) {
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: error.statusCode }
+        { 
+          status: error.statusCode,
+          headers: corsHeaders,
+        }
       );
     }
     
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: corsHeaders,
+      }
     );
   }
 }
 
-export async function OPTIONS() {
-  const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2-app.pages.dev';
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
   
   return new NextResponse(null, {
     status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': allowedOrigin,
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Credentials': 'true',
-    },
+    headers: corsHeaders,
   });
 }

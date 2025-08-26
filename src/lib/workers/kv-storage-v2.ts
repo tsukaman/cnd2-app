@@ -4,6 +4,7 @@
  */
 
 import { DiagnosisResult } from '@/types/diagnosis';
+import { logger } from '../logger';
 
 export class KVStorage {
   private kv: KVNamespace | null = null;
@@ -24,19 +25,19 @@ export class KVStorage {
         if (env.CND2_RESULTS && typeof env.CND2_RESULTS === 'object') {
           this.kv = env.CND2_RESULTS as KVNamespace;
           this.isAvailable = true;
-          console.log('[KV] Storage initialized successfully');
+          logger.info('KV Storage initialized successfully');
         } else if ('CND2_RESULTS' in globalThis) {
           this.kv = (globalThis as { CND2_RESULTS?: KVNamespace }).CND2_RESULTS as KVNamespace;
           this.isAvailable = true;
-          console.log('[KV] Storage initialized from globalThis');
+          logger.info('KV Storage initialized from globalThis');
         }
       }
       
       if (!this.isAvailable) {
-        console.warn('[KV] Storage not available in current environment');
+        logger.warn('KV Storage not available in current environment');
       }
     } catch (error) {
-      console.error('[KV] Failed to initialize storage:', error);
+      logger.error('Failed to initialize KV storage', error);
       this.isAvailable = false;
     }
   }
@@ -46,7 +47,7 @@ export class KVStorage {
    */
   async save(id: string, data: DiagnosisResult, options?: SaveOptions): Promise<void> {
     if (!this.isAvailable || !this.kv) {
-      console.warn('[KV] Storage not available, using fallback');
+      logger.debug('KV Storage not available, using fallback');
       await this.saveFallback(id, data);
       return;
     }
@@ -85,7 +86,7 @@ export class KVStorage {
     try {
       return JSON.parse(data);
     } catch (error) {
-      console.error('[KV] Parse error:', error);
+      logger.error('Failed to parse KV data', error);
       return null;
     }
   }
@@ -131,7 +132,7 @@ export class KVStorage {
           expiresAt: entry.expiresAt,
         }));
     } catch (error) {
-      console.error('[KV] Index parse error:', error);
+      logger.error('Failed to parse KV index', error);
       return [];
     }
   }
@@ -215,7 +216,7 @@ export class KVStorage {
         expirationTtl: 30 * 24 * 60 * 60,
       });
     } catch (error) {
-      console.error('[KV] Index update error:', error);
+      logger.error('Failed to update KV index', error);
     }
   }
 
@@ -247,7 +248,7 @@ export class KVStorage {
       try {
         localStorage.setItem(`cnd2_result_${id}`, JSON.stringify(data));
       } catch (error) {
-        console.error('[KV] Fallback save failed:', error);
+        logger.error('Fallback save failed', error);
       }
     }
   }
@@ -258,7 +259,7 @@ export class KVStorage {
         const data = localStorage.getItem(`cnd2_result_${id}`);
         return data ? JSON.parse(data) : null;
       } catch (error) {
-        console.error('[KV] Fallback get failed:', error);
+        logger.error('Fallback get failed', error);
         return null;
       }
     }
@@ -270,7 +271,7 @@ export class KVStorage {
       try {
         localStorage.removeItem(`cnd2_result_${id}`);
       } catch (error) {
-        console.error('[KV] Fallback delete failed:', error);
+        logger.error('Fallback delete failed', error);
       }
     }
   }
