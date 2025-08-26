@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Output configuration for Cloudflare Pages
-  // Standard build for Next.js app
+  // Static export for simpler deployment
+  output: 'export',
   
   // Enable React strict mode for better development experience
   reactStrictMode: true,
@@ -11,10 +12,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // Optimize images
+  // Optimize images - unoptimized for static export
   images: {
-    formats: ['image/avif', 'image/webp'],
-    domains: ['cdn2.cloudnativedays.jp'],
+    unoptimized: true,
   },
   
   // Production optimizations

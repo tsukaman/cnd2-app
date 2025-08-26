@@ -38,6 +38,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: cnd2-app
-          directory: .next
+          directory: out
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: '3'
