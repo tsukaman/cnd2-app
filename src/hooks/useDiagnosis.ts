@@ -38,22 +38,23 @@ export function useDiagnosis(): UseDiagnosisReturn {
         throw new Error(data.error || '診断の生成に失敗しました');
       }
 
-      setResult(data.result);
+      const result = data.data?.result || data.result;
+      setResult(result);
       
       // 結果を保存（クライアント側）
       try {
         const stored = localStorage.getItem('cnd2_results') || '{}';
         const results = JSON.parse(stored);
-        results[data.result.id] = {
-          ...data.result,
-          createdAt: data.result.createdAt,
+        results[result.id] = {
+          ...result,
+          createdAt: result.createdAt,
         };
         localStorage.setItem('cnd2_results', JSON.stringify(results));
       } catch (storageError) {
         logger.warn('[useDiagnosis] 結果保存エラー', storageError);
       }
       
-      return data.result;
+      return result;
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 

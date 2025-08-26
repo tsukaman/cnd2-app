@@ -157,6 +157,13 @@ export default function PrairieCardInput({
               {label}
             </label>
             <div className="flex items-center gap-2">
+              {/* Platform detection status (debug) */}
+              {process.env.NODE_ENV === 'development' && (
+                <span className="text-xs text-gray-500 mr-2">
+                  Platform: {platform}
+                </span>
+              )}
+              
               {/* NFC Button (Android only) */}
               {nfcSupported && platform === 'android' && (
                 <motion.button

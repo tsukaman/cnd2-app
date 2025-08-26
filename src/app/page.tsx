@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { MenuCard } from "@/components/ui/MenuCard";
 import { ConsentDialog } from "@/components/ui/ConsentDialog";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { BackgroundEffects } from "@/components/effects/BackgroundEffects";
+import { DiagnosisResultComponent } from "@/components/diagnosis/DiagnosisResult";
+import type { DiagnosisResult } from "@/types";
 
 const taglines = [
   { en: "Connect Your Future", ja: "エンジニアの出会いを、データで可視化する" },
@@ -19,6 +22,10 @@ export default function Home() {
   const [isReady, setIsReady] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
   const [taglineIndex, setTaglineIndex] = useState(0);
+  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
+  const searchParams = useSearchParams();
+  const resultId = searchParams.get("result");
+  const mode = searchParams.get("mode");
 
   useEffect(() => {
     // プライバシー同意確認
@@ -29,6 +36,22 @@ export default function Home() {
     // ローディング画面を1秒間表示
     setTimeout(() => setIsReady(true), 1000);
   }, []);
+
+  // 診断結果を読み込む
+  useEffect(() => {
+    if (resultId) {
+      // LocalStorageから結果を取得
+      const storedResult = localStorage.getItem(`diagnosis-${resultId}`);
+      if (storedResult) {
+        try {
+          const result = JSON.parse(storedResult);
+          setDiagnosisResult(result);
+        } catch (error) {
+          console.error("Failed to parse diagnosis result:", error);
+        }
+      }
+    }
+  }, [resultId]);
 
   useEffect(() => {
     // タグラインを5秒ごとに切り替える
@@ -50,6 +73,25 @@ export default function Home() {
           setHasConsented(true);
         }}
       />
+    );
+  }
+
+  // 診断結果がある場合は結果を表示
+  if (diagnosisResult) {
+    return (
+      <main className="min-h-screen relative overflow-hidden stars-bg">
+        <BackgroundEffects />
+        <div className="relative z-10">
+          <DiagnosisResultComponent 
+            result={diagnosisResult} 
+            onReset={() => {
+              setDiagnosisResult(null);
+              // URLパラメータをクリア
+              window.history.replaceState({}, '', '/');
+            }}
+          />
+        </div>
+      </main>
     );
   }
 

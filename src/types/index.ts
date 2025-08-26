@@ -33,15 +33,23 @@ export interface PrairieProfile {
 }
 
 export interface DiagnosisResult {
-  type: string;
-  score: number;
-  message: string;
-  conversationStarters: string[];
-  hiddenGems: string;
-  shareTag: string;
-  participants: PrairieProfile[];
-  createdAt: Date;
   id: string;
+  mode: 'duo' | 'group';
+  type: string;
+  compatibility: number;
+  summary: string;
+  strengths: string[];
+  opportunities: string[];
+  advice: string;
+  participants: PrairieProfile[];
+  createdAt: string;
+  aiPowered?: boolean;
+  // Legacy fields for backward compatibility
+  score?: number;
+  message?: string;
+  conversationStarters?: string[];
+  hiddenGems?: string;
+  shareTag?: string;
 }
 
 export interface CND2State {

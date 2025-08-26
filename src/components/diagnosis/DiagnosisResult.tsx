@@ -33,17 +33,17 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
   }, []);
 
   const copyToClipboard = () => {
-    const url = `https://cdn2.cloudnativedays.jp/result/${result.id}`;
+    const url = `https://cnd2.cloudnativedays.jp/result/${result.id}`;
     navigator.clipboard.writeText(url);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // スコアに応じた色を決定
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return "from-yellow-400 to-orange-500"; // ゴールド
-    if (score >= 80) return "from-purple-500 to-pink-500";   // パープル
-    if (score >= 70) return "from-blue-500 to-cyan-500";     // ブルー
+  // 相性度に応じた色を決定
+  const getScoreColor = (compatibility: number) => {
+    if (compatibility >= 90) return "from-yellow-400 to-orange-500"; // ゴールド
+    if (compatibility >= 80) return "from-purple-500 to-pink-500";   // パープル
+    if (compatibility >= 70) return "from-blue-500 to-cyan-500";     // ブルー
     return "from-green-500 to-emerald-500";                   // グリーン
   };
 
@@ -84,7 +84,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
         <div className="glass-effect rounded-3xl p-8 relative overflow-hidden">
           {/* 背景のグラデーション効果 */}
           <div className="absolute inset-0 opacity-10">
-            <div className={`absolute inset-0 bg-gradient-to-br ${getScoreColor(result.score)}`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${getScoreColor(result.compatibility || result.score || 85)}`} />
           </div>
 
           {/* スコア表示 */}
@@ -96,7 +96,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
           >
             <div className="inline-flex items-center justify-center">
               <Trophy className="w-8 h-8 text-yellow-500 mr-2" />
-              <span className="text-5xl font-bold text-white">{result.score}</span>
+              <span className="text-5xl font-bold text-white">{result.compatibility || result.score || 85}</span>
               <span className="text-2xl text-white/80 ml-1">/100</span>
             </div>
             <div className="text-sm text-white/60 mt-2">相性スコア</div>
@@ -104,7 +104,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
 
           {/* 診断タイプ */}
           <motion.h2 
-            className={`text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r ${getScoreColor(result.score)} bg-clip-text text-transparent`}
+            className={`text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r ${getScoreColor(result.compatibility || result.score || 85)} bg-clip-text text-transparent`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
@@ -120,14 +120,14 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             className="text-center mb-8"
           >
             <p className="text-lg md:text-xl text-white mb-4">
-              {result.message}
+              {result.summary || result.message}
             </p>
             <p className="text-md text-purple-400 font-semibold">
               &quot;Scaling Together² - 出会いを二乗でスケール！&quot;
             </p>
           </motion.div>
 
-          {/* 会話のきっかけ */}
+          {/* 強みと機会 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -136,10 +136,10 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
           >
             <div className="flex items-center mb-4">
               <MessageCircle className="w-5 h-5 text-cyan-400 mr-2" />
-              <h3 className="text-lg font-semibold text-white">会話のきっかけ</h3>
+              <h3 className="text-lg font-semibold text-white">強みと相性</h3>
             </div>
             <div className="space-y-2">
-              {result.conversationStarters.map((starter, index) => (
+              {(result.strengths || result.conversationStarters || []).map((strength, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
@@ -148,14 +148,14 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
                   className="flex items-start"
                 >
                   <span className="text-cyan-400 mr-2">•</span>
-                  <span className="text-white/80">{starter}</span>
+                  <span className="text-white/80">{strength}</span>
                 </motion.div>
               ))}
             </div>
           </motion.div>
 
-          {/* 隠れた共通点 */}
-          {result.hiddenGems && (
+          {/* アドバイスと機会 */}
+          {(result.advice || result.hiddenGems || result.opportunities) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -164,11 +164,22 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             >
               <div className="flex items-center mb-3">
                 <Sparkles className="w-5 h-5 text-yellow-400 mr-2" />
-                <h3 className="text-lg font-semibold text-white">意外な発見</h3>
+                <h3 className="text-lg font-semibold text-white">アドバイス</h3>
               </div>
               <p className="text-white/80 bg-white/10 rounded-xl p-4">
-                {result.hiddenGems}
+                {result.advice || result.hiddenGems}
               </p>
+              {result.opportunities && result.opportunities.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-semibold text-white/60 mb-2">今後の機会:</h4>
+                  {result.opportunities.map((opportunity, index) => (
+                    <div key={index} className="flex items-start">
+                      <span className="text-purple-400 mr-2">→</span>
+                      <span className="text-white/70 text-sm">{opportunity}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -179,7 +190,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             transition={{ delay: 1.7 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <ShareButton resultId={result.id} score={result.score} />
+            <ShareButton resultId={result.id} score={result.compatibility ?? result.score ?? 85} />
 
             <motion.button
               onClick={() => setShowQRModal(true)}
