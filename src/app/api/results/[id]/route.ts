@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { KVStorage } from '@/lib/workers/kv-storage-v2';
 import { ApiError } from '@/lib/api-errors';
 import { getCorsHeaders } from '@/lib/cors';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'edge';
 
@@ -13,6 +14,9 @@ export async function GET(
   request: NextRequest,
   context: RouteContext
 ) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   try {
     const { id } = await context.params;
     
@@ -27,24 +31,35 @@ export async function GET(
       throw ApiError.notFound('Result');
     }
     
-    return NextResponse.json({
-      success: true,
-      result,
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        result,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        headers: corsHeaders,
+      }
+    );
   } catch (error) {
-    console.error('Results API error:', error);
+    logger.error('Results API error', error);
     
     if (error instanceof ApiError) {
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: error.statusCode }
+        { 
+          status: error.statusCode,
+          headers: corsHeaders,
+        }
       );
     }
     
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: corsHeaders,
+      }
     );
   }
 }
@@ -53,6 +68,9 @@ export async function DELETE(
   request: NextRequest,
   context: RouteContext
 ) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   try {
     const { id } = await context.params;
     
@@ -63,23 +81,34 @@ export async function DELETE(
     const storage = new KVStorage();
     await storage.delete(id);
     
-    return NextResponse.json({
-      success: true,
-      message: 'Result deleted successfully',
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Result deleted successfully',
+      },
+      {
+        headers: corsHeaders,
+      }
+    );
   } catch (error) {
-    console.error('Results API delete error:', error);
+    logger.error('Results API delete error', error);
     
     if (error instanceof ApiError) {
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: error.statusCode }
+        { 
+          status: error.statusCode,
+          headers: corsHeaders,
+        }
       );
     }
     
     return NextResponse.json(
       { success: false, error: 'Failed to delete result' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: corsHeaders,
+      }
     );
   }
 }
