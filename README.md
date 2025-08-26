@@ -50,11 +50,21 @@
 - **Testing Library**: React Testing Library 16.3
 - **Coverage**: 63テスト、包括的なカバレージ
 
-### インフラ・セキュリティ
-- **Hosting**: Cloudflare Pages/Workers対応
+### インフラ・モニタリング
+- **Hosting**: Cloudflare Pages/Workers (推奨)
+- **Storage**: Cloudflare Workers KV (診断結果の永続化)
+- **Monitoring**: Sentry (エラートラッキング、パフォーマンス監視)
 - **Environment Validation**: Zodによる型安全な環境変数
 - **API Security**: レート制限、CORS、リクエストID追跡
 - **Secrets Management**: サーバーサイドのみでのAPIキー管理
+- **CSP**: Content Security Policy設定（XSS対策強化）
+
+### パフォーマンス最適化
+- **Bundle Analysis**: webpack-bundle-analyzerによるバンドルサイズ分析
+- **Image Optimization**: Next/Imageによる画像最適化とWebP自動変換
+- **Lazy Loading**: Intersection Observerによる遅延読み込み
+- **Code Splitting**: 動的インポートによるコード分割
+- **Edge Runtime**: Cloudflare Workersでのエッジ実行
 
 ## 📦 インストール
 
@@ -88,6 +98,10 @@ OPENAI_API_KEY=your-api-key-here
 # アプリケーションURL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
+# Sentry設定（オプション）
+SENTRY_DSN=your-sentry-dsn
+NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
+
 # その他の設定は.env.exampleを参照
 ```
 
@@ -111,6 +125,9 @@ npm run type-check
 
 # ビルド
 npm run build
+
+# バンドルサイズ分析
+npm run analyze
 
 # プロダクションモードで起動
 npm start
@@ -140,7 +157,10 @@ cnd2-app/
 │   │   ├── api-middleware.ts  # APIミドルウェア
 │   │   ├── api-errors.ts      # エラーハンドリング
 │   │   ├── env.ts             # 環境変数検証
-│   │   └── rate-limit.ts      # レート制限
+│   │   ├── rate-limiter.ts    # レート制限
+│   │   ├── sentry-filters.ts  # Sentryエラーフィルタリング
+│   │   └── workers/           # Cloudflare Workers関連
+│   │       └── kv-storage.ts  # KVストレージ実装
 │   └── types/                  # TypeScript型定義
 ├── public/                     # 静的ファイル
 ├── __tests__/                  # テストファイル
@@ -233,14 +253,46 @@ Prairie CardのURLからプロフィール情報を取得
 
 - **環境変数検証**: Zodによる厳密な型チェック
 - **APIキー保護**: サーバーサイドのみでアクセス可能
-- **レート制限**: 悪用防止のための制限機構
+- **レート制限**: 悪用防止のための制限機構（100req/分）
 - **CORS設定**: 適切なオリジン制御
-- **XSS対策**: React標準のエスケープ処理
+- **XSS対策**: React標準のエスケープ処理 + CSP設定
 - **CSRFトークン**: Next.jsの標準実装
+- **CSP**: Content Security Policy（unsafe-eval不使用）
+- **セキュリティヘッダー**: X-Frame-Options、X-Content-Type-Options等
+
+## 📊 モニタリング・監視
+
+### Sentry統合
+- **エラートラッキング**: クライアント、サーバー、エッジランタイム全対応
+- **パフォーマンス監視**: トランザクション追跡、レスポンスタイム計測
+- **セッションリプレイ**: エラー発生時のユーザー操作を再現（本番環境のみ）
+- **カスタムフィルタリング**: ノイズ除去、重要エラーのみ通知
+
+### 診断結果の永続化
+- **Cloudflare Workers KV**: 診断結果の保存と取得
+- **自動削除**: 7日後に自動削除（プライバシー保護）
+- **レート制限**: KVレベルでのレート制限実装
 
 ## 🚀 デプロイ
 
-### Vercel（推奨）
+### Cloudflare Pages（推奨）
+```bash
+# ビルド（静的エクスポート）
+npm run build
+
+# Wrangler CLIを使用してデプロイ
+npx wrangler pages deploy out
+
+# または、Cloudflare DashboardからGitHub連携でデプロイ
+```
+
+#### Cloudflare Pages設定
+- **ビルドコマンド**: `npm run build`
+- **出力ディレクトリ**: `out`
+- **Node.jsバージョン**: 20.x
+- **環境変数**: Cloudflare Dashboardで設定
+
+### Vercel（代替）
 ```bash
 # Vercel CLIをインストール
 npm i -g vercel
@@ -249,13 +301,7 @@ npm i -g vercel
 vercel
 ```
 
-### Cloudflare Pages
-```bash
-# ビルド
-npm run build
-
-# outディレクトリをCloudflare Pagesにアップロード
-```
+**注意**: Vercelは商業イベント利用時に有料プランが必要な場合があります。
 
 ### Docker
 ```bash
@@ -298,6 +344,8 @@ docker run -p 3000:3000 cnd2-app
 - **最終更新**: 2025年8月26日
 - **テスト**: 全63テスト合格 ✅
 - **ビルド**: 成功 ✅
+- **セキュリティ**: CSP強化済み ✅
+- **モニタリング**: Sentry統合済み ✅
 
 ---
 
