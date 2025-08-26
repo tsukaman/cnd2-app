@@ -15,17 +15,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      # macOS Tart環境用: Homebrewの確認とNode.jsセットアップ
+      - name: Check Node.js installation
+        id: check-node
+        run: |
+          if command -v node &> /dev/null; then
+            echo "Node.js $(node -v) is already installed"
+            echo "skip_setup=true" >> $GITHUB_OUTPUT
+          else
+            echo "Node.js not found, will install"
+            echo "skip_setup=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Install Node.js via Homebrew (if needed)
+        if: steps.check-node.outputs.skip_setup == 'false'
+        run: |
+          # Homebrewがない場合はインストール
+          if ! command -v brew &> /dev/null; then
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          fi
+          brew install node@20
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          # Self-hosted Runner の場合、Node.js が既にインストールされている可能性があります
-          # その場合は check-latest: false でスキップ可能
           check-latest: false
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          # macOS環境でのnpmキャッシュ最適化
+          npm config set cache ~/.npm-cache --global
+          npm ci
       
       - name: Build
         run: npm run build
