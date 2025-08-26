@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface OptimizedImageProps {
@@ -29,6 +29,14 @@ export default function OptimizedImage({
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // Memoize blur placeholder to avoid re-creating on every render
+  const blurDataURL = useMemo(() => {
+    const svg = `<svg width="${width || 400}" height="${height || 300}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#f3f4f6"/>
+    </svg>`;
+    return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+  }, [width, height]);
 
   if (error) {
     return (
@@ -61,11 +69,7 @@ export default function OptimizedImage({
         quality={quality}
         loading={priority ? undefined : 'lazy'}
         placeholder="blur"
-        blurDataURL={`data:image/svg+xml;base64,${Buffer.from(
-          `<svg width="${width || 400}" height="${height || 300}" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100%" height="100%" fill="#f3f4f6"/>
-          </svg>`
-        ).toString('base64')}`}
+        blurDataURL={blurDataURL}
         onLoadingComplete={() => setIsLoading(false)}
         onError={() => {
           setIsLoading(false);

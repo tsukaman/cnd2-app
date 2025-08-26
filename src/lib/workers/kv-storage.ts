@@ -158,25 +158,37 @@ export class KVStorage {
    * Store rate limit data
    */
   async incrementRateLimit(identifier: string, windowMinutes: number = 15): Promise<number> {
-    const now = new Date();
-    const window = Math.floor(now.getTime() / (windowMinutes * 60 * 1000));
-    const key = this.getKey(`ratelimit:${identifier}:${window}`);
-    
-    const current = await this.kv.get(key);
-    const count = current ? parseInt(current, 10) + 1 : 1;
-    
-    await this.kv.put(key, count.toString(), {
-      expirationTtl: windowMinutes * 60, // Expire after the window
-    });
+    try {
+      const now = new Date();
+      const window = Math.floor(now.getTime() / (windowMinutes * 60 * 1000));
+      const key = this.getKey(`ratelimit:${identifier}:${window}`);
+      
+      const current = await this.kv.get(key);
+      const count = current ? parseInt(current, 10) + 1 : 1;
+      
+      await this.kv.put(key, count.toString(), {
+        expirationTtl: windowMinutes * 60, // Expire after the window
+      });
 
-    return count;
+      return count;
+    } catch (error) {
+      console.error('[KV] Failed to increment rate limit:', error);
+      // Return a high number to trigger rate limiting on error
+      return Number.MAX_SAFE_INTEGER;
+    }
   }
 
   /**
    * Check rate limit
    */
   async checkRateLimit(identifier: string, limit: number, windowMinutes: number = 15): Promise<boolean> {
-    const count = await this.incrementRateLimit(identifier, windowMinutes);
-    return count <= limit;
+    try {
+      const count = await this.incrementRateLimit(identifier, windowMinutes);
+      return count <= limit;
+    } catch (error) {
+      console.error('[KV] Rate limit check failed:', error);
+      // Fail-safe: restrict access on error to prevent abuse
+      return false;
+    }
   }
 }
