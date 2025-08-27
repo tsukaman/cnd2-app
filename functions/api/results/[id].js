@@ -1,6 +1,8 @@
 // Results API for Cloudflare Functions
 import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../../utils/response.js';
 import { createLogger, logRequest } from '../../utils/logger.js';
+import { validateId } from '../../utils/id.js';
+import { safeParseInt, METRICS_KEYS } from '../../utils/constants.js';
 
 export async function onRequestGet({ params, env, request }) {
   const logger = createLogger(env);
@@ -13,7 +15,7 @@ export async function onRequestGet({ params, env, request }) {
       logger.info('Fetching diagnosis result', { id });
       
       // Validate ID format
-      if (!id || !id.match(/^[a-z0-9]{8,20}$/)) {
+      if (!validateId(id)) {
         logger.warn('Invalid result ID format', { id });
         return errorResponse(
           new Error('Invalid result ID format'),
@@ -46,9 +48,10 @@ export async function onRequestGet({ params, env, request }) {
             
             // Track cache hit metrics
             try {
-              const metricsKey = 'metrics:cache:hit';
-              const currentCount = await env.DIAGNOSIS_KV.get(metricsKey) || '0';
-              await env.DIAGNOSIS_KV.put(metricsKey, String(parseInt(currentCount) + 1));
+              const metricsKey = METRICS_KEYS.CACHE_HIT;
+              const currentCount = await env.DIAGNOSIS_KV.get(metricsKey);
+              const count = safeParseInt(currentCount, 0);
+              await env.DIAGNOSIS_KV.put(metricsKey, String(count + 1));
             } catch (e) {
               logger.debug('Failed to update cache hit metrics', { error: e.message });
             }
@@ -67,9 +70,10 @@ export async function onRequestGet({ params, env, request }) {
           
           // Track cache miss metrics
           try {
-            const metricsKey = 'metrics:cache:miss';
-            const currentCount = await env.DIAGNOSIS_KV.get(metricsKey) || '0';
-            await env.DIAGNOSIS_KV.put(metricsKey, String(parseInt(currentCount) + 1));
+            const metricsKey = METRICS_KEYS.CACHE_MISS;
+            const currentCount = await env.DIAGNOSIS_KV.get(metricsKey);
+            const count = safeParseInt(currentCount, 0);
+            await env.DIAGNOSIS_KV.put(metricsKey, String(count + 1));
           } catch (e) {
             logger.debug('Failed to update cache miss metrics', { error: e.message });
           }
@@ -104,7 +108,7 @@ export async function onRequestDelete({ params, env, request }) {
       logger.info('Deleting diagnosis result', { id });
       
       // Validate ID format
-      if (!id || !id.match(/^[a-z0-9]{8,20}$/)) {
+      if (!validateId(id)) {
         logger.warn('Invalid result ID format', { id });
         return errorResponse(
           new Error('Invalid result ID format'),

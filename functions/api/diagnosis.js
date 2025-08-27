@@ -1,6 +1,8 @@
 // Diagnosis API for Cloudflare Functions
 import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../utils/response.js';
 import { createLogger, logRequest } from '../utils/logger.js';
+import { generateId, validateId } from '../utils/id.js';
+import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 
 export async function onRequestPost({ request, env }) {
   const logger = createLogger(env);
@@ -38,7 +40,7 @@ export async function onRequestPost({ request, env }) {
         
         try {
           await env.DIAGNOSIS_KV.put(key, JSON.stringify(result), {
-            expirationTtl: 604800, // 7 days
+            expirationTtl: KV_TTL.DIAGNOSIS,
           });
           
           logger.metric('kv_write_duration', Date.now() - startKV, 'ms', {
@@ -85,7 +87,7 @@ async function generateDiagnosis(profiles, mode, env) {
   const logger = createLogger(env);
   const startTime = Date.now();
   
-  // Simplified diagnosis generation
+  // Simplified diagnosis generation with guaranteed valid ID
   const id = generateId();
   const compatibility = Math.floor(Math.random() * 30) + 70; // 70-100%
   
@@ -116,8 +118,4 @@ async function generateDiagnosis(profiles, mode, env) {
   });
   
   return result;
-}
-
-function generateId() {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }

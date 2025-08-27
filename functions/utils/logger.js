@@ -142,17 +142,47 @@ export function createLogger(env) {
 }
 
 /**
+ * Safe headers for logging (exclude sensitive information)
+ */
+const SAFE_HEADERS = [
+  'content-type',
+  'user-agent',
+  'origin',
+  'accept',
+  'accept-language',
+  'cache-control',
+  'pragma',
+  'referer',
+  'x-forwarded-for',
+  'x-real-ip',
+];
+
+/**
+ * Filter headers for safe logging
+ */
+function filterHeaders(headers) {
+  const filtered = {};
+  for (const header of SAFE_HEADERS) {
+    const value = headers.get(header);
+    if (value) {
+      filtered[header] = value;
+    }
+  }
+  return filtered;
+}
+
+/**
  * Request logging middleware
  */
 export async function logRequest(request, env, ctx, handler) {
   const logger = createLogger(env);
   const startTime = Date.now();
   
-  // Log request
+  // Log request with filtered headers
   logger.info('Request received', {
     method: request.method,
     url: request.url,
-    headers: Object.fromEntries(request.headers.entries()),
+    headers: filterHeaders(request.headers),
   });
   
   try {

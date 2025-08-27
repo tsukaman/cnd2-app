@@ -1,6 +1,7 @@
 // Prairie Card API for Cloudflare Functions
 import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../utils/response.js';
 import { createLogger, logRequest } from '../utils/logger.js';
+import { safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 
 export async function onRequestPost({ request, env }) {
   const logger = createLogger(env);
@@ -81,9 +82,10 @@ export async function onRequestPost({ request, env }) {
       // Track success metrics
       if (env.DIAGNOSIS_KV) {
         try {
-          const metricsKey = 'metrics:prairie:success';
-          const currentCount = await env.DIAGNOSIS_KV.get(metricsKey) || '0';
-          await env.DIAGNOSIS_KV.put(metricsKey, String(parseInt(currentCount) + 1));
+          const metricsKey = METRICS_KEYS.PRAIRIE_SUCCESS;
+          const currentCount = await env.DIAGNOSIS_KV.get(metricsKey);
+          const count = safeParseInt(currentCount, 0);
+          await env.DIAGNOSIS_KV.put(metricsKey, String(count + 1));
         } catch (e) {
           logger.debug('Failed to update metrics', { error: e.message });
         }
@@ -102,9 +104,10 @@ export async function onRequestPost({ request, env }) {
       // Track error metrics
       if (env.DIAGNOSIS_KV) {
         try {
-          const metricsKey = 'metrics:prairie:error';
-          const currentCount = await env.DIAGNOSIS_KV.get(metricsKey) || '0';
-          await env.DIAGNOSIS_KV.put(metricsKey, String(parseInt(currentCount) + 1));
+          const metricsKey = METRICS_KEYS.PRAIRIE_ERROR;
+          const currentCount = await env.DIAGNOSIS_KV.get(metricsKey);
+          const count = safeParseInt(currentCount, 0);
+          await env.DIAGNOSIS_KV.put(metricsKey, String(count + 1));
         } catch (e) {
           logger.debug('Failed to update error metrics', { error: e.message });
         }
