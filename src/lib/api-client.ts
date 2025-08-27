@@ -25,8 +25,11 @@ function getApiUrl(path: string): string {
   }
   
   // 環境変数が設定されている場合は絶対URLを構築
+  // 末尾スラッシュを削除して二重スラッシュを防ぐ
+  // 例: "https://cnd2-app.pages.dev/" -> "https://cnd2-app.pages.dev"
+  const cleanBaseUrl = API_BASE_URL.replace(/\/$/, '');
   // 例: "https://cnd2-app.pages.dev" + "/" + "api/prairie"
-  return `${API_BASE_URL}/${cleanPath}`;
+  return `${cleanBaseUrl}/${cleanPath}`;
 }
 
 export const apiClient = {

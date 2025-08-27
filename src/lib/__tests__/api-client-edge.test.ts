@@ -55,7 +55,7 @@ describe('API Client Edge Cases', () => {
       delete (global as any).window;
     });
 
-    it('末尾スラッシュがあるAPI_BASE_URLを処理する', async () => {
+    it('末尾スラッシュがあるAPI_BASE_URLを正しく処理する', async () => {
       process.env.NEXT_PUBLIC_API_BASE_URL = 'https://test.com/';
       const { apiClient } = require('../api-client');
       
@@ -68,7 +68,7 @@ describe('API Client Edge Cases', () => {
       
       // 二重スラッシュにならないことを確認
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://test.com//api/prairie', // 現在の実装では二重スラッシュになる
+        'https://test.com/api/prairie', // 末尾スラッシュが正規化される
         expect.any(Object)
       );
     });
@@ -87,27 +87,32 @@ describe('API Client Edge Cases', () => {
         .rejects.toThrow('API_BASE_URL is not configured for server-side rendering');
     });
 
-    it('異なるパス形式を正しく処理する', async () => {
-      process.env.NEXT_PUBLIC_API_BASE_URL = 'https://test.com';
-      const { apiClient } = require('../api-client');
-      
+    it('異なるAPI_BASE_URL形式を正しく処理する', async () => {
       const testCases = [
-        { input: '/api/test', expected: 'https://test.com/api/test' },
-        { input: 'api/test', expected: 'https://test.com/api/test' },
-        { input: '//api/test', expected: 'https://test.com//api/test' }, // 異常ケース
+        { baseUrl: 'https://test.com', expectedUrl: 'https://test.com/api/prairie' },
+        { baseUrl: 'https://test.com/', expectedUrl: 'https://test.com/api/prairie' },
+        { baseUrl: 'https://api.example.com/v1', expectedUrl: 'https://api.example.com/v1/api/prairie' },
+        { baseUrl: 'https://api.example.com/v1/', expectedUrl: 'https://api.example.com/v1/api/prairie' },
       ];
 
-      for (const testCase of testCases) {
+      for (const { baseUrl, expectedUrl } of testCases) {
         jest.clearAllMocks();
+        jest.resetModules();
+        
+        process.env.NEXT_PUBLIC_API_BASE_URL = baseUrl;
+        const { apiClient } = require('../api-client');
         
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: async () => ({ success: true }),
         });
 
-        // getApiUrl関数の動作を直接テストできないため、
-        // apiClientの呼び出しを通じて間接的にテスト
-        // 実際のテストでは、getApiUrl関数をexportして直接テストすることを推奨
+        await apiClient.prairie.fetch('test');
+        
+        expect(global.fetch).toHaveBeenCalledWith(
+          expectedUrl,
+          expect.any(Object)
+        );
       }
     });
   });
