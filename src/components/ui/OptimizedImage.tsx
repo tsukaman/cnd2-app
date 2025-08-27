@@ -118,6 +118,10 @@ export default function OptimizedImage({
           setIsLoading(false);
           onLoad?.(event);
         }}
+        onLoad={(event) => {
+          setIsLoading(false);
+          onLoad?.(event);
+        }}
         onError={(event) => {
           setIsLoading(false);
           if (fallback && !error) {
@@ -130,7 +134,7 @@ export default function OptimizedImage({
         }}
         className={`${isLoading ? 'opacity-0' : 'opacity-100'} ${
           disableAnimation ? '' : 'transition-opacity duration-300'
-        }`}
+        } ${className}`}
       />}
     </div>
   );
