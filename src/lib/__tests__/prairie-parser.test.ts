@@ -29,10 +29,29 @@ describe('PrairieCardParser', () => {
   let parser: PrairieCardParser;
 
   beforeEach(() => {
+    // Clear all mocks
+    jest.clearAllMocks();
+    
     // Reset the singleton instance
     PrairieCardParser.resetInstance();
+    
+    // Get new instance
     parser = PrairieCardParser.getInstance();
-    jest.clearAllMocks();
+    
+    // Manually replace cacheManager with mock
+    (parser as any).cacheManager = {
+      getFromMemory: jest.fn().mockReturnValue(null),
+      getFromBrowser: jest.fn().mockResolvedValue(null),
+      save: jest.fn().mockResolvedValue(undefined),
+      clear: jest.fn().mockResolvedValue(undefined),
+      getWithSquaredCache: jest.fn().mockResolvedValue(null),
+      findRelatedCache: jest.fn().mockResolvedValue(null),
+    };
+    
+    // Manually replace rateLimiter with mock
+    (parser as any).rateLimiter = {
+      wait: jest.fn().mockResolvedValue(undefined),
+    };
   });
 
   describe('parseProfile', () => {
@@ -54,11 +73,7 @@ describe('PrairieCardParser', () => {
     });
 
     it('should handle network timeout', async () => {
-      (global.fetch as jest.Mock).mockImplementation(() => 
-        new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('AbortError')), 100);
-        })
-      );
+      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('AbortError'));
 
       await expect(parser.parseProfile('https://my.prairie.cards/test')).rejects.toThrow(NetworkError);
     });
