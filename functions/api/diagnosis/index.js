@@ -120,20 +120,24 @@ export async function onRequestPost(context) {
       });
     }
     
-    // Here you would call your diagnosis generation logic
-    // For now, returning a placeholder
+    // Import diagnosis functions
+    const { generateOpenAIDiagnosis, generateFallbackDiagnosis } = require('./openai-diagnosis');
+    
+    // Try OpenAI diagnosis first, fallback if not available
+    let diagnosisData = await generateOpenAIDiagnosis(profiles, mode || 'duo', env);
+    
+    if (!diagnosisData) {
+      console.log('[CND²] Using fallback diagnosis');
+      diagnosisData = generateFallbackDiagnosis(profiles, mode || 'duo');
+    }
+    
+    // Create full result object
     const result = {
       id: Math.random().toString(36).substring(2) + Date.now().toString(36),
       mode: mode || 'duo',
-      type: 'クラウドネイティブ・パートナー',
-      compatibility: Math.floor(Math.random() * 30) + 70,
-      summary: 'AI診断機能は本番環境で有効になります',
-      strengths: ['技術的な興味の共通点が多い'],
-      opportunities: ['一緒にOSSプロジェクトに貢献'],
-      advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
+      ...diagnosisData,
       participants: profiles,
-      createdAt: new Date().toISOString(),
-      aiPowered: false
+      createdAt: new Date().toISOString()
     };
     
     // Store result in KV if available
@@ -145,7 +149,7 @@ export async function onRequestPost(context) {
       success: true,
       data: {
         result,
-        aiPowered: false
+        aiPowered: result.aiPowered || false
       }
     }), {
       headers: { 'Content-Type': 'application/json' }

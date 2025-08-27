@@ -1,0 +1,179 @@
+/**
+ * OpenAI Diagnosis Implementation for Cloudflare Functions
+ */
+
+const CND2_SYSTEM_PROMPT = `あなたはCND² - CloudNative Days × Connect 'n' Discoverの相性診断AIアシスタントです。
+エンジニアのPrairieカード情報から、技術的な相性やコラボレーション可能性を診断します。
+
+診断結果は以下のJSON形式で返してください：
+{
+  "type": "診断タイプ名（クリエイティブな名前）",
+  "compatibility": 相性スコア（0-100）,
+  "summary": "診断結果のサマリー（100文字程度）",
+  "strengths": ["強み1", "強み2", "強み3"],
+  "opportunities": ["機会1", "機会2"],
+  "advice": "アドバイス（100文字程度）"
+}
+
+診断は前向きで建設的な内容にし、技術的な共通点や補完関係を見つけてください。`;
+
+/**
+ * Sanitize profile to remove PII before sending to OpenAI
+ */
+function sanitizeProfile(profile) {
+  // Only include non-sensitive information
+  return {
+    basic: {
+      tags: profile.basic?.tags || [],
+      company: profile.basic?.company ? '企業' : undefined, // Generic label
+      // Exclude: name, email, twitter, avatar
+    },
+    interests: profile.interests || {},
+    // Exclude any other sensitive fields
+  };
+}
+
+async function generateOpenAIDiagnosis(profiles, mode, env) {
+  // Check if OpenAI API key is configured
+  if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY === 'your-openai-api-key-here') {
+    console.log('[CND²] OpenAI API key not configured, using fallback');
+    return null;
+  }
+
+  try {
+    // Sanitize profiles to protect PII
+    const sanitizedProfiles = profiles.map(sanitizeProfile);
+    
+    // Build prompt based on mode
+    let prompt = '';
+    if (mode === 'duo') {
+      prompt = `以下の2人のエンジニアの相性を診断してください：
+
+エンジニア1:
+${JSON.stringify(sanitizedProfiles[0], null, 2)}
+
+エンジニア2:
+${JSON.stringify(sanitizedProfiles[1], null, 2)}
+
+両者の技術スタック、興味分野、経験を考慮して、コラボレーションの可能性を評価してください。`;
+    } else {
+      prompt = `以下の${sanitizedProfiles.length}人のエンジニアグループの相性を診断してください：
+
+${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p, null, 2)}`).join('\n\n')}
+
+グループ全体のダイナミクスと、チームとしての強みを評価してください。`;
+    }
+
+    // Call OpenAI API using fetch
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: CND2_SYSTEM_PROMPT
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 1000,
+        response_format: { type: "json_object" }
+      })
+    });
+
+    if (!response.ok) {
+      // Avoid logging sensitive information
+      console.error('[CND²] OpenAI API error: HTTP', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    if (!content) {
+      console.error('[CND²] Empty OpenAI response');
+      return null;
+    }
+
+    // Safe JSON parsing with try-catch
+    try {
+      const result = JSON.parse(content);
+      
+      return {
+        ...result,
+        aiPowered: true
+      };
+    } catch (parseError) {
+      console.error('[CND²] Failed to parse OpenAI response:', parseError);
+      return null;
+    }
+    
+  } catch (error) {
+    console.error('[CND²] OpenAI diagnosis failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Generate fallback diagnosis when OpenAI is not available
+ */
+function generateFallbackDiagnosis(profiles, mode) {
+  // Extract skills and interests from profiles
+  const allSkills = new Set();
+  const allInterests = new Set();
+  
+  profiles.forEach(profile => {
+    if (profile.basic?.tags) {
+      profile.basic.tags.forEach(tag => allSkills.add(tag));
+    }
+    if (profile.interests) {
+      Object.values(profile.interests).forEach(interest => {
+        if (Array.isArray(interest)) {
+          interest.forEach(item => allInterests.add(item));
+        }
+      });
+    }
+  });
+
+  // Calculate compatibility based on common skills
+  const commonSkills = Array.from(allSkills).slice(0, 3);
+  const compatibility = Math.min(95, 70 + commonSkills.length * 5 + Math.floor(Math.random() * 10));
+
+  const types = [
+    'クラウドネイティブ・パートナー',
+    'イノベーション・デュオ',
+    'テクノロジー・シナジー',
+    'オープンソース・コラボレーター',
+    'アジャイル・チーム'
+  ];
+
+  return {
+    type: types[Math.floor(Math.random() * types.length)],
+    compatibility,
+    summary: `共通の技術領域での強い相性が見られます。特に${commonSkills.join('、')}での協力が期待できます。`,
+    strengths: [
+      '技術的な興味の共通点が多い',
+      '補完的なスキルセットを持つ',
+      'コミュニケーションスタイルが合う'
+    ],
+    opportunities: [
+      '一緒にOSSプロジェクトに貢献',
+      '技術勉強会の共同開催'
+    ],
+    advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
+    aiPowered: false
+  };
+}
+
+module.exports = {
+  generateOpenAIDiagnosis,
+  generateFallbackDiagnosis
+};
