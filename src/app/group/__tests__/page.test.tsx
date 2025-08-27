@@ -120,6 +120,13 @@ describe('GroupPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    // Clear localStorage to ensure test isolation
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    // Cleanup after each test
+    localStorage.clear();
   });
 
   describe('レンダリング', () => {
@@ -154,8 +161,13 @@ describe('GroupPage', () => {
   });
 
   describe('参加者管理', () => {
-    it('参加者を追加できる（最大6人）', () => {
+    it('参加者を追加できる（最大6人）', async () => {
       render(<GroupPage />);
+      
+      // Wait for component to stabilize and verify initial state
+      await waitFor(() => {
+        expect(screen.getByText('メンバー 1 / 3')).toBeInTheDocument();
+      });
       
       const addButton = screen.getByRole('button', { name: /メンバー追加/ });
       
@@ -165,14 +177,21 @@ describe('GroupPage', () => {
       }
       
       // Check that we now have 6 members
-      expect(screen.getByText('メンバー 1 / 6')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('メンバー 1 / 6')).toBeInTheDocument();
+      });
       
       // 6人になったら追加ボタンが表示されなくなる
       expect(screen.queryByRole('button', { name: /メンバー追加/ })).not.toBeInTheDocument();
     });
 
-    it('参加者を削除できる（最小3人）', () => {
+    it('参加者を削除できる（最小3人）', async () => {
       render(<GroupPage />);
+      
+      // Wait for initial state
+      await waitFor(() => {
+        expect(screen.getByText('メンバー 1 / 3')).toBeInTheDocument();
+      });
       
       // 参加者を5人に増やす
       const addButton = screen.getByRole('button', { name: /メンバー追加/ });
@@ -180,7 +199,9 @@ describe('GroupPage', () => {
       fireEvent.click(addButton);
       
       // Should now have 5 members
-      expect(screen.getByText('メンバー 1 / 5')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('メンバー 1 / 5')).toBeInTheDocument();
+      });
       
       // 削除ボタンをクリック
       const removeButtons = screen.getAllByRole('button', { name: /削除/ });

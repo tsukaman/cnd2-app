@@ -119,12 +119,9 @@ export default function GroupPage() {
                 {/* Member Tabs */}
                 <div className="flex gap-2 mb-6 flex-wrap">
                   {profiles.map((profile, index) => (
-                    <motion.button
+                    <motion.div
                       key={index}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setCurrentIndex(index)}
-                      className={`px-4 py-2 rounded-full font-semibold transition-all flex items-center gap-2 ${
+                      className={`px-4 py-2 rounded-full font-semibold transition-all flex items-center gap-2 relative ${
                         currentIndex === index
                           ? 'bg-gradient-to-r from-purple-600 to-orange-500 text-white'
                           : profile
@@ -132,20 +129,25 @@ export default function GroupPage() {
                           : 'bg-gray-100 text-gray-600 border-2 border-gray-300'
                       }`}
                     >
-                      <span>{index + 1}</span>
-                      {profile && <span className="text-xs">✓</span>}
+                      <button
+                        onClick={() => setCurrentIndex(index)}
+                        className="flex items-center gap-2"
+                      >
+                        <span>{index + 1}</span>
+                        {profile && <span className="text-xs">✓</span>}
+                      </button>
                       {profiles.length > 3 && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemoveSlot(index);
                           }}
-                          className="ml-1 hover:text-red-500"
+                          className="ml-1 hover:text-red-500 p-1"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       )}
-                    </motion.button>
+                    </motion.div>
                   ))}
                 </div>
                 
