@@ -28,6 +28,8 @@ describe('PrairieCardParser', () => {
   let parser: PrairieCardParser;
 
   beforeEach(() => {
+    // Reset the singleton instance
+    (PrairieCardParser as any).instance = null;
     parser = PrairieCardParser.getInstance();
     jest.clearAllMocks();
   });

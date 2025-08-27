@@ -2,6 +2,18 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ErrorBoundary from '../ErrorBoundary';
 
+// Mock framer-motion to avoid animation issues in tests
+jest.mock('framer-motion', () => ({
+  motion: {
+    div: React.forwardRef(({ children, ...props }: any, ref: any) => 
+      React.createElement('div', { ...props, ref }, children)
+    ),
+    button: React.forwardRef(({ children, ...props }: any, ref: any) =>
+      React.createElement('button', { ...props, ref }, children)
+    ),
+  },
+}));
+
 // Component that throws an error
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
   if (shouldThrow) {
