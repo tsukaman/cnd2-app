@@ -16,6 +16,15 @@ jest.mock('next/navigation', () => ({
   })),
 }));
 
+// localStorageのモック
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+};
+global.localStorage = localStorageMock as any;
+
 // API clientモック
 jest.mock('@/lib/api-client', () => ({
   apiClient: {
@@ -29,10 +38,11 @@ jest.mock('@/lib/api-client', () => ({
 }));
 
 // コンポーネントモック
-jest.mock('@/components/ProfileSelector', () => ({
-  ProfileSelector: ({ onScan, index }: any) => (
-    <div data-testid={`profile-selector-${index}`}>
-      <button onClick={() => onScan('https://prairie.cards/test')}>
+jest.mock('@/components/prairie/PrairieCardInput', () => ({
+  __esModule: true,
+  default: ({ onProfileLoaded, disabled }: any) => (
+    <div data-testid="prairie-card-input">
+      <button onClick={() => onProfileLoaded({ basic: { name: 'Test User' } })} disabled={disabled}>
         スキャン
       </button>
     </div>
@@ -126,8 +136,9 @@ describe('DuoPage', () => {
     it('初期状態で2人分のプロファイルセレクターが表示される', () => {
       render(<DuoPage />);
       
-      expect(screen.getByTestId('profile-selector-0')).toBeInTheDocument();
-      expect(screen.getByTestId('profile-selector-1')).toBeInTheDocument();
+      // PrairieCardInputコンポーネントが2つ表示される
+      const inputs = screen.getAllByTestId('prairie-card-input');
+      expect(inputs).toHaveLength(2);
     });
 
     it('タイトルとヘッダーが表示される', () => {

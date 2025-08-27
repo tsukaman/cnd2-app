@@ -21,6 +21,15 @@ jest.mock('next/navigation', () => ({
   })),
 }));
 
+// localStorageのモック
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+};
+global.localStorage = localStorageMock as any;
+
 // API clientモック
 jest.mock('@/lib/api-client', () => ({
   apiClient: {
@@ -119,14 +128,16 @@ describe('GroupPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorageMock.getItem.mockClear();
+    localStorageMock.setItem.mockClear();
+    localStorageMock.removeItem.mockClear();
+    localStorageMock.clear.mockClear();
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
-    // Clear localStorage to ensure test isolation
-    localStorage.clear();
   });
 
   afterEach(() => {
     // Cleanup after each test
-    localStorage.clear();
+    jest.clearAllMocks();
   });
 
   describe('レンダリング', () => {
