@@ -7,12 +7,13 @@ import { ValidationError, NetworkError, ParseError } from '@/lib/errors';
 
 // モック設定
 jest.mock('@/lib/cache-manager', () => ({
-  CacheManager: {
-    getInstance: jest.fn(() => ({
-      getWithSquaredCache: jest.fn(() => null),
-      save: jest.fn(),
-    })),
-  },
+  CacheManager: jest.fn().mockImplementation(() => ({
+    getFromMemory: jest.fn(() => null),
+    getFromBrowser: jest.fn(() => null),
+    save: jest.fn(),
+    clear: jest.fn(),
+    getWithSquaredCache: jest.fn(() => null),
+  })),
 }));
 
 jest.mock('@/lib/rate-limiter', () => ({
