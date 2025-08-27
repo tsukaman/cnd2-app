@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { OptimizedImage } from '../OptimizedImage';
+import OptimizedImage from '../OptimizedImage';
 
 // Intersection Observer モック
 const mockIntersectionObserver = jest.fn();

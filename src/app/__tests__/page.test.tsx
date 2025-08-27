@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 // Next.js navigationモック
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  useSearchParams: jest.fn(() => ({
+    get: jest.fn(() => null),
+  })),
 }));
 
 // コンポーネントモック
@@ -16,6 +19,26 @@ jest.mock('@/components/effects/BackgroundEffects', () => ({
 
 jest.mock('@/components/effects/CloudAnimation', () => ({
   CloudAnimation: () => <div data-testid="cloud-animation" />,
+}));
+
+jest.mock('@/components/ui/MenuCard', () => ({
+  MenuCard: ({ title, href }: any) => <a href={href} data-testid="menu-card">{title}</a>,
+}));
+
+jest.mock('@/components/ui/ConsentDialog', () => ({
+  ConsentDialog: ({ onConsent }: any) => (
+    <div data-testid="consent-dialog">
+      <button onClick={onConsent}>同意する</button>
+    </div>
+  ),
+}));
+
+jest.mock('@/components/ui/LoadingScreen', () => ({
+  LoadingScreen: () => <div data-testid="loading-screen" />,
+}));
+
+jest.mock('@/components/diagnosis/DiagnosisResult', () => ({
+  DiagnosisResultComponent: ({ result }: any) => <div data-testid="diagnosis-result">{result?.id}</div>,
 }));
 
 describe('HomePage', () => {

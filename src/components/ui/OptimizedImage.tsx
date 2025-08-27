@@ -15,6 +15,10 @@ interface OptimizedImageProps {
   fill?: boolean;
   sizes?: string;
   quality?: number;
+  fallback?: string;
+  disableAnimation?: boolean;
+  onLoad?: (event: React.SyntheticEvent<HTMLImageElement>) => void;
+  onError?: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }
 
 export default function OptimizedImage({
@@ -27,9 +31,14 @@ export default function OptimizedImage({
   fill = false,
   sizes,
   quality = 85,
+  fallback,
+  disableAnimation = false,
+  onLoad,
+  onError,
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(src);
 
   // Memoize blur placeholder to avoid re-creating on every render
   const blurDataURL = useMemo(() => {
@@ -60,7 +69,7 @@ export default function OptimizedImage({
       )}
       
       <Image
-        src={src}
+        src={currentSrc}
         alt={alt}
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
@@ -72,11 +81,23 @@ export default function OptimizedImage({
         placeholder="blur"
         blurDataURL={blurDataURL}
         onLoadingComplete={() => setIsLoading(false)}
-        onError={() => {
+        onLoad={(event: any) => {
           setIsLoading(false);
-          setError(true);
+          onLoad?.(event);
         }}
-        className={`${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        onError={(event: any) => {
+          setIsLoading(false);
+          if (fallback && !error) {
+            setCurrentSrc(fallback);
+            setError(true);
+          } else {
+            setError(true);
+          }
+          onError?.(event);
+        }}
+        className={`${isLoading ? 'opacity-0' : 'opacity-100'} ${
+          disableAnimation ? '' : 'transition-opacity duration-300'
+        } ${className}`}
       />
     </div>
   );

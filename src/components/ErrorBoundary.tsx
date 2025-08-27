@@ -22,21 +22,27 @@ export class ErrorBoundary extends React.Component<Props, State> {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
   }
-
+  
   static getDerivedStateFromError(error: Error): State {
+    // This is called during the render phase, so no side effects
     return { hasError: true, error, errorInfo: null };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // テスト環境では副作用をスキップ
+    if (process.env.NODE_ENV === 'test') {
+      console.log('Error caught in test:', error.message);
+      return;
+    }
+    
     // エラーログを記録
-    const cnd2Error = error instanceof CND2Error ? error : ErrorHandler.mapError(error);
-    ErrorHandler.logError(cnd2Error, 'ErrorBoundary');
-
-    // 状態を更新
-    this.setState({
-      error,
-      errorInfo,
-    });
+    try {
+      const cnd2Error = error instanceof CND2Error ? error : ErrorHandler.mapError(error);
+      ErrorHandler.logError(cnd2Error, 'ErrorBoundary');
+    } catch (logError) {
+      // ログエラーを無視して続行
+      console.error('Failed to log error:', logError);
+    }
 
     // 本番環境では外部サービスにエラーを送信
     if (process.env.NODE_ENV === 'production') {

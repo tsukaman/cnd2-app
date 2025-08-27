@@ -26,6 +26,13 @@ export class PrairieCardParser {
     }
     return PrairieCardParser.instance;
   }
+  
+  // テスト用: シングルトンインスタンスをリセット
+  static resetInstance(): void {
+    if (process.env.NODE_ENV === 'test') {
+      PrairieCardParser.instance = null as any;
+    }
+  }
 
   async parseProfile(url: string): Promise<PrairieProfile> {
     // URLの正規化と検証
@@ -87,6 +94,11 @@ export class PrairieCardParser {
       const mappedError = ErrorHandler.mapError(error);
       ErrorHandler.logError(mappedError, 'PrairieCardParser.parseProfile');
       
+      // 既にカスタムエラーの場合はそのまま再スロー
+      if (error instanceof NetworkError || error instanceof ParseError || error instanceof ValidationError) {
+        throw error;
+      }
+      
       // ユーザー向けメッセージを設定
       if (mappedError instanceof NetworkError) {
         throw new NetworkError('Prairie Cardサーバーに接続できません。しばらく待ってから再試行してください。');
@@ -147,7 +159,7 @@ export class PrairieCardParser {
       return html;
     } catch (error: any) {
       // タイムアウトエラー
-      if (error.name === 'AbortError') {
+      if (error.name === 'AbortError' || error.message === 'AbortError') {
         throw new NetworkError('Prairie Card取得がタイムアウトしました。', { url });
       }
       
@@ -195,6 +207,7 @@ export class PrairieCardParser {
         updatedAt: this.extractDate($, '.updated-date, [data-field="updated"]'),
         connectedBy: 'CND²',
         hashtag: CND2_CONFIG.app.hashtag,
+        isPartialData: false,
       },
     };
   }
@@ -237,10 +250,11 @@ export class PrairieCardParser {
         social: {},
         custom: {},
         meta: {
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           connectedBy: 'CND²',
           hashtag: CND2_CONFIG.app.hashtag,
+          isPartialData: true,
         },
       };
 
@@ -369,12 +383,12 @@ export class PrairieCardParser {
     return href || undefined;
   }
 
-  private extractDate($: cheerio.CheerioAPI, selector: string): Date | undefined {
+  private extractDate($: cheerio.CheerioAPI, selector: string): string | undefined {
     const dateText = this.extractText($, selector);
     if (!dateText) return undefined;
     
     try {
-      return new Date(dateText);
+      return new Date(dateText).toISOString();
     } catch {
       return undefined;
     }

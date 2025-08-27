@@ -64,7 +64,10 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: "spring", duration: 1 }}
-        className="max-w-4xl mx-auto p-4"
+        className="max-w-4xl mx-auto px-4 py-4 animate-fadeIn"
+        data-testid="diagnosis-result-container"
+        role="article"
+        aria-label="診断結果"
       >
         {/* CND²ロゴアニメーション */}
         <motion.div className="text-center mb-6">
@@ -110,6 +113,11 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             transition={{ delay: 0.7 }}
           >
             {result.type}
+            {result.mode === 'group' && result.participants && (
+              <div className="text-sm text-white/60 mt-2">
+                {result.participants.length}人
+              </div>
+            )}
           </motion.h2>
 
           {/* 診断メッセージ */}
@@ -274,3 +282,6 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
     </>
   );
 }
+
+// Export with expected name for tests
+export { DiagnosisResultComponent as DiagnosisResult };

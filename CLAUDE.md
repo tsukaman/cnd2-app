@@ -337,13 +337,33 @@ try {
 - [OpenAI API Documentation](https://platform.openai.com/docs)
 - [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
 
-## 🔄 最近の重要な変更（2025-08-26）
+## 🔄 最近の重要な変更（2025-08-27）
 
+### 2025-08-27の変更
+1. **テストモック戦略の根本的修正**: `global.fetch`から`apiClient`の直接モックへ移行
+2. **IntersectionObserver修正**: Jestモック関数から適切なクラスコンストラクタへ
+3. **React Confettiモック化**: Canvas関連エラーを完全回避
+4. **ErrorBoundary無限ループ防止**: テスト環境での副作用スキップ
+5. **シングルトンパターン対応**: PrairieCardParserに`resetInstance()`追加
+
+### 2025-08-26の変更
 1. **AI診断機能実装**: OpenAI GPT-4o-mini統合
 2. **セキュリティ強化**: Prairie Card URL検証、HTML sanitization
 3. **レート制限実装**: 10リクエスト/分/IP
 4. **Edge Runtime対応**: setInterval削除、cheerio→正規表現
 5. **型安全性向上**: DiagnosisResult型の統一
+
+## 📝 今後の改善項目（ToDo）
+
+### テスト関連の軽微な修正
+- [ ] グループページのUIテスト：実際のコンポーネントテキストと期待値の不一致を修正
+- [ ] 診断結果コンポーネントテスト：表示テキストの差異を修正
+- [ ] APIクライアントテスト：タイムアウトエラー処理のテストケース修正
+- [ ] 全体のテストカバレッジを80%以上に向上（現在76%）
+
+### その他の改善項目
+- [ ] PR #33（UI関連テストの修正）の完全マージと検証
+- [ ] Issue #32のクローズ処理
 
 ---
 

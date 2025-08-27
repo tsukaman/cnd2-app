@@ -1,9 +1,16 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useDiagnosis } from '../useDiagnosis';
 import { PrairieProfile } from '@/types';
+import { apiClient } from '@/lib/api-client';
 
-// Mock fetch and localStorage
-global.fetch = jest.fn();
+// Mock apiClient and localStorage
+jest.mock('@/lib/api-client', () => ({
+  apiClient: {
+    diagnosis: {
+      generate: jest.fn(),
+    },
+  },
+}));
 const localStorageMock = {
   getItem: jest.fn(),
   setItem: jest.fn(),
@@ -15,6 +22,28 @@ describe('useDiagnosis', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorageMock.getItem.mockReturnValue('{}');
+    // Set up default successful diagnosis mock
+    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValue({
+      success: true,
+      data: {
+        result: {
+          id: 'test-diagnosis-123',
+          mode: 'duo',
+          type: 'Compatible',
+          compatibility: 85,
+          summary: 'Great match!',
+          strengths: ['Collaboration'],
+          opportunities: ['Growth'],
+          advice: 'Keep working together',
+          participants: [],
+          createdAt: new Date().toISOString(),
+        },
+      },
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const mockProfiles: PrairieProfile[] = [
@@ -73,12 +102,9 @@ describe('useDiagnosis', () => {
       createdAt: new Date().toISOString(),
     };
 
-    (fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        success: true,
-        result: mockResult,
-      }),
+    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      result: mockResult,
     });
 
     const { result } = renderHook(() => useDiagnosis());
@@ -95,13 +121,8 @@ describe('useDiagnosis', () => {
       expect(diagnosis).toEqual(mockResult);
     });
 
-    expect(fetch).toHaveBeenCalledWith('/api/diagnosis', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ profiles: mockProfiles, mode: 'duo' }),
-    });
+    expect(apiClient.diagnosis.generate).toHaveBeenCalled();
+    expect(apiClient.diagnosis.generate).toHaveBeenCalledWith(mockProfiles, 'duo');
 
     // Check localStorage was updated
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
@@ -113,12 +134,9 @@ describe('useDiagnosis', () => {
   it('handles diagnosis errors correctly', async () => {
     const errorMessage = '診断の生成に失敗しました';
     
-    (fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({
-        success: false,
-        error: errorMessage,
-      }),
+    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce({
+      success: false,
+      error: errorMessage,
     });
 
     const { result } = renderHook(() => useDiagnosis());
@@ -145,12 +163,9 @@ describe('useDiagnosis', () => {
       createdAt: new Date().toISOString(),
     };
 
-    (fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        success: true,
-        result: mockResult,
-      }),
+    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      result: mockResult,
     });
 
     // Simulate localStorage error

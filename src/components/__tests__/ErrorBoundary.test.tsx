@@ -2,9 +2,38 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ErrorBoundary from '../ErrorBoundary';
 
-// Component that throws an error
+// Mock framer-motion to avoid animation issues in tests
+jest.mock('framer-motion', () => ({
+  motion: {
+    div: React.forwardRef(({ children, ...props }: any, ref: any) => 
+      React.createElement('div', { ...props, ref }, children)
+    ),
+    button: React.forwardRef(({ children, ...props }: any, ref: any) =>
+      React.createElement('button', { ...props, ref }, children)
+    ),
+  },
+}));
+
+// Mock the ErrorHandler to prevent any side effects
+jest.mock('@/lib/errors', () => ({
+  ErrorHandler: {
+    logError: jest.fn(),
+    mapError: jest.fn((error) => error),
+    getUserMessage: jest.fn(() => 'Test error message'),
+  },
+  CND2Error: class CND2Error extends Error {
+    constructor(message: string, public code?: string) {
+      super(message);
+    }
+  },
+}));
+
+// Component that throws an error - stabilized for testing
+let hasThrown = false;
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
-  if (shouldThrow) {
+  // Only throw once to avoid infinite loops
+  if (shouldThrow && !hasThrown) {
+    hasThrown = true;
     throw new Error('Test error');
   }
   return <div>No error</div>;
@@ -22,6 +51,7 @@ describe('ErrorBoundary', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    hasThrown = false; // Reset the flag before each test
   });
 
   it('renders children when there is no error', () => {
