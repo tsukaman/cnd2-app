@@ -84,6 +84,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
         whileTap={{ scale: 0.95 }}
         onClick={handleShare}
         className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-semibold flex items-center gap-2 hover:shadow-lg transition-all"
+        aria-label="結果をシェア"
       >
         <Share2 className="w-5 h-5" />
         結果をシェア

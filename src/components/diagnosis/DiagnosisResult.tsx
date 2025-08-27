@@ -29,8 +29,18 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
 
     // 5秒後にコンフェッティを停止
     const timer = setTimeout(() => setShowConfetti(false), 5000);
+
+    // 結果をlocalStorageに保存
+    try {
+      const existingResults = JSON.parse(localStorage.getItem('cnd2_results') || '{}');
+      existingResults[result.id] = result;
+      localStorage.setItem('cnd2_results', JSON.stringify(existingResults));
+    } catch (error) {
+      console.error('Failed to save result to localStorage:', error);
+    }
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [result]);
 
   const copyToClipboard = () => {
     const url = `https://cnd2.cloudnativedays.jp/result/${result.id}`;
@@ -45,6 +55,13 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
     if (compatibility >= 80) return "from-purple-500 to-pink-500";   // パープル
     if (compatibility >= 70) return "from-blue-500 to-cyan-500";     // ブルー
     return "from-green-500 to-emerald-500";                   // グリーン
+  };
+
+  // テストで期待されるスコアの色クラス
+  const getScoreTextColor = (compatibility: number) => {
+    if (compatibility >= 80) return "text-green-600";
+    if (compatibility >= 60) return "text-yellow-600"; 
+    return "text-red-600";
   };
 
   return (
@@ -64,7 +81,10 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: "spring", duration: 1 }}
-        className="max-w-4xl mx-auto p-4"
+        className="max-w-4xl mx-auto p-4 animate-fadeIn"
+        data-testid="diagnosis-result-container"
+        role="article"
+        aria-label="診断結果"
       >
         {/* CND²ロゴアニメーション */}
         <motion.div className="text-center mb-6">
@@ -89,15 +109,16 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
 
           {/* スコア表示 */}
           <motion.div 
-            className="relative text-center mb-8"
+            className="relative text-center mb-8 animate-slideUp"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.5, type: "spring" }}
           >
             <div className="inline-flex items-center justify-center">
               <Trophy className="w-8 h-8 text-yellow-500 mr-2" />
-              <span className="text-5xl font-bold text-white">{result.compatibility || result.score || 85}</span>
-              <span className="text-2xl text-white/80 ml-1">/100</span>
+              <span className={`text-5xl font-bold ${getScoreTextColor(result.compatibility || result.score || 85)}`}>
+                {result.compatibility || result.score || 85}%
+              </span>
             </div>
             <div className="text-sm text-white/60 mt-2">相性スコア</div>
           </motion.div>
@@ -197,6 +218,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
               className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              aria-label="QRコード"
             >
               <QrCode className="w-5 h-5" />
               QRコード
@@ -207,6 +229,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
               className="px-6 py-3 bg-white/10 backdrop-blur text-white rounded-xl font-semibold flex items-center justify-center gap-2 border border-white/20"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              aria-label="URLをコピー"
             >
               <Download className="w-5 h-5" />
               URLをコピー
@@ -218,6 +241,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
                 className="px-6 py-3 bg-white/10 backdrop-blur text-white rounded-xl font-semibold flex items-center justify-center gap-2 border border-white/20"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                aria-label="もう一度診断"
               >
                 <RefreshCw className="w-5 h-5" />
                 もう一度診断
@@ -274,3 +298,6 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
     </>
   );
 }
+
+// Export with expected name for tests
+export { DiagnosisResultComponent as DiagnosisResult };

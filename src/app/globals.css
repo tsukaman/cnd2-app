@@ -240,6 +240,16 @@ body {
   100% { background-position: 200% center; }
 }
 
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
@@ -252,6 +262,14 @@ body {
   background: linear-gradient(90deg, transparent, rgba(192, 132, 252, 0.3), transparent);
   background-size: 200% 100%;
   animation: shimmer 3s linear infinite;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.6s ease-out;
 }
 
 /* High Contrast Mode Support */
