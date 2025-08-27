@@ -14,6 +14,20 @@ jest.mock('framer-motion', () => ({
   },
 }));
 
+// Mock the ErrorHandler to prevent any side effects
+jest.mock('@/lib/errors', () => ({
+  ErrorHandler: {
+    logError: jest.fn(),
+    mapError: jest.fn((error) => error),
+    getUserMessage: jest.fn(() => 'Test error message'),
+  },
+  CND2Error: class CND2Error extends Error {
+    constructor(message: string, public code?: string) {
+      super(message);
+    }
+  },
+}));
+
 // Component that throws an error
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
   if (shouldThrow) {

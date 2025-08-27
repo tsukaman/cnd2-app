@@ -25,8 +25,8 @@ export interface PrairieProfile {
   };
   custom: Record<string, unknown>;
   meta: {
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: string;
+    updatedAt?: string;
     connectedBy?: string;
     hashtag?: string;
     isPartialData?: boolean;

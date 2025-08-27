@@ -55,8 +55,8 @@ export function usePrairieCard(): UsePrairieCardReturn {
         },
         custom: data.data.custom || {},
         meta: {
-          createdAt: data.data.createdAt ? new Date(data.data.createdAt) : undefined,
-          updatedAt: data.data.updatedAt ? new Date(data.data.updatedAt) : undefined,
+          createdAt: data.data.createdAt || undefined,
+          updatedAt: data.data.updatedAt || undefined,
           connectedBy: data.data.connectedBy,
           hashtag: data.data.hashtag,
         },

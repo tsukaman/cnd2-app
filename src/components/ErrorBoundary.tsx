@@ -24,6 +24,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    // This method is called during the render phase, so side effects are not allowed.
+    // Return new state to trigger error UI
     return { hasError: true, error, errorInfo: null };
   }
 
@@ -31,12 +33,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
     // エラーログを記録
     const cnd2Error = error instanceof CND2Error ? error : ErrorHandler.mapError(error);
     ErrorHandler.logError(cnd2Error, 'ErrorBoundary');
-
-    // 状態を更新
-    this.setState({
-      error,
-      errorInfo,
-    });
+    
+    // Store errorInfo for development display
+    // Note: We don't call setState here to avoid conflicts with getDerivedStateFromError
+    // Instead, we store it directly on the instance for development use
+    (this as any)._errorInfo = errorInfo;
 
     // 本番環境では外部サービスにエラーを送信
     if (process.env.NODE_ENV === 'production') {
@@ -59,6 +60,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   handleReset = () => {
     this.setState({ hasError: false, error: null, errorInfo: null });
+    // Also reset the stored error info
+    (this as any)._errorInfo = null;
   };
 
   render() {
@@ -115,10 +118,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
                       {this.state.error.stack}
                     </>
                   )}
-                  {this.state.errorInfo && (
+                  {(this as any)._errorInfo && (
                     <>
                       {'\n\nComponent stack:\n'}
-                      {this.state.errorInfo.componentStack}
+                      {(this as any)._errorInfo.componentStack}
                     </>
                   )}
                 </pre>

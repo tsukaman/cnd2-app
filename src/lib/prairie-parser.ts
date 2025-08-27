@@ -243,8 +243,8 @@ export class PrairieCardParser {
         social: {},
         custom: {},
         meta: {
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           connectedBy: 'CND²',
           hashtag: CND2_CONFIG.app.hashtag,
           isPartialData: true,
@@ -376,12 +376,12 @@ export class PrairieCardParser {
     return href || undefined;
   }
 
-  private extractDate($: cheerio.CheerioAPI, selector: string): Date | undefined {
+  private extractDate($: cheerio.CheerioAPI, selector: string): string | undefined {
     const dateText = this.extractText($, selector);
     if (!dateText) return undefined;
     
     try {
-      return new Date(dateText);
+      return new Date(dateText).toISOString();
     } catch {
       return undefined;
     }
