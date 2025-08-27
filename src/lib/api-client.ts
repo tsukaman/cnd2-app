@@ -5,9 +5,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 // 開発環境では/api、本番環境ではCloudflare FunctionsのURLを使用
 function getApiUrl(path: string): string {
-  // 開発環境でAPIルートが削除されているため、常にCloudflare Functionsを使用
+  // API_BASE_URLが未設定の場合、現在のオリジンを使用（相対パス）
   if (!API_BASE_URL) {
-    throw new Error('API_BASE_URL is not configured');
+    // ブラウザ環境では相対パスを使用
+    if (typeof window !== 'undefined') {
+      // pathが/で始まる場合は削除
+      const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+      return `/${cleanPath}`;
+    }
+    // サーバーサイドではエラー（ただし静的エクスポートなので実際には呼ばれない）
+    throw new Error('API_BASE_URL is not configured for server-side rendering');
   }
   
   // pathが/で始まる場合は削除

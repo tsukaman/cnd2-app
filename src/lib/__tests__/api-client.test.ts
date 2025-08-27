@@ -255,12 +255,28 @@ describe('API Client', () => {
       );
     });
 
-    it('API_BASE_URLが未設定の場合エラーをスローする', async () => {
+    it('API_BASE_URLが未設定の場合相対パスを使用する', async () => {
       delete process.env.NEXT_PUBLIC_API_BASE_URL;
       const { apiClient } = require('../api-client');
+      
+      // windowオブジェクトをモック
+      global.window = {} as any;
+      
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
 
-      await expect(apiClient.prairie.fetch('test'))
-        .rejects.toThrow('API_BASE_URL is not configured');
+      await apiClient.prairie.fetch('test');
+      
+      // 相対パスでfetchが呼ばれることを確認
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/prairie',
+        expect.any(Object)
+      );
+      
+      // クリーンアップ
+      delete (global as any).window;
     });
   });
 
