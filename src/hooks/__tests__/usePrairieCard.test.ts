@@ -1,27 +1,31 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { usePrairieCard } from '../usePrairieCard';
+import { apiClient } from '@/lib/api-client';
 
-// Mock fetch
-global.fetch = jest.fn();
+// Mock apiClient
+jest.mock('@/lib/api-client', () => ({
+  apiClient: {
+    prairie: {
+      fetch: jest.fn(),
+    },
+  },
+}));
 
 describe('usePrairieCard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Set up default successful fetch mock
-    (fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        success: true,
-        data: {
-          name: 'Default User',
-          title: 'Developer',
-          company: 'Company',
-          bio: 'Bio',
-          skills: [],
-          tags: [],
-          interests: [],
-        },
-      }),
+    (apiClient.prairie.fetch as jest.Mock).mockResolvedValue({
+      success: true,
+      data: {
+        name: 'Default User',
+        title: 'Developer',
+        company: 'Company',
+        bio: 'Bio',
+        skills: [],
+        tags: [],
+        interests: [],
+      },
     });
   });
 
@@ -82,12 +86,9 @@ describe('usePrairieCard', () => {
       },
     };
 
-    (fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        success: true,
-        data: mockData,
-      }),
+    (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: mockData,
     });
 
     const { result } = renderHook(() => usePrairieCard());
@@ -104,26 +105,16 @@ describe('usePrairieCard', () => {
       expect(fetchedProfile).toEqual(expectedProfile);
     });
 
-    expect(fetch).toHaveBeenCalled();
-    // Verify the call was made with expected parameters
-    const fetchCall = (fetch as jest.Mock).mock.calls[0];
-    expect(fetchCall[0]).toBe('/api/prairie');
-    expect(fetchCall[1]?.method).toBe('POST');
-    expect(fetchCall[1]?.headers).toEqual({
-      'Content-Type': 'application/json',
-    });
-    expect(JSON.parse(fetchCall[1]?.body)).toEqual({ url: 'https://example.com/profile' });
+    expect(apiClient.prairie.fetch).toHaveBeenCalled();
+    expect(apiClient.prairie.fetch).toHaveBeenCalledWith('https://example.com/profile');
   });
 
   it('handles fetch errors correctly', async () => {
     const errorMessage = 'Prairie Cardの取得に失敗しました';
     
-    (fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({
-        success: false,
-        error: errorMessage,
-      }),
+    (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce({
+      success: false,
+      error: errorMessage,
     });
 
     const { result } = renderHook(() => usePrairieCard());
@@ -142,7 +133,7 @@ describe('usePrairieCard', () => {
   });
 
   it('handles network errors correctly', async () => {
-    (fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    (apiClient.prairie.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
     const { result } = renderHook(() => usePrairieCard());
 

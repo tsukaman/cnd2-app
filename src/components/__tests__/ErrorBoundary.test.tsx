@@ -28,9 +28,12 @@ jest.mock('@/lib/errors', () => ({
   },
 }));
 
-// Component that throws an error
+// Component that throws an error - stabilized for testing
+let hasThrown = false;
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
-  if (shouldThrow) {
+  // Only throw once to avoid infinite loops
+  if (shouldThrow && !hasThrown) {
+    hasThrown = true;
     throw new Error('Test error');
   }
   return <div>No error</div>;
@@ -48,6 +51,7 @@ describe('ErrorBoundary', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    hasThrown = false; // Reset the flag before each test
   });
 
   it('renders children when there is no error', () => {
