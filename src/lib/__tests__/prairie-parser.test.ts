@@ -8,11 +8,12 @@ import { ValidationError, NetworkError, ParseError } from '@/lib/errors';
 // モック設定
 jest.mock('@/lib/cache-manager', () => ({
   CacheManager: jest.fn().mockImplementation(() => ({
-    getFromMemory: jest.fn(() => null),
-    getFromBrowser: jest.fn(() => null),
-    save: jest.fn(),
-    clear: jest.fn(),
-    getWithSquaredCache: jest.fn(() => null),
+    getFromMemory: jest.fn().mockReturnValue(null),
+    getFromBrowser: jest.fn().mockResolvedValue(null),
+    save: jest.fn().mockResolvedValue(undefined),
+    clear: jest.fn().mockResolvedValue(undefined),
+    getWithSquaredCache: jest.fn().mockResolvedValue(null),
+    findRelatedCache: jest.fn().mockResolvedValue(null),
   })),
 }));
 
@@ -29,7 +30,7 @@ describe('PrairieCardParser', () => {
 
   beforeEach(() => {
     // Reset the singleton instance
-    (PrairieCardParser as any).instance = null;
+    PrairieCardParser.resetInstance();
     parser = PrairieCardParser.getInstance();
     jest.clearAllMocks();
   });

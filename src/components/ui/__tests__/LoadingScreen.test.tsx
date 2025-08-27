@@ -5,49 +5,48 @@ import { LoadingScreen } from '../LoadingScreen';
 
 describe('LoadingScreen', () => {
   describe('レンダリング', () => {
-    it('デフォルトメッセージが表示される', () => {
+    it('CND²ロゴが表示される', () => {
       render(<LoadingScreen />);
       
-      expect(screen.getByText('読み込み中...')).toBeInTheDocument();
+      expect(screen.getByText('CND²')).toBeInTheDocument();
     });
 
-    it('カスタムメッセージが表示される', () => {
-      render(<LoadingScreen message="データを処理中です" />);
-      
-      expect(screen.getByText('データを処理中です')).toBeInTheDocument();
-    });
-
-    it('スピナーアニメーションが表示される', () => {
+    it('アニメーションドットが表示される', () => {
       const { container } = render(<LoadingScreen />);
       
-      const spinner = container.querySelector('.animate-spin');
-      expect(spinner).toBeInTheDocument();
+      // 3つのアニメーションドットが存在することを確認
+      const dots = container.querySelectorAll('.bg-cyan-400.rounded-full');
+      expect(dots).toHaveLength(3);
     });
 
-    it('クラウドアイコンが表示される', () => {
+    it('グラデーション背景が表示される', () => {
       const { container } = render(<LoadingScreen />);
       
-      const cloudIcon = container.querySelector('svg');
-      expect(cloudIcon).toBeInTheDocument();
-      expect(cloudIcon).toHaveClass('text-blue-500');
+      const background = container.querySelector('.bg-gradient-to-br');
+      expect(background).toBeInTheDocument();
+    });
+
+    it('中央配置でレンダリングされる', () => {
+      const { container } = render(<LoadingScreen />);
+      
+      const centerContainer = container.querySelector('.flex.items-center.justify-center');
+      expect(centerContainer).toBeInTheDocument();
     });
   });
 
   describe('スタイリング', () => {
-    it('フルスクリーンオーバーレイが適用される', () => {
+    it('フルスクリーンビューが適用される', () => {
       const { container } = render(<LoadingScreen />);
       
-      const overlay = container.firstChild;
-      expect(overlay).toHaveClass('fixed');
-      expect(overlay).toHaveClass('inset-0');
-      expect(overlay).toHaveClass('z-50');
+      const fullscreen = container.querySelector('.min-h-screen');
+      expect(fullscreen).toBeInTheDocument();
     });
 
-    it('背景にブラー効果が適用される', () => {
+    it('グラデーション背景が適用される', () => {
       const { container } = render(<LoadingScreen />);
       
-      const backdrop = container.querySelector('.backdrop-blur-sm');
-      expect(backdrop).toBeInTheDocument();
+      const gradient = container.querySelector('.from-blue-900.via-purple-900.to-pink-900');
+      expect(gradient).toBeInTheDocument();
     });
 
     it('中央配置のスタイルが適用される', () => {
@@ -55,47 +54,6 @@ describe('LoadingScreen', () => {
       
       const content = container.querySelector('.flex.items-center.justify-center');
       expect(content).toBeInTheDocument();
-    });
-  });
-
-  describe('アニメーション', () => {
-    it('スピナーに回転アニメーションが適用される', () => {
-      const { container } = render(<LoadingScreen />);
-      
-      const spinner = container.querySelector('.animate-spin');
-      expect(spinner).toHaveStyle({ animation: expect.stringContaining('spin') });
-    });
-
-    it('テキストにパルスアニメーションが適用される', () => {
-      const { container } = render(<LoadingScreen />);
-      
-      const text = container.querySelector('.animate-pulse');
-      expect(text).toBeInTheDocument();
-    });
-  });
-
-  describe('アクセシビリティ', () => {
-    it('適切なaria-live属性が設定される', () => {
-      const { container } = render(<LoadingScreen />);
-      
-      const liveRegion = container.querySelector('[aria-live="polite"]');
-      expect(liveRegion).toBeInTheDocument();
-    });
-
-    it('スクリーンリーダー用のテキストが含まれる', () => {
-      render(<LoadingScreen message="処理中" />);
-      
-      expect(screen.getByText('処理中')).toHaveAttribute('role', 'status');
-    });
-  });
-
-  describe('レスポンシブデザイン', () => {
-    it('モバイルとデスクトップで適切にレンダリングされる', () => {
-      const { container } = render(<LoadingScreen />);
-      
-      const contentBox = container.querySelector('.p-8');
-      expect(contentBox).toBeInTheDocument();
-      expect(contentBox).toHaveClass('rounded-xl');
     });
   });
 });

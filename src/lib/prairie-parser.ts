@@ -26,6 +26,13 @@ export class PrairieCardParser {
     }
     return PrairieCardParser.instance;
   }
+  
+  // テスト用: シングルトンインスタンスをリセット
+  static resetInstance(): void {
+    if (process.env.NODE_ENV === 'test') {
+      PrairieCardParser.instance = null as any;
+    }
+  }
 
   async parseProfile(url: string): Promise<PrairieProfile> {
     // URLの正規化と検証

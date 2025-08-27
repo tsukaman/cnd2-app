@@ -18,26 +18,32 @@ interface State {
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
+  private errorInfoCache: ErrorInfo | null = null;
+  
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
   }
-
+  
   static getDerivedStateFromError(error: Error): State {
-    // This method is called during the render phase, so side effects are not allowed.
-    // Return new state to trigger error UI
+    // This is called during the render phase, so no side effects
     return { hasError: true, error, errorInfo: null };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // エラーログを記録
-    const cnd2Error = error instanceof CND2Error ? error : ErrorHandler.mapError(error);
-    ErrorHandler.logError(cnd2Error, 'ErrorBoundary');
-    
     // Store errorInfo for development display
-    // Note: We don't call setState here to avoid conflicts with getDerivedStateFromError
-    // Instead, we store it directly on the instance for development use
-    (this as any)._errorInfo = errorInfo;
+    this.errorInfoCache = errorInfo;
+    // Force re-render to display errorInfo
+    this.forceUpdate();
+    
+    // エラーログを記録
+    try {
+      const cnd2Error = error instanceof CND2Error ? error : ErrorHandler.mapError(error);
+      ErrorHandler.logError(cnd2Error, 'ErrorBoundary');
+    } catch (logError) {
+      // ログエラーを無視して続行
+      console.error('Failed to log error:', logError);
+    }
 
     // 本番環境では外部サービスにエラーを送信
     if (process.env.NODE_ENV === 'production') {
@@ -59,9 +65,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   handleReset = () => {
+    this.errorInfoCache = null;
     this.setState({ hasError: false, error: null, errorInfo: null });
-    // Also reset the stored error info
-    (this as any)._errorInfo = null;
   };
 
   render() {
@@ -118,10 +123,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
                       {this.state.error.stack}
                     </>
                   )}
-                  {(this as any)._errorInfo && (
+                  {this.errorInfoCache && (
                     <>
                       {'\n\nComponent stack:\n'}
-                      {(this as any)._errorInfo.componentStack}
+                      {this.errorInfoCache.componentStack}
                     </>
                   )}
                 </pre>
