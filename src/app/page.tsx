@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { MenuCard } from "@/components/ui/MenuCard";
 import { ConsentDialog } from "@/components/ui/ConsentDialog";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { BackgroundEffects } from "@/components/effects/BackgroundEffects";
 import { DiagnosisResultComponent } from "@/components/diagnosis/DiagnosisResult";
 import type { DiagnosisResult } from "@/types";
+import { BarChart3 } from "lucide-react";
 
 const taglines = [
   { en: "Connect Your Future", ja: "エンジニアの出会いを、データで可視化する" },
@@ -162,6 +164,22 @@ export default function Home() {
             <div className="h-0.5 w-24 mx-auto bg-gradient-to-r from-transparent via-purple-500 to-transparent mt-6"></div>
           </motion.div>
         </AnimatePresence>
+
+        {/* Admin Link */}
+        <motion.div
+          className="absolute top-4 right-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Link
+            href="/admin/metrics"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-gray-400 hover:text-white"
+          >
+            <BarChart3 className="w-4 h-4" />
+            <span className="text-sm">Metrics</span>
+          </Link>
+        </motion.div>
 
         {/* フッター with CloudNative Days Logo and Hashtag */}
         <motion.div
