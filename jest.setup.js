@@ -200,8 +200,27 @@ global.HTMLCanvasElement = class HTMLCanvasElement {
 process.env.NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://localhost:3000';
 process.env.NODE_ENV = 'test';
 
+// Set up default fetch mock
+if (!global.fetch || !global.fetch.mockImplementation) {
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ success: true, data: {} }),
+      text: () => Promise.resolve(''),
+      status: 200,
+      statusText: 'OK',
+    })
+  );
+}
+
 // Clean up after each test
+beforeEach(() => {
+  jest.useFakeTimers();
+});
+
 afterEach(() => {
   jest.clearAllTimers();
+  jest.runOnlyPendingTimers();
+  jest.useRealTimers();
   jest.clearAllMocks();
 });

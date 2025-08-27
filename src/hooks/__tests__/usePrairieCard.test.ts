@@ -7,6 +7,26 @@ global.fetch = jest.fn();
 describe('usePrairieCard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set up default successful fetch mock
+    (fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          name: 'Default User',
+          title: 'Developer',
+          company: 'Company',
+          bio: 'Bio',
+          skills: [],
+          tags: [],
+          interests: [],
+        },
+      }),
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('initializes with correct default state', () => {

@@ -15,6 +15,29 @@ describe('useDiagnosis', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorageMock.getItem.mockReturnValue('{}');
+    // Set up default successful fetch mock
+    (fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        data: {
+          id: 'test-diagnosis-123',
+          mode: 'duo',
+          type: 'Compatible',
+          compatibility: 85,
+          summary: 'Great match!',
+          strengths: ['Collaboration'],
+          opportunities: ['Growth'],
+          advice: 'Keep working together',
+          participants: [],
+          createdAt: new Date().toISOString(),
+        },
+      }),
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const mockProfiles: PrairieProfile[] = [

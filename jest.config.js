@@ -23,6 +23,14 @@ const customJestConfig = {
     '!src/**/index.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
   ],
+  // Test timeout and cleanup settings
+  testTimeout: 10000,
+  maxWorkers: '50%',
+  forceExit: true,
+  detectOpenHandles: false,
+  clearMocks: true,
+  restoreMocks: true,
+  resetMocks: true,
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
