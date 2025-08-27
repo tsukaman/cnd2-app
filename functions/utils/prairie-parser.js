@@ -11,10 +11,11 @@
  */
 function extractTextByClass(html, className) {
   // Match various HTML patterns with the given class
+  const escapedClassName = escapeRegExp(className);
   const patterns = [
-    new RegExp(`<[^>]+class="[^"]*${className}[^"]*"[^>]*>([^<]+)<`, 'i'),
-    new RegExp(`<[^>]+class='[^']*${className}[^']*'[^>]*>([^<]+)<`, 'i'),
-    new RegExp(`<${className}[^>]*>([^<]+)</${className}>`, 'i'),
+    new RegExp(`<[^>]+class="[^"]*${escapedClassName}[^"]*"[^>]*>([^<]+)<`, 'i'),
+    new RegExp(`<[^>]+class='[^']*${escapedClassName}[^']*'[^>]*>([^<]+)<`, 'i'),
+    new RegExp(`<${escapedClassName}[^>]*>([^<]+)</${escapedClassName}>`, 'i'),
   ];
   
   for (const pattern of patterns) {
@@ -34,7 +35,8 @@ function extractTextByClass(html, className) {
  */
 function extractArrayByClass(html, className) {
   const items = [];
-  const pattern = new RegExp(`<[^>]+class="[^"]*${className}[^"]*"[^>]*>([^<]+)<`, 'gi');
+  const escapedClassName = escapeRegExp(className);
+  const pattern = new RegExp(`<[^>]+class="[^"]*${escapedClassName}[^"]*"[^>]*>([^<]+)<`, 'gi');
   const matches = html.matchAll(pattern);
   
   for (const match of matches) {
@@ -44,7 +46,7 @@ function extractArrayByClass(html, className) {
   }
   
   // Also try data-field pattern
-  const dataPattern = new RegExp(`data-field="${className}"[^>]*>([^<]+)<`, 'gi');
+  const dataPattern = new RegExp(`data-field="${escapedClassName}"[^>]*>([^<]+)<`, 'gi');
   const dataMatches = html.matchAll(dataPattern);
   
   for (const match of dataMatches) {
@@ -63,7 +65,8 @@ function extractArrayByClass(html, className) {
  * @returns {string|undefined} - URL if found
  */
 function extractSocialUrl(html, domain) {
-  const pattern = new RegExp(`https?://(?:www\\.)?${domain.replace('.', '\\.')}[^"'\\s>]+`, 'i');
+  const escapedDomain = escapeRegExp(domain);
+  const pattern = new RegExp(`https?://(?:www\\.)?${escapedDomain}[^"'\\s>]+`, 'i');
   const match = html.match(pattern);
   return match ? match[0] : undefined;
 }
@@ -76,9 +79,19 @@ function extractSocialUrl(html, domain) {
  */
 function extractLink(html, identifier) {
   // Try to find href with the identifier nearby
-  const pattern = new RegExp(`href="([^"]+)"[^>]*>[^<]*${identifier}|${identifier}[^<]*<[^>]*href="([^"]+)"`, 'i');
+  const escapedIdentifier = escapeRegExp(identifier);
+  const pattern = new RegExp(`href="([^"]+)"[^>]*>[^<]*${escapedIdentifier}|${escapedIdentifier}[^<]*<[^>]*href="([^"]+)"`, 'i');
   const match = html.match(pattern);
   return match ? (match[1] || match[2]) : undefined;
+}
+
+/**
+ * Escape regular expression special characters
+ * @param {string} string - String to escape
+ * @returns {string} - Escaped string safe for regex
+ */
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
@@ -219,8 +232,9 @@ function validatePrairieCardUrl(url) {
   }
 }
 
-module.exports = {
+export {
   parseFromHTML,
   validatePrairieCardUrl,
   escapeHtml,
+  escapeRegExp,
 };

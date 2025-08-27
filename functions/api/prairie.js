@@ -2,6 +2,7 @@
 import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../utils/response.js';
 import { createLogger, logRequest } from '../utils/logger.js';
 import { safeParseInt, METRICS_KEYS } from '../utils/constants.js';
+import { parseFromHTML, validatePrairieCardUrl } from '../utils/prairie-parser.js';
 
 export async function onRequestPost({ request, env }) {
   const logger = createLogger(env);
@@ -145,6 +146,3 @@ export async function onRequestOptions({ request }) {
     headers: corsHeaders,
   });
 }
-
-// Import improved Prairie Card parser
-const { parseFromHTML, validatePrairieCardUrl } = require('../utils/prairie-parser');

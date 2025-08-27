@@ -42,7 +42,7 @@ describe('CSP Headers Configuration', () => {
       let cspHeader: string;
 
       beforeAll(() => {
-        const cspMatch = rootHeaders.match(/Content-Security-Policy:(.*?)(?=\n|$)/s);
+        const cspMatch = rootHeaders.match(/Content-Security-Policy:([\s\S]*?)(?=\n\w+:|$)/);
         cspHeader = cspMatch ? cspMatch[1].trim() : '';
       });
 

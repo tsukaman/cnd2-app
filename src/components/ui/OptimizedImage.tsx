@@ -17,6 +17,8 @@ interface OptimizedImageProps {
   quality?: number;
   fallback?: string;
   disableAnimation?: boolean;
+  decorative?: boolean;
+  srcSet?: string;
   onLoad?: (event: React.SyntheticEvent<HTMLImageElement>) => void;
   onError?: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }
@@ -33,6 +35,8 @@ export default function OptimizedImage({
   quality = 85,
   fallback,
   disableAnimation = false,
+  decorative = false,
+  srcSet,
   onLoad,
   onError,
 }: OptimizedImageProps) {
@@ -80,6 +84,8 @@ export default function OptimizedImage({
         loading={priority ? undefined : 'lazy'}
         placeholder="blur"
         blurDataURL={blurDataURL}
+        aria-hidden={decorative ? true : undefined}
+        {...(srcSet && { srcSet })}
         onLoadingComplete={() => setIsLoading(false)}
         onLoad={(event: any) => {
           setIsLoading(false);
