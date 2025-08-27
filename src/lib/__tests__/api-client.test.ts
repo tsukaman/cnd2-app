@@ -256,11 +256,14 @@ describe('API Client', () => {
     });
 
     it('API_BASE_URLが未設定の場合相対パスを使用する', async () => {
-      delete process.env.NEXT_PUBLIC_API_BASE_URL;
-      const { apiClient } = require('../api-client');
-      
-      // windowオブジェクトをモック
+      // windowオブジェクトをモック（モジュールロード前に設定が必要）
       global.window = {} as any;
+      
+      delete process.env.NEXT_PUBLIC_API_BASE_URL;
+      
+      // windowが定義されている状態でモジュールを再読み込み
+      jest.resetModules();
+      const { apiClient } = require('../api-client');
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
@@ -277,6 +280,7 @@ describe('API Client', () => {
       
       // クリーンアップ
       delete (global as any).window;
+      jest.resetModules();
     });
   });
 

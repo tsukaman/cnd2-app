@@ -12,6 +12,15 @@ jest.mock('next/navigation', () => ({
   })),
 }));
 
+// localStorageのモック
+const localStorageMock = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+};
+global.localStorage = localStorageMock as any;
+
 // コンポーネントモック
 jest.mock('@/components/effects/BackgroundEffects', () => ({
   BackgroundEffects: () => <div data-testid="background-effects" />,
@@ -54,6 +63,10 @@ describe('HomePage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorageMock.getItem.mockClear();
+    localStorageMock.setItem.mockClear();
+    localStorageMock.removeItem.mockClear();
+    localStorageMock.clear.mockClear();
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
   });
 
