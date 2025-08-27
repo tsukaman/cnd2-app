@@ -77,6 +77,7 @@ describe('KVStorage', () => {
 
   beforeEach(() => {
     mockNamespace = new MockKVNamespace();
+    mockNamespace.clear(); // Clear any previous test data
     kv = new KVStorage(mockNamespace as any, 'test');
   });
 
