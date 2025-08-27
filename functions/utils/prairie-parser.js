@@ -36,7 +36,9 @@ function extractTextByClass(html, className) {
 function extractArrayByClass(html, className) {
   const items = [];
   const escapedClassName = escapeRegExp(className);
-  const pattern = new RegExp(`<[^>]+class="[^"]*${escapedClassName}[^"]*"[^>]*>([^<]+)<`, 'gi');
+  
+  // Pattern 1: class="className" or class="something className" or class="className something"
+  const pattern = new RegExp(`<[^>]+class="[^"]*\\b${escapedClassName}\\b[^"]*"[^>]*>([^<]+)<`, 'gi');
   const matches = html.matchAll(pattern);
   
   for (const match of matches) {
@@ -45,7 +47,17 @@ function extractArrayByClass(html, className) {
     }
   }
   
-  // Also try data-field pattern
+  // Pattern 2: class='className' (single quotes)
+  const singleQuotePattern = new RegExp(`<[^>]+class='[^']*\\b${escapedClassName}\\b[^']*'[^>]*>([^<]+)<`, 'gi');
+  const singleQuoteMatches = html.matchAll(singleQuotePattern);
+  
+  for (const match of singleQuoteMatches) {
+    if (match[1]) {
+      items.push(match[1].trim());
+    }
+  }
+  
+  // Pattern 3: data-field="className"
   const dataPattern = new RegExp(`data-field="${escapedClassName}"[^>]*>([^<]+)<`, 'gi');
   const dataMatches = html.matchAll(dataPattern);
   
