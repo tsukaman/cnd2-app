@@ -17,7 +17,7 @@ const envSchema = z.object({
   OPENAI_MODEL: z.string().default('gpt-4-turbo-preview'),
   
   // API configuration
-  API_RATE_LIMIT: z.coerce.number().int().positive().default(100),
+  API_RATE_LIMIT: z.coerce.number().int().positive().default(10),
   API_RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60), // seconds
   API_TIMEOUT: z.coerce.number().int().positive().default(30000), // milliseconds
   CORS_ORIGINS: z.string().default('*'),
