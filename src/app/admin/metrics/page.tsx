@@ -44,9 +44,43 @@ export default function MetricsPage() {
   useEffect(() => {
     fetchMetrics();
     
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchMetrics, 30000);
-    return () => clearInterval(interval);
+    // Auto-refresh every 30 seconds only when user is active
+    let interval: NodeJS.Timeout;
+    
+    const startAutoRefresh = () => {
+      interval = setInterval(() => {
+        // Only refresh if the page is visible
+        if (document.visibilityState === 'visible') {
+          fetchMetrics();
+        }
+      }, 30000);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Refresh immediately when page becomes visible
+        fetchMetrics();
+        // Restart the interval
+        if (interval) clearInterval(interval);
+        startAutoRefresh();
+      } else {
+        // Stop refreshing when page is hidden
+        if (interval) clearInterval(interval);
+      }
+    };
+
+    // Start auto-refresh if page is visible
+    if (document.visibilityState === 'visible') {
+      startAutoRefresh();
+    }
+    
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      if (interval) clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const formatNumber = (num: number) => {
