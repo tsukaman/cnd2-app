@@ -68,38 +68,8 @@ class MockKVNamespace {
     this.expirations.clear();
   }
 }
+
 import { toBase64 } from '@/lib/utils/edge-compat';
-
-// Mock KVNamespace
-class MockKVNamespace {
-  private store: Map<string, { value: string; metadata?: Record<string, unknown> }> = new Map();
-
-  async get(key: string): Promise<string | null> {
-    const item = this.store.get(key);
-    return item?.value || null;
-  }
-
-  async put(key: string, value: string, options?: any): Promise<void> {
-    this.store.set(key, { value, metadata: options?.metadata });
-  }
-
-  async delete(key: string): Promise<void> {
-    this.store.delete(key);
-  }
-
-  async list(options?: any): Promise<any> {
-    const keys = Array.from(this.store.keys())
-      .filter(key => !options?.prefix || key.startsWith(options.prefix))
-      .slice(0, options?.limit || 10)
-      .map(key => ({ name: key, metadata: this.store.get(key)?.metadata }));
-
-    return {
-      keys,
-      list_complete: keys.length < (options?.limit || 10),
-      cursor: undefined,
-    };
-  }
-}
 
 describe('KVStorage', () => {
   let kv: KVStorage;
