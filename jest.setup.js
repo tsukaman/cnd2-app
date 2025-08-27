@@ -75,54 +75,50 @@ jest.mock('framer-motion', () => {
 });
 
 // Mock HTMLCanvasElement for confetti library
-Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
-  value: jest.fn(() => ({
-    fillRect: jest.fn(),
-    clearRect: jest.fn(),
-    getImageData: jest.fn(() => ({ data: new Array(4) })),
-    putImageData: jest.fn(),
-    createImageData: jest.fn(() => ({ data: new Array(4) })),
-    setTransform: jest.fn(),
-    drawImage: jest.fn(),
-    save: jest.fn(),
-    restore: jest.fn(),
-    beginPath: jest.fn(),
-    moveTo: jest.fn(),
-    lineTo: jest.fn(),
-    closePath: jest.fn(),
-    stroke: jest.fn(),
-    fill: jest.fn(),
-    measureText: jest.fn(() => ({ width: 0 })),
-    arc: jest.fn(),
-    fillText: jest.fn(),
-    translate: jest.fn(),
-    scale: jest.fn(),
-    rotate: jest.fn(),
-    globalAlpha: 1,
-    globalCompositeOperation: 'source-over',
-    fillStyle: '#000000',
-    strokeStyle: '#000000',
-    lineWidth: 1,
-    lineCap: 'butt',
-    lineJoin: 'miter',
-    miterLimit: 10,
-    font: '10px sans-serif',
-    textAlign: 'start',
-    textBaseline: 'alphabetic',
-    direction: 'ltr',
-  })),
-});
+global.HTMLCanvasElement = class HTMLCanvasElement {
+  constructor() {
+    this.width = 300;
+    this.height = 150;
+  }
 
-// Mock HTMLCanvasElement dimensions
-Object.defineProperty(HTMLCanvasElement.prototype, 'width', {
-  value: 300,
-  writable: true,
-});
-
-Object.defineProperty(HTMLCanvasElement.prototype, 'height', {
-  value: 150,
-  writable: true,
-});
+  getContext() {
+    return {
+      fillRect: jest.fn(),
+      clearRect: jest.fn(),
+      getImageData: jest.fn(() => ({ data: new Array(4) })),
+      putImageData: jest.fn(),
+      createImageData: jest.fn(() => ({ data: new Array(4) })),
+      setTransform: jest.fn(),
+      drawImage: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      beginPath: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      closePath: jest.fn(),
+      stroke: jest.fn(),
+      fill: jest.fn(),
+      measureText: jest.fn(() => ({ width: 0 })),
+      arc: jest.fn(),
+      fillText: jest.fn(),
+      translate: jest.fn(),
+      scale: jest.fn(),
+      rotate: jest.fn(),
+      globalAlpha: 1,
+      globalCompositeOperation: 'source-over',
+      fillStyle: '#000000',
+      strokeStyle: '#000000',
+      lineWidth: 1,
+      lineCap: 'butt',
+      lineJoin: 'miter',
+      miterLimit: 10,
+      font: '10px sans-serif',
+      textAlign: 'start',
+      textBaseline: 'alphabetic',
+      direction: 'ltr',
+    };
+  }
+};
 
 // Set up test environment variables
 process.env.NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://localhost:3000';
