@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { PrairieProfile, DiagnosisResult } from '@/types';
 import { logger } from '@/lib/logger';
+import { apiClient } from '@/lib/api-client';
 
 interface UseDiagnosisReturn {
   loading: boolean;
@@ -24,17 +25,9 @@ export function useDiagnosis(): UseDiagnosisReturn {
     setError(null);
     
     try {
-      const response = await fetch('/api/diagnosis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ profiles, mode }),
-      });
-
-      const data = await response.json();
+      const data = await apiClient.diagnosis.generate(profiles, mode);
       
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.error || '診断の生成に失敗しました');
       }
 

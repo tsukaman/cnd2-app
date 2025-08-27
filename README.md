@@ -192,6 +192,18 @@ Located in `functions/*` - Used for production deployment on Cloudflare Pages
 - **KV Storage**: Cloudflare Workers KV bindings
 - **Edge Deployment**: Global edge network deployment
 
+## 🌐 デプロイ環境
+
+### 開発環境（現在稼働中）
+- **URL**: https://cnd2-app.pages.dev
+- **プラットフォーム**: Cloudflare Pages
+- **Functions**: Cloudflare Workers
+- **ストレージ**: Cloudflare KV
+
+### 本番環境（将来）
+- **URL**: https://cnd2.cloudnativedays.jp （※開発完了後に設定）
+- **カスタムドメイン**: 開発完了後にCloudflareで設定
+
 ## 🏗️ アーキテクチャ
 
 ### ディレクトリ構造

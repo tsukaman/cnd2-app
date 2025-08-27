@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { PrairieProfile } from '@/types';
 import { logger } from '@/lib/logger';
+import { apiClient } from '@/lib/api-client';
 
 interface UsePrairieCardReturn {
   loading: boolean;
@@ -20,17 +21,9 @@ export function usePrairieCard(): UsePrairieCardReturn {
     setError(null);
     
     try {
-      const response = await fetch('/api/prairie', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
-
-      const data = await response.json();
+      const data = await apiClient.prairie.fetch(url);
       
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.error || 'Prairie Cardの取得に失敗しました');
       }
 
