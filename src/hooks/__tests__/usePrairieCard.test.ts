@@ -84,13 +84,15 @@ describe('usePrairieCard', () => {
       expect(fetchedProfile).toEqual(expectedProfile);
     });
 
-    expect(fetch).toHaveBeenCalledWith('/api/prairie', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url: 'https://example.com/profile' }),
+    expect(fetch).toHaveBeenCalled();
+    // Verify the call was made with expected parameters
+    const fetchCall = (fetch as jest.Mock).mock.calls[0];
+    expect(fetchCall[0]).toBe('/api/prairie');
+    expect(fetchCall[1]?.method).toBe('POST');
+    expect(fetchCall[1]?.headers).toEqual({
+      'Content-Type': 'application/json',
     });
+    expect(JSON.parse(fetchCall[1]?.body)).toEqual({ url: 'https://example.com/profile' });
   });
 
   it('handles fetch errors correctly', async () => {

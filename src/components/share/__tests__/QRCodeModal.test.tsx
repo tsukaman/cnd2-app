@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { QRCodeModal } from '../QRCodeModal';
 import QRCode from 'qrcode';
 
@@ -61,11 +61,15 @@ describe('QRCodeModal', () => {
   it('closes when backdrop is clicked', async () => {
     render(<QRCodeModal {...defaultProps} />);
     
-    const backdrop = document.querySelector('.bg-black\\/80');
-    if (backdrop) {
-      fireEvent.click(backdrop);
-      expect(defaultProps.onClose).toHaveBeenCalled();
-    }
+    await waitFor(() => {
+      const backdrop = document.querySelector('.bg-black\\/80');
+      if (backdrop) {
+        act(() => {
+          fireEvent.click(backdrop);
+        });
+        expect(defaultProps.onClose).toHaveBeenCalled();
+      }
+    });
   });
 
   it('closes when X button is clicked', async () => {

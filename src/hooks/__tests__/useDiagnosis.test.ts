@@ -95,13 +95,15 @@ describe('useDiagnosis', () => {
       expect(diagnosis).toEqual(mockResult);
     });
 
-    expect(fetch).toHaveBeenCalledWith('/api/diagnosis', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ profiles: mockProfiles, mode: 'duo' }),
+    expect(fetch).toHaveBeenCalled();
+    // Verify the call was made with expected parameters
+    const fetchCall = (fetch as jest.Mock).mock.calls[0];
+    expect(fetchCall[0]).toBe('/api/diagnosis');
+    expect(fetchCall[1]?.method).toBe('POST');
+    expect(fetchCall[1]?.headers).toEqual({
+      'Content-Type': 'application/json',
     });
+    expect(JSON.parse(fetchCall[1]?.body)).toEqual({ profiles: mockProfiles, mode: 'duo' });
 
     // Check localStorage was updated
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
