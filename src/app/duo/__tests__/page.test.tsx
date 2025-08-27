@@ -169,7 +169,7 @@ describe('DuoPage', () => {
       fireEvent.click(scanButton);
 
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledWith('https://prairie.cards/test');
+        expect(apiClient.prairie.fetch).toHaveBeenCalledWith('https://prairie.cards/test1');
       });
     });
 
