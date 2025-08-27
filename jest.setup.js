@@ -77,7 +77,14 @@ jest.mock('framer-motion', () => {
   };
 });
 
-// Mock HTMLCanvasElement for confetti library
+// Mock react-confetti to avoid canvas issues
+jest.mock('react-confetti', () => {
+  return function MockConfetti() {
+    return null; // Don't render anything in tests
+  };
+});
+
+// Mock HTMLCanvasElement for other canvas operations
 global.HTMLCanvasElement = class HTMLCanvasElement {
   constructor() {
     this.width = 300;
