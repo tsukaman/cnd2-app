@@ -2,6 +2,7 @@
 import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../utils/response.js';
 import { createLogger, logRequest } from '../utils/logger.js';
 import { safeParseInt, METRICS_KEYS } from '../utils/constants.js';
+import { parseFromHTML, validatePrairieCardUrl } from '../utils/prairie-parser.js';
 
 export async function onRequestPost({ request, env }) {
   const logger = createLogger(env);
@@ -69,7 +70,9 @@ export async function onRequestPost({ request, env }) {
         
         logger.info('Prairie Card parsed successfully', {
           url,
-          name: prairieData.name,
+          name: prairieData.basic?.name || 'No name found',
+          hasSkills: prairieData.details?.skills?.length > 0,
+          hasTags: prairieData.details?.tags?.length > 0,
         });
       }
       
@@ -136,69 +139,3 @@ export async function onRequestOptions({ request }) {
   });
 }
 
-// URL validation function for security
-function validatePrairieCardUrl(url) {
-  try {
-    const parsed = new URL(url);
-    // Only allow prairie.cards domains
-    const validHosts = ['prairie.cards', 'my.prairie.cards'];
-    return validHosts.includes(parsed.hostname) || 
-           parsed.hostname.endsWith('.prairie.cards');
-  } catch {
-    return false;
-  }
-}
-
-// HTML sanitization function for security
-function escapeHtml(unsafe) {
-  if (!unsafe) return '';
-  return String(unsafe)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function parseFromHTML(html) {
-  // Simplified Prairie Card parsing
-  const extractText = (pattern) => {
-    const match = html.match(pattern);
-    return match ? match[1].trim() : '';
-  };
-  
-  const extractArray = (pattern) => {
-    const matches = html.matchAll(pattern);
-    return Array.from(matches).map(m => m[1].trim());
-  };
-  
-  // Transform to match PrairieProfile type structure
-  return {
-    basic: {
-      name: escapeHtml(extractText(/<h1[^>]*>([^<]+)<\/h1>/i)) || 'CloudNative Enthusiast',
-      bio: escapeHtml(extractText(/<div[^>]*class="[^"]*bio[^"]*"[^>]*>([^<]+)<\/div>/i)) || 'クラウドネイティブ技術に情熱を注ぐエンジニア',
-      title: escapeHtml(extractText(/<div[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
-      company: escapeHtml(extractText(/<div[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
-    },
-    details: {
-      interests: ['Kubernetes', 'Docker', 'CI/CD', 'Observability'],
-      skills: extractArray(/<span[^>]*class="[^"]*skill[^"]*"[^>]*>([^<]+)<\/span>/gi),
-      tags: ['#CloudNative', '#DevOps', '#SRE'],
-      certifications: [],
-      communities: [],
-    },
-    social: {
-      twitter: extractSocialUrl(html, 'twitter.com') || extractSocialUrl(html, 'x.com'),
-      github: extractSocialUrl(html, 'github.com'),
-      linkedin: extractSocialUrl(html, 'linkedin.com'),
-    },
-    custom: {},
-    meta: {},
-  };
-}
-
-function extractSocialUrl(html, domain) {
-  const pattern = new RegExp(`https?://(?:www\\.)?${domain.replace('.', '\\.')}[^"'\\s>]+`, 'i');
-  const match = html.match(pattern);
-  return match ? match[0] : undefined;
-}
