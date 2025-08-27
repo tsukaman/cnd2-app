@@ -24,6 +24,7 @@ export async function onRequestGet({ request, env }) {
     // Fetch all metrics from KV
     const startTime = Date.now();
     const metricsData = {};
+    const fetchErrors = [];
     
     // Fetch all metric keys in parallel
     const metricPromises = Object.entries(METRICS_KEYS).map(async ([key, kvKey]) => {
@@ -33,10 +34,20 @@ export async function onRequestGet({ request, env }) {
       } catch (error) {
         logger.debug(`Failed to fetch metric ${kvKey}`, { error: error.message });
         metricsData[key] = 0;
+        fetchErrors.push({ key: kvKey, error: error.message });
       }
     });
     
     await Promise.all(metricPromises);
+    
+    // Log warning if there were partial failures
+    if (fetchErrors.length > 0) {
+      logger.warn('Some metrics failed to fetch', { 
+        failedCount: fetchErrors.length, 
+        totalCount: Object.keys(METRICS_KEYS).length,
+        errors: fetchErrors 
+      });
+    }
     
     logger.metric('metrics_fetch_duration', Date.now() - startTime, 'ms', {
       keys: Object.keys(METRICS_KEYS).length,
@@ -84,10 +95,16 @@ export async function onRequestGet({ request, env }) {
       timestamp: new Date().toISOString(),
     };
     
+    // Add warning if there were fetch errors
+    if (fetchErrors.length > 0) {
+      metrics.warning = `Partial data: ${fetchErrors.length} metrics could not be retrieved`;
+    }
+    
     logger.info('Metrics retrieved successfully', {
       prairieTotal,
       diagnosisTotal,
       cacheTotal,
+      partialFailures: fetchErrors.length,
     });
     
     return successResponse(metrics, corsHeaders);

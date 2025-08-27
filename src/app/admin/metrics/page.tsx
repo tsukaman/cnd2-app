@@ -5,25 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, TrendingUp, TrendingDown, Activity } from 'lucide-react';
-
-interface Metrics {
-  prairie: {
-    success: number;
-    error: number;
-    successRate: number;
-  };
-  diagnosis: {
-    success: number;
-    error: number;
-    successRate: number;
-  };
-  cache: {
-    hit: number;
-    miss: number;
-    hitRate: number;
-  };
-  timestamp: string;
-}
+import type { Metrics } from '@/types/metrics';
 
 export default function MetricsPage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
@@ -35,9 +17,13 @@ export default function MetricsPage() {
     setError(null);
     
     try {
+      // In development, use relative path for Next.js API Routes
       // In production, fetch from Cloudflare Functions
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://cnd2-app.pages.dev';
-      const response = await fetch(`${apiUrl}/api/admin/metrics`);
+      const apiUrl = process.env.NODE_ENV === 'development' 
+        ? '' // Use relative path for Next.js API Routes
+        : (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://cnd2-app.pages.dev');
+      const endpoint = apiUrl ? `${apiUrl}/api/admin/metrics` : '/api/admin/metrics';
+      const response = await fetch(endpoint);
       
       if (!response.ok) {
         throw new Error('Failed to fetch metrics');
@@ -123,7 +109,17 @@ export default function MetricsPage() {
       </div>
 
       {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <>
+          {/* Warning message if partial data */}
+          {(metrics as any).warning && (
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                ⚠️ {(metrics as any).warning}
+              </p>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Prairie API Metrics */}
           <Card>
             <CardHeader className="pb-3">
@@ -244,6 +240,7 @@ export default function MetricsPage() {
             </CardContent>
           </Card>
         </div>
+        </>
       )}
 
       <div className="mt-8 p-4 bg-blue-50 rounded-lg">
