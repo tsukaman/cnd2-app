@@ -282,3 +282,6 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
     </>
   );
 }
+
+// Export with expected name for tests
+export { DiagnosisResultComponent as DiagnosisResult };
