@@ -17,6 +17,22 @@ const CND2_SYSTEM_PROMPT = `あなたはCND² - CloudNative Days × Connect 'n' 
 
 診断は前向きで建設的な内容にし、技術的な共通点や補完関係を見つけてください。`;
 
+/**
+ * Sanitize profile to remove PII before sending to OpenAI
+ */
+function sanitizeProfile(profile) {
+  // Only include non-sensitive information
+  return {
+    basic: {
+      tags: profile.basic?.tags || [],
+      company: profile.basic?.company ? '企業' : undefined, // Generic label
+      // Exclude: name, email, twitter, avatar
+    },
+    interests: profile.interests || {},
+    // Exclude any other sensitive fields
+  };
+}
+
 async function generateOpenAIDiagnosis(profiles, mode, env) {
   // Check if OpenAI API key is configured
   if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY === 'your-openai-api-key-here') {
@@ -25,22 +41,25 @@ async function generateOpenAIDiagnosis(profiles, mode, env) {
   }
 
   try {
+    // Sanitize profiles to protect PII
+    const sanitizedProfiles = profiles.map(sanitizeProfile);
+    
     // Build prompt based on mode
     let prompt = '';
     if (mode === 'duo') {
       prompt = `以下の2人のエンジニアの相性を診断してください：
 
 エンジニア1:
-${JSON.stringify(profiles[0], null, 2)}
+${JSON.stringify(sanitizedProfiles[0], null, 2)}
 
 エンジニア2:
-${JSON.stringify(profiles[1], null, 2)}
+${JSON.stringify(sanitizedProfiles[1], null, 2)}
 
 両者の技術スタック、興味分野、経験を考慮して、コラボレーションの可能性を評価してください。`;
     } else {
-      prompt = `以下の${profiles.length}人のエンジニアグループの相性を診断してください：
+      prompt = `以下の${sanitizedProfiles.length}人のエンジニアグループの相性を診断してください：
 
-${profiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p, null, 2)}`).join('\n\n')}
+${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p, null, 2)}`).join('\n\n')}
 
 グループ全体のダイナミクスと、チームとしての強みを評価してください。`;
     }
@@ -71,8 +90,8 @@ ${profiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p, null, 2)
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[CND²] OpenAI API error:', error);
+      // Avoid logging sensitive information
+      console.error('[CND²] OpenAI API error: HTTP', response.status);
       return null;
     }
 
@@ -84,12 +103,18 @@ ${profiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p, null, 2)
       return null;
     }
 
-    const result = JSON.parse(content);
-    
-    return {
-      ...result,
-      aiPowered: true
-    };
+    // Safe JSON parsing with try-catch
+    try {
+      const result = JSON.parse(content);
+      
+      return {
+        ...result,
+        aiPowered: true
+      };
+    } catch (parseError) {
+      console.error('[CND²] Failed to parse OpenAI response:', parseError);
+      return null;
+    }
     
   } catch (error) {
     console.error('[CND²] OpenAI diagnosis failed:', error);
