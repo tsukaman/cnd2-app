@@ -24,17 +24,18 @@ if (!global.fetch) {
 }
 
 // Mock IntersectionObserver
-global.IntersectionObserver = jest.fn().mockImplementation(() => {
-  return {
-    observe: jest.fn(),
-    unobserve: jest.fn(), 
-    disconnect: jest.fn(),
-    takeRecords: jest.fn(),
-    root: null,
-    rootMargin: '',
-    thresholds: [],
-  };
-});
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {
+    this.root = null;
+    this.rootMargin = '';
+    this.thresholds = [];
+  }
+  
+  observe = jest.fn();
+  unobserve = jest.fn();
+  disconnect = jest.fn();
+  takeRecords = jest.fn().mockReturnValue([]);
+};
 
 // Mock framer-motion
 jest.mock('framer-motion', () => {
