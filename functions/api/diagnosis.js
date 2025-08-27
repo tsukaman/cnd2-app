@@ -1,75 +1,79 @@
 // Diagnosis API for Cloudflare Functions
+import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../utils/response.js';
+import { createLogger, logRequest } from '../utils/logger.js';
+
 export async function onRequestPost({ request, env }) {
+  const logger = createLogger(env);
   const origin = request.headers.get('origin');
-  const corsHeaders = getCorsHeaders(origin);
+  const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
-  try {
-    const { profiles, mode } = await request.json();
-    
-    if (!profiles || !Array.isArray(profiles) || profiles.length < 2) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'At least 2 profiles are required' 
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        }
-      );
-    }
-    
-    // Generate diagnosis result
-    const result = await generateDiagnosis(profiles, mode, env);
-    
-    // Store in KV if available
-    if (env.DIAGNOSIS_KV) {
-      const key = `diagnosis:${result.id}`;
-      await env.DIAGNOSIS_KV.put(key, JSON.stringify(result), {
-        expirationTtl: 604800, // 7 days
+  return await logRequest(request, env, null, async () => {
+    try {
+      const { profiles, mode } = await request.json();
+      
+      // Validation
+      if (!profiles || !Array.isArray(profiles) || profiles.length < 2) {
+        logger.warn('Invalid request: insufficient profiles', { 
+          profileCount: profiles?.length || 0 
+        });
+        return errorResponse(
+          new Error('At least 2 profiles are required'),
+          400,
+          corsHeaders
+        );
+      }
+      
+      logger.info('Generating diagnosis', { 
+        mode, 
+        participantCount: profiles.length 
       });
-    }
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
+      
+      // Generate diagnosis result
+      const result = await generateDiagnosis(profiles, mode, env);
+      
+      // Store in KV if available
+      if (env.DIAGNOSIS_KV) {
+        const key = `diagnosis:${result.id}`;
+        const startKV = Date.now();
+        
+        try {
+          await env.DIAGNOSIS_KV.put(key, JSON.stringify(result), {
+            expirationTtl: 604800, // 7 days
+          });
+          
+          logger.metric('kv_write_duration', Date.now() - startKV, 'ms', {
+            key,
+            operation: 'put',
+          });
+          
+          logger.info('Diagnosis stored in KV', { 
+            id: result.id,
+            ttl: '7days' 
+          });
+        } catch (kvError) {
+          // Log but don't fail the request
+          logger.error('Failed to store in KV', kvError, { id: result.id });
+        }
+      }
+      
+      return successResponse(
+        {
           result,
           aiPowered: false, // Simplified version doesn't use AI
+          cached: false,
         },
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
-      }
-    );
-  } catch (error) {
-    console.error('Diagnosis API error:', error);
-    
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'Failed to generate diagnosis' 
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
-      }
-    );
-  }
+        corsHeaders
+      );
+    } catch (error) {
+      logger.error('Diagnosis generation failed', error);
+      return errorResponse(error, 500, corsHeaders);
+    }
+  });
 }
 
 export async function onRequestOptions({ request }) {
   const origin = request.headers.get('origin');
-  const corsHeaders = getCorsHeaders(origin);
+  const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
   return new Response(null, {
     status: 200,
@@ -77,24 +81,10 @@ export async function onRequestOptions({ request }) {
   });
 }
 
-function getCorsHeaders(requestOrigin) {
-  const allowedOrigins = [
-    'https://cnd2-app.pages.dev',
-    'https://cnd2.cloudnativedays.jp',
-    'http://localhost:3000',
-  ];
-  
-  const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
-  
-  return {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-  };
-}
-
 async function generateDiagnosis(profiles, mode, env) {
+  const logger = createLogger(env);
+  const startTime = Date.now();
+  
   // Simplified diagnosis generation
   const id = generateId();
   const compatibility = Math.floor(Math.random() * 30) + 70; // 70-100%
@@ -119,6 +109,11 @@ async function generateDiagnosis(profiles, mode, env) {
     participants: profiles,
     createdAt: new Date().toISOString(),
   };
+  
+  logger.metric('diagnosis_generation', Date.now() - startTime, 'ms', {
+    mode,
+    compatibility,
+  });
   
   return result;
 }

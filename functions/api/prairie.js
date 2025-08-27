@@ -1,122 +1,131 @@
 // Prairie Card API for Cloudflare Functions
+import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../utils/response.js';
+import { createLogger, logRequest } from '../utils/logger.js';
+
 export async function onRequestPost({ request, env }) {
+  const logger = createLogger(env);
   const origin = request.headers.get('origin');
-  const corsHeaders = getCorsHeaders(origin);
+  const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
-  try {
-    const { url, html } = await request.json();
-    
-    if (!url && !html) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'URL or HTML content is required' 
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        }
-      );
-    }
-    
-    // Simplified Prairie Card parsing for demo
-    // In production, use the full parser from lib/prairie-card-parser
-    let prairieData;
-    
-    if (html) {
-      // Parse from HTML
-      prairieData = parseFromHTML(html);
-    } else {
-      // Validate URL before fetching
-      if (!validatePrairieCardUrl(url)) {
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Invalid Prairie Card URL' 
-          }),
-          {
-            status: 400,
-            headers: {
-              'Content-Type': 'application/json',
-              ...corsHeaders,
-            },
-          }
+  return await logRequest(request, env, null, async () => {
+    try {
+      const { url, html } = await request.json();
+      
+      // Validation
+      if (!url && !html) {
+        logger.warn('Invalid request: missing URL or HTML');
+        return errorResponse(
+          new Error('URL or HTML content is required'),
+          400,
+          corsHeaders
         );
       }
       
-      // Fetch and parse from URL
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'CND2/1.0',
-          'Accept': 'text/html',
-        },
-      });
+      // Simplified Prairie Card parsing for demo
+      let prairieData;
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch Prairie Card: ${response.status}`);
+      if (html) {
+        // Parse from HTML
+        logger.info('Parsing Prairie Card from HTML');
+        prairieData = parseFromHTML(html);
+      } else {
+        // Validate URL before fetching
+        if (!validatePrairieCardUrl(url)) {
+          logger.warn('Invalid Prairie Card URL', { url });
+          return errorResponse(
+            new Error('Invalid Prairie Card URL'),
+            400,
+            corsHeaders
+          );
+        }
+        
+        logger.info('Fetching Prairie Card', { url });
+        const startFetch = Date.now();
+        
+        // Fetch and parse from URL
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'CND2/1.0',
+            'Accept': 'text/html',
+          },
+        });
+        
+        logger.metric('prairie_fetch_duration', Date.now() - startFetch, 'ms', {
+          url,
+          status: response.status,
+        });
+        
+        if (!response.ok) {
+          logger.error('Failed to fetch Prairie Card', null, {
+            url,
+            status: response.status,
+          });
+          throw new Error(`Failed to fetch Prairie Card: ${response.status}`);
+        }
+        
+        const html = await response.text();
+        prairieData = parseFromHTML(html);
+        
+        logger.info('Prairie Card parsed successfully', {
+          url,
+          name: prairieData.name,
+        });
       }
       
-      const html = await response.text();
-      prairieData = parseFromHTML(html);
-    }
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: prairieData,
-        timestamp: new Date().toISOString(),
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
+      // Cache hit tracking
+      const cacheStatus = {
+        hit: false,
+        source: 'fetch',
+      };
+      
+      // Track success metrics
+      if (env.DIAGNOSIS_KV) {
+        try {
+          const metricsKey = 'metrics:prairie:success';
+          const currentCount = await env.DIAGNOSIS_KV.get(metricsKey) || '0';
+          await env.DIAGNOSIS_KV.put(metricsKey, String(parseInt(currentCount) + 1));
+        } catch (e) {
+          logger.debug('Failed to update metrics', { error: e.message });
+        }
       }
-    );
-  } catch (error) {
-    // Log detailed error for debugging (not exposed to client)
-    console.error('Prairie API error:', {
-      message: error.message,
-      stack: error.stack,
-      url: url,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Return user-friendly error message
-    let errorMessage = 'Prairie Cardの解析に失敗しました';
-    let statusCode = 500;
-    
-    if (error.message.includes('Failed to fetch')) {
-      errorMessage = 'Prairie Cardの取得に失敗しました。URLを確認してください。';
-      statusCode = 502; // Bad Gateway
-    } else if (error.message.includes('Invalid URL')) {
-      errorMessage = '無効なURLです。正しいPrairie Card URLを入力してください。';
-      statusCode = 400;
-    }
-    
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: errorMessage,
-        timestamp: new Date().toISOString()
-      }),
-      {
-        status: statusCode,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
+      
+      return successResponse(
+        {
+          ...prairieData,
+          cache: cacheStatus,
         },
+        corsHeaders
+      );
+    } catch (error) {
+      logger.error('Prairie API error', error);
+      
+      // Track error metrics
+      if (env.DIAGNOSIS_KV) {
+        try {
+          const metricsKey = 'metrics:prairie:error';
+          const currentCount = await env.DIAGNOSIS_KV.get(metricsKey) || '0';
+          await env.DIAGNOSIS_KV.put(metricsKey, String(parseInt(currentCount) + 1));
+        } catch (e) {
+          logger.debug('Failed to update error metrics', { error: e.message });
+        }
       }
-    );
-  }
+      
+      // Determine appropriate status code
+      let statusCode = 500;
+      if (error.message.includes('Failed to fetch')) {
+        statusCode = 502; // Bad Gateway
+      } else if (error.message.includes('Invalid')) {
+        statusCode = 400; // Bad Request
+      }
+      
+      return errorResponse(error, statusCode, corsHeaders);
+    }
+  });
 }
 
 export async function onRequestOptions({ request }) {
   const origin = request.headers.get('origin');
-  const corsHeaders = getCorsHeaders(origin);
+  const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
   return new Response(null, {
     status: 200,
@@ -148,29 +157,6 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-function getCorsHeaders(requestOrigin) {
-  const allowedOrigins = [
-    'https://cnd2-app.pages.dev',
-    'https://cnd2.cloudnativedays.jp',
-    'http://localhost:3000',
-  ];
-  
-  const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
-  
-  return {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-    // Security headers
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'X-XSS-Protection': '1; mode=block',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
-  };
-}
-
 function parseFromHTML(html) {
   // Simplified Prairie Card parsing
   const extractText = (pattern) => {
@@ -183,17 +169,28 @@ function parseFromHTML(html) {
     return Array.from(matches).map(m => m[1].trim());
   };
   
+  // Transform to match PrairieProfile type structure
   return {
-    name: escapeHtml(extractText(/<h1[^>]*>([^<]+)<\/h1>/i)) || 'CloudNative Enthusiast',
-    bio: escapeHtml(extractText(/<div[^>]*class="[^"]*bio[^"]*"[^>]*>([^<]+)<\/div>/i)) || 'クラウドネイティブ技術に情熱を注ぐエンジニア',
-    title: escapeHtml(extractText(/<div[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
-    company: escapeHtml(extractText(/<div[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
-    interests: ['Kubernetes', 'Docker', 'CI/CD', 'Observability'],
-    skills: extractArray(/<span[^>]*class="[^"]*skill[^"]*"[^>]*>([^<]+)<\/span>/gi),
-    tags: ['#CloudNative', '#DevOps', '#SRE'],
-    twitter: extractSocialUrl(html, 'twitter.com') || extractSocialUrl(html, 'x.com'),
-    github: extractSocialUrl(html, 'github.com'),
-    linkedin: extractSocialUrl(html, 'linkedin.com'),
+    basic: {
+      name: escapeHtml(extractText(/<h1[^>]*>([^<]+)<\/h1>/i)) || 'CloudNative Enthusiast',
+      bio: escapeHtml(extractText(/<div[^>]*class="[^"]*bio[^"]*"[^>]*>([^<]+)<\/div>/i)) || 'クラウドネイティブ技術に情熱を注ぐエンジニア',
+      title: escapeHtml(extractText(/<div[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
+      company: escapeHtml(extractText(/<div[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/div>/i)) || '',
+    },
+    details: {
+      interests: ['Kubernetes', 'Docker', 'CI/CD', 'Observability'],
+      skills: extractArray(/<span[^>]*class="[^"]*skill[^"]*"[^>]*>([^<]+)<\/span>/gi),
+      tags: ['#CloudNative', '#DevOps', '#SRE'],
+      certifications: [],
+      communities: [],
+    },
+    social: {
+      twitter: extractSocialUrl(html, 'twitter.com') || extractSocialUrl(html, 'x.com'),
+      github: extractSocialUrl(html, 'github.com'),
+      linkedin: extractSocialUrl(html, 'linkedin.com'),
+    },
+    custom: {},
+    meta: {},
   };
 }
 

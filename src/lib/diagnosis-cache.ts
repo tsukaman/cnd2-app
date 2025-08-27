@@ -12,12 +12,6 @@ export class DiagnosisCache {
 
   private constructor() {
     this.cache = new Map();
-    
-    // 定期的に期限切れエントリをクリーンアップ
-    if (typeof window === 'undefined') {
-      // サーバーサイドでのみ実行
-      this.startCleanupInterval();
-    }
   }
 
   static getInstance(): DiagnosisCache {
@@ -25,6 +19,13 @@ export class DiagnosisCache {
       DiagnosisCache.instance = new DiagnosisCache();
     }
     return DiagnosisCache.instance;
+  }
+
+  // 確率的クリーンアップ（10%の確率で実行）
+  private probabilisticCleanup(): void {
+    if (Math.random() < 0.1) {
+      this.cleanup();
+    }
   }
 
   // プロファイルからキャッシュキーを生成
@@ -52,6 +53,9 @@ export class DiagnosisCache {
 
   // キャッシュから診断結果を取得
   get(profiles: PrairieProfile[], mode: 'duo' | 'group'): DiagnosisResult | null {
+    // Edge Runtime対応: 確率的クリーンアップ
+    this.probabilisticCleanup();
+    
     const key = this.generateKey(profiles, mode);
     const cached = this.cache.get(key);
 
@@ -79,6 +83,9 @@ export class DiagnosisCache {
 
   // 診断結果をキャッシュに保存
   set(profiles: PrairieProfile[], mode: 'duo' | 'group', result: DiagnosisResult): void {
+    // Edge Runtime対応: 確率的クリーンアップ
+    this.probabilisticCleanup();
+    
     // サイズ制限チェック
     if (this.cache.size >= this.MAX_SIZE) {
       // 最も古いエントリを削除
@@ -137,23 +144,6 @@ export class DiagnosisCache {
     }
   }
 
-  // 定期的なクリーンアップを開始
-  private startCleanupInterval(): void {
-    // Edge Runtimeでは使用不可のため、通常のNode.js環境でのみ実行
-    if (typeof process !== 'undefined' && process.versions?.node) {
-      const interval = 10 * 60 * 1000; // 10分ごと
-      
-      // setIntervalの代わりに再帰的なsetTimeoutを使用
-      const scheduleCleanup = () => {
-        setTimeout(() => {
-          this.cleanup();
-          scheduleCleanup();
-        }, interval);
-      };
-      
-      scheduleCleanup();
-    }
-  }
 
   // 新しいIDを生成
   private generateNewId(): string {
