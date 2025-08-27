@@ -43,11 +43,18 @@ export class PrairieCardParser {
     // レート制限
     await this.rateLimiter.wait();
 
+    let html: string = '';
+    
     try {
       console.log(`[CND²] Prairie Card取得中: ${normalizedUrl}`);
       
       // HTMLを取得
-      const html = await this.fetchHTML(normalizedUrl);
+      html = await this.fetchHTML(normalizedUrl);
+      
+      // フォーマット変更を検出
+      if (this.detectFormatChange(html)) {
+        console.warn('[CND²] Prairie Cardフォーマット変更検出 - 部分解析モードに切り替え');
+      }
       
       // パース処理
       const profile = this.extractProfile(html, normalizedUrl);
@@ -64,6 +71,18 @@ export class PrairieCardParser {
       
       return sanitizedProfile;
     } catch (error) {
+      // エラーリカバリーを試みる
+      const recoveredProfile = this.analyzeAndRecoverFromError(html, error as Error);
+      if (recoveredProfile) {
+        console.warn('[CND²] Prairie Card部分的にリカバリー成功');
+        
+        // サニタイズしてキャッシュ
+        const sanitizedProfile = sanitizer.sanitizePrairieProfile(recoveredProfile) as PrairieProfile;
+        await this.cacheManager.save(normalizedUrl, sanitizedProfile);
+        
+        return sanitizedProfile;
+      }
+      
       // エラーを適切に分類して再スロー
       const mappedError = ErrorHandler.mapError(error);
       ErrorHandler.logError(mappedError, 'PrairieCardParser.parseProfile');
@@ -73,26 +92,73 @@ export class PrairieCardParser {
         throw new NetworkError('Prairie Cardサーバーに接続できません。しばらく待ってから再試行してください。');
       } else if (mappedError instanceof ParseError) {
         throw new ParseError('Prairie CardのHTMLフォーマットが変更された可能性があります。');
+      } else if (mappedError instanceof ValidationError) {
+        throw mappedError; // バリデーションエラーはそのまま
       }
       
-      throw mappedError;
+      // デフォルトエラー
+      throw new Error('Prairie Cardの取得に失敗しました。URLを確認して再度お試しください。');
     }
   }
 
   private async fetchHTML(url: string): Promise<string> {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': `${CND2_CONFIG.app.name}/${CND2_CONFIG.app.version}`,
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'ja,en;q=0.9',
-      },
-    });
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒タイムアウト
 
-    if (!response.ok) {
-      throw new Error(`HTTPエラー: ${response.status}`);
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': `${CND2_CONFIG.app.name}/${CND2_CONFIG.app.version}`,
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'ja,en;q=0.9',
+          'Cache-Control': 'no-cache',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      // HTTPステータスコードごとの詳細なエラー処理
+      if (!response.ok) {
+        switch (response.status) {
+          case 404:
+            throw new ValidationError('Prairie Cardが見つかりません。URLを確認してください。', { url, status: 404 });
+          case 403:
+            throw new ValidationError('Prairie Cardへのアクセスが拒否されました。', { url, status: 403 });
+          case 429:
+            throw new NetworkError('リクエストが多すぎます。しばらく待ってから再試行してください。', { url, status: 429 });
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            throw new NetworkError('Prairie Cardサーバーでエラーが発生しました。', { url, status: response.status });
+          default:
+            throw new NetworkError(`HTTPエラー: ${response.status}`, { url, status: response.status });
+        }
+      }
+
+      const html = await response.text();
+      
+      // HTMLが有効か確認
+      if (!html || html.trim().length < 100) {
+        throw new ParseError('Prairie Cardのコンテンツが空または無効です。', { url });
+      }
+
+      return html;
+    } catch (error: any) {
+      // タイムアウトエラー
+      if (error.name === 'AbortError') {
+        throw new NetworkError('Prairie Card取得がタイムアウトしました。', { url });
+      }
+      
+      // ネットワークエラー
+      if (error.message?.includes('fetch')) {
+        throw new NetworkError('ネットワークエラーが発生しました。インターネット接続を確認してください。', { url });
+      }
+      
+      // その他のエラーはそのまま再スロー
+      throw error;
     }
-
-    return response.text();
   }
 
   private extractProfile(html: string, _url: string): PrairieProfile {
@@ -131,6 +197,80 @@ export class PrairieCardParser {
         hashtag: CND2_CONFIG.app.hashtag,
       },
     };
+  }
+
+  // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
+  // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
+  // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
+  private analyzeAndRecoverFromError(html: string, error: Error): PrairieProfile | null {
+    try {
+      // HTMLが空の場合
+      if (!html || html.trim().length === 0) {
+        console.warn('[CND²] Prairie Card HTMLが空です');
+        return null;
+      }
+
+      // Prairie Cardのページではない場合
+      if (!html.includes('prairie') && !html.includes('Prairie')) {
+        console.warn('[CND²] Prairie Cardページではない可能性があります');
+        return null;
+      }
+
+      // 部分的にパースを試みる（エラーに強い実装）
+      const $ = cheerio.load(html);
+
+      // 最小限の情報でもプロファイルを作成
+      const minimalProfile: PrairieProfile = {
+        basic: {
+          name: $('h1, h2, .name').first().text().trim() || 'Unknown',
+          title: $('.title, .role').first().text().trim() || '',
+          company: $('.company, .organization').first().text().trim() || '',
+          bio: $('.bio, .description, p').first().text().trim() || '',
+        },
+        details: {
+          tags: [],
+          skills: [],
+          interests: [],
+          certifications: [],
+          communities: [],
+        },
+        social: {},
+        custom: {},
+        meta: {
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          connectedBy: 'CND²',
+          hashtag: CND2_CONFIG.app.hashtag,
+        },
+      };
+
+      console.warn('[CND²] Prairie Card部分解析成功:', minimalProfile.basic.name);
+      return minimalProfile;
+    } catch (recoveryError) {
+      console.error('[CND²] Prairie Cardリカバリー失敗:', recoveryError);
+      return null;
+    }
+  }
+
+  // Prairie Cardのフォーマット変更を検出
+  private detectFormatChange(html: string): boolean {
+    const knownSelectors = [
+      '.profile-name',
+      '.prairie-card',
+      '[data-prairie-field]',
+      '.prairie-profile',
+    ];
+
+    const $ = cheerio.load(html);
+    const foundSelectors = knownSelectors.filter(selector => $(selector).length > 0);
+    
+    // 既知のセレクタが一つも見つからない場合、フォーマットが変更された可能性がある
+    if (foundSelectors.length === 0) {
+      console.warn('[CND²] Prairie Cardのフォーマットが変更された可能性があります');
+      return true;
+    }
+
+    return false;
   }
 
   private extractText($: cheerio.CheerioAPI, selector: string): string {

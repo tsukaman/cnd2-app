@@ -11,12 +11,21 @@ export async function onRequestGet({ params, env, request }) {
       const data = await env.DIAGNOSIS_KV.get(key);
       
       if (data) {
-        return new Response(data, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        });
+        const result = JSON.parse(data);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              result
+            }
+          }),
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders,
+            },
+          }
+        );
       }
     }
     
@@ -68,7 +77,9 @@ export async function onRequestDelete({ params, env, request }) {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Result deleted' 
+        data: {
+          message: 'Result deleted successfully'
+        }
       }),
       {
         headers: {

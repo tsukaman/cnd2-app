@@ -8,11 +8,17 @@ import {
 } from './prompts';
 import { nanoid } from 'nanoid';
 
+import { DiagnosisCache } from './diagnosis-cache';
+
 export class DiagnosisEngine {
   private openai: OpenAI | null = null;
   private static instance: DiagnosisEngine;
+  private cache: DiagnosisCache;
 
   private constructor() {
+    // キャッシュを初期化
+    this.cache = DiagnosisCache.getInstance();
+    
     // サーバーサイドでのみOpenAI APIキーを使用
     if (typeof window === 'undefined') {
       const apiKey = process.env.OPENAI_API_KEY;
@@ -41,6 +47,13 @@ export class DiagnosisEngine {
 
   // 2人診断
   async generateDuoDiagnosis(profiles: [PrairieProfile, PrairieProfile]): Promise<DiagnosisResult> {
+    // キャッシュをチェック
+    const cached = this.cache.get(profiles, 'duo');
+    if (cached) {
+      console.log('[CND²] キャッシュからAI診断を返します');
+      return cached;
+    }
+
     if (!this.isConfigured()) {
       console.warn('[CND²] OpenAI APIキーが設定されていません。モック診断を返します。');
       return this.generateMockDiagnosis(profiles);
@@ -75,13 +88,18 @@ export class DiagnosisEngine {
 
       const result = JSON.parse(content);
       
-      return {
+      const diagnosisResult: DiagnosisResult = {
         ...result,
         mode: 'duo' as const,
         participants: profiles,
         createdAt: new Date().toISOString(),
         id: nanoid(10),
-      } as DiagnosisResult;
+      };
+
+      // キャッシュに保存
+      this.cache.set(profiles, 'duo', diagnosisResult);
+      
+      return diagnosisResult;
     } catch (error) {
       console.error('[CND²] AI診断生成エラー:', error);
       
@@ -92,6 +110,13 @@ export class DiagnosisEngine {
 
   // グループ診断
   async generateGroupDiagnosis(profiles: PrairieProfile[]): Promise<DiagnosisResult> {
+    // キャッシュをチェック
+    const cached = this.cache.get(profiles, 'group');
+    if (cached) {
+      console.log('[CND²] キャッシュからグループAI診断を返します');
+      return cached;
+    }
+
     if (!this.isConfigured()) {
       console.warn('[CND²] OpenAI APIキーが設定されていません。モック診断を返します。');
       return this.generateMockGroupDiagnosis(profiles);
@@ -126,13 +151,18 @@ export class DiagnosisEngine {
 
       const result = JSON.parse(content);
       
-      return {
+      const diagnosisResult: DiagnosisResult = {
         ...result,
         mode: 'group' as const,
         participants: profiles,
         createdAt: new Date().toISOString(),
         id: nanoid(10),
-      } as DiagnosisResult;
+      };
+
+      // キャッシュに保存
+      this.cache.set(profiles, 'group', diagnosisResult);
+      
+      return diagnosisResult;
     } catch (error) {
       console.error('[CND²] グループAI診断生成エラー:', error);
       

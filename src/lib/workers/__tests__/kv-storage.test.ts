@@ -1,4 +1,73 @@
+/**
+ * @jest-environment node
+ */
+
 import { KVStorage } from '../kv-storage';
+
+// Edge-compat モック
+jest.mock('@/lib/utils/edge-compat', () => ({
+  toBase64: (str: string) => Buffer.from(str).toString('base64'),
+}));
+
+// Cloudflare KV名前空間のモック
+class MockKVNamespace {
+  private store: Map<string, string> = new Map();
+  private metadata: Map<string, any> = new Map();
+  private expirations: Map<string, number> = new Map();
+
+  async put(key: string, value: string, options?: any): Promise<void> {
+    this.store.set(key, value);
+    if (options?.metadata) {
+      this.metadata.set(key, options.metadata);
+    }
+    if (options?.expirationTtl) {
+      this.expirations.set(key, Date.now() + options.expirationTtl * 1000);
+    }
+  }
+
+  async get(key: string): Promise<string | null> {
+    // 有効期限チェック
+    const expiration = this.expirations.get(key);
+    if (expiration && Date.now() > expiration) {
+      this.store.delete(key);
+      this.metadata.delete(key);
+      this.expirations.delete(key);
+      return null;
+    }
+    
+    return this.store.get(key) || null;
+  }
+
+  async delete(key: string): Promise<void> {
+    this.store.delete(key);
+    this.metadata.delete(key);
+    this.expirations.delete(key);
+  }
+
+  async list(options?: any): Promise<any> {
+    const prefix = options?.prefix || '';
+    const limit = options?.limit || 100;
+    const keys = Array.from(this.store.keys())
+      .filter(key => key.startsWith(prefix))
+      .slice(0, limit)
+      .map(name => ({ 
+        name, 
+        metadata: this.metadata.get(name) 
+      }));
+    
+    return { 
+      keys,
+      list_complete: keys.length < limit 
+    };
+  }
+
+  // テスト用ヘルパー
+  clear() {
+    this.store.clear();
+    this.metadata.clear();
+    this.expirations.clear();
+  }
+}
 import { toBase64 } from '@/lib/utils/edge-compat';
 
 // Mock KVNamespace

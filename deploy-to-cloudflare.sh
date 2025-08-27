@@ -25,9 +25,13 @@ fi
 echo "🏗️ Building the project..."
 npm run build
 
+# Clean cache files before deploying
+echo "🧹 Cleaning cache files..."
+rm -rf out/cache
+
 # Deploy to Cloudflare Pages
 echo "🚀 Deploying to Cloudflare Pages..."
-wrangler pages deploy .next --project-name=cnd2-app --branch=main
+wrangler pages deploy out --project-name=cnd2-app --branch=main
 
 echo "✅ Deployment complete!"
 echo ""
