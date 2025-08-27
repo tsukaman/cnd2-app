@@ -29,11 +29,12 @@ jest.mock('@/lib/errors', () => ({
 }));
 
 // Component that throws an error - stabilized for testing
-let hasThrown = false;
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
+  const [hasThrown, setHasThrown] = React.useState(false);
+  
   // Only throw once to avoid infinite loops
   if (shouldThrow && !hasThrown) {
-    hasThrown = true;
+    setHasThrown(true);
     throw new Error('Test error');
   }
   return <div>No error</div>;
@@ -51,7 +52,6 @@ describe('ErrorBoundary', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    hasThrown = false; // Reset the flag before each test
   });
 
   it('renders children when there is no error', () => {
@@ -113,27 +113,33 @@ describe('ErrorBoundary', () => {
 
   it('resets error state when reset button is clicked', () => {
     // Component that can toggle between error and no error
-    let shouldThrow = true;
-    const TestComponent = () => {
-      if (shouldThrow) {
+    const TestComponent = ({ shouldThrow }: { shouldThrow: boolean }) => {
+      const [hasThrown, setHasThrown] = React.useState(false);
+      
+      if (shouldThrow && !hasThrown) {
+        setHasThrown(true);
         throw new Error('Test error');
       }
       return <div>No error</div>;
     };
     
-    render(
+    const { rerender } = render(
       <ErrorBoundary>
-        <TestComponent />
+        <TestComponent shouldThrow={true} />
       </ErrorBoundary>
     );
     
     expect(screen.getByText('エラーが発生しました')).toBeInTheDocument();
     
-    // Change the component to not throw
-    shouldThrow = false;
-    
     const resetButton = screen.getByText('再試行');
     fireEvent.click(resetButton);
+    
+    // After reset, rerender with shouldThrow = false
+    rerender(
+      <ErrorBoundary>
+        <TestComponent shouldThrow={false} />
+      </ErrorBoundary>
+    );
     
     // After reset, component should render normally
     expect(screen.getByText('No error')).toBeInTheDocument();
