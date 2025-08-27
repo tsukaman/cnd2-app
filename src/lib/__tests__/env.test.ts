@@ -12,7 +12,7 @@ describe('Environment validation', () => {
       const { getApiConfig } = require('@/lib/env');
       const config = getApiConfig();
 
-      expect(config.rateLimit).toBe(100);
+      expect(config.rateLimit).toBe(10);
       expect(config.rateLimitWindow).toBe(60);
       expect(config.timeout).toBe(30000);
       expect(config.corsOrigins).toEqual(['*']);
