@@ -5,6 +5,49 @@ import { usePrairieCard } from '@/hooks/usePrairieCard';
 
 jest.mock('@/hooks/usePrairieCard');
 
+// Mock additional hooks
+jest.mock('@/hooks/useNFC', () => ({
+  useNFC: () => ({
+    isSupported: false,
+    isReading: false,
+    startReading: jest.fn(),
+    stopReading: jest.fn(),
+    error: null,
+  }),
+}));
+
+jest.mock('@/hooks/useQRScanner', () => ({
+  useQRScanner: () => ({
+    isSupported: false,
+    isScanning: false,
+    startScanning: jest.fn(),
+    stopScanning: jest.fn(),
+    error: null,
+  }),
+}));
+
+jest.mock('@/hooks/useClipboardPaste', () => ({
+  useClipboardPaste: () => ({
+    paste: jest.fn(),
+    isSupported: true,
+  }),
+}));
+
+// Mock framer-motion
+jest.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  },
+  AnimatePresence: ({ children }: any) => children,
+}));
+
+// Mock platform utils
+jest.mock('@/lib/platform', () => ({
+  detectPlatform: () => ({ device: 'desktop', os: 'macos' }),
+  getRecommendedInputMethod: () => 'manual',
+}));
+
 describe('PrairieCardInput', () => {
   const mockFetchProfile = jest.fn();
   const defaultProps = {
@@ -37,6 +80,8 @@ describe('PrairieCardInput', () => {
       fetchProfile: mockFetchProfile,
       loading: false,
       error: null,
+      profile: null,
+      clearError: jest.fn(),
     });
   });
 
@@ -66,6 +111,8 @@ describe('PrairieCardInput', () => {
       fetchProfile: mockFetchProfile,
       loading: true,
       error: null,
+      profile: null,
+      clearError: jest.fn(),
     });
     
     render(<PrairieCardInput {...defaultProps} />);
@@ -80,6 +127,8 @@ describe('PrairieCardInput', () => {
       fetchProfile: mockFetchProfile,
       loading: false,
       error: 'Failed to fetch',
+      profile: null,
+      clearError: jest.fn(),
     });
     
     render(<PrairieCardInput {...defaultProps} />);
