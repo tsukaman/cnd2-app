@@ -87,6 +87,11 @@ export class PrairieCardParser {
       const mappedError = ErrorHandler.mapError(error);
       ErrorHandler.logError(mappedError, 'PrairieCardParser.parseProfile');
       
+      // 既にカスタムエラーの場合はそのまま再スロー
+      if (error instanceof NetworkError || error instanceof ParseError || error instanceof ValidationError) {
+        throw error;
+      }
+      
       // ユーザー向けメッセージを設定
       if (mappedError instanceof NetworkError) {
         throw new NetworkError('Prairie Cardサーバーに接続できません。しばらく待ってから再試行してください。');
@@ -147,7 +152,7 @@ export class PrairieCardParser {
       return html;
     } catch (error: any) {
       // タイムアウトエラー
-      if (error.name === 'AbortError') {
+      if (error.name === 'AbortError' || error.message === 'AbortError') {
         throw new NetworkError('Prairie Card取得がタイムアウトしました。', { url });
       }
       
@@ -195,6 +200,7 @@ export class PrairieCardParser {
         updatedAt: this.extractDate($, '.updated-date, [data-field="updated"]'),
         connectedBy: 'CND²',
         hashtag: CND2_CONFIG.app.hashtag,
+        isPartialData: false,
       },
     };
   }
@@ -241,6 +247,7 @@ export class PrairieCardParser {
           updatedAt: new Date(),
           connectedBy: 'CND²',
           hashtag: CND2_CONFIG.app.hashtag,
+          isPartialData: true,
         },
       };
 

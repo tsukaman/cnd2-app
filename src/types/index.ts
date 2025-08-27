@@ -29,6 +29,7 @@ export interface PrairieProfile {
     updatedAt?: Date;
     connectedBy?: string;
     hashtag?: string;
+    isPartialData?: boolean;
   };
 }
 
