@@ -11,6 +11,9 @@ updates:
     ignore:
       # @types/dompurify is deprecated as DOMPurify now includes its own types
       - dependency-name: "@types/dompurify"
+      # node-fetch v3+ is ESM-only and breaks our CommonJS test setup
+      - dependency-name: "node-fetch"
+        versions: [">=3.0.0"]
     groups:
       dependencies:
         patterns:
