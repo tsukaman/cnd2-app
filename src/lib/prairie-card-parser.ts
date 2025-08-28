@@ -15,23 +15,87 @@ export class PrairieCardParser {
     };
 
     const extractAvatar = (): string | undefined => {
+      // まずメタタグから取得を試みる
+      const metaImage = this.extractMetaContent(html, 'og:image');
+      if (metaImage) return metaImage;
+      
+      // 従来の方法でも試す
       const avatarMatch = html.match(/<img[^>]*class="[^"]*avatar[^"]*"[^>]*src="([^"]+)"/i) ||
                           html.match(/<img[^>]*src="([^"]+)"[^>]*class="[^"]*avatar[^"]*"/i) ||
                           html.match(/<img[^>]*alt="[^"]*avatar[^"]*"[^>]*src="([^"]+)"/i);
       return avatarMatch ? avatarMatch[1] : undefined;
     };
 
+    // メタタグから名前を抽出
+    const extractNameFromMeta = (): string => {
+      // og:titleまたはtitleタグから名前を抽出
+      const ogTitle = this.extractMetaContent(html, 'og:title');
+      const titleTag = extractText(/<title>([^<]+)<\/title>/i);
+      
+      const titleSource = ogTitle || titleTag || '';
+      // "名前 のプロフィール" パターンから名前を抽出
+      const nameMatch = titleSource.match(/^(.+?)\s*の(?:プロフィール|Profile)/);
+      if (nameMatch) return nameMatch[1].trim();
+      
+      // その他のパターン
+      if (titleSource) {
+        // " - Prairie Card" や " | Prairie Card" を除去
+        return titleSource.replace(/\s*[-|]\s*Prairie\s*Card.*$/i, '').trim();
+      }
+      
+      return '';
+    };
+
+    // メタタグからプロフィール情報を抽出
+    const extractProfileFromMeta = (): { company?: string; bio?: string } => {
+      const description = this.extractMetaContent(html, 'og:description') || 
+                         this.extractMetaContent(html, 'description') || '';
+      
+      const result: { company?: string; bio?: string } = {};
+      
+      // 会社名の抽出パターン（文字数制限付きでReDoS対策）
+      const companyPatterns = [
+        // @Company形式を最初にチェック（優先度高）
+        /@\s*([^。、\n|]{1,100}?)(?:\s*[|]|$)/,  // @の後から|または文末まで
+        /(?:所属|勤務|在籍)[:：]?\s*([^。、\n|]{1,100})/,
+        // 会社名キーワードが含まれるパターン（キーワードを含む部分のみ取得）
+        /(?:at |@ )?([\w\s]{1,30}(?:会社|Company|Corp|Inc|Ltd|株式会社)\.?)(?:\s*[|]|$)/
+      ];
+      
+      for (const pattern of companyPatterns) {
+        const match = description.match(pattern);
+        if (match) {
+          result.company = match[1].trim();
+          break;
+        }
+      }
+      
+      // bio（自己紹介）はdescription全体を使用
+      if (description && description.length > 0) {
+        result.bio = description.substring(0, 500); // 最大500文字
+      }
+      
+      return result;
+    };
+
+    // メタタグから取得した情報
+    const metaName = extractNameFromMeta();
+    const metaProfile = extractProfileFromMeta();
+
     return {
       name: extractText(/<h1[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)<\/h1>/i) || 
             extractText(/<h1[^>]*>([^<]+)<\/h1>/i) || 
+            metaName ||  // メタタグから取得した名前を使用
             '名前未設定',
       title: extractText(/<div[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i) || 
              extractText(/<span[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/span>/i) || 
              extractText(/<div[^>]*class="[^"]*role[^"]*"[^>]*>([^<]+)<\/div>/i) || '',
       bio: extractText(/<div[^>]*class="[^"]*bio[^"]*"[^>]*>([^<]+)<\/div>/i) || 
-           extractText(/<p[^>]*class="[^"]*bio[^"]*"[^>]*>([^<]+)<\/p>/i) || '',
+           extractText(/<p[^>]*class="[^"]*bio[^"]*"[^>]*>([^<]+)<\/p>/i) || 
+           metaProfile.bio || '',  // メタタグから取得したbioを使用
       company: extractText(/<div[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/div>/i) || 
-               extractText(/<span[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/span>/i) || '',
+               extractText(/<span[^>]*class="[^"]*company[^"]*"[^>]*>([^<]+)<\/span>/i) || 
+               metaProfile.company || '',  // メタタグから取得した会社名を使用
       avatar: extractAvatar(),
       interests: extractArray(/<span[^>]*class="[^"]*interest[^"]*"[^>]*>([^<]+)<\/span>/gi),
       skills: extractArray(/<span[^>]*class="[^"]*skill[^"]*"[^>]*>([^<]+)<\/span>/gi),
@@ -50,6 +114,27 @@ export class PrairieCardParser {
   }
 
   async parseFromURL(url: string): Promise<PrairieData> {
+    // Validate URL for security
+    try {
+      const parsed = new URL(url);
+      
+      // Only allow HTTPS protocol
+      if (parsed.protocol !== 'https:') {
+        throw new Error('Only HTTPS URLs are allowed');
+      }
+      
+      // Only allow prairie.cards domains
+      const validHosts = ['prairie.cards', 'my.prairie.cards'];
+      if (!validHosts.includes(parsed.hostname) && !parsed.hostname.endsWith('.prairie.cards')) {
+        throw new Error('Invalid Prairie Card domain');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Invalid URL');
+    }
+    
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'CND2/1.0',
@@ -63,6 +148,23 @@ export class PrairieCardParser {
 
     const html = await response.text();
     return this.parseFromHTML(html);
+  }
+
+  private extractMetaContent(html: string, property: string): string | undefined {
+    // og:propertyまたはnameでメタタグを検索（文字数制限付きでReDoS対策）
+    const patterns = [
+      new RegExp(`<meta[^>]{0,500}property=["']${property.replace(':', '\\:')}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
+      new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}property=["']${property.replace(':', '\\:')}["']`, 'i'),
+      new RegExp(`<meta[^>]{0,500}name=["']${property}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
+      new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}name=["']${property}["']`, 'i')
+    ];
+    
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match) return match[1];
+    }
+    
+    return undefined;
   }
 
   private extractSocialUrl(html: string, domain: string): string | undefined {

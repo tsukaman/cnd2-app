@@ -98,6 +98,103 @@ function extractLink(html, identifier) {
 }
 
 /**
+ * Extract meta tag content
+ * @param {string} html - HTML content
+ * @param {string} property - Meta property name (e.g., 'og:title', 'description')
+ * @returns {string|undefined} - Content value if found
+ */
+function extractMetaContent(html, property) {
+  // Escape property for regex
+  const escapedProperty = property.replace(/:/g, '\\:');
+  
+  // Try multiple patterns for meta tags (with length limits for ReDoS protection)
+  const patterns = [
+    new RegExp(`<meta[^>]{0,500}property=["']${escapedProperty}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
+    new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}property=["']${escapedProperty}["']`, 'i'),
+    new RegExp(`<meta[^>]{0,500}name=["']${property}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
+    new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}name=["']${property}["']`, 'i')
+  ];
+  
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  return undefined;
+}
+
+/**
+ * Extract name from meta tags
+ * @param {string} html - HTML content
+ * @returns {string} - Extracted name or empty string
+ */
+function extractNameFromMeta(html) {
+  // Try og:title first, then title tag
+  const ogTitle = extractMetaContent(html, 'og:title');
+  const titleTag = html.match(/<title>([^<]+)<\/title>/i)?.[1]?.trim();
+  
+  const titleSource = ogTitle || titleTag || '';
+  
+  // Extract name from "名前 のプロフィール" pattern
+  const nameMatch = titleSource.match(/^(.+?)\s*の(?:プロフィール|Profile)/);
+  if (nameMatch) return nameMatch[1].trim();
+  
+  // Remove " - Prairie Card" or " | Prairie Card" suffix
+  if (titleSource) {
+    return titleSource.replace(/\s*[-|]\s*Prairie\s*Card.*$/i, '').trim();
+  }
+  
+  return '';
+}
+
+/**
+ * Extract profile information from meta tags
+ * @param {string} html - HTML content
+ * @returns {Object} - Profile information (company, bio)
+ */
+function extractProfileFromMeta(html) {
+  const description = extractMetaContent(html, 'og:description') || 
+                     extractMetaContent(html, 'description') || '';
+  
+  const result = {};
+  
+  // Extract company from various patterns (with length limits for ReDoS protection)
+  const companyPatterns = [
+    // @Company format checked first (higher priority)
+    /@\s*([^。、\n|]{1,100}?)(?:\s*[|]|$)/,  // From @ to | or end of string
+    /(?:所属|勤務|在籍)[：:]?\s*([^。、\n|]{1,100})/,
+    // Pattern for company keywords (captures only the company name part)
+    /(?:at |@ )?([\w\s]{1,30}(?:会社|Company|Corp|Inc|Ltd|株式会社)\.?)(?:\s*[|]|$)/
+  ];
+  
+  for (const pattern of companyPatterns) {
+    const match = description.match(pattern);
+    if (match) {
+      result.company = match[1].trim();
+      break;
+    }
+  }
+  
+  // Use entire description as bio (up to 500 chars)
+  if (description && description.length > 0) {
+    result.bio = description.substring(0, 500);
+  }
+  
+  return result;
+}
+
+/**
+ * Extract avatar from meta tags
+ * @param {string} html - HTML content
+ * @returns {string|undefined} - Avatar URL if found
+ */
+function extractAvatarFromMeta(html) {
+  return extractMetaContent(html, 'og:image');
+}
+
+/**
  * Escape regular expression special characters
  * @param {string} string - String to escape
  * @returns {string} - Escaped string safe for regex
@@ -127,10 +224,16 @@ function escapeHtml(unsafe) {
  * @returns {Object} - Parsed profile object
  */
 function parseFromHTML(html) {
-  // Extract basic information
+  // Extract information from meta tags first
+  const metaName = extractNameFromMeta(html);
+  const metaProfile = extractProfileFromMeta(html);
+  const metaAvatar = extractAvatarFromMeta(html);
+  
+  // Extract basic information (fallback to meta tags if not found)
   const name = extractTextByClass(html, 'profile-name') || 
                extractTextByClass(html, 'name') ||
                html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1]?.trim() ||
+               metaName ||
                'CloudNative Enthusiast';
                
   const title = extractTextByClass(html, 'title') ||
@@ -141,12 +244,14 @@ function parseFromHTML(html) {
   const company = extractTextByClass(html, 'company') ||
                   extractTextByClass(html, 'organization') ||
                   extractTextByClass(html, 'affiliation') ||
+                  metaProfile.company ||
                   '';
                   
   const bio = extractTextByClass(html, 'bio') ||
               extractTextByClass(html, 'description') ||
               extractTextByClass(html, 'about') ||
               html.match(/<p[^>]*>([^<]{20,})<\/p>/i)?.[1]?.trim() ||
+              metaProfile.bio ||
               '';
               
   // Extract skills and tags
@@ -197,7 +302,7 @@ function parseFromHTML(html) {
       title: escapeHtml(title),
       company: escapeHtml(company),
       bio: escapeHtml(bio),
-      avatar: undefined, // Avatar extraction would require more complex parsing
+      avatar: metaAvatar ? escapeHtml(metaAvatar) : undefined, // Escape avatar URL for security
     },
     details: {
       tags: tags.map(escapeHtml).filter(Boolean),
@@ -235,6 +340,12 @@ function parseFromHTML(html) {
 function validatePrairieCardUrl(url) {
   try {
     const parsed = new URL(url);
+    
+    // Only allow HTTPS protocol (security requirement)
+    if (parsed.protocol !== 'https:') {
+      return false;
+    }
+    
     // Only allow prairie.cards domains
     const validHosts = ['prairie.cards', 'my.prairie.cards'];
     return validHosts.includes(parsed.hostname) || 
