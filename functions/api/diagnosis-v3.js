@@ -8,6 +8,11 @@ const HTML_SIZE_LIMIT = 50000;
 const REGEX_MAX_LENGTH = 500;
 const META_ATTR_MAX_LENGTH = 200;
 
+// レート制限設定
+const RATE_LIMIT_WINDOW_MS = 60000; // 1分
+const RATE_LIMIT_MAX_REQUESTS = 50; // イベント会場での共有WiFi利用を考慮して緩和（元: 10）
+const RATE_LIMIT_BURST_ALLOW = 5; // 短期間のバースト許容数
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   
@@ -19,6 +24,73 @@ export async function onRequestPost(context) {
       'Access-Control-Allow-Headers': 'Content-Type',
       'Content-Type': 'application/json'
     };
+    
+    // レート制限チェック
+    // イベント会場での共有WiFi対策：IPアドレスに加えてユーザーエージェントやセッションIDも考慮
+    const clientIP = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+    const userAgent = request.headers.get('User-Agent') || 'unknown';
+    const sessionId = request.headers.get('X-Session-Id') || ''; // オプション: クライアント側でセッションIDを送信
+    
+    // レート制限のキー生成（IPベースだが、セッションIDがあればそれも含める）
+    const rateLimitKey = sessionId ? `ratelimit:${clientIP}:${sessionId}` : `ratelimit:${clientIP}`;
+    
+    if (env.DIAGNOSIS_KV) {
+      const rateLimitData = await env.DIAGNOSIS_KV.get(rateLimitKey);
+      
+      if (rateLimitData) {
+        const { count, resetTime } = JSON.parse(rateLimitData);
+        const now = Date.now();
+        
+        if (now < resetTime) {
+          if (count >= RATE_LIMIT_MAX_REQUESTS) {
+            // イベント会場判定: 短時間に多数のリクエストがある場合は警告のみ
+            console.warn(`[Rate Limit] IP ${clientIP} reached limit: ${count} requests`);
+            
+            // より詳細なエラーメッセージ
+            const retryAfter = Math.ceil((resetTime - now) / 1000);
+            return new Response(
+              JSON.stringify({ 
+                error: `アクセスが集中しています。${retryAfter}秒後に再試行してください。`,
+                detail: 'イベント会場の共有WiFiをご利用の場合は、少し時間をおいてからお試しください。'
+              }),
+              { 
+                status: 429, 
+                headers: {
+                  ...headers,
+                  'Retry-After': retryAfter.toString(),
+                  'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+                  'X-RateLimit-Remaining': '0',
+                  'X-RateLimit-Reset': new Date(resetTime).toISOString()
+                }
+              }
+            );
+          }
+          // カウントを増やす
+          await env.DIAGNOSIS_KV.put(
+            rateLimitKey,
+            JSON.stringify({ count: count + 1, resetTime }),
+            { expirationTtl: Math.ceil((resetTime - now) / 1000) }
+          );
+        } else {
+          // リセット時間を過ぎているので新しいウィンドウを開始
+          await env.DIAGNOSIS_KV.put(
+            rateLimitKey,
+            JSON.stringify({ count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS }),
+            { expirationTtl: 60 }
+          );
+        }
+      } else {
+        // 初回リクエスト
+        await env.DIAGNOSIS_KV.put(
+          rateLimitKey,
+          JSON.stringify({ count: 1, resetTime: Date.now() + RATE_LIMIT_WINDOW_MS }),
+          { expirationTtl: 60 }
+        );
+      }
+    }
+    
+    // アクセスログ（デバッグ用）
+    console.log(`[Access] IP: ${clientIP}, SessionId: ${sessionId || 'none'}, UA: ${userAgent.substring(0, 50)}`);
     
     // リクエストボディを取得
     const body = await request.json();
@@ -87,11 +159,11 @@ export async function onRequestPost(context) {
       }).then(r => r.text())
     ]);
     
-    // HTMLを適切なサイズに制限（各50KB）
-    const trimmedHtml1 = html1.substring(0, 50000);
-    const trimmedHtml2 = html2.substring(0, 50000);
+    // HTMLを適切なサイズに制限（各50KB）- trimHtmlSafelyを使用
+    const trimmedHtml1 = trimHtmlSafely(html1, HTML_SIZE_LIMIT);
+    const trimmedHtml2 = trimHtmlSafely(html2, HTML_SIZE_LIMIT);
     
-    // 診断プロンプトを構築
+    // 診断プロンプトを構築 - トリミング済みHTMLを直接使用
     const prompt = buildDiagnosisPrompt(trimmedHtml1, trimmedHtml2);
     
     // OpenAI APIを直接呼び出し（fetch使用）
@@ -149,6 +221,10 @@ export async function onRequestPost(context) {
     try {
       aiResult = JSON.parse(openaiData.choices[0].message.content);
       console.log('[Diagnosis v3] AI result parsed successfully');
+      // 診断結果の必須フィールド検証
+      if (!aiResult.diagnosis || !aiResult.extracted_profiles) {
+        throw new Error('診断結果の構造が不正です');
+      }
     } catch (parseError) {
       console.error('[Diagnosis v3] Failed to parse AI response:', parseError);
       console.error('[Diagnosis v3] Raw content:', openaiData.choices[0].message.content.substring(0, 500));
@@ -168,8 +244,12 @@ export async function onRequestPost(context) {
       // 必須フィールド（DiagnosisResult型準拠）
       compatibility: typeof diagnosis.score === 'number' ? diagnosis.score : 50,
       summary: diagnosis.message || '診断を完了しました。',
-      strengths: Array.isArray(diagnosis.conversationStarters) ? diagnosis.conversationStarters : ['技術的な共通点が見つかりました'],
-      opportunities: Array.isArray(diagnosis.conversationStarters) ? diagnosis.conversationStarters : ['新しい発見の機会があります'],
+      strengths: Array.isArray(diagnosis.conversationStarters) && diagnosis.conversationStarters.length > 0 
+        ? diagnosis.conversationStarters.slice(0, Math.ceil(diagnosis.conversationStarters.length / 2))
+        : ['技術的な共通点が見つかりました'],
+      opportunities: Array.isArray(diagnosis.conversationStarters) && diagnosis.conversationStarters.length > 1
+        ? diagnosis.conversationStarters.slice(Math.ceil(diagnosis.conversationStarters.length / 2))
+        : [diagnosis.hiddenGems || '新しい発見の機会があります'],
       advice: diagnosis.hiddenGems || 'お互いの技術や興味について話してみましょう。',
       // レガシーフィールド（後方互換性）
       score: diagnosis.score,
@@ -247,19 +327,13 @@ export async function onRequestOptions(context) {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Session-Id',
     }
   });
 }
 
-// 診断プロンプト生成関数
-/**
- * HTMLを構造を保持しながらサイズ制限する
- * @param {string} html 元のHTML
- * @param {number} maxLength 最大文字数
- * @returns {string} トリミングされたHTML
- */
-function trimHtmlSafely(html, maxLength = 50000) {
+// HTMLを構造を保持しながらサイズ制限する
+function trimHtmlSafely(html, maxLength = HTML_SIZE_LIMIT) {
   if (html.length <= maxLength) {
     return html;
   }
@@ -300,11 +374,9 @@ function trimHtmlSafely(html, maxLength = 50000) {
   return extractedContent || html.substring(0, maxLength);
 }
 
+// 診断プロンプト生成関数
 function buildDiagnosisPrompt(html1, html2) {
-  // HTMLを構造を保持しながらサイズ制限
-  const trimmedHtml1 = trimHtmlSafely(html1, 50000);
-  const trimmedHtml2 = trimHtmlSafely(html2, 50000);
-  
+  // HTMLはすでにトリミング済みなので、そのまま使用
   return `
 あなたはCloudNative Days Tokyo 2025の相性診断AIです。
 以下の手順で2つのPrairie CardのHTMLから相性診断を実施してください。
@@ -395,10 +467,10 @@ function buildDiagnosisPrompt(html1, html2) {
 }
 
 【Prairie Card HTML 1】
-${trimmedHtml1}
+${html1}
 
 【Prairie Card HTML 2】
-${trimmedHtml2}
+${html2}
 `;
 }
 
