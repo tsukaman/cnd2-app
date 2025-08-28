@@ -107,12 +107,12 @@ function extractMetaContent(html, property) {
   // Escape property for regex
   const escapedProperty = property.replace(/:/g, '\\:');
   
-  // Try multiple patterns for meta tags
+  // Try multiple patterns for meta tags (with length limits for ReDoS protection)
   const patterns = [
-    new RegExp(`<meta[^>]*property=["']${escapedProperty}["'][^>]*content=["']([^"']+)["']`, 'i'),
-    new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*property=["']${escapedProperty}["']`, 'i'),
-    new RegExp(`<meta[^>]*name=["']${property}["'][^>]*content=["']([^"']+)["']`, 'i'),
-    new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*name=["']${property}["']`, 'i')
+    new RegExp(`<meta[^>]{0,500}property=["']${escapedProperty}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
+    new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}property=["']${escapedProperty}["']`, 'i'),
+    new RegExp(`<meta[^>]{0,500}name=["']${property}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
+    new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}name=["']${property}["']`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -160,11 +160,11 @@ function extractProfileFromMeta(html) {
   
   const result = {};
   
-  // Extract company from various patterns
+  // Extract company from various patterns (with length limits for ReDoS protection)
   const companyPatterns = [
-    /(?:会社|Company|Corp|Inc|Ltd|株式会社)[：:]?\s*([^。、\n]+)/,
-    /(?:所属|勤務|在籍)[：:]?\s*([^。、\n]+)/,
-    /@\s*([^。、\n\s]+(?:\s+[^。、\n\s]+)*)/ // @Company format
+    /(?:会社|Company|Corp|Inc|Ltd|株式会社)[：:]?\s*([^。、\n]{1,100})/,
+    /(?:所属|勤務|在籍)[：:]?\s*([^。、\n]{1,100})/,
+    /@\s*([^。、\n\s]{1,50}(?:\s+[^。、\n\s]{1,50}){0,3})/ // @Company format
   ];
   
   for (const pattern of companyPatterns) {
@@ -300,7 +300,7 @@ function parseFromHTML(html) {
       title: escapeHtml(title),
       company: escapeHtml(company),
       bio: escapeHtml(bio),
-      avatar: metaAvatar || undefined, // Use avatar from meta tags if available
+      avatar: metaAvatar ? escapeHtml(metaAvatar) : undefined, // Escape avatar URL for security
     },
     details: {
       tags: tags.map(escapeHtml).filter(Boolean),
@@ -338,6 +338,12 @@ function parseFromHTML(html) {
 function validatePrairieCardUrl(url) {
   try {
     const parsed = new URL(url);
+    
+    // Only allow HTTPS protocol (security requirement)
+    if (parsed.protocol !== 'https:') {
+      return false;
+    }
+    
     // Only allow prairie.cards domains
     const validHosts = ['prairie.cards', 'my.prairie.cards'];
     return validHosts.includes(parsed.hostname) || 

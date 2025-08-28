@@ -34,16 +34,7 @@ jest.mock('@/hooks/useClipboardPaste', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => {
-  const React = require('react');
-  return {
-    motion: {
-      div: ({ children, ...props }: any) => React.createElement('div', props, children),
-      button: ({ children, ...props }: any) => React.createElement('button', props, children),
-    },
-    AnimatePresence: ({ children }: any) => children,
-  };
-});
+jest.mock('framer-motion', () => require('../../../test-utils/framer-motion-mock').framerMotionMock);
 
 // Mock platform utils
 jest.mock('@/lib/platform', () => ({

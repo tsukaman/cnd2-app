@@ -53,11 +53,11 @@ export class PrairieCardParser {
       
       const result: { company?: string; bio?: string } = {};
       
-      // 会社名の抽出パターン
+      // 会社名の抽出パターン（文字数制限付きでReDoS対策）
       const companyPatterns = [
-        /(?:会社|Company|Corp|Inc|Ltd|株式会社)[:：]?\s*([^。、\n]+)/,
-        /(?:所属|勤務|在籍)[:：]?\s*([^。、\n]+)/,
-        /@\s*([^。、\n\s]+(?:\s+[^。、\n\s]+)*)/  // @Company形式
+        /(?:会社|Company|Corp|Inc|Ltd|株式会社)[:：]?\s*([^。、\n]{1,100})/,
+        /(?:所属|勤務|在籍)[:：]?\s*([^。、\n]{1,100})/,
+        /@\s*([^。、\n\s]{1,50}(?:\s+[^。、\n\s]{1,50}){0,3})/  // @Company形式
       ];
       
       for (const pattern of companyPatterns) {
@@ -112,6 +112,27 @@ export class PrairieCardParser {
   }
 
   async parseFromURL(url: string): Promise<PrairieData> {
+    // Validate URL for security
+    try {
+      const parsed = new URL(url);
+      
+      // Only allow HTTPS protocol
+      if (parsed.protocol !== 'https:') {
+        throw new Error('Only HTTPS URLs are allowed');
+      }
+      
+      // Only allow prairie.cards domains
+      const validHosts = ['prairie.cards', 'my.prairie.cards'];
+      if (!validHosts.includes(parsed.hostname) && !parsed.hostname.endsWith('.prairie.cards')) {
+        throw new Error('Invalid Prairie Card domain');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Invalid URL');
+    }
+    
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'CND2/1.0',
@@ -128,12 +149,12 @@ export class PrairieCardParser {
   }
 
   private extractMetaContent(html: string, property: string): string | undefined {
-    // og:propertyまたはnameでメタタグを検索
+    // og:propertyまたはnameでメタタグを検索（文字数制限付きでReDoS対策）
     const patterns = [
-      new RegExp(`<meta[^>]*property=["']${property.replace(':', '\\:')}["'][^>]*content=["']([^"']+)["']`, 'i'),
-      new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*property=["']${property.replace(':', '\\:')}["']`, 'i'),
-      new RegExp(`<meta[^>]*name=["']${property}["'][^>]*content=["']([^"']+)["']`, 'i'),
-      new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*name=["']${property}["']`, 'i')
+      new RegExp(`<meta[^>]{0,500}property=["']${property.replace(':', '\\:')}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
+      new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}property=["']${property.replace(':', '\\:')}["']`, 'i'),
+      new RegExp(`<meta[^>]{0,500}name=["']${property}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
+      new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}name=["']${property}["']`, 'i')
     ];
     
     for (const pattern of patterns) {

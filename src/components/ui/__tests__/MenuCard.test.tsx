@@ -2,16 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MenuCard } from '../MenuCard';
 
 // Mock framer-motion to avoid animation issues in tests
-jest.mock('framer-motion', () => {
-  const React = require('react');
-  return {
-    motion: {
-      div: React.forwardRef(({ children, whileHover, whileTap, ...props }: any, ref: any) => 
-        React.createElement('div', { ...props, ref }, children)
-      ),
-    },
-  };
-});
+jest.mock('framer-motion', () => require('../../../test-utils/framer-motion-mock').framerMotionMock);
 
 describe('MenuCard', () => {
   const defaultProps = {

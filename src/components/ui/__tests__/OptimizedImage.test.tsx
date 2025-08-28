@@ -20,16 +20,7 @@ jest.mock('next/image', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => {
-  const React = require('react');
-  return {
-    motion: {
-      div: ({ children, ...props }: any) => React.createElement('div', props, children),
-      img: ({ children, ...props }: any) => React.createElement('img', props, children),
-    },
-    AnimatePresence: ({ children }: any) => children,
-  };
-});
+jest.mock('framer-motion', () => require('../../../test-utils/framer-motion-mock').framerMotionMock);
 
 // Mock utils
 jest.mock('@/lib/utils/edge-compat', () => ({
