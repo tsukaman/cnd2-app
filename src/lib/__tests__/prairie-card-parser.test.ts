@@ -77,6 +77,87 @@ const emptyHTML = `
 // fetch モック
 global.fetch = jest.fn();
 
+// メタタグのみの動的Prairie Card HTML（実際の my.prairie.cards の構造）
+const metaOnlyHTML = `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>テストユーザー のプロフィール</title>
+  <meta property="og:title" content="テストユーザー のプロフィール" />
+  <meta property="og:description" content="クラウドネイティブ推進室 @ Example Corp / CloudNative Days Tokyo 実行委員 / Prairie Card開発者" />
+  <meta property="og:image" content="https://my.prairie.cards/images/avatar/testuser.jpg" />
+  <meta name="description" content="クラウドネイティブ推進室 @ Example Corp" />
+</head>
+<body>
+  <div id="root"></div>
+  <script>/* React app loads here */</script>
+</body>
+</html>
+`;
+
+const engineerMetaHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>エンジニア のプロフィール - Prairie Card</title>
+  <meta property="og:title" content="エンジニア のプロフィール" />
+  <meta property="og:description" content="Software Engineer @TechCorp | Kubernetes enthusiast | CNCF contributor" />
+  <meta property="og:image" content="https://my.prairie.cards/avatars/engineer.png" />
+</head>
+<body><div id="app"></div></body>
+</html>
+`;
+
+// 様々なパターンのメタタグHTML
+const metaVariants = {
+  japanese: `
+    <html>
+      <head>
+        <title>山田太郎 のプロフィール</title>
+        <meta property="og:description" content="株式会社テスト / フルスタックエンジニア / React・TypeScript・Go" />
+      </head>
+      <body></body>
+    </html>
+  `,
+  english: `
+    <html>
+      <head>
+        <title>John Doe's Profile</title>
+        <meta property="og:title" content="John Doe's Profile" />
+        <meta property="og:description" content="Senior Developer at Tech Inc | Cloud Architecture | DevOps" />
+      </head>
+      <body></body>
+    </html>
+  `,
+  mixedLanguage: `
+    <html>
+      <head>
+        <title>テック花子 | Tech Hanako のプロフィール</title>
+        <meta property="og:description" content="SRE @ グローバルテック株式会社 | CKAD certified | Golang/Python" />
+      </head>
+      <body></body>
+    </html>
+  `,
+  withEmoji: `
+    <html>
+      <head>
+        <title>🚀 DevOps Engineer のプロフィール</title>
+        <meta property="og:description" content="Infrastructure as Code enthusiast 💻 | AWS Solutions Architect | 所属: Cloud Native Co." />
+        <meta property="og:image" content="https://example.com/avatar.jpg" />
+      </head>
+      <body></body>
+    </html>
+  `,
+  minimal: `
+    <html>
+      <head>
+        <title>User Profile</title>
+      </head>
+      <body></body>
+    </html>
+  `
+};
+
 describe('PrairieCardParser', () => {
   let parser: PrairieCardParser;
 
@@ -311,6 +392,95 @@ describe('PrairieCardParser', () => {
       const result = await parser.parseFromHTML(htmlWithNewlines);
       // 改行と空白が含まれる可能性
       expect(result.name).toContain('Multi');
+    });
+  });
+
+  describe('メタタグからの抽出', () => {
+    it('動的Prairie Card（my.prairie.cards）からメタタグで情報を取得する', async () => {
+      const result = await parser.parseFromHTML(metaOnlyHTML);
+      
+      expect(result).toBeDefined();
+      expect(result.name).toBe('テストユーザー');  // 「のプロフィール」が除去される
+      expect(result.bio).toContain('クラウドネイティブ推進室');
+      expect(result.bio).toContain('Example Corp');
+      expect(result.avatar).toBe('https://my.prairie.cards/images/avatar/testuser.jpg');
+      
+      // メタタグのみのHTMLでは従来の要素は取得できない
+      expect(result.skills).toEqual([]);
+      expect(result.interests).toEqual([]);
+      expect(result.tags).toEqual([]);
+    });
+
+    it('エンジニアプロファイルをメタタグから正しく取得する', async () => {
+      const result = await parser.parseFromHTML(engineerMetaHTML);
+      
+      expect(result).toBeDefined();
+      expect(result.name).toBe('エンジニア');
+      expect(result.bio).toContain('Software Engineer');
+      expect(result.bio).toContain('TechCorp');
+      expect(result.bio).toContain('Kubernetes enthusiast');
+      expect(result.avatar).toBe('https://my.prairie.cards/avatars/engineer.png');
+    });
+
+    it('様々なパターンのメタタグを正しく処理する', async () => {
+      // 日本語プロファイル
+      const jpResult = await parser.parseFromHTML(metaVariants.japanese);
+      expect(jpResult.name).toBe('山田太郎');
+      expect(jpResult.bio).toContain('株式会社テスト');
+      
+      // 英語プロファイル
+      const enResult = await parser.parseFromHTML(metaVariants.english);
+      expect(enResult.name).toBe('John Doe');
+      expect(enResult.bio).toContain('Senior Developer');
+      
+      // 混合言語プロファイル
+      const mixedResult = await parser.parseFromHTML(metaVariants.mixedLanguage);
+      expect(mixedResult.name).toContain('テック花子');
+      expect(mixedResult.company).toBe('グローバルテック株式会社');
+      
+      // 絵文字入りプロファイル
+      const emojiResult = await parser.parseFromHTML(metaVariants.withEmoji);
+      expect(emojiResult.name).toBe('🚀 DevOps Engineer');
+      expect(emojiResult.bio).toContain('Infrastructure as Code');
+      expect(emojiResult.avatar).toBe('https://example.com/avatar.jpg');
+      
+      // 最小限のプロファイル
+      const minResult = await parser.parseFromHTML(metaVariants.minimal);
+      expect(minResult.name).toBe('User Profile');
+    });
+
+    it('メタタグと通常要素の両方がある場合は通常要素を優先する', async () => {
+      const hybridHTML = `
+        <html>
+          <head>
+            <title>Meta Name のプロフィール</title>
+            <meta property="og:title" content="Meta Name のプロフィール" />
+            <meta property="og:description" content="Meta Bio" />
+          </head>
+          <body>
+            <h1 class="name">HTML Name</h1>
+            <div class="bio">HTML Bio</div>
+          </body>
+        </html>
+      `;
+      
+      const result = await parser.parseFromHTML(hybridHTML);
+      expect(result.name).toBe('HTML Name');  // HTMLの要素が優先
+      expect(result.bio).toBe('HTML Bio');    // HTMLの要素が優先
+    });
+
+    it('会社名をog:descriptionから抽出する', async () => {
+      const htmlWithCompany = `
+        <html>
+          <head>
+            <meta property="og:description" content="Software Engineer @ Google Inc. | Cloud expert" />
+          </head>
+        </html>
+      `;
+      
+      const result = await parser.parseFromHTML(htmlWithCompany);
+      // @ パターンから会社名を抽出
+      expect(result.company).toBe('Google Inc.');
     });
   });
 
