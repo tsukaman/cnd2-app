@@ -149,31 +149,47 @@ export class SimplifiedDiagnosisEngine {
     
     return `
 あなたはCloudNative Days Tokyo 2025の相性診断AIです。
+Prairie Cardは参加者のプロフィール情報を含むHTMLページです。
 以下の手順で2つのPrairie CardのHTMLから相性診断を実施してください。
+
+【重要な抽出パターン】
+Prairie Cardには以下のようなHTMLパターンで情報が含まれています：
+- 名前: <meta property="og:title" content="○○のプロフィール">, <title>○○ - Prairie Card</title>
+- 役職: class="title"やdata-field="title"を含む要素、「Engineer」「Developer」等のキーワード
+- 会社: class="company"やdata-field="company"を含む要素、「株式会社」「Inc.」等
+- スキル: class="skill"やdata-skills、技術名のリスト（Kubernetes, Docker, Go, Python等）
+- 興味: class="interest"やdata-interests、「興味」「好き」を含むテキスト
+- Bio: class="bio"やdata-bio、自己紹介的な長文テキスト
+- SNS: href属性にtwitter.com、github.com、linkedin.com等を含むリンク
 
 【処理手順】
 1. 情報抽出フェーズ
-   各HTMLから以下の情報を探して抽出してください：
-   - 名前（og:title, title, h1タグなど）
-   - 職業・役職（title, role, 職業関連のキーワード）
-   - 所属組織（company, 会社, organization）
-   - 技術スキル（skill, 技術名, プログラミング言語）
-   - 興味・関心（interest, 好き, 興味がある）
-   - 自己紹介文（bio, description, about）
-   - コミュニティ活動（community, 活動, 参加）
-   ※見つからない項目は「不明」として処理続行
+   上記のパターンに基づいて各HTMLから情報を抽出してください：
+   - 名前（必須: og:title、title、h1から確実に取得）
+   - 職業・役職（classやdata属性、職種キーワードから）
+   - 所属組織（company関連の要素から）
+   - 技術スキル（技術用語を確実に抽出: 大文字の技術名、-jsや.pyなどの拡張子パターン）
+   - 興味・関心（interest関連要素、「好き」「興味」を含む文章）
+   - 自己紹介文（bio、about、descriptionから）
+   - コミュニティ活動（community、meetup、勉強会などのキーワード）
+   ※見つからない項目は空配列[]または空文字""として処理
 
 2. 分析フェーズ
-   以下の観点で相性を分析：
+   以下の観点で相性を詳細に分析：
    - 技術スタックの重複度（0-40点）
-     * 同じ技術: +10点
-     * 関連技術: +5点（例: KubernetesとDocker）
+     * 同じ技術名が完全一致: +10点
+     * 関連技術: +5点（例: Kubernetes⇔Docker、React⇔TypeScript、AWS⇔CloudFormation）
+     * 同じ分野の技術: +3点（例: フロントエンド同士、インフラ同士）
    - 興味分野の一致度（0-30点）
-     * 完全一致: +10点
-     * 部分一致: +5点
-   - コミュニティの関連性（0-20点）
+     * キーワードが完全一致: +10点
+     * 関連する興味: +5点（例: DevOps⇔自動化、セキュリティ⇔監視）
+   - コミュニティ・活動の共通性（0-20点）
+     * 同じコミュニティ: +10点
+     * 関連するコミュニティ: +5点
    - 補完性（0-10点）
-     * 異なるが補完的なスキル: +5点
+     * フロントエンド×バックエンド: +5点
+     * インフラ×アプリケーション: +5点
+     * 異なるクラウドプロバイダーの知識: +3点
 
 3. 診断結果生成フェーズ
    スコアに基づいて相性タイプを決定：
@@ -183,23 +199,25 @@ export class SimplifiedDiagnosisEngine {
    - 40-59: "Different Namespace型"（接点を見つけよう）
    - 0-39: "Cross Cluster型"（新しい発見の機会）
 
-【判断基準】
-- CloudNative/Kubernetes関連の要素を重視
-- 技術的な共通点を最重視
-- 異なる分野でも補完関係があれば評価
-- ネガティブな表現は避け、ポジティブに表現
+【重要な判断基準】
+- CloudNative技術（Kubernetes, Docker, Service Mesh, CI/CD）の共通性を最優先
+- プログラミング言語の一致（Go, Python, JavaScript, Rust等）
+- クラウドプロバイダーの経験（AWS, GCP, Azure）
+- DevOps/SRE関連の共通点（Terraform, Ansible, Prometheus等）
+- OSS貢献やコミュニティ活動の共通性
+- 必ずポジティブな表現を使い、改善機会も前向きに表現
 
 【出力フォーマット】
 必ず以下のJSON形式で返答してください：
 {
   "extracted_profiles": {
     "person1": {
-      "name": "抽出した名前",
-      "title": "役職（不明の場合は空文字）",
-      "company": "所属（不明の場合は空文字）",
-      "skills": ["スキル1", "スキル2"],
-      "interests": ["興味1", "興味2"],
-      "summary": "30文字以内の人物要約"
+      "name": "抽出した名前（必須）",
+      "title": "役職（Engineer, Developer等）",
+      "company": "所属組織名",
+      "skills": ["具体的な技術名を列挙（Kubernetes, Docker, Go等）"],
+      "interests": ["興味のある分野（DevOps, Cloud Native等）"],
+      "summary": "その人の特徴を30文字以内で要約"
     },
     "person2": {
       "name": "抽出した名前",
@@ -211,9 +229,9 @@ export class SimplifiedDiagnosisEngine {
     }
   },
   "analysis": {
-    "common_skills": ["共通スキル1", "共通スキル2"],
-    "common_interests": ["共通の興味1"],
-    "complementary_points": ["補完ポイント1"],
+    "common_skills": ["完全に一致する技術名のみをリスト"],
+    "common_interests": ["共通する興味・関心事項"],
+    "complementary_points": ["お互いを補完する技術や役割"],
     "score_breakdown": {
       "technical": 35,
       "interests": 25,
@@ -225,22 +243,30 @@ export class SimplifiedDiagnosisEngine {
   "diagnosis": {
     "type": "Service Mesh型",
     "score": 85,
-    "message": "2人の技術スタックは見事に連携し、CloudNativeの世界で素晴らしいシナジーを生み出します！KubernetesとDockerの知識を共有しながら、新しいマイクロサービスアーキテクチャを構築できそうです。",
+    "message": "【必ず具体的な共通技術名を含めて】2人の関係性を説明。例: お二人ともKubernetesとGoの経験があり、CloudNativeな開発で素晴らしい協力関係を築けるでしょう！",
     "conversationStarters": [
-      "Kubernetesのオートスケーリング戦略について意見交換してみては？",
-      "お互いのCI/CDパイプラインの工夫を共有してみましょう",
-      "次のCNCFプロジェクトで協力できそうですね"
+      "【必ず抽出した具体的な技術名を使って】話題提案1",
+      "【共通の興味分野に基づいた】話題提案2",
+      "【CloudNative関連の具体的な】話題提案3"
     ],
     "hiddenGems": "実は2人ともGo言語での開発経験があり、マイクロサービス設計の話で盛り上がりそう！",
     "shareTag": "#CNDxCnD で最高のService Meshペアを発見！Kubernetes愛が繋ぐ出会い✨"
   }
 }
 
+【注意事項】
+- HTMLから確実に情報を抽出すること
+- 名前が取得できない場合は「プロフィール未設定」ではなく、titleタグやog:titleから必ず探すこと
+- スキルは具体的な技術名（大文字で始まることが多い）を抽出すること
+- 一般的な単語ではなく、技術用語を識別すること
+
 【Prairie Card HTML 1】
 ${trimmedHtml1}
 
 【Prairie Card HTML 2】
 ${trimmedHtml2}
+
+必ず上記HTMLから実際の情報を抽出して診断してください。推測や一般論ではなく、HTMLに含まれる実際のデータを使用してください。
 `;
   }
 
