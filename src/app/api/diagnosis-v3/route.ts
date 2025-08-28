@@ -7,7 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import SimplifiedDiagnosisEngine from '@/lib/diagnosis-engine-v3';
 import { ErrorHandler, CND2Error } from '@/lib/errors';
 
-export const runtime = 'edge';
+// Node.js runtimeを使用（OpenAI SDKのため）
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {

@@ -28,8 +28,12 @@ export function useDiagnosisV3(): UseDiagnosisV3Result {
     try {
       console.log('[useDiagnosisV3] Starting diagnosis with URLs:', urls);
       
-      // 新しいv3エンドポイントを呼び出し
-      const response = await fetch('/api/diagnosis-v3', {
+      // 本番環境と開発環境で異なるエンドポイントを使用
+      const endpoint = process.env.NODE_ENV === 'production' 
+        ? '/api/diagnosis-v3'  // Cloudflare Pages Function
+        : '/api/diagnosis-v3'; // Next.js API Route
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
