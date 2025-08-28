@@ -32,14 +32,28 @@ jest.mock('@/lib/utils/edge-compat', () => ({
   toBase64: jest.fn(() => 'data:image/svg+xml;base64,test'),
 }));
 
-// Intersection Observer モック
-const mockIntersectionObserver = jest.fn();
-mockIntersectionObserver.mockReturnValue({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+// Intersection Observer モック with proper typing
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root: Element | null = null;
+  readonly rootMargin: string = '';
+  readonly thresholds: ReadonlyArray<number> = [];
+
+  constructor(
+    private callback: IntersectionObserverCallback,
+    private options?: IntersectionObserverInit
+  ) {}
+
+  observe = jest.fn();
+  unobserve = jest.fn();
+  disconnect = jest.fn();
+  takeRecords = jest.fn().mockReturnValue([]);
+}
+
+const mockIntersectionObserver = jest.fn().mockImplementation((callback, options) => {
+  return new MockIntersectionObserver(callback, options);
 });
-window.IntersectionObserver = mockIntersectionObserver as any;
+
+window.IntersectionObserver = mockIntersectionObserver as typeof IntersectionObserver;
 
 describe('OptimizedImage', () => {
   const defaultProps = {
@@ -52,14 +66,14 @@ describe('OptimizedImage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // IntersectionObserverのコールバックを保存
-    mockIntersectionObserver.mockImplementation((callback) => ({
-      observe: jest.fn((element) => {
+    mockIntersectionObserver.mockImplementation((callback) => {
+      const observer = new MockIntersectionObserver(callback);
+      observer.observe.mockImplementation((element) => {
         // 即座に表示状態にする
-        callback([{ isIntersecting: true, target: element }]);
-      }),
-      unobserve: jest.fn(),
-      disconnect: jest.fn(),
-    }));
+        callback([{ isIntersecting: true, target: element } as IntersectionObserverEntry], observer);
+      });
+      return observer;
+    });
   });
 
   describe('レンダリング', () => {
@@ -87,11 +101,11 @@ describe('OptimizedImage', () => {
     });
 
     it('プレースホルダーが初期表示される', () => {
-      mockIntersectionObserver.mockImplementation((callback) => ({
-        observe: jest.fn(),
-        unobserve: jest.fn(),
-        disconnect: jest.fn(),
-      }));
+      mockIntersectionObserver.mockImplementation((callback) => {
+        const observer = new MockIntersectionObserver(callback);
+        // Don't trigger callback immediately to show placeholder
+        return observer;
+      });
 
       const { container } = render(<OptimizedImage {...defaultProps} />);
       
@@ -102,14 +116,10 @@ describe('OptimizedImage', () => {
 
   describe('遅延読み込み', () => {
     it('viewport内に入ったら画像が読み込まれる', async () => {
-      let observerCallback: any;
+      let observerCallback: IntersectionObserverCallback | undefined;
       mockIntersectionObserver.mockImplementation((callback) => {
         observerCallback = callback;
-        return {
-          observe: jest.fn(),
-          unobserve: jest.fn(),
-          disconnect: jest.fn(),
-        };
+        return new MockIntersectionObserver(callback);
       });
 
       render(<OptimizedImage {...defaultProps} />);
