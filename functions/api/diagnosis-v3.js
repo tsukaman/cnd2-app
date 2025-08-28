@@ -8,6 +8,10 @@ const HTML_SIZE_LIMIT = 50000;
 const REGEX_MAX_LENGTH = 500;
 const META_ATTR_MAX_LENGTH = 200;
 
+// レート制限設定
+const RATE_LIMIT_WINDOW_MS = 60000; // 1分
+const RATE_LIMIT_MAX_REQUESTS = 10; // 1分あたり10リクエスト
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   
@@ -19,6 +23,53 @@ export async function onRequestPost(context) {
       'Access-Control-Allow-Headers': 'Content-Type',
       'Content-Type': 'application/json'
     };
+    
+    // レート制限チェック
+    const clientIP = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+    if (env.DIAGNOSIS_KV) {
+      const rateLimitKey = `ratelimit:${clientIP}`;
+      const rateLimitData = await env.DIAGNOSIS_KV.get(rateLimitKey);
+      
+      if (rateLimitData) {
+        const { count, resetTime } = JSON.parse(rateLimitData);
+        const now = Date.now();
+        
+        if (now < resetTime) {
+          if (count >= RATE_LIMIT_MAX_REQUESTS) {
+            return new Response(
+              JSON.stringify({ error: 'レート制限に達しました。1分後に再試行してください' }),
+              { 
+                status: 429, 
+                headers: {
+                  ...headers,
+                  'Retry-After': Math.ceil((resetTime - now) / 1000).toString()
+                }
+              }
+            );
+          }
+          // カウントを増やす
+          await env.DIAGNOSIS_KV.put(
+            rateLimitKey,
+            JSON.stringify({ count: count + 1, resetTime }),
+            { expirationTtl: Math.ceil((resetTime - now) / 1000) }
+          );
+        } else {
+          // リセット時間を過ぎているので新しいウィンドウを開始
+          await env.DIAGNOSIS_KV.put(
+            rateLimitKey,
+            JSON.stringify({ count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS }),
+            { expirationTtl: 60 }
+          );
+        }
+      } else {
+        // 初回リクエスト
+        await env.DIAGNOSIS_KV.put(
+          rateLimitKey,
+          JSON.stringify({ count: 1, resetTime: Date.now() + RATE_LIMIT_WINDOW_MS }),
+          { expirationTtl: 60 }
+        );
+      }
+    }
     
     // リクエストボディを取得
     const body = await request.json();
