@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import DuoPage from '../page';
 import { useRouter } from 'next/navigation';
+import { createLocalStorageMock, createMockPrairieProfile } from '@/test-utils/mocks';
 
 // Next.js navigationモック
 jest.mock('next/navigation', () => ({
@@ -17,12 +18,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 // localStorageのモック
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
+const localStorageMock = createLocalStorageMock();
 global.localStorage = localStorageMock as any;
 
 // API clientモック
@@ -42,7 +38,7 @@ jest.mock('@/components/prairie/PrairieCardInput', () => ({
   __esModule: true,
   default: ({ onProfileLoaded, disabled }: any) => (
     <div data-testid="prairie-card-input">
-      <button onClick={() => onProfileLoaded({ basic: { name: 'Test User' } })} disabled={disabled}>
+      <button onClick={() => onProfileLoaded(createMockPrairieProfile('Test User'))} disabled={disabled}>
         スキャン
       </button>
     </div>
@@ -77,41 +73,35 @@ describe('DuoPage', () => {
   };
 
   const mockProfile1 = {
+    ...createMockPrairieProfile('Test User 1'),
     basic: {
+      ...createMockPrairieProfile('Test User 1').basic,
       name: 'Test User 1',
       title: 'Engineer',
       company: 'Tech Corp',
       bio: 'Bio 1',
     },
     details: {
-      tags: [],
+      ...createMockPrairieProfile('Test User 1').details,
       skills: ['JavaScript'],
       interests: ['Web'],
-      certifications: [],
-      communities: [],
     },
-    social: {},
-    custom: {},
-    meta: {},
   };
 
   const mockProfile2 = {
+    ...createMockPrairieProfile('Test User 2'),
     basic: {
+      ...createMockPrairieProfile('Test User 2').basic,
       name: 'Test User 2',
       title: 'Designer',
       company: 'Design Inc',
       bio: 'Bio 2',
     },
     details: {
-      tags: [],
+      ...createMockPrairieProfile('Test User 2').details,
       skills: ['Figma'],
       interests: ['UI/UX'],
-      certifications: [],
-      communities: [],
     },
-    social: {},
-    custom: {},
-    meta: {},
   };
 
   const mockDiagnosisResult = {

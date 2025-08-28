@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import GroupPage from '../page';
 import { useRouter } from 'next/navigation';
+import { createLocalStorageMock, createMockPrairieProfile } from '@/test-utils/mocks';
 
 // Next.js navigationモック
 jest.mock('next/navigation', () => ({
@@ -22,12 +23,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 // localStorageのモック
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
+const localStorageMock = createLocalStorageMock();
 global.localStorage = localStorageMock as any;
 
 // API clientモック
@@ -47,13 +43,7 @@ jest.mock('@/components/prairie/PrairieCardInput', () => {
   return function MockPrairieCardInput({ onProfileLoaded }: any) {
     return (
       <div data-testid="prairie-card-input">
-        <button onClick={() => onProfileLoaded({
-          basic: { name: 'Test User' },
-          details: {},
-          social: {},
-          custom: {},
-          meta: {}
-        })}>
+        <button onClick={() => onProfileLoaded(createMockPrairieProfile('Test User'))}>
           スキャン
         </button>
       </div>
@@ -89,22 +79,19 @@ describe('GroupPage', () => {
   };
 
   const createMockProfile = (name: string) => ({
+    ...createMockPrairieProfile(name),
     basic: {
+      ...createMockPrairieProfile(name).basic,
       name,
       title: `${name} Title`,
       company: `${name} Company`,
       bio: `${name} Bio`,
     },
     details: {
-      tags: [],
+      ...createMockPrairieProfile(name).details,
       skills: [`${name}-skill`],
       interests: [`${name}-interest`],
-      certifications: [],
-      communities: [],
     },
-    social: {},
-    custom: {},
-    meta: {},
   });
 
   const mockProfiles = [

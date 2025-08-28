@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PrairieCardInput from '../PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
+import { createFramerMotionMock } from '@/test-utils/mocks';
 
 jest.mock('@/hooks/usePrairieCard');
 
@@ -34,13 +35,7 @@ jest.mock('@/hooks/useClipboardPaste', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-  },
-  AnimatePresence: ({ children }: any) => children,
-}));
+jest.mock('framer-motion', () => createFramerMotionMock());
 
 // Mock platform utils
 jest.mock('@/lib/platform', () => ({

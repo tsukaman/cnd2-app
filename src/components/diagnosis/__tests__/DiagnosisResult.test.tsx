@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { DiagnosisResult } from '../DiagnosisResult';
 import { DiagnosisResult as DiagnosisResultType } from '@/types';
+import { createLocalStorageMock, createFramerMotionMock, createMockPrairieProfile } from '@/test-utils/mocks';
 
 // Mock ShareButton component
 jest.mock('@/components/share/ShareButton', () => ({
@@ -17,13 +18,7 @@ jest.mock('@/components/share/QRCodeModal', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-  },
-  AnimatePresence: ({ children }: any) => children,
-}));
+jest.mock('framer-motion', () => createFramerMotionMock());
 
 // モックデータ
 const mockDuoDiagnosis: DiagnosisResultType = {
@@ -36,41 +31,25 @@ const mockDuoDiagnosis: DiagnosisResultType = {
   opportunities: ['機会1', '機会2', '機会3'],
   advice: 'アドバイス内容',
   participants: [
-    {
+    { 
+      ...createMockPrairieProfile('User1'),
       basic: {
+        ...createMockPrairieProfile('User1').basic,
         name: 'User1',
         title: 'Engineer',
         company: 'Tech Corp',
         bio: 'Bio1',
       },
-      details: {
-        tags: [],
-        skills: [],
-        interests: [],
-        certifications: [],
-        communities: [],
-      },
-      social: {},
-      custom: {},
-      meta: {},
     },
-    {
+    { 
+      ...createMockPrairieProfile('User2'),
       basic: {
+        ...createMockPrairieProfile('User2').basic,
         name: 'User2',
         title: 'Developer',
         company: 'Web Inc',
         bio: 'Bio2',
       },
-      details: {
-        tags: [],
-        skills: [],
-        interests: [],
-        certifications: [],
-        communities: [],
-      },
-      social: {},
-      custom: {},
-      meta: {},
     },
   ],
   createdAt: new Date().toISOString(),
@@ -81,23 +60,15 @@ const mockGroupDiagnosis: DiagnosisResultType = {
   mode: 'group',
   participants: [
     ...mockDuoDiagnosis.participants,
-    {
+    { 
+      ...createMockPrairieProfile('User3'),
       basic: {
+        ...createMockPrairieProfile('User3').basic,
         name: 'User3',
         title: 'Manager',
         company: 'Cloud Ltd',
         bio: 'Bio3',
       },
-      details: {
-        tags: [],
-        skills: [],
-        interests: [],
-        certifications: [],
-        communities: [],
-      },
-      social: {},
-      custom: {},
-      meta: {},
     },
   ],
 };
@@ -107,22 +78,7 @@ Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true
 Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 768 });
 
 // localStorage モック
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  
-  return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    clear: jest.fn(() => {
-      store = {};
-    }),
-    removeItem: jest.fn((key: string) => {
-      delete store[key];
-    }),
-  };
-})();
+const localStorageMock = createLocalStorageMock();
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,

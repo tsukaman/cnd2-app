@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import OptimizedImage from '../OptimizedImage';
+import { createFramerMotionMock } from '@/test-utils/mocks';
 
 // Mock next/image
 jest.mock('next/image', () => ({
@@ -19,13 +20,7 @@ jest.mock('next/image', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: any) => React.createElement('div', props, children),
-    img: ({ children, ...props }: any) => React.createElement('img', props, children),
-  },
-  AnimatePresence: ({ children }: any) => children,
-}));
+jest.mock('framer-motion', () => createFramerMotionMock());
 
 // Mock utils
 jest.mock('@/lib/utils/edge-compat', () => ({
