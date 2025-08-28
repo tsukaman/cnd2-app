@@ -87,11 +87,11 @@ export async function onRequestPost(context) {
       }).then(r => r.text())
     ]);
     
-    // HTMLを適切なサイズに制限（各50KB）
-    const trimmedHtml1 = html1.substring(0, 50000);
-    const trimmedHtml2 = html2.substring(0, 50000);
+    // HTMLを適切なサイズに制限（各50KB）- trimHtmlSafelyを使用
+    const trimmedHtml1 = trimHtmlSafely(html1, HTML_SIZE_LIMIT);
+    const trimmedHtml2 = trimHtmlSafely(html2, HTML_SIZE_LIMIT);
     
-    // 診断プロンプトを構築
+    // 診断プロンプトを構築 - トリミング済みHTMLを直接使用
     const prompt = buildDiagnosisPrompt(trimmedHtml1, trimmedHtml2);
     
     // OpenAI APIを直接呼び出し（fetch使用）
@@ -132,6 +132,13 @@ export async function onRequestPost(context) {
       id: generateId(),
       mode: 'duo',
       type: aiResult.diagnosis.type,
+      // 必須フィールド
+      compatibility: aiResult.diagnosis.score || 0,
+      summary: aiResult.diagnosis.message || '',
+      strengths: aiResult.diagnosis.conversationStarters || [],
+      opportunities: aiResult.diagnosis.conversationStarters || [],
+      advice: aiResult.diagnosis.hiddenGems || '',
+      // レガシーフィールド（後方互換性）
       score: aiResult.diagnosis.score,
       message: aiResult.diagnosis.message,
       conversationStarters: aiResult.diagnosis.conversationStarters,
@@ -239,10 +246,7 @@ function trimHtmlSafely(html, maxLength = 50000) {
 }
 
 function buildDiagnosisPrompt(html1, html2) {
-  // HTMLを構造を保持しながらサイズ制限
-  const trimmedHtml1 = trimHtmlSafely(html1, 50000);
-  const trimmedHtml2 = trimHtmlSafely(html2, 50000);
-  
+  // HTMLはすでにトリミング済みなので、そのまま使用
   return `
 あなたはCloudNative Days Tokyo 2025の相性診断AIです。
 以下の手順で2つのPrairie CardのHTMLから相性診断を実施してください。
@@ -333,10 +337,10 @@ function buildDiagnosisPrompt(html1, html2) {
 }
 
 【Prairie Card HTML 1】
-${trimmedHtml1}
+${html1}
 
 【Prairie Card HTML 2】
-${trimmedHtml2}
+${html2}
 `;
 }
 
