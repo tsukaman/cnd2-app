@@ -52,6 +52,12 @@ export interface DiagnosisResult {
   conversationStarters?: string[];
   hiddenGems?: string;
   shareTag?: string;
+  // V3 engine metadata
+  metadata?: {
+    engine?: string;
+    model?: string;
+    analysis?: any;
+  };
 }
 
 export interface CND2State {
