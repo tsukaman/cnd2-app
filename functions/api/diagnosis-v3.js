@@ -95,51 +95,91 @@ export async function onRequestPost(context) {
     const prompt = buildDiagnosisPrompt(trimmedHtml1, trimmedHtml2);
     
     // OpenAI APIを直接呼び出し（fetch使用）
+    const openaiPayload = {
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'あなたはCloudNative Days Tokyo 2025の相性診断を行う専門AIです。与えられたHTMLから情報を正確に抽出し、詳細な相性診断を提供してください。'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000,
+      response_format: { type: "json_object" }
+    };
+    
+    console.log('[Diagnosis v3] OpenAI payload size:', JSON.stringify(openaiPayload).length, 'bytes');
+    
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'あなたはCloudNative Days Tokyo 2025の相性診断を行う専門AIです。与えられたHTMLから情報を正確に抽出し、詳細な相性診断を提供してください。'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        response_format: { type: "json_object" }
-      })
+      body: JSON.stringify(openaiPayload)
     });
     
+    console.log('[Diagnosis v3] OpenAI API response status:', openaiResponse.status);
+    
     if (!openaiResponse.ok) {
-      console.error('[Diagnosis v3] OpenAI API error:', await openaiResponse.text());
-      throw new Error('AI診断に失敗しました');
+      const errorText = await openaiResponse.text();
+      console.error('[Diagnosis v3] OpenAI API error response:', errorText);
+      throw new Error(`OpenAI API error (${openaiResponse.status}): ${errorText.substring(0, 200)}`);
     }
     
     const openaiData = await openaiResponse.json();
-    const aiResult = JSON.parse(openaiData.choices[0].message.content);
+    console.log('[Diagnosis v3] OpenAI response structure:', {
+      hasChoices: !!openaiData.choices,
+      choicesLength: openaiData.choices?.length,
+      hasFirstChoice: !!openaiData.choices?.[0],
+      hasMessage: !!openaiData.choices?.[0]?.message,
+      hasContent: !!openaiData.choices?.[0]?.message?.content
+    });
     
-    // 診断結果を整形
+    if (!openaiData.choices || !openaiData.choices[0] || !openaiData.choices[0].message || !openaiData.choices[0].message.content) {
+      console.error('[Diagnosis v3] Invalid OpenAI response structure:', JSON.stringify(openaiData).substring(0, 500));
+      throw new Error('OpenAI応答の形式が不正です');
+    }
+    
+    let aiResult;
+    try {
+      aiResult = JSON.parse(openaiData.choices[0].message.content);
+      console.log('[Diagnosis v3] AI result parsed successfully');
+    } catch (parseError) {
+      console.error('[Diagnosis v3] Failed to parse AI response:', parseError);
+      console.error('[Diagnosis v3] Raw content:', openaiData.choices[0].message.content.substring(0, 500));
+      throw new Error('AI応答のJSON解析に失敗しました');
+    }
+    
+    // 診断結果を整形（安全なアクセス）
+    const diagnosis = aiResult.diagnosis || {};
+    const profiles = aiResult.extracted_profiles || {};
+    
+    console.log('[Diagnosis v3] Building diagnosis result with safe defaults');
+    
     const diagnosisResult = {
       id: generateId(),
       mode: 'duo',
-      type: aiResult.diagnosis.type,
-      score: aiResult.diagnosis.score,
-      message: aiResult.diagnosis.message,
-      conversationStarters: aiResult.diagnosis.conversationStarters,
-      hiddenGems: aiResult.diagnosis.hiddenGems,
-      shareTag: aiResult.diagnosis.shareTag,
+      type: diagnosis.type || 'Sidecar Container型',
+      // 必須フィールド（DiagnosisResult型準拠）
+      compatibility: typeof diagnosis.score === 'number' ? diagnosis.score : 50,
+      summary: diagnosis.message || '診断を完了しました。',
+      strengths: Array.isArray(diagnosis.conversationStarters) ? diagnosis.conversationStarters : ['技術的な共通点が見つかりました'],
+      opportunities: Array.isArray(diagnosis.conversationStarters) ? diagnosis.conversationStarters : ['新しい発見の機会があります'],
+      advice: diagnosis.hiddenGems || 'お互いの技術や興味について話してみましょう。',
+      // レガシーフィールド（後方互換性）
+      score: diagnosis.score,
+      message: diagnosis.message,
+      conversationStarters: diagnosis.conversationStarters,
+      hiddenGems: diagnosis.hiddenGems,
+      shareTag: diagnosis.shareTag || '#CNDxCnD',
       participants: [
-        createProfile(aiResult.extracted_profiles.person1),
-        createProfile(aiResult.extracted_profiles.person2)
+        createProfile(profiles.person1 || {}),
+        createProfile(profiles.person2 || {})
       ],
       createdAt: new Date().toISOString(),
       metadata: {
@@ -165,12 +205,34 @@ export async function onRequestPost(context) {
     );
     
   } catch (error) {
-    console.error('[Diagnosis v3] Error:', error);
+    console.error('[Diagnosis v3] Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    
+    // エラー種別に応じた適切なレスポンス
+    let statusCode = 500;
+    let userMessage = '診断中にエラーが発生しました';
+    
+    if (error.message.includes('OpenAI API')) {
+      statusCode = 503;
+      userMessage = 'AI診断サービスが一時的に利用できません';
+    } else if (error.message.includes('JSON')) {
+      statusCode = 502;
+      userMessage = 'AI応答の処理に失敗しました';
+    } else if (error.message.includes('Prairie Card')) {
+      statusCode = 400;
+      userMessage = 'Prairie Cardの取得に失敗しました';
+    }
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message || '診断中にエラーが発生しました'
+        error: userMessage,
+        // Cloudflare Workers環境ではprocess.envが未定義の可能性があるため安全にチェック
+        details: (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') ? error.message : undefined
       }),
-      { status: 500, headers: {
+      { status: statusCode, headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json'
       }}
@@ -350,8 +412,12 @@ function generateId() {
   return id;
 }
 
-// プロファイル作成関数
+// プロファイル作成関数（安全なnullチェック付き）
 function createProfile(extractedProfile) {
+  if (!extractedProfile) {
+    extractedProfile = {};
+  }
+  
   return {
     basic: {
       name: extractedProfile.name || '名前未設定',
@@ -360,8 +426,8 @@ function createProfile(extractedProfile) {
       bio: extractedProfile.summary || ''
     },
     details: {
-      skills: extractedProfile.skills || [],
-      interests: extractedProfile.interests || [],
+      skills: Array.isArray(extractedProfile.skills) ? extractedProfile.skills : [],
+      interests: Array.isArray(extractedProfile.interests) ? extractedProfile.interests : [],
       tags: [],
       certifications: [],
       communities: []
