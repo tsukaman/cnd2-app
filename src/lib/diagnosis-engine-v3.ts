@@ -8,6 +8,11 @@ import { DiagnosisResult, PrairieProfile } from '@/types';
 import { nanoid } from 'nanoid';
 import { DiagnosisCache } from './diagnosis-cache';
 
+// 定数定義
+const HTML_SIZE_LIMIT = 50000;
+const REGEX_MAX_LENGTH = 500;
+const META_ATTR_MAX_LENGTH = 200;
+
 export class SimplifiedDiagnosisEngine {
   private openai: OpenAI | null = null;
   private static instance: SimplifiedDiagnosisEngine;
@@ -93,7 +98,7 @@ export class SimplifiedDiagnosisEngine {
    * @param maxLength 最大文字数
    * @returns トリミングされたHTML
    */
-  private trimHtmlSafely(html: string, maxLength: number = 50000): string {
+  private trimHtmlSafely(html: string, maxLength: number = HTML_SIZE_LIMIT): string {
     if (html.length <= maxLength) {
       return html;
     }
@@ -139,8 +144,8 @@ export class SimplifiedDiagnosisEngine {
    */
   private buildDiagnosisPrompt(html1: string, html2: string): string {
     // HTMLを構造を保持しながらサイズ制限
-    const trimmedHtml1 = this.trimHtmlSafely(html1, 50000);
-    const trimmedHtml2 = this.trimHtmlSafely(html2, 50000);
+    const trimmedHtml1 = this.trimHtmlSafely(html1, HTML_SIZE_LIMIT);
+    const trimmedHtml2 = this.trimHtmlSafely(html2, HTML_SIZE_LIMIT);
     
     return `
 あなたはCloudNative Days Tokyo 2025の相性診断AIです。

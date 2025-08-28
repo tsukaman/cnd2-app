@@ -1,6 +1,12 @@
 /**
  * Simplified Prairie Card Parser for Cloudflare Workers
  */
+
+// 定数定義
+const COMPANY_NAME_MAX_LENGTH = 50;
+const REGEX_ATTR_MAX_LENGTH = 200;
+const CONTENT_MAX_LENGTH = 500;
+
 export class PrairieCardParser {
   async parseFromHTML(html: string): Promise<PrairieData> {
     // 簡易的なHTML解析（cheerioなしで動作）

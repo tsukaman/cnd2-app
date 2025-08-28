@@ -3,6 +3,11 @@
  * Prairie CardのHTML全体をAIに渡して診断を行う
  */
 
+// 定数定義
+const HTML_SIZE_LIMIT = 50000;
+const REGEX_MAX_LENGTH = 500;
+const META_ATTR_MAX_LENGTH = 200;
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   
