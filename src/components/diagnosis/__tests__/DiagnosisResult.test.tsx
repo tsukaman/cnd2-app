@@ -34,6 +34,20 @@ jest.mock('framer-motion', () => {
   };
 });
 
+// Mock lucide-react icons
+jest.mock('lucide-react', () => ({
+  Download: () => null,
+  RefreshCw: () => null,
+  Trophy: () => null,
+  MessageCircle: () => null,
+  Sparkles: () => null,
+  QrCode: () => null,
+  Copy: () => null,
+  Check: () => null,
+  Share2: () => null,
+  X: () => null,
+}));
+
 // モックデータ
 const mockDuoDiagnosis: DiagnosisResultType = {
   id: 'test-123',
