@@ -144,7 +144,11 @@ export class ErrorHandler {
       console.error('[CND² Error]', logEntry);
     } else {
       // 本番環境では簡潔なログ
-      console.error(`[CND²] ${error.code}: ${error.message}`);
+      if (typeof error === 'object' && error !== null && 'code' in error && 'message' in error) {
+        console.error(`[CND²] ${error.code}: ${error.message}`);
+      } else {
+        console.error('[CND²] エラー: ', error);
+      }
       // Send to Sentry if configured
       if (typeof window !== 'undefined') {
         const win = window as Window & { Sentry?: { captureException: (error: unknown, context?: unknown) => void } };

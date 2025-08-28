@@ -55,9 +55,11 @@ export class PrairieCardParser {
       
       // 会社名の抽出パターン（文字数制限付きでReDoS対策）
       const companyPatterns = [
-        /(?:会社|Company|Corp|Inc|Ltd|株式会社)[:：]?\s*([^。、\n|]{1,100})/,
+        // @Company形式を最初にチェック（優先度高）
+        /@\s*([^。、\n|]{1,100}?)(?:\s*[|]|$)/,  // @の後から|または文末まで
         /(?:所属|勤務|在籍)[:：]?\s*([^。、\n|]{1,100})/,
-        /@\s*([^。、\n\s|]{1,50}(?:\s+[^。、\n\s|]{1,50}){0,3})/  // @Company形式
+        // 会社名キーワードが含まれるパターン（キーワードを含む部分のみ取得）
+        /(?:at |@ )?([\w\s]{1,30}(?:会社|Company|Corp|Inc|Ltd|株式会社)\.?)(?:\s*[|]|$)/
       ];
       
       for (const pattern of companyPatterns) {

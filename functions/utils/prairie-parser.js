@@ -162,9 +162,11 @@ function extractProfileFromMeta(html) {
   
   // Extract company from various patterns (with length limits for ReDoS protection)
   const companyPatterns = [
-    /(?:会社|Company|Corp|Inc|Ltd|株式会社)[：:]?\s*([^。、\n|]{1,100})/,
+    // @Company format checked first (higher priority)
+    /@\s*([^。、\n|]{1,100}?)(?:\s*[|]|$)/,  // From @ to | or end of string
     /(?:所属|勤務|在籍)[：:]?\s*([^。、\n|]{1,100})/,
-    /@\s*([^。、\n\s|]{1,50}(?:\s+[^。、\n\s|]{1,50}){0,3})/ // @Company format
+    // Pattern for company keywords (captures only the company name part)
+    /(?:at |@ )?([\w\s]{1,30}(?:会社|Company|Corp|Inc|Ltd|株式会社)\.?)(?:\s*[|]|$)/
   ];
   
   for (const pattern of companyPatterns) {
