@@ -26,7 +26,7 @@ export class SimplifiedDiagnosisEngine {
       const apiKey = process.env.OPENAI_API_KEY;
       if (apiKey && apiKey !== 'your_openai_api_key_here') {
         this.openai = new OpenAI({ apiKey });
-        console.log('[CND²] SimplifiedDiagnosisEngine: OpenAI initialized with gpt-4o');
+        console.log('[CND²] SimplifiedDiagnosisEngine: OpenAI initialized with gpt-4o-mini');
       } else {
         console.warn('[CND²] OpenAI APIキーが設定されていません。');
       }
@@ -267,12 +267,12 @@ ${trimmedHtml2}
         this.extractDisplayName(html2)
       ];
       
-      console.log('[CND²] AI診断を実行中 (gpt-4o)...');
+      console.log('[CND²] AI診断を実行中 (gpt-4o-mini)...');
       
       const prompt = this.buildDiagnosisPrompt(html1, html2);
       
       const completion = await this.openai!.chat.completions.create({
-        model: 'gpt-4o-mini',  // より高性能なモデルを使用
+        model: 'gpt-4o-mini',  // コスト効率的で高速なモデルを使用
         messages: [
           {
             role: 'system',
