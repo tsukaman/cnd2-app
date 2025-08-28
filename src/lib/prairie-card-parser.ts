@@ -53,13 +53,14 @@ export class PrairieCardParser {
       
       const result: { company?: string; bio?: string } = {};
       
-      // 会社名の抽出パターン（文字数制限付きでReDoS対策）
+      // 会社名の抽出パターン（ReDoS対策済み）
       const companyPatterns = [
-        // @Company形式を最初にチェック（優先度高）
-        /@\s*([^。、\n|]{1,100}?)(?:\s*[|]|$)/,  // @の後から|または文末まで
-        /(?:所属|勤務|在籍)[:：]?\s*([^。、\n|]{1,100})/,
-        // 会社名キーワードが含まれるパターン（キーワードを含む部分のみ取得）
-        /(?:at |@ )?([\w\s]{1,30}(?:会社|Company|Corp|Inc|Ltd|株式会社)\.?)(?:\s*[|]|$)/
+        // @Company形式を最初にチェック（固定長で安全）
+        /@\s{0,3}([^。、\n|]{1,50})(?:[|]|$)/,  // スペース数を固定
+        // 所属等のキーワード後の会社名
+        /(?:所属|勤務|在籍)[:：]?\s{0,3}([^。、\n|]{1,50})/,
+        // 会社名キーワードを含むパターン（シンプルなマッチング）
+        /([\w\s]{1,30}(?:会社|Company|Corp|Inc|Ltd|株式会社))/
       ];
       
       for (const pattern of companyPatterns) {
@@ -151,12 +152,15 @@ export class PrairieCardParser {
   }
 
   private extractMetaContent(html: string, property: string): string | undefined {
-    // og:propertyまたはnameでメタタグを検索（文字数制限付きでReDoS対策）
+    // プロパティ名を安全にエスケープ（ReDoS対策）
+    const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(':', '\\:');
+    
+    // 固定長のパターンを使用してパフォーマンスを最適化
     const patterns = [
-      new RegExp(`<meta[^>]{0,500}property=["']${property.replace(':', '\\:')}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
-      new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}property=["']${property.replace(':', '\\:')}["']`, 'i'),
-      new RegExp(`<meta[^>]{0,500}name=["']${property}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
-      new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}name=["']${property}["']`, 'i')
+      new RegExp(`<meta[^>]{0,200}property=["']${escapedProperty}["'][^>]{0,200}content=["']([^"']{0,500})["']`, 'i'),
+      new RegExp(`<meta[^>]{0,200}content=["']([^"']{0,500})["'][^>]{0,200}property=["']${escapedProperty}["']`, 'i'),
+      new RegExp(`<meta[^>]{0,200}name=["']${escapedProperty}["'][^>]{0,200}content=["']([^"']{0,500})["']`, 'i'),
+      new RegExp(`<meta[^>]{0,200}content=["']([^"']{0,500})["'][^>]{0,200}name=["']${escapedProperty}["']`, 'i')
     ];
     
     for (const pattern of patterns) {

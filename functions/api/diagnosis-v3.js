@@ -186,7 +186,58 @@ export async function onRequestOptions(context) {
 }
 
 // 診断プロンプト生成関数
+/**
+ * HTMLを構造を保持しながらサイズ制限する
+ * @param {string} html 元のHTML
+ * @param {number} maxLength 最大文字数
+ * @returns {string} トリミングされたHTML
+ */
+function trimHtmlSafely(html, maxLength = 50000) {
+  if (html.length <= maxLength) {
+    return html;
+  }
+
+  // 重要なセクションを優先的に保持
+  const importantPatterns = [
+    /<head[^>]*>([\s\S]*?)<\/head>/i,
+    /<meta[^>]*og:[^>]*>/gi,
+    /<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi,
+    /<(title|name|role|company|skill|interest)[^>]*>([\s\S]*?)<\/\1>/gi
+  ];
+
+  let extractedContent = '';
+  for (const pattern of importantPatterns) {
+    const matches = html.match(pattern);
+    if (matches) {
+      extractedContent += matches.join('\n');
+      if (extractedContent.length >= maxLength) {
+        break;
+      }
+    }
+  }
+
+  // 残りのコンテンツを追加（タグの整合性を保つ）
+  if (extractedContent.length < maxLength) {
+    const remaining = maxLength - extractedContent.length;
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch && bodyMatch[1]) {
+      const bodyContent = bodyMatch[1].substring(0, remaining);
+      // 最後の完全なタグまでで切る
+      const lastCompleteTag = bodyContent.lastIndexOf('>');
+      if (lastCompleteTag > 0) {
+        extractedContent += bodyContent.substring(0, lastCompleteTag + 1);
+      }
+    }
+  }
+
+  return extractedContent || html.substring(0, maxLength);
+}
+
 function buildDiagnosisPrompt(html1, html2) {
+  // HTMLを構造を保持しながらサイズ制限
+  const trimmedHtml1 = trimHtmlSafely(html1, 50000);
+  const trimmedHtml2 = trimHtmlSafely(html2, 50000);
+  
   return `
 あなたはCloudNative Days Tokyo 2025の相性診断AIです。
 以下の手順で2つのPrairie CardのHTMLから相性診断を実施してください。
@@ -277,10 +328,10 @@ function buildDiagnosisPrompt(html1, html2) {
 }
 
 【Prairie Card HTML 1】
-${html1}
+${trimmedHtml1}
 
 【Prairie Card HTML 2】
-${html2}
+${trimmedHtml2}
 `;
 }
 

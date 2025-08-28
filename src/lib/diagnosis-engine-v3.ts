@@ -88,12 +88,59 @@ export class SimplifiedDiagnosisEngine {
   }
 
   /**
+   * HTMLを構造を保持しながらサイズ制限する
+   * @param html 元のHTML
+   * @param maxLength 最大文字数
+   * @returns トリミングされたHTML
+   */
+  private trimHtmlSafely(html: string, maxLength: number = 50000): string {
+    if (html.length <= maxLength) {
+      return html;
+    }
+
+    // 重要なセクションを優先的に保持
+    const importantSections = [
+      /<head[^>]*>([\s\S]*?)<\/head>/i,
+      /<meta[^>]*og:[^>]*>/gi,
+      /<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi,
+      /<(title|name|role|company|skill|interest)[^>]*>([\s\S]*?)<\/\1>/gi
+    ];
+
+    let extractedContent = '';
+    for (const pattern of importantSections) {
+      const matches = html.match(pattern);
+      if (matches) {
+        extractedContent += matches.join('\n');
+        if (extractedContent.length >= maxLength) {
+          break;
+        }
+      }
+    }
+
+    // 残りのコンテンツを追加（タグの整合性を保つ）
+    if (extractedContent.length < maxLength) {
+      const remaining = maxLength - extractedContent.length;
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      if (bodyMatch && bodyMatch[1]) {
+        const bodyContent = bodyMatch[1].substring(0, remaining);
+        // 最後の完全なタグまでで切る
+        const lastCompleteTag = bodyContent.lastIndexOf('>');
+        if (lastCompleteTag > 0) {
+          extractedContent += bodyContent.substring(0, lastCompleteTag + 1);
+        }
+      }
+    }
+
+    return extractedContent || html.substring(0, maxLength);
+  }
+
+  /**
    * 詳細な診断プロンプトを生成
    */
   private buildDiagnosisPrompt(html1: string, html2: string): string {
-    // HTMLを適切なサイズに制限（各50KB程度）
-    const trimmedHtml1 = html1.substring(0, 50000);
-    const trimmedHtml2 = html2.substring(0, 50000);
+    // HTMLを構造を保持しながらサイズ制限
+    const trimmedHtml1 = this.trimHtmlSafely(html1, 50000);
+    const trimmedHtml2 = this.trimHtmlSafely(html2, 50000);
     
     return `
 あなたはCloudNative Days Tokyo 2025の相性診断AIです。
