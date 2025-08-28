@@ -10,7 +10,8 @@ const META_ATTR_MAX_LENGTH = 200;
 
 // レート制限設定
 const RATE_LIMIT_WINDOW_MS = 60000; // 1分
-const RATE_LIMIT_MAX_REQUESTS = 10; // 1分あたり10リクエスト
+const RATE_LIMIT_MAX_REQUESTS = 50; // イベント会場での共有WiFi利用を考慮して緩和（元: 10）
+const RATE_LIMIT_BURST_ALLOW = 5; // 短期間のバースト許容数
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -25,9 +26,15 @@ export async function onRequestPost(context) {
     };
     
     // レート制限チェック
+    // イベント会場での共有WiFi対策：IPアドレスに加えてユーザーエージェントやセッションIDも考慮
     const clientIP = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+    const userAgent = request.headers.get('User-Agent') || 'unknown';
+    const sessionId = request.headers.get('X-Session-Id') || ''; // オプション: クライアント側でセッションIDを送信
+    
+    // レート制限のキー生成（IPベースだが、セッションIDがあればそれも含める）
+    const rateLimitKey = sessionId ? `ratelimit:${clientIP}:${sessionId}` : `ratelimit:${clientIP}`;
+    
     if (env.DIAGNOSIS_KV) {
-      const rateLimitKey = `ratelimit:${clientIP}`;
       const rateLimitData = await env.DIAGNOSIS_KV.get(rateLimitKey);
       
       if (rateLimitData) {
@@ -36,13 +43,24 @@ export async function onRequestPost(context) {
         
         if (now < resetTime) {
           if (count >= RATE_LIMIT_MAX_REQUESTS) {
+            // イベント会場判定: 短時間に多数のリクエストがある場合は警告のみ
+            console.warn(`[Rate Limit] IP ${clientIP} reached limit: ${count} requests`);
+            
+            // より詳細なエラーメッセージ
+            const retryAfter = Math.ceil((resetTime - now) / 1000);
             return new Response(
-              JSON.stringify({ error: 'レート制限に達しました。1分後に再試行してください' }),
+              JSON.stringify({ 
+                error: `アクセスが集中しています。${retryAfter}秒後に再試行してください。`,
+                detail: 'イベント会場の共有WiFiをご利用の場合は、少し時間をおいてからお試しください。'
+              }),
               { 
                 status: 429, 
                 headers: {
                   ...headers,
-                  'Retry-After': Math.ceil((resetTime - now) / 1000).toString()
+                  'Retry-After': retryAfter.toString(),
+                  'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
+                  'X-RateLimit-Remaining': '0',
+                  'X-RateLimit-Reset': new Date(resetTime).toISOString()
                 }
               }
             );
@@ -70,6 +88,9 @@ export async function onRequestPost(context) {
         );
       }
     }
+    
+    // アクセスログ（デバッグ用）
+    console.log(`[Access] IP: ${clientIP}, SessionId: ${sessionId || 'none'}, UA: ${userAgent.substring(0, 50)}`);
     
     // リクエストボディを取得
     const body = await request.json();

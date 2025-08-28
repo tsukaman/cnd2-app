@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { DiagnosisResult } from '@/types';
-import { apiClient } from '@/lib/api-client';
+import { apiClientV3 } from '@/lib/api-client-v3';
 
 export interface UseDiagnosisV3Result {
   diagnose: (urls: [string, string]) => Promise<void>;
@@ -27,26 +27,10 @@ export function useDiagnosisV3(): UseDiagnosisV3Result {
 
     try {
       console.log('[useDiagnosisV3] Starting diagnosis with URLs:', urls);
+      console.log('[useDiagnosisV3] Session ID:', apiClientV3.session.getId());
       
-      // 本番環境と開発環境で異なるエンドポイントを使用
-      const endpoint = process.env.NODE_ENV === 'production' 
-        ? '/api/diagnosis-v3'  // Cloudflare Pages Function
-        : '/api/diagnosis-v3'; // Next.js API Route
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ urls }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '診断に失敗しました');
-      }
-
-      const diagnosisResult = await response.json() as DiagnosisResult;
+      // v3 APIクライアントを使用（セッションID付きリクエスト）
+      const diagnosisResult = await apiClientV3.diagnosis.generateFromUrls(urls);
       
       console.log('[useDiagnosisV3] Diagnosis successful:', {
         id: diagnosisResult.id,
