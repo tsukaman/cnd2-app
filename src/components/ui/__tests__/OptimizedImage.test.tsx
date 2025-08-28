@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import OptimizedImage from '../OptimizedImage';
-import { createFramerMotionMock } from '@/test-utils/mocks';
+import { setupIntersectionObserverMock, MockIntersectionObserver } from '@/test-utils/mocks';
 
 // Mock next/image
 jest.mock('next/image', () => ({
@@ -20,35 +20,24 @@ jest.mock('next/image', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => createFramerMotionMock());
+jest.mock('framer-motion', () => {
+  const React = require('react');
+  return {
+    motion: {
+      div: ({ children, ...props }: any) => React.createElement('div', props, children),
+      img: ({ children, ...props }: any) => React.createElement('img', props, children),
+    },
+    AnimatePresence: ({ children }: any) => children,
+  };
+});
 
 // Mock utils
 jest.mock('@/lib/utils/edge-compat', () => ({
   toBase64: jest.fn(() => 'data:image/svg+xml;base64,test'),
 }));
 
-// Intersection Observer モック with proper typing
-class MockIntersectionObserver implements IntersectionObserver {
-  readonly root: Element | null = null;
-  readonly rootMargin: string = '';
-  readonly thresholds: ReadonlyArray<number> = [];
-
-  constructor(
-    private callback: IntersectionObserverCallback,
-    private options?: IntersectionObserverInit
-  ) {}
-
-  observe = jest.fn();
-  unobserve = jest.fn();
-  disconnect = jest.fn();
-  takeRecords = jest.fn().mockReturnValue([]);
-}
-
-const mockIntersectionObserver = jest.fn().mockImplementation((callback, options) => {
-  return new MockIntersectionObserver(callback, options);
-});
-
-window.IntersectionObserver = mockIntersectionObserver as typeof IntersectionObserver;
+// Setup IntersectionObserver モック
+const mockIntersectionObserver = setupIntersectionObserverMock();
 
 describe('OptimizedImage', () => {
   const defaultProps = {

@@ -49,6 +49,19 @@ export class MockIntersectionObserver implements IntersectionObserver {
 }
 
 /**
+ * Setup IntersectionObserver mock with proper typing
+ */
+export const setupIntersectionObserverMock = () => {
+  const mockIntersectionObserver = jest.fn().mockImplementation((callback, options) => {
+    return new MockIntersectionObserver(callback, options);
+  });
+  
+  window.IntersectionObserver = mockIntersectionObserver as unknown as typeof IntersectionObserver;
+  
+  return mockIntersectionObserver;
+}
+
+/**
  * Create mock for framer-motion
  */
 export const createFramerMotionMock = () => ({

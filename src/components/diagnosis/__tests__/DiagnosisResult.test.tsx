@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { DiagnosisResult } from '../DiagnosisResult';
 import { DiagnosisResult as DiagnosisResultType } from '@/types';
-import { createLocalStorageMock, createFramerMotionMock, createMockPrairieProfile } from '@/test-utils/mocks';
+import { setupGlobalMocks, createMockPrairieProfile } from '@/test-utils/mocks';
 
 // Mock ShareButton component
 jest.mock('@/components/share/ShareButton', () => ({
@@ -18,7 +18,16 @@ jest.mock('@/components/share/QRCodeModal', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => createFramerMotionMock());
+jest.mock('framer-motion', () => {
+  const React = require('react');
+  return {
+    motion: {
+      div: ({ children, ...props }: any) => React.createElement('div', props, children),
+      button: ({ children, ...props }: any) => React.createElement('button', props, children),
+    },
+    AnimatePresence: ({ children }: any) => children,
+  };
+});
 
 // モックデータ
 const mockDuoDiagnosis: DiagnosisResultType = {
@@ -77,20 +86,8 @@ const mockGroupDiagnosis: DiagnosisResultType = {
 Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1024 });
 Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 768 });
 
-// localStorage モック
-const localStorageMock = createLocalStorageMock();
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-  writable: true,
-});
-
-// Clipboard API モック
-Object.assign(navigator, {
-  clipboard: {
-    writeText: jest.fn(),
-  },
-});
+// Setup global mocks (localStorage, IntersectionObserver, Clipboard)
+const { localStorage: localStorageMock } = setupGlobalMocks();
 
 // Mock Confetti component
 jest.mock('react-confetti', () => ({
