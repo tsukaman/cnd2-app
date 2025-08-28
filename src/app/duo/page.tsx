@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -8,24 +8,55 @@ import { useRouter } from 'next/navigation';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
+import { useDiagnosisV3 } from '@/hooks/useDiagnosisV3';
 import type { PrairieProfile } from '@/types';
+
+// 環境変数でエンジンバージョンを切り替え
+const USE_V3_ENGINE = process.env.NEXT_PUBLIC_USE_DIAGNOSIS_V3 === 'true';
 
 export default function DuoPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
+  const [prairieUrls, setPrairieUrls] = useState<[string, string]>(['', '']);
   const { loading: parsingLoading, error: parseError } = usePrairieCard();
   const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
+  const { diagnose: diagnoseV3, isLoading: v3Loading, error: v3Error, result: v3Result } = useDiagnosisV3();
+
+  // V3エンジン使用時の設定
+  const isLoading = USE_V3_ENGINE ? (parsingLoading || v3Loading) : (parsingLoading || diagnosisLoading);
+  const error = USE_V3_ENGINE ? (parseError || v3Error) : (parseError || diagnosisError);
+
+  // V3の結果が返ってきたら遷移
+  useEffect(() => {
+    if (USE_V3_ENGINE && v3Result) {
+      // Store result in localStorage
+      localStorage.setItem(`diagnosis-${v3Result.id}`, JSON.stringify(v3Result));
+      // Navigate to home with result in state
+      router.push(`/?result=${v3Result.id}&mode=duo`);
+    }
+  }, [v3Result, router]);
 
   const handleProfileParsed = (profile: PrairieProfile, index: 0 | 1) => {
     const newProfiles = [...profiles] as [PrairieProfile | null, PrairieProfile | null];
     newProfiles[index] = profile;
     setProfiles(newProfiles);
+    
+    // V3エンジンの場合、URLも抽出して保存
+    if (USE_V3_ENGINE && profile.meta?.sourceUrl) {
+      const newUrls = [...prairieUrls] as [string, string];
+      newUrls[index] = profile.meta.sourceUrl;
+      setPrairieUrls(newUrls);
+    }
   };
 
   const handleNextStep = () => {
-    if (step === 1 && profiles[0]) {
-      setStep(2);
+    if (step === 1) {
+      // V3エンジンの場合はURL、従来エンジンの場合はprofileをチェック
+      const canProceed = USE_V3_ENGINE ? prairieUrls[0] : profiles[0];
+      if (canProceed) {
+        setStep(2);
+      }
     }
   };
 
@@ -36,235 +67,193 @@ export default function DuoPage() {
   };
 
   const handleStartDiagnosis = async () => {
-    if (profiles[0] && profiles[1]) {
-      const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
-      if (result) {
-        // Store result in localStorage for now (until deployment is fixed)
-        localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
-        // Navigate to home with result in state
-        router.push(`/?result=${result.id}&mode=duo`);
+    if (USE_V3_ENGINE) {
+      // V3エンジン: URLを直接渡す
+      if (prairieUrls[0] && prairieUrls[1]) {
+        await diagnoseV3(prairieUrls);
+      }
+    } else {
+      // 従来エンジン: パース済みのprofileを渡す
+      if (profiles[0] && profiles[1]) {
+        const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
+        if (result) {
+          localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
+          router.push(`/?result=${result.id}&mode=duo`);
+        }
       }
     }
   };
 
-  const isLoading = parsingLoading || diagnosisLoading;
-  const error = parseError || diagnosisError;
+  // 診断開始可能かどうかの判定
+  const canStartDiagnosis = USE_V3_ENGINE 
+    ? (prairieUrls[0] && prairieUrls[1])  // V3: URLがあればOK
+    : (profiles[0] && profiles[1]);        // 従来: profileが必要
 
   return (
-    <div className="min-h-screen stars-bg">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-black p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* ヘッダー */}
+        <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="mb-8"
         >
-          <Link href="/" className="inline-block mb-4">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-2 font-medium"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>ホームに戻る</span>
-            </motion.div>
+          <Link href="/" className="inline-flex items-center text-white hover:text-cyan-400 transition-colors mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            <span>ホームに戻る</span>
           </Link>
           
-          <h1 className="text-4xl font-bold gradient-text mb-2">
-            2人の相性診断
-          </h1>
-          <p className="text-gray-400 flex items-center justify-center gap-2">
-            <Users className="w-5 h-5" />
-            Prairie Cardから相性を診断します
-          </p>
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center mb-4">
+              <Users className="w-12 h-12 text-cyan-400" />
+            </div>
+            <h1 className="text-4xl font-bold text-white mb-2">
+              2人診断モード
+            </h1>
+            <p className="text-gray-400">
+              2つのPrairie Cardから相性を診断します
+            </p>
+            {USE_V3_ENGINE && (
+              <p className="text-xs text-cyan-400 mt-2">
+                🚀 新エンジンv3使用中（AI直接解析）
+              </p>
+            )}
+          </div>
         </motion.div>
 
-        {/* Progress Indicator */}
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="flex items-center justify-between">
-            <div className={`flex-1 h-2 bg-gray-200 rounded-full overflow-hidden`}>
-              <motion.div
-                className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
-                initial={{ width: '0%' }}
-                animate={{ width: step === 1 ? '50%' : '100%' }}
-                transition={{ duration: 0.5 }}
-              />
+        {/* ステップインジケータ */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center space-x-4">
+            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+              step >= 1 ? 'bg-cyan-500' : 'bg-gray-700'
+            }`}>
+              <span className="text-white font-bold">1</span>
             </div>
-          </div>
-          <div className="flex justify-between mt-2">
-            <span className={`text-sm ${step >= 1 ? 'text-blue-400 font-semibold' : 'text-gray-500'}`}>
-              1人目のカード
-            </span>
-            <span className={`text-sm ${step >= 2 ? 'text-blue-400 font-semibold' : 'text-gray-500'}`}>
-              2人目のカード
-            </span>
+            <div className={`w-20 h-0.5 ${step >= 2 ? 'bg-cyan-500' : 'bg-gray-700'}`} />
+            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+              step >= 2 ? 'bg-cyan-500' : 'bg-gray-700'
+            }`}>
+              <span className="text-white font-bold">2</span>
+            </div>
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* メインコンテンツ */}
         <AnimatePresence mode="wait">
-          {step === 1 && (
+          {step === 1 ? (
             <motion.div
               key="step1"
-              initial={{ opacity: 0, x: 100 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              className="max-w-2xl mx-auto"
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
             >
-              <div className="card-dark p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <span className="text-2xl">👤</span>
+              <div className="glass-effect rounded-3xl p-8">
+                <h2 className="text-2xl font-bold text-white mb-4">
                   1人目のPrairie Card
                 </h2>
-                
-                <PrairieCardInput
+                <PrairieCardInput 
                   onProfileLoaded={(profile) => handleProfileParsed(profile, 0)}
+                  // @ts-ignore - 互換性のため一時的に無視
                 />
-                
-                {profiles[0] && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-green-500/10 rounded-lg border border-green-500/30 backdrop-blur-sm"
-                  >
-                    <p className="text-green-400 font-semibold">
-                      ✅ {profiles[0].basic.name}さんのカードを読み込みました
+                {profiles[0] && !USE_V3_ENGINE && (
+                  <div className="mt-4 p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <p className="text-green-400">
+                      ✓ {profiles[0].basic.name}さんのプロフィールを読み込みました
                     </p>
-                  </motion.div>
+                  </div>
                 )}
-                
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200"
-                  >
-                    <p className="text-red-600">{error}</p>
-                  </motion.div>
+                {USE_V3_ENGINE && prairieUrls[0] && (
+                  <div className="mt-4 p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <p className="text-green-400">
+                      ✓ Prairie Card URLを設定しました
+                    </p>
+                  </div>
                 )}
-                
-                <div className="mt-8 flex justify-end">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleNextStep}
-                    disabled={!profiles[0] || isLoading}
-                    className={`px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all ${
-                      profiles[0] && !isLoading
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    次へ
-                    <ArrowRight className="w-5 h-5" />
-                  </motion.button>
-                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleNextStep}
+                  disabled={USE_V3_ENGINE ? !prairieUrls[0] : !profiles[0]}
+                  className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span>次へ</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
             </motion.div>
-          )}
-          
-          {step === 2 && (
+          ) : (
             <motion.div
               key="step2"
-              initial={{ opacity: 0, x: 100 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              className="max-w-2xl mx-auto"
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
             >
-              <div className="card-dark p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <span className="text-2xl">👥</span>
+              <div className="glass-effect rounded-3xl p-8">
+                <h2 className="text-2xl font-bold text-white mb-4">
                   2人目のPrairie Card
                 </h2>
-                
-                <PrairieCardInput
+                <PrairieCardInput 
                   onProfileLoaded={(profile) => handleProfileParsed(profile, 1)}
+                  // @ts-ignore - 互換性のため一時的に無視
                 />
-                
-                {profiles[1] && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
-                  >
-                    <p className="text-green-800 font-semibold">
-                      ✅ {profiles[1].basic.name}さんのカードを読み込みました
+                {profiles[1] && !USE_V3_ENGINE && (
+                  <div className="mt-4 p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <p className="text-green-400">
+                      ✓ {profiles[1].basic.name}さんのプロフィールを読み込みました
                     </p>
-                  </motion.div>
+                  </div>
                 )}
-                
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200"
-                  >
-                    <p className="text-red-600">{error}</p>
-                  </motion.div>
+                {USE_V3_ENGINE && prairieUrls[1] && (
+                  <div className="mt-4 p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <p className="text-green-400">
+                      ✓ Prairie Card URLを設定しました
+                    </p>
+                  </div>
                 )}
-                
-                <div className="mt-8 flex justify-between">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handlePrevStep}
-                    disabled={isLoading}
-                    className="px-6 py-3 rounded-full font-semibold flex items-center gap-2 border-2 border-gray-300 hover:border-gray-400 transition-all"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                    戻る
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleStartDiagnosis}
-                    disabled={!profiles[1] || isLoading}
-                    className={`px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all ${
-                      profiles[1] && !isLoading
-                        ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white hover:shadow-lg'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {diagnosisLoading ? (
-                      '診断中...'
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5" />
-                        診断開始
-                      </>
-                    )}
-                  </motion.button>
-                </div>
+              </div>
+
+              <div className="flex justify-between">
+                <button
+                  onClick={handlePrevStep}
+                  className="btn-secondary flex items-center space-x-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>戻る</span>
+                </button>
+
+                <button
+                  onClick={handleStartDiagnosis}
+                  disabled={!canStartDiagnosis || isLoading}
+                  className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                      <span>診断中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>診断開始</span>
+                    </>
+                  )}
+                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        
-        {/* Summary Card (Always Visible) */}
-        {(profiles[0] || profiles[1]) && (
+
+        {/* エラー表示 */}
+        {error && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto mt-8"
+            className="mt-6 p-4 bg-red-500/10 rounded-lg border border-red-500/20"
           >
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-semibold mb-4">診断対象</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className={`p-4 rounded-lg ${profiles[0] ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
-                  <p className="text-sm text-gray-600 mb-1">1人目</p>
-                  <p className="font-semibold">
-                    {profiles[0] ? profiles[0].basic.name : '未設定'}
-                  </p>
-                </div>
-                <div className={`p-4 rounded-lg ${profiles[1] ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50 border border-gray-200'}`}>
-                  <p className="text-sm text-gray-600 mb-1">2人目</p>
-                  <p className="font-semibold">
-                    {profiles[1] ? profiles[1].basic.name : '未設定'}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p className="text-red-400">エラー: {error}</p>
           </motion.div>
         )}
       </div>
