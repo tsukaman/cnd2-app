@@ -8,13 +8,18 @@ import { setupGlobalMocks, createMockPrairieProfile } from '@/test-utils/mocks';
 // Mock ShareButton component
 jest.mock('@/components/share/ShareButton', () => ({
   __esModule: true,
-  default: ({ result }: any) => <button>シェア</button>,
+  default: ({ result }: any) => {
+    const React = require('react');
+    return React.createElement('button', null, 'シェア');
+  },
 }));
 
 // Mock QRCodeModal component  
 jest.mock('@/components/share/QRCodeModal', () => ({
-  QRCodeModal: ({ isOpen, onClose, url }: any) => 
-    isOpen ? <div data-testid="qr-modal">{url}</div> : null,
+  QRCodeModal: ({ isOpen, onClose, url }: any) => {
+    const React = require('react');
+    return isOpen ? React.createElement('div', { 'data-testid': 'qr-modal' }, url) : null;
+  },
 }));
 
 // Mock framer-motion
@@ -92,7 +97,10 @@ const { localStorage: localStorageMock } = setupGlobalMocks();
 // Mock Confetti component
 jest.mock('react-confetti', () => ({
   __esModule: true,
-  default: () => <div data-testid="confetti" />,
+  default: () => {
+    const React = require('react');
+    return React.createElement('div', { 'data-testid': 'confetti' });
+  },
 }));
 
 describe('DiagnosisResult', () => {
