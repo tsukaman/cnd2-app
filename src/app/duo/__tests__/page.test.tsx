@@ -150,43 +150,45 @@ describe('DuoPage', () => {
   });
 
   describe('プロファイル読み込み', () => {
-    it('Prairie CardのURLからプロファイルを取得する', async () => {
-      (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce({
-        success: true,
-        data: mockProfile1,
-      });
-
+    it('Prairie Cardのプロファイル読み込みが動作する', async () => {
       render(<DuoPage />);
       
+      // モックされたPrairieCardInputのスキャンボタンをクリック
       const scanButton = screen.getAllByText('スキャン')[0];
       fireEvent.click(scanButton);
 
+      // プロファイルが読み込まれたことを確認
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledWith('https://prairie.cards/test1');
+        expect(screen.getByText('Test Userさんのカードを読み込みました')).toBeInTheDocument();
       });
     });
 
     it('2人分のプロファイルが読み込まれたら診断ボタンが有効になる', async () => {
-      (apiClient.prairie.fetch as jest.Mock)
-        .mockResolvedValueOnce({ success: true, data: mockProfile1 })
-        .mockResolvedValueOnce({ success: true, data: mockProfile2 });
-
       render(<DuoPage />);
       
       // 1人目のスキャン
-      fireEvent.click(screen.getAllByText('スキャン')[0]);
+      const scanButton1 = screen.getAllByText('スキャン')[0];
+      fireEvent.click(scanButton1);
+      
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('Test Userさんのカードを読み込みました')).toBeInTheDocument();
       });
 
-      // 2人目のスキャン  
-      fireEvent.click(screen.getAllByText('スキャン')[1]);
+      // 次へボタンをクリックして2人目の入力画面へ
+      const nextButton = screen.getByRole('button', { name: /次へ/ });
+      fireEvent.click(nextButton);
+
+      // 2人目のスキャン
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(2);
+        const scanButton2 = screen.getAllByText('スキャン')[0];
+        fireEvent.click(scanButton2);
       });
 
-      const startButton = screen.getByRole('button', { name: /診断を開始/ });
-      expect(startButton).toBeEnabled();
+      // 診断を開始ボタンが有効になることを確認
+      await waitFor(() => {
+        const startButton = screen.getByRole('button', { name: /診断を開始/ });
+        expect(startButton).toBeEnabled();
+      });
     });
 
     it('プロファイル取得エラーを処理する', async () => {

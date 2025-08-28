@@ -262,11 +262,11 @@ describe('GroupPage', () => {
         expect(screen.getByText(/Test User.*さんのカードを読み込みました/)).toBeInTheDocument();
       });
       
-      // In a real scenario, we would need to navigate to member 2 and 3 and load their profiles
-      // For now, we verify that the button remains disabled with only one profile loaded
+      // グループ診断には最低3人必要なので、1人だけロードした状態ではボタンは無効のままである必要がある
       expect(startButton).toBeDisabled();
       
-      // Note: This test should be enhanced when the actual component navigation logic is clearer
+      // TODO: 複数メンバー間のナビゲーションとプロファイルロードをテストする場合は、
+      // 実際のコンポーネント実装に合わせてテストを拡張する必要がある
     });
 
     it('プロファイル取得エラーを処理する', async () => {
