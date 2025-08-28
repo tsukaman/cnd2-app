@@ -125,7 +125,27 @@ export async function onRequestPost(context) {
     }
     
     const openaiData = await openaiResponse.json();
-    const aiResult = JSON.parse(openaiData.choices[0].message.content);
+    
+    // OpenAI APIレスポンスの検証
+    if (!openaiData.choices || !openaiData.choices[0] || !openaiData.choices[0].message || !openaiData.choices[0].message.content) {
+      console.error('[Diagnosis v3] Invalid OpenAI response structure');
+      throw new Error('AI応答の形式が不正です');
+    }
+    
+    let aiResult;
+    try {
+      aiResult = JSON.parse(openaiData.choices[0].message.content);
+      // 診断結果の必須フィールド検証
+      if (!aiResult.diagnosis || !aiResult.extracted_profiles) {
+        throw new Error('診断結果の構造が不正です');
+      }
+    } catch (parseError) {
+      console.error('[Diagnosis v3] JSON parse error:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'AI診断結果の解析に失敗しました' }),
+        { status: 500, headers }
+      );
+    }
     
     // 診断結果を整形
     const diagnosisResult = {
@@ -135,9 +155,13 @@ export async function onRequestPost(context) {
       // 必須フィールド
       compatibility: aiResult.diagnosis.score || 0,
       summary: aiResult.diagnosis.message || '',
-      strengths: aiResult.diagnosis.conversationStarters || [],
-      opportunities: aiResult.diagnosis.conversationStarters || [],
-      advice: aiResult.diagnosis.hiddenGems || '',
+      strengths: Array.isArray(aiResult.diagnosis.conversationStarters) && aiResult.diagnosis.conversationStarters.length > 0 
+        ? aiResult.diagnosis.conversationStarters.slice(0, Math.ceil(aiResult.diagnosis.conversationStarters.length / 2))
+        : ['技術的な共通点が見つかりました'],
+      opportunities: Array.isArray(aiResult.diagnosis.conversationStarters) && aiResult.diagnosis.conversationStarters.length > 1
+        ? aiResult.diagnosis.conversationStarters.slice(Math.ceil(aiResult.diagnosis.conversationStarters.length / 2))
+        : [aiResult.diagnosis.hiddenGems || '新しい発見の機会があります'],
+      advice: aiResult.diagnosis.hiddenGems || 'お互いの技術や興味について話してみましょう。',
       // レガシーフィールド（後方互換性）
       score: aiResult.diagnosis.score,
       message: aiResult.diagnosis.message,
