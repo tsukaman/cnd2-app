@@ -176,8 +176,9 @@ describe('GroupPage', () => {
       render(<GroupPage />);
       
       // Wait for component to stabilize and verify initial state
+      // GroupPage shows a single PrairieCardInput with participant tabs
       await waitFor(() => {
-        expect(screen.getByText('メンバー 1 / 3')).toBeInTheDocument();
+        expect(screen.getByTestId('prairie-card-input')).toBeInTheDocument();
       });
       
       const addButton = screen.getByRole('button', { name: /メンバー追加/ });

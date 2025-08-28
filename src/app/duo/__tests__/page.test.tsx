@@ -133,19 +133,22 @@ describe('DuoPage', () => {
   });
 
   describe('レンダリング', () => {
-    it('初期状態で2人分のプロファイルセレクターが表示される', () => {
+    it('初期状態で1人目のプロファイルセレクターが表示される', () => {
       render(<DuoPage />);
       
-      // PrairieCardInputコンポーネントが2つ表示される
-      const inputs = screen.getAllByTestId('prairie-card-input');
-      expect(inputs).toHaveLength(2);
+      // DuoPageは1人ずつステップで入力するため、最初は1つだけ表示される
+      const input = screen.getByTestId('prairie-card-input');
+      expect(input).toBeInTheDocument();
+      
+      // Step indicator shows step 1
+      expect(screen.getByText('1人目のカード')).toHaveClass('text-blue-400');
     });
 
     it('タイトルとヘッダーが表示される', () => {
       render(<DuoPage />);
       
-      expect(screen.getByText('2人で相性診断')).toBeInTheDocument();
-      expect(screen.getByText('Prairie Cardをスキャンして')).toBeInTheDocument();
+      expect(screen.getByText('2人の相性診断')).toBeInTheDocument();
+      expect(screen.getByText('Prairie Cardから相性を診断します')).toBeInTheDocument();
     });
 
     it('診断開始ボタンが初期状態で無効になっている', () => {
