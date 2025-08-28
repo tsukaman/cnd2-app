@@ -229,7 +229,8 @@ export async function onRequestPost(context) {
     return new Response(
       JSON.stringify({ 
         error: userMessage,
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        // Cloudflare Workers環境ではprocess.envが未定義の可能性があるため安全にチェック
+        details: (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') ? error.message : undefined
       }),
       { status: statusCode, headers: {
         'Access-Control-Allow-Origin': '*',
