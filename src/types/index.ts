@@ -30,6 +30,7 @@ export interface PrairieProfile {
     connectedBy?: string;
     hashtag?: string;
     isPartialData?: boolean;
+    sourceUrl?: string;
   };
 }
 
