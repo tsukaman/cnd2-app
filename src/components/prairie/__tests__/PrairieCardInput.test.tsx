@@ -185,7 +185,7 @@ describe('PrairieCardInput', () => {
     
     await waitFor(() => {
       expect(defaultProps.onProfileLoaded).not.toHaveBeenCalled();
-    }, { timeout: 2000 });
+    }, { timeout: 500 });
   });
 
   it('disables button when input is empty', () => {
