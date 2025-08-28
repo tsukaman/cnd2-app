@@ -102,7 +102,7 @@ export async function onRequestPost(context) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -144,7 +144,7 @@ export async function onRequestPost(context) {
       createdAt: new Date().toISOString(),
       metadata: {
         engine: 'v3-cloudflare',
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         analysis: aiResult.analysis
       }
     };

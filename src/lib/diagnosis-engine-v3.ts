@@ -272,7 +272,7 @@ ${trimmedHtml2}
       const prompt = this.buildDiagnosisPrompt(html1, html2);
       
       const completion = await this.openai!.chat.completions.create({
-        model: 'gpt-4o',  // より高性能なモデルを使用
+        model: 'gpt-4o-mini',  // より高性能なモデルを使用
         messages: [
           {
             role: 'system',
@@ -361,7 +361,7 @@ ${trimmedHtml2}
         // 追加の分析情報を保存
         metadata: {
           engine: 'v3-simplified',
-          model: 'gpt-4o',
+          model: 'gpt-4o-mini',
           analysis: aiResult.analysis
         }
       };
