@@ -300,6 +300,13 @@ ${trimmedHtml2}
         id: nanoid(10),
         mode: 'duo' as const,
         type: aiResult.diagnosis.type,
+        // 新しい必須フィールド
+        compatibility: aiResult.diagnosis.score || 0,
+        summary: aiResult.diagnosis.message || '',
+        strengths: aiResult.diagnosis.conversationStarters || [],
+        opportunities: aiResult.diagnosis.conversationStarters || [],
+        advice: aiResult.diagnosis.hiddenGems || '',
+        // レガシーフィールド（後方互換性）
         score: aiResult.diagnosis.score,
         message: aiResult.diagnosis.message,
         conversationStarters: aiResult.diagnosis.conversationStarters,
