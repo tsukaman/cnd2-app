@@ -28,20 +28,23 @@ export enum ApiErrorCode {
  * Custom API Error class
  */
 export class ApiError extends Error {
+  public readonly code: ApiErrorCode;
   public readonly statusCode: number;
   public readonly details?: any;
 
   constructor(
-    public readonly code: ApiErrorCode,
     message: string,
+    code: ApiErrorCode,
+    statusCode?: number,
     details?: any
   ) {
     super(message);
     this.name = 'ApiError';
+    this.code = code;
     this.details = details;
     
-    // Set status code based on error code
-    this.statusCode = getStatusCodeForErrorCode(code);
+    // Use provided status code or get from error code
+    this.statusCode = statusCode ?? getStatusCodeForErrorCode(code);
     
     // Maintains proper stack trace for where our error was thrown
     if (Error.captureStackTrace) {
@@ -54,8 +57,9 @@ export class ApiError extends Error {
    */
   static validation(message: string, details?: unknown): ApiError {
     return new ApiError(
-      ApiErrorCode.VALIDATION_ERROR,
       message,
+      ApiErrorCode.VALIDATION_ERROR,
+      400,
       details
     );
   }
@@ -65,8 +69,9 @@ export class ApiError extends Error {
    */
   static unauthorized(message = 'Unauthorized'): ApiError {
     return new ApiError(
+      message,
       ApiErrorCode.UNAUTHORIZED,
-      message
+      401
     );
   }
 
@@ -75,8 +80,9 @@ export class ApiError extends Error {
    */
   static forbidden(message = 'Forbidden'): ApiError {
     return new ApiError(
+      message,
       ApiErrorCode.FORBIDDEN,
-      message
+      403
     );
   }
 
@@ -85,8 +91,9 @@ export class ApiError extends Error {
    */
   static notFound(resource: string): ApiError {
     return new ApiError(
+      `${resource} not found`,
       ApiErrorCode.NOT_FOUND,
-      `${resource} not found`
+      404
     );
   }
 
@@ -95,8 +102,9 @@ export class ApiError extends Error {
    */
   static rateLimit(retryAfter: number): ApiError {
     return new ApiError(
-      ApiErrorCode.RATE_LIMIT_ERROR,
       `Rate limit exceeded. Please try again in ${retryAfter} seconds.`,
+      ApiErrorCode.RATE_LIMIT_ERROR,
+      429,
       { retryAfter }
     );
   }
@@ -106,8 +114,9 @@ export class ApiError extends Error {
    */
   static internal(message = 'Internal server error'): ApiError {
     return new ApiError(
+      message,
       ApiErrorCode.INTERNAL_ERROR,
-      message
+      500
     );
   }
 
@@ -116,8 +125,9 @@ export class ApiError extends Error {
    */
   static serviceUnavailable(message = 'Service unavailable'): ApiError {
     return new ApiError(
+      message,
       ApiErrorCode.SERVICE_UNAVAILABLE,
-      message
+      503
     );
   }
 
@@ -126,8 +136,9 @@ export class ApiError extends Error {
    */
   static timeout(message = 'Request timeout'): ApiError {
     return new ApiError(
+      message,
       ApiErrorCode.TIMEOUT_ERROR,
-      message
+      504
     );
   }
 
@@ -137,8 +148,9 @@ export class ApiError extends Error {
   static externalService(service: string, error?: unknown): ApiError {
     const message = `External service error: ${service}`;
     return new ApiError(
-      ApiErrorCode.EXTERNAL_SERVICE_ERROR,
       message,
+      ApiErrorCode.EXTERNAL_SERVICE_ERROR,
+      502,
       { service, originalError: error instanceof Error ? error.message : String(error) }
     );
   }
@@ -214,8 +226,9 @@ export function handleApiError(error: unknown): NextResponse {
     );
   } else if (error instanceof Error) {
     const apiError = new ApiError(
+      error.message,
       ApiErrorCode.INTERNAL_ERROR,
-      error.message
+      500
     );
     return NextResponse.json(
       {
@@ -226,8 +239,9 @@ export function handleApiError(error: unknown): NextResponse {
     );
   } else if (typeof error === 'string') {
     const apiError = new ApiError(
+      error,
       ApiErrorCode.INTERNAL_ERROR,
-      error
+      500
     );
     return NextResponse.json(
       {
@@ -238,8 +252,9 @@ export function handleApiError(error: unknown): NextResponse {
     );
   } else {
     const apiError = new ApiError(
+      'An unexpected error occurred',
       ApiErrorCode.INTERNAL_ERROR,
-      'An unexpected error occurred'
+      500
     );
     return NextResponse.json(
       {
@@ -259,7 +274,7 @@ export function createErrorResponse(
   message: string,
   details?: any
 ): NextResponse {
-  const error = new ApiError(code, message, details);
+  const error = new ApiError(message, code, undefined, details);
   return NextResponse.json(
     {
       success: false,
