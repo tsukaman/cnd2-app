@@ -11,7 +11,7 @@ const mockSearchParams = {
 
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
-  useSearchParams: jest.fn(() => mockSearchParams),
+  useSearchParams: () => mockSearchParams,
 }));
 
 // localStorageのモック
@@ -65,6 +65,7 @@ describe('HomePage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
     localStorageMock.getItem.mockClear();
     localStorageMock.setItem.mockClear();
     localStorageMock.removeItem.mockClear();
@@ -72,9 +73,17 @@ describe('HomePage', () => {
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
   });
 
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+  });
+
   describe('レンダリング', () => {
     it('ホームページの要素が正しく表示される', () => {
       render(<HomePage />);
+      
+      // Wait for loading screen to finish (1 second)
+      jest.advanceTimersByTime(1000);
       
       expect(screen.getByText('CND²')).toBeInTheDocument();
       expect(screen.getByText('Prairie Card × AI 相性診断')).toBeInTheDocument();
@@ -84,6 +93,9 @@ describe('HomePage', () => {
     it('背景エフェクトがレンダリングされる', () => {
       render(<HomePage />);
       
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
+      
       expect(screen.getByTestId('background-effects')).toBeInTheDocument();
       expect(screen.getByTestId('cloud-animation')).toBeInTheDocument();
     });
@@ -91,12 +103,18 @@ describe('HomePage', () => {
     it('診断ボタンが表示される', () => {
       render(<HomePage />);
       
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
+      
       expect(screen.getByRole('button', { name: /2人で診断/ })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /グループで診断/ })).toBeInTheDocument();
     });
 
     it('特徴セクションが表示される', () => {
       render(<HomePage />);
+      
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
       
       expect(screen.getByText('Prairie Card連携')).toBeInTheDocument();
       expect(screen.getByText('AI診断')).toBeInTheDocument();
@@ -108,6 +126,9 @@ describe('HomePage', () => {
     it('2人診断ボタンをクリックすると/duoに遷移する', () => {
       render(<HomePage />);
       
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
+      
       const duoButton = screen.getByRole('button', { name: /2人で診断/ });
       fireEvent.click(duoButton);
       
@@ -116,6 +137,9 @@ describe('HomePage', () => {
 
     it('グループ診断ボタンをクリックすると/groupに遷移する', () => {
       render(<HomePage />);
+      
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
       
       const groupButton = screen.getByRole('button', { name: /グループで診断/ });
       fireEvent.click(groupButton);
@@ -128,12 +152,18 @@ describe('HomePage', () => {
     it('ヒーローセクションにフェードインアニメーションが適用される', () => {
       const { container } = render(<HomePage />);
       
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
+      
       const heroSection = container.querySelector('.animate-fadeIn');
       expect(heroSection).toBeInTheDocument();
     });
 
     it('ボタンにホバーエフェクトが適用される', () => {
       render(<HomePage />);
+      
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
       
       const duoButton = screen.getByRole('button', { name: /2人で診断/ });
       expect(duoButton).toHaveClass('hover:scale-105');
@@ -144,6 +174,9 @@ describe('HomePage', () => {
     it('コンテナに適切なレスポンシブクラスが適用される', () => {
       const { container } = render(<HomePage />);
       
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
+      
       const mainContainer = container.querySelector('main');
       expect(mainContainer).toHaveClass('min-h-screen');
       expect(mainContainer).toHaveClass('relative');
@@ -151,6 +184,9 @@ describe('HomePage', () => {
 
     it('グリッドレイアウトがレスポンシブに対応している', () => {
       const { container } = render(<HomePage />);
+      
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
       
       const featuresGrid = container.querySelector('.grid');
       expect(featuresGrid).toHaveClass('md:grid-cols-3');
@@ -161,6 +197,9 @@ describe('HomePage', () => {
     it('適切な見出し階層が維持される', () => {
       render(<HomePage />);
       
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
+      
       const h1 = screen.getByRole('heading', { level: 1 });
       expect(h1).toHaveTextContent('CND²');
       
@@ -170,6 +209,9 @@ describe('HomePage', () => {
 
     it('ボタンに適切なaria属性が設定される', () => {
       render(<HomePage />);
+      
+      // Wait for loading screen to finish
+      jest.advanceTimersByTime(1000);
       
       const buttons = screen.getAllByRole('button');
       buttons.forEach(button => {
