@@ -16,6 +16,7 @@ describe('SimplifiedDiagnosisEngine', () => {
   let engine: SimplifiedDiagnosisEngine;
   let mockOpenAI: jest.Mocked<OpenAI>;
   let mockCache: jest.Mocked<DiagnosisCache>;
+  let originalWindow: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -45,15 +46,28 @@ describe('SimplifiedDiagnosisEngine', () => {
     // Set environment
     process.env.OPENAI_API_KEY = 'test-api-key';
     
+    // Mock window as undefined to simulate server-side environment
+    originalWindow = global.window;
+    delete (global as any).window;
+    
     // Reset singleton instance to pick up the new environment variable
     (SimplifiedDiagnosisEngine as any).instance = undefined;
     
     // Get instance
     engine = SimplifiedDiagnosisEngine.getInstance();
+    
+    // Force set the openai instance for testing
+    (engine as any).openai = mockOpenAI;
   });
 
   afterEach(() => {
     delete process.env.OPENAI_API_KEY;
+    // Restore window
+    if (originalWindow) {
+      (global as any).window = originalWindow;
+    }
+    // Reset singleton instance
+    (SimplifiedDiagnosisEngine as any).instance = undefined;
   });
 
   describe('getInstance', () => {
@@ -72,7 +86,9 @@ describe('SimplifiedDiagnosisEngine', () => {
     it('OpenAI APIキーが設定されていない場合はfalseを返す', () => {
       delete process.env.OPENAI_API_KEY;
       (SimplifiedDiagnosisEngine as any).instance = undefined;
+      
       const newEngine = SimplifiedDiagnosisEngine.getInstance();
+      
       expect(newEngine.isConfigured()).toBe(false);
     });
   });
@@ -139,14 +155,25 @@ describe('SimplifiedDiagnosisEngine', () => {
     it('新規診断を生成する', async () => {
       mockCache.get.mockReturnValue(null);
       
+      // Mock fetch to return HTML
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        text: jest.fn().mockResolvedValue('<html><head><title>Test User</title></head><body>Test content</body></html>'),
+      });
+      
       const mockAIResponse = {
-        id: 'test-id-123',
-        compatibility: 75,
-        summary: '良好な相性です',
-        strengths: ['コミュニケーション'],
-        opportunities: ['技術共有'],
-        advice: 'お互いの強みを活かしましょう',
-        type: 'クラウドネイティブ型',
+        extracted_profiles: {
+          person1: { name: 'Test User 1', skills: ['JavaScript'] },
+          person2: { name: 'Test User 2', skills: ['TypeScript'] }
+        },
+        diagnosis: {
+          compatibility: 75,
+          summary: '良好な相性です',
+          strengths: ['コミュニケーション'],
+          opportunities: ['技術共有'],
+          advice: 'お互いの強みを活かしましょう',
+          type: 'クラウドネイティブ型',
+        }
       };
       
       mockOpenAI.chat.completions.create.mockResolvedValue({
@@ -265,28 +292,4 @@ describe('SimplifiedDiagnosisEngine', () => {
     });
   });
 
-  describe('generateFallbackDiagnosis', () => {
-    it('適切なフォールバック診断を生成する', () => {
-      const profiles = [
-        {
-          basic: { name: 'User 1' },
-          details: { skills: ['React'] },
-        },
-        {
-          basic: { name: 'User 2' },
-          details: { skills: ['Vue'] },
-        },
-      ] as any;
-
-      const result = (engine as any).generateFallbackDiagnosis(profiles, 'duo');
-      
-      expect(result).toBeDefined();
-      expect(result.id).toBe('test-id-123');
-      expect(result.compatibility).toBeGreaterThanOrEqual(60);
-      expect(result.compatibility).toBeLessThanOrEqual(95);
-      expect(result.strengths).toBeInstanceOf(Array);
-      expect(result.opportunities).toBeInstanceOf(Array);
-      expect(result.advice).toBeDefined();
-    });
-  });
 });

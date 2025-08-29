@@ -275,13 +275,7 @@ if (!global.fetch || !global.fetch.mockImplementation) {
 }
 
 // Clean up after each test
-beforeEach(() => {
-  jest.useFakeTimers();
-});
-
+// Remove global timer setup - let individual tests handle their own timer setup
 afterEach(() => {
-  jest.clearAllTimers();
-  jest.runOnlyPendingTimers();
-  jest.useRealTimers();
   jest.clearAllMocks();
 });

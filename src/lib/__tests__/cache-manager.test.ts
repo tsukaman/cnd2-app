@@ -1,4 +1,4 @@
-import { CacheManager } from '../cache-manager';
+import { CacheManager } from '../cache-manager-generic';
 
 describe('CacheManager', () => {
   let cacheManager: CacheManager<any>;
