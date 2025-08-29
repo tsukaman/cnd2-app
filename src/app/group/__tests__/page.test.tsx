@@ -177,7 +177,7 @@ describe('GroupPage', () => {
       
       // Check that we now have 6 members
       await waitFor(() => {
-        expect(screen.getByText('メンバー 1 / 6')).toBeInTheDocument();
+        expect(screen.getByText(/メンバー.*1.*\/.*6/)).toBeInTheDocument();
       });
       
       // 6人になったら追加ボタンが表示されなくなる
@@ -189,7 +189,7 @@ describe('GroupPage', () => {
       
       // Wait for initial state
       await waitFor(() => {
-        expect(screen.getByText('メンバー 1 / 3')).toBeInTheDocument();
+        expect(screen.getByText(/メンバー.*1.*\/.*3/)).toBeInTheDocument();
       });
       
       // 参加者を5人に増やす

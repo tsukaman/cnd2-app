@@ -111,7 +111,8 @@ describe('PrairieCardInput', () => {
     
     render(<PrairieCardInput {...defaultProps} />);
     
-    const button = screen.getByRole('button');
+    // Get the scan button specifically (not NFC/QR/clipboard buttons)
+    const button = screen.getByRole('button', { name: /スキャン|読み込み/i });
     expect(button).toBeDisabled();
     expect(screen.getByText('Prairie Card読み込み中...')).toBeInTheDocument();
   });

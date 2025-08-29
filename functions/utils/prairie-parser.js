@@ -219,6 +219,19 @@ function escapeHtml(unsafe) {
 }
 
 /**
+ * Extract text from data-field attribute
+ * @param {string} html - HTML content
+ * @param {string} fieldName - Field name to search for
+ * @returns {string} - Extracted text
+ */
+function extractTextByDataField(html, fieldName) {
+  const escapedFieldName = escapeRegExp(fieldName);
+  const pattern = new RegExp(`<[^>]+data-field=["']${escapedFieldName}["'][^>]*>([^<]+)<`, 'i');
+  const match = html.match(pattern);
+  return match && match[1] ? match[1].trim() : '';
+}
+
+/**
  * Parse Prairie Card HTML into profile structure
  * @param {string} html - Prairie Card HTML content
  * @returns {Object} - Parsed profile object
@@ -232,6 +245,7 @@ function parseFromHTML(html) {
   // Extract basic information (fallback to meta tags if not found)
   const name = extractTextByClass(html, 'profile-name') || 
                extractTextByClass(html, 'name') ||
+               extractTextByDataField(html, 'name') ||
                html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1]?.trim() ||
                metaName ||
                'CloudNative Enthusiast';

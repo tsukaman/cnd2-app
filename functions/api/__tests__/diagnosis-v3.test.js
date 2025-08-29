@@ -13,7 +13,7 @@ function trimHtmlSafely(html, maxLength = 50000) {
     /<head[^>]*>([\s\S]*?)<\/head>/i,
     /<meta[^>]*og:[^>]*>/gi,
     /<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi,
-    /<(title|name|role|company|skill|interest)[^>]*>([\s\S]*?)<\/1>/gi
+    /<(title|name|role|company|skill|interest)[^>]*>([\s\S]*?)<\/\1>/gi
   ];
 
   let extractedContent = '';
