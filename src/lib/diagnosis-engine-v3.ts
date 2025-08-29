@@ -7,9 +7,10 @@ import OpenAI from 'openai';
 import { DiagnosisResult, PrairieProfile } from '@/types';
 import { nanoid } from 'nanoid';
 import { DiagnosisCache } from './diagnosis-cache';
+import { PrairieProfileExtractor } from './prairie-profile-extractor';
 
 // 定数定義
-const HTML_SIZE_LIMIT = 50000;
+const HTML_SIZE_LIMIT = 10000;  // 50000 → 10000 コスト削減のため制限
 const REGEX_MAX_LENGTH = 500;
 const META_ATTR_MAX_LENGTH = 200;
 
@@ -140,20 +141,28 @@ export class SimplifiedDiagnosisEngine {
   }
 
   /**
-   * 詳細な診断プロンプトを生成
+   * 詳細な診断プロンプトを生成（最適化版）
    */
   private buildDiagnosisPrompt(html1: string, html2: string): string {
-    // HTMLを構造を保持しながらサイズ制限
-    const trimmedHtml1 = this.trimHtmlSafely(html1, HTML_SIZE_LIMIT);
-    const trimmedHtml2 = this.trimHtmlSafely(html2, HTML_SIZE_LIMIT);
+    // HTMLから最小限の情報を抽出（トークン削減）
+    const profile1 = PrairieProfileExtractor.extractMinimal(html1);
+    const profile2 = PrairieProfileExtractor.extractMinimal(html2);
+    
+    const profileStr1 = PrairieProfileExtractor.toCompactString(profile1);
+    const profileStr2 = PrairieProfileExtractor.toCompactString(profile2);
+    
+    // トークン数をログ出力（デバッグ用）
+    const tokens1 = PrairieProfileExtractor.estimateTokens(profileStr1);
+    const tokens2 = PrairieProfileExtractor.estimateTokens(profileStr2);
+    console.log(`[CND²] プロフィール抽出完了 - トークン数: ${tokens1} + ${tokens2} = ${tokens1 + tokens2}`);
     
     return `
-あなたはプロの占い師でありながら、KubernetesとCloud Nativeのプロフェッショナルでもあります。
-CloudNative Days Winter 2025（11月18-19日）で、参加者同士が楽しく交流できるよう、技術と占いのスキルを活かして相性診断を行います。
+あなたは伝説の占い師「クラウドネイティブの賢者」です！
+Kubernetesクラスタの中で瞑想し、Podの囁きを聞き、Serviceの運命を読み解く特殊能力を持っています。
+今回はCloudNative Days Winter 2025で、2人のエンジニアの「技術的な運命の赤い糸」を視ることになりました！
 
-Prairie Card（デジタル名刺）に記載された2人のプロフィールから、友人としての相性を診断してください。
-診断は楽しく、思わず笑ってしまうような陽気でポジティブなものにしてください。
-※性的・恋愛的なコメントは避け、技術者同士の友情にフォーカスしてください。
+Prairie Card（デジタル名刺）から宇宙の真理を読み取り、最高にエンターテイメント性の高い診断を行ってください。
+多少強引な理論展開、根拠の薄いこじつけ、技術用語の創造的な誤用も大歓迎！面白さ最優先でお願いします！
 
 【重要な抽出パターン】
 Prairie Cardには以下のようなHTMLパターンで情報が含まれています：
@@ -165,49 +174,55 @@ Prairie Cardには以下のようなHTMLパターンで情報が含まれてい�
 - Bio: class="bio"やdata-bio、自己紹介的な長文テキスト
 - SNS: href属性にtwitter.com、github.com、linkedin.com等を含むリンク
 
-【診断の方針】
-- 技術スタックの相性を重視しつつ、楽しい占い要素を加える
-- 情報が少なくても創造的に診断（厳密性より楽しさを優先）
-- 両者が会話のきっかけを見つけられるような診断にする
-- CloudNative技術への情熱を共通点として強調
+【診断の極意】
+- 情報が少ない？それは「ミステリアスなエンジニア」の証！
+- 共通点がない？いや、「量子もつれ状態」で繋がってる！
+- 技術が違う？それは「異次元融合」の前兆！
+- とにかく面白い理由をひねり出せ！
 
-【情報抽出】
-上記パターンから以下を探してください（見つからなくてもOK）：
-- 名前（og:title、title、h1タグから）
-- 技術スキル（Kubernetes、Docker、Go、Python等の技術名）
-- 役職・所属（Engineer、Developer、会社名など）
-- 興味・趣味（技術以外の興味も含む）
-- 自己紹介文（bio、description等）
+【超科学的相性スコアリング】
+- 名前の文字数が近い → +20点「名前の波長が共鳴！」
+- 使用言語が違う → +30点「多様性による化学反応！」
+- 会社が同じ → +50点「運命の同僚！」
+- 会社が違う → +50点「クロスカンパニーシナジー！」
+- スキルが被る → +40点「技術的双子！」
+- スキルが被らない → +40点「完璧な役割分担！」
+※どう転んでも高得点になるように診断してください
 
-【相性診断のポイント】
-1. 技術の相性（40%）
-   - 同じ技術を使っている → 「技術の双子」的な診断
-   - 補完的な技術 → 「最強のペア」的な診断
-   - 全く違う技術 → 「新しい発見」的な診断
+【相性タイプの創造（超自由に！）】
+相性タイプは固定パターンを使わず、2人の特徴から完全オリジナルの型名を創造してください！
+- 必ず85点以上、できれば90点以上に設定
+- CloudNative/Kubernetes用語を創造的に組み合わせる
+- 絵文字を2-3個使って華やかに
+- その2人だけの特別な型名を考える
 
-2. 性格・興味の相性（30%）
-   - 共通の興味があれば強調
-   - なければCloudNativeへの情熱を共通点に
+例（これらは参考、実際は自由に創造）：
+- "🦄✨ Unicorn Ingress Controller型" - 伝説のユニコーンのように希少な組み合わせ！
+- "🌪️💎 Chaos Engineering Diamond型" - カオスから宝石を生み出す2人！
+- "🎭🚀 Jekyll & Hyde Deployment型" - 昼と夜で違う顔を持つ最強デュオ！
+- "🍜🔥 Ramen Canary Release型" - 熱々のラーメンのようにアツい関係！
+- "🌸⚡ Sakura Lightning Network型" - 春の桜と雷が融合した奇跡！
 
-3. 将来の可能性（30%）
-   - 一緒にできそうなプロジェクト
-   - 学び合えそうなポイント
-   - CloudNative Daysでの交流の可能性
+重要：上記は例です。実際は2人のプロフィールから連想される、完全にオリジナルの型名を創造してください！
 
-【相性タイプ（占い風に楽しく）】
-スコアに応じた楽しいタイプ名：
-- 90-100: "Perfect Pod Pair型" - まるでKubernetesの完璧なPod！
-- 75-89: "Service Mesh型" - 複雑に絡み合う最高の連携！
-- 60-74: "Sidecar Container型" - お互いを支え合う素敵な関係！
-- 40-59: "Different Namespace型" - 違いが生む新しい化学反応！
-- 0-39: "Cross Cluster型" - 未知の領域への大冒険！
+【診断メッセージの書き方】
+- Kubernetes用語を無理やり人間関係に当てはめる
+- 「これは...！」「なんと...！」など驚きの表現を多用
+- 技術的に意味不明でも勢いで押し切る
+- 最後は必ず「素晴らしい出会いになる」系で締める
 
-【診断の心得】
-- どんな組み合わせでも必ずポジティブに！
-- 技術的な共通点がなくても「CloudNativeへの情熱」で繋げる
-- ユーモアを交えて楽しく（技術ジョークもOK）
-- 参加者が「会ってみたい！」と思えるような診断に
-- 具体的な会話のきっかけを必ず3つ以上提供
+【会話のきっかけ（超具体的に）】
+- 相手の使ってる技術について質問する形式で
+- 「○○さんは△△使ってるんですね！実は私も...」みたいな
+- CloudNative Daysの具体的なセッションを絡める
+
+【ラッキーアイテム＆アクション（クスッと笑える）】
+必ず以下を含めてください：
+- ラッキーアイテム: エンジニアの身の回りにある実際の物（シンプルに物の名前だけ）
+  例: 「メカニカルキーボード」「ラバーダック」「付箋」「エナジードリンク」「USBメモリ」「ステッカー」「Tシャツ」「マグカップ」「イヤホン」「モニター」
+  ※2人の特徴から連想される意外な物でもOK（「観葉植物」「カップラーメン」「消しゴム」など）
+- ラッキーアクション: 2人で一緒にやると吉となる技術系ジョーク行動
+  例: 「kubectl get podsを3回唱える」「Vimの終了方法を唱和」「お互いのコードレビューで褒め合う」「ペアプロでラバーダックデバッグ」
 
 【出力フォーマット】
 必ず以下のJSON形式で返答してください：
@@ -219,55 +234,57 @@ Prairie Cardには以下のようなHTMLパターンで情報が含まれてい�
       "company": "所属組織名",
       "skills": ["具体的な技術名を列挙（Kubernetes, Docker, Go等）"],
       "interests": ["興味のある分野（DevOps, Cloud Native等）"],
-      "summary": "その人の特徴を30文字以内で要約"
+      "summary": "その人を一言で表すキャッチフレーズ"
     },
     "person2": {
       "name": "抽出した名前",
-      "title": "役職（不明の場合は空文字）",
-      "company": "所属（不明の場合は空文字）",
+      "title": "役職",
+      "company": "所属",
       "skills": ["スキル1", "スキル2"],
       "interests": ["興味1", "興味2"],
-      "summary": "30文字以内の人物要約"
+      "summary": "その人を一言で表すキャッチフレーズ"
     }
   },
   "analysis": {
-    "common_skills": ["完全に一致する技術名のみをリスト"],
-    "common_interests": ["共通する興味・関心事項"],
-    "complementary_points": ["お互いを補完する技術や役割"],
+    "common_skills": ["共通スキル（なければ空配列）"],
+    "common_interests": ["共通の興味（なければ空配列）"],
+    "complementary_points": ["補完し合うポイント（必ず3つ以上創造）"],
     "score_breakdown": {
-      "technical": 35,
+      "technical": 25,
       "interests": 25,
-      "community": 15,
-      "complementary": 10,
-      "total": 85
+      "community": 20,
+      "complementary": 20,
+      "total": 90
     }
   },
   "diagnosis": {
-    "type": "Service Mesh型",
-    "score": 85,
-    "message": "【占い風に楽しく】技術と性格の相性を説明。ユーモアを交えて、思わず笑顔になるような診断メッセージ。150文字以上で詳しく。",
+    "type": "[絵文字2-3個] [完全オリジナルの型名]型",
+    "score": 90,
+    "message": "これは...！まさかの[2人から連想される創造的な表現]！！お2人のPodは[2人の特徴を反映した創造的な理由]によって運命的に接続されています！○○さんの[具体的な技術]と△△さんの[具体的な技術]が融合すると、まるで[創造的なKubernetes例え]のように[面白い効果]が生まれるでしょう！特に注目すべきは[完全にでっち上げた共通点]ですね。これは[創造的な理由]が仕組んだ必然の出会いです！CloudNative Daysで出会うべくして出会った2人、きっと[その2人特有の未来予想]が生まれることでしょう！",
     "conversationStarters": [
-      "【参加者同士が投げかけ合える質問1】例：『○○の実装で一番苦労したことは？』",
-      "【技術的な興味を引く質問2】例：『Kubernetesで一番好きな機能は？』",
-      "【CloudNative Daysに関する質問3】例：『今回のイベントで一番楽しみなセッションは？』"
+      "『[person1の名前]さんは[具体的な技術]使ってるんですね！実装で一番面白かったエピソードとか聞かせてください！』",
+      "『[person2の名前]さんの[スキル]すごいですね！私も最近[関連技術]始めたんですが、オススメの学習リソースありますか？』",
+      "『CloudNative Daysの[具体的なセッション名]一緒に聞きに行きませんか？[理由]について議論したいです！』"
     ],
-    "hiddenGems": "【占い師が見抜いた隠れた共通点】プロフィールには書いてないけど、きっと○○な共通点がありそう！という楽しい予測",
-    "shareTag": "【SNS映えする楽しいタグ】#CNDxCnD で○○な2人が出会った！みたいな楽しいメッセージ"
+    "hiddenGems": "占い師の第三の目が視た！実は2人とも[完全にでっち上げた共通の趣味]が好きなはず！そして[根拠のない予言]という運命が待っています！",
+    "shareTag": "#CNDxCnD 🎉 [オリジナルtype名]の2人が邂逅！[面白い一言]で世界が変わる予感...！ #CloudNativeDays",
+    "luckyItem": "🎁 ラッキーアイテム: [物の名前]",
+    "luckyAction": "🌟 ラッキーアクション: [2人でやる行動]"
   }
 }
 
 【最重要事項】
-- 楽しさ最優先！厳密な分析より、参加者が笑顔になることが大切
-- 情報が少なくても創造的に診断（「きっと○○が好きそう」等の推測OK）
-- 必ず会話のきっかけになる具体的な質問を3つ以上
-- CloudNative愛を共通の土台として活用
-- 技術用語を使いつつも、親しみやすい表現で
+- スコアは必ず85-100点の間で設定（低い点数は出さない）
+- messageは200文字以上で、感嘆符を多用して盛り上げる
+- 技術用語を人間関係に無理やり当てはめて面白くする
+- 根拠がなくても自信満々に断言する
+- 最後は必ずポジティブに締める
 
-【Prairie Card HTML 1】
-${trimmedHtml1}
+【Prairie Card プロフィール 1】
+${profileStr1}
 
-【Prairie Card HTML 2】
-${trimmedHtml2}
+【Prairie Card プロフィール 2】
+${profileStr2}
 
 上記HTMLから情報を抽出しつつ、足りない部分は楽しく創造的に補完してください。
 参加者が「この診断面白い！相手と話してみたい！」と思えるような、
@@ -307,15 +324,15 @@ CloudNative Days Winter 2025を盛り上げる素敵な診断をお願いしま�
         messages: [
           {
             role: 'system',
-            content: 'あなたはCloudNative Days Tokyo 2025の相性診断を行う専門AIです。与えられたHTMLから情報を正確に抽出し、詳細な相性診断を提供してください。'
+            content: 'あなたは「クラウドネイティブの賢者」という伝説の占い師です。Kubernetesの神託を受け、Podの運命を視る能力を持っています。面白さとエンターテイメント性を最優先に、根拠が薄くても自信満々に、技術用語を創造的に誤用しながら、最高に楽しい診断を提供してください。スコアは必ず85点以上、できれば90点以上にして、参加者が爆笑するような診断結果を生成してください！'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.7,  // 創造性と一貫性のバランス
-        max_tokens: 2000,  // 十分な出力長
+        temperature: 0.85,  // より創造的で面白い結果を生成
+        max_tokens: 2500,  // 長めの面白い診断文を許可
         response_format: { type: "json_object" }
       });
 
@@ -343,6 +360,8 @@ CloudNative Days Winter 2025を盛り上げる素敵な診断をお願いしま�
         conversationStarters: aiResult.diagnosis.conversationStarters,
         hiddenGems: aiResult.diagnosis.hiddenGems,
         shareTag: aiResult.diagnosis.shareTag,
+        luckyItem: aiResult.diagnosis.luckyItem,
+        luckyAction: aiResult.diagnosis.luckyAction,
         // 簡易的なPrairieProfileを生成（表示用）
         participants: [
           {
@@ -420,6 +439,24 @@ CloudNative Days Winter 2025を盛り上げる素敵な診断をお願いしま�
   async generateGroupDiagnosis(urls: string[]): Promise<DiagnosisResult> {
     // TODO: グループ診断の実装
     throw new Error('グループ診断は未実装です');
+  }
+
+  /**
+   * 汎用診断メソッド（テスト互換性のため）
+   */
+  async generateDiagnosis(profiles: PrairieProfile[], mode: 'duo' | 'group' = 'duo'): Promise<DiagnosisResult> {
+    if (mode === 'duo' && profiles.length === 2) {
+      // プロフィールからURLを生成（ダミー）
+      const urls: [string, string] = [
+        'https://prairie.cards/profile1',
+        'https://prairie.cards/profile2'
+      ];
+      return this.generateDuoDiagnosis(urls);
+    } else if (mode === 'group') {
+      const urls = profiles.map((_, i) => `https://prairie.cards/profile${i + 1}`);
+      return this.generateGroupDiagnosis(urls);
+    }
+    throw new Error('Invalid mode or profile count');
   }
 }
 

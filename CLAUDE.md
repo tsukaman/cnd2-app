@@ -337,7 +337,39 @@ try {
 - [OpenAI API Documentation](https://platform.openai.com/docs)
 - [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
 
-## 🔄 最近の重要な変更（2025-08-27）
+## 🔄 最近の重要な変更（2025-08-29）
+
+### 2025-08-29の変更（最新）
+1. **診断結果のエンターテイメント性向上**
+   - 「クラウドネイティブの賢者」キャラクター導入
+   - スコアを常に85点以上に設定（ポジティブな体験）
+   - ラッキーアイテム・ラッキーアクション追加
+   - temperature: 0.85で創造的な診断文生成
+
+2. **Prairie Card解析の完全修正**
+   - functions/api/prairie.tsが実際にHTMLを解析するように修正
+   - prairie-parser.jsに包括的な抽出パターンを追加
+   - 技術キーワードの自動検出（JavaScript、Docker、Kubernetes等）
+   - ハッシュタグ抽出機能
+
+3. **UIフローの改善**
+   - duo/page.tsxに自動画面遷移を実装
+   - プログレスバーのビジュアルフィードバック強化
+   - ランディングページと統一されたデザイン
+
+4. **CIテストエラーの修正**
+   - NextResponse.jsonのJestモック追加（jest.setup.js）
+   - ApiErrorクラスの引数順序修正 (message, code, statusCode, details)
+   - diagnosis-engine-v3にgenerateDiagnosisメソッド追加（テスト互換性）
+
+5. **v3エンジンのトークン消費分析**
+   - v3: 7,000トークン/診断 = ¥288,000（予算の11.5倍）
+   - v2: 1,500トークン/診断 = ¥64,800
+   - 結論: v2エンジンの改良に注力
+
+6. **PR #65作成中**
+   - Prairie Card解析とv3プロンプト精度向上
+   - CIテストの修正進行中
 
 ### 2025-08-27の変更
 1. **テストモック戦略の根本的修正**: `global.fetch`から`apiClient`の直接モックへ移行
@@ -355,15 +387,30 @@ try {
 
 ## 📝 今後の改善項目（ToDo）
 
-### テスト関連の軽微な修正
-- [ ] グループページのUIテスト：実際のコンポーネントテキストと期待値の不一致を修正
-- [ ] 診断結果コンポーネントテスト：表示テキストの差異を修正
-- [ ] APIクライアントテスト：タイムアウトエラー処理のテストケース修正
-- [ ] 全体のテストカバレッジを80%以上に向上（現在76%）
+### 緊急対応（最優先）
+- [ ] PR #65のCIテスト完全通過
+- [ ] PR #65のマージとCloudflareデプロイ
+- [ ] Prairie Card解析の本番環境での動作確認
 
-### その他の改善項目
-- [ ] PR #33（UI関連テストの修正）の完全マージと検証
-- [ ] Issue #32のクローズ処理
+### v3エンジン関連（高優先度）
+- [ ] v3エンジンのテスト修正（generateFallbackDiagnosis等）
+- [ ] v3エンジンのトークン消費最適化（現在予算の11.5倍）
+- [ ] v2エンジンへの完全移行検討
+
+### E2Eテスト移行（中優先度）
+- [ ] HomePage統合テストをPlaywrightでE2E化
+- [ ] DuoPage統合テストをPlaywrightでE2E化
+- [ ] GroupPage統合テストをPlaywrightでE2E化
+
+### スキップされたテストの修正（低優先度）
+- [ ] PrairieCardInputボタン無効化テストの修正
+- [ ] OptimizedImage装飾的画像アクセシビリティテストの修正
+- [ ] diagnosis-v3 trimHtmlSafely本文抽出の修正
+
+### テスト改善（低優先度）
+- [ ] テストモックをtest-utilsファイルに分離
+- [ ] 全体のテストカバレッジを80%以上に向上
+- [ ] 複数メンバー間のナビゲーションテスト実装
 
 ---
 

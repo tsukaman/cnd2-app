@@ -131,19 +131,24 @@ function extractMetaContent(html, property) {
  * @returns {string} - Extracted name or empty string
  */
 function extractNameFromMeta(html) {
-  // Try og:title first, then title tag
+  // Try multiple sources for name extraction
   const ogTitle = extractMetaContent(html, 'og:title');
+  const twitterTitle = extractMetaContent(html, 'twitter:title');
   const titleTag = html.match(/<title>([^<]+)<\/title>/i)?.[1]?.trim();
   
-  const titleSource = ogTitle || titleTag || '';
+  const titleSource = ogTitle || twitterTitle || titleTag || '';
   
-  // Extract name from "名前 のプロフィール" pattern
-  const nameMatch = titleSource.match(/^(.+?)\s*の(?:プロフィール|Profile)/);
+  // Extract name from various patterns
+  // Pattern 1: "名前 のプロフィール" or "名前 の プロフィール"
+  const nameMatch = titleSource.match(/^(.+?)\s*の?\s*(?:プロフィール|Profile|Prairie Card)/i);
   if (nameMatch) return nameMatch[1].trim();
   
-  // Remove " - Prairie Card" or " | Prairie Card" suffix
+  // Pattern 2: Remove " - Prairie Card" or " | Prairie Card" suffix
   if (titleSource) {
-    return titleSource.replace(/\s*[-|]\s*Prairie\s*Card.*$/i, '').trim();
+    let cleanName = titleSource.replace(/\s*[-–—|]\s*Prairie\s*Card.*$/i, '').trim();
+    // Also remove just "Prairie Card" at the end
+    cleanName = cleanName.replace(/\s*Prairie\s*Card\s*$/i, '').trim();
+    if (cleanName) return cleanName;
   }
   
   return '';
@@ -237,93 +242,164 @@ function extractTextByDataField(html, fieldName) {
  * @returns {Object} - Parsed profile object
  */
 function parseFromHTML(html) {
+  console.log('[Prairie Parser] Starting HTML parsing...');
+  
   // Extract information from meta tags first
   const metaName = extractNameFromMeta(html);
   const metaProfile = extractProfileFromMeta(html);
   const metaAvatar = extractAvatarFromMeta(html);
   
-  // Extract basic information (fallback to meta tags if not found)
+  // Extract basic information with multiple fallbacks
   const name = extractTextByClass(html, 'profile-name') || 
                extractTextByClass(html, 'name') ||
                extractTextByDataField(html, 'name') ||
+               extractTextByClass(html, 'user-name') ||
+               extractTextByClass(html, 'display-name') ||
                html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1]?.trim() ||
+               html.match(/<h2[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)</i)?.[1]?.trim() ||
                metaName ||
-               'CloudNative Enthusiast';
+               '';
                
   const title = extractTextByClass(html, 'title') ||
                 extractTextByClass(html, 'role') ||
                 extractTextByClass(html, 'job-title') ||
+                extractTextByClass(html, 'position') ||
+                extractTextByDataField(html, 'title') ||
+                extractTextByDataField(html, 'role') ||
+                // Look for job titles in text
+                html.match(/>([^<]*(?:Engineer|Developer|Designer|Manager|Lead|Architect|Analyst|Consultant|Specialist|Director)[^<]*)</i)?.[1]?.trim() ||
                 '';
                 
   const company = extractTextByClass(html, 'company') ||
                   extractTextByClass(html, 'organization') ||
                   extractTextByClass(html, 'affiliation') ||
+                  extractTextByClass(html, 'workplace') ||
+                  extractTextByDataField(html, 'company') ||
+                  extractTextByDataField(html, 'organization') ||
                   metaProfile.company ||
+                  // Look for company patterns
+                  html.match(/>([^<]*(?:株式会社|会社|Inc\.|Inc|Corp\.|Corp|Ltd\.|Ltd|LLC|GmbH)[^<]*)</i)?.[1]?.trim() ||
                   '';
                   
   const bio = extractTextByClass(html, 'bio') ||
               extractTextByClass(html, 'description') ||
               extractTextByClass(html, 'about') ||
-              html.match(/<p[^>]*>([^<]{20,})<\/p>/i)?.[1]?.trim() ||
+              extractTextByClass(html, 'introduction') ||
+              extractTextByClass(html, 'profile-text') ||
+              extractTextByDataField(html, 'bio') ||
+              extractTextByDataField(html, 'about') ||
+              html.match(/<p[^>]*>([^<]{20,500})<\/p>/i)?.[1]?.trim() ||
               metaProfile.bio ||
               '';
               
-  // Extract skills and tags
+  // Extract skills and tags with enhanced patterns
   const skills = [
     ...extractArrayByClass(html, 'skill'),
     ...extractArrayByClass(html, 'skill-tag'),
     ...extractArrayByClass(html, 'skills'),
+    ...extractArrayByClass(html, 'tech'),
+    ...extractArrayByClass(html, 'technology'),
   ];
+  
+  // Add technology keywords found in HTML
+  const techKeywords = [
+    'JavaScript', 'TypeScript', 'Python', 'Go', 'Rust', 'Java', 'C++', 'C#', 'Ruby', 'PHP',
+    'React', 'Vue', 'Angular', 'Next.js', 'Nuxt.js', 'Node.js', 'Express', 'Django', 'Rails',
+    'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Terraform', 'Ansible',
+    'Git', 'GitHub', 'GitLab', 'CI/CD', 'DevOps', 'Cloud Native', 'Microservices',
+    'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'GraphQL', 'REST API', 'gRPC'
+  ];
+  
+  for (const keyword of techKeywords) {
+    if (html.includes(keyword) && !skills.includes(keyword)) {
+      skills.push(keyword);
+    }
+  }
   
   const tags = [
     ...extractArrayByClass(html, 'tag'),
     ...extractArrayByClass(html, 'tags'),
     ...extractArrayByClass(html, 'keyword'),
+    ...extractArrayByClass(html, 'label'),
+    ...extractArrayByClass(html, 'badge'),
   ];
+  
+  // Extract hashtags from text (最大10個まで、パフォーマンス最適化)
+  const hashtagPattern = /#([\w]{1,50}|[ぁ-んァ-ヶー]{1,20}|[一-龠]{1,20})/g;
+  let hashtagCount = 0;
+  let hashtagMatch;
+  while ((hashtagMatch = hashtagPattern.exec(html)) !== null && hashtagCount < 10) {
+    const hashtag = '#' + hashtagMatch[1];
+    if (!tags.includes(hashtag)) {
+      tags.push(hashtag);
+      hashtagCount++;
+    }
+  }
   
   const interests = [
     ...extractArrayByClass(html, 'interest'),
     ...extractArrayByClass(html, 'interests'),
     ...extractArrayByClass(html, 'hobby'),
+    ...extractArrayByClass(html, 'hobbies'),
+    ...extractArrayByClass(html, 'like'),
   ];
   
   const certifications = [
     ...extractArrayByClass(html, 'certification'),
     ...extractArrayByClass(html, 'certifications'),
     ...extractArrayByClass(html, 'cert'),
+    ...extractArrayByClass(html, 'certificate'),
+    ...extractArrayByClass(html, 'qualification'),
   ];
   
   const communities = [
     ...extractArrayByClass(html, 'community'),
     ...extractArrayByClass(html, 'communities'),
     ...extractArrayByClass(html, 'group'),
+    ...extractArrayByClass(html, 'organization'),
+    ...extractArrayByClass(html, 'meetup'),
   ];
+  
+  // Extract motto
+  const motto = extractTextByClass(html, 'motto') ||
+                extractTextByClass(html, 'slogan') ||
+                extractTextByClass(html, 'catchphrase') ||
+                extractTextByDataField(html, 'motto') ||
+                undefined;
   
   // Extract social links
   const twitter = extractSocialUrl(html, 'twitter.com') || extractSocialUrl(html, 'x.com');
   const github = extractSocialUrl(html, 'github.com');
   const linkedin = extractSocialUrl(html, 'linkedin.com');
   const facebook = extractSocialUrl(html, 'facebook.com');
-  const website = extractLink(html, 'website') || extractLink(html, 'homepage');
+  const website = extractLink(html, 'website') || extractLink(html, 'homepage') || extractLink(html, 'portfolio');
   const blog = extractLink(html, 'blog');
   const qiita = extractSocialUrl(html, 'qiita.com');
   const zenn = extractSocialUrl(html, 'zenn.dev');
   
+  // Remove duplicates and limit arrays
+  const uniqueSkills = [...new Set(skills)].slice(0, 15);
+  const uniqueTags = [...new Set(tags)].slice(0, 15);
+  const uniqueInterests = [...new Set(interests)].slice(0, 10);
+  const uniqueCertifications = [...new Set(certifications)].slice(0, 10);
+  const uniqueCommunities = [...new Set(communities)].slice(0, 10);
+  
   // Build the profile object matching PrairieProfile type
-  return {
+  const profile = {
     basic: {
-      name: escapeHtml(name),
+      name: escapeHtml(name) || 'Prairie Card User',
       title: escapeHtml(title),
       company: escapeHtml(company),
       bio: escapeHtml(bio),
-      avatar: metaAvatar ? escapeHtml(metaAvatar) : undefined, // Escape avatar URL for security
+      avatar: metaAvatar ? escapeHtml(metaAvatar) : undefined,
     },
     details: {
-      tags: tags.map(escapeHtml).filter(Boolean),
-      skills: skills.map(escapeHtml).filter(Boolean),
-      interests: interests.map(escapeHtml).filter(Boolean),
-      certifications: certifications.map(escapeHtml).filter(Boolean),
-      communities: communities.map(escapeHtml).filter(Boolean),
+      tags: uniqueTags.map(escapeHtml).filter(Boolean),
+      skills: uniqueSkills.map(escapeHtml).filter(Boolean),
+      interests: uniqueInterests.map(escapeHtml).filter(Boolean),
+      certifications: uniqueCertifications.map(escapeHtml).filter(Boolean),
+      communities: uniqueCommunities.map(escapeHtml).filter(Boolean),
+      motto: motto ? escapeHtml(motto) : undefined,
     },
     social: {
       twitter,
@@ -344,6 +420,15 @@ function parseFromHTML(html) {
       isPartialData: false,
     },
   };
+  
+  console.log('[Prairie Parser] Parsed profile:', {
+    name: profile.basic.name,
+    hasSkills: profile.details.skills.length > 0,
+    hasTags: profile.details.tags.length > 0,
+    hasInterests: profile.details.interests.length > 0,
+  });
+  
+  return profile;
 }
 
 /**
