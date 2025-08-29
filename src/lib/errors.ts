@@ -122,9 +122,26 @@ export class ErrorHandler {
   }
   
   /**
+   * 型ガード: エラーがcode と message プロパティを持つか確認
+   */
+  static isErrorWithCodeAndMessage(error: unknown): error is { code: string, message: string } {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      typeof (error as any).code === 'string' &&
+      typeof (error as any).message === 'string'
+    );
+  }
+
+  /**
    * エラーログを出力
    */
   static logError(error: CND2Error, context?: string): void {
+    // テスト環境ではログを抑制
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
     const timestamp = new Date().toISOString();
     const logEntry = {
       timestamp,
@@ -144,7 +161,7 @@ export class ErrorHandler {
       console.error('[CND² Error]', logEntry);
     } else {
       // 本番環境では簡潔なログ
-      if (typeof error === 'object' && error !== null && 'code' in error && 'message' in error) {
+      if (ErrorHandler.isErrorWithCodeAndMessage(error)) {
         console.error(`[CND²] ${error.code}: ${error.message}`);
       } else {
         console.error('[CND²] エラー: ', error);

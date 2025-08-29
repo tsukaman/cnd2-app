@@ -77,9 +77,9 @@ export default function OptimizedImage({
         alt={alt}
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
-        fill={fill}
+        fill={fill || undefined}
         sizes={sizes || (fill ? '100vw' : undefined)}
-        priority={priority}
+        priority={priority || undefined}
         quality={quality}
         loading={priority ? undefined : 'lazy'}
         placeholder="blur"

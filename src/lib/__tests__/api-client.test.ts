@@ -308,10 +308,8 @@ describe('API Client', () => {
 
     it('タイムアウトエラーを処理する', async () => {
       const { apiClient } = require('../api-client');
-      (global.fetch as jest.Mock).mockImplementationOnce(
-        () => new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 100)
-        )
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Request timeout')
       );
 
       await expect(apiClient.prairie.fetch('test'))

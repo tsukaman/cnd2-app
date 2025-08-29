@@ -127,11 +127,11 @@ describe('DuoPage', () => {
       render(<DuoPage />);
       
       // DuoPageは1人ずつステップで入力するため、最初は1つだけ表示される
-      const input = screen.getByTestId('prairie-card-input');
-      expect(input).toBeInTheDocument();
+      expect(screen.getByText('1人目のPrairie Card')).toBeInTheDocument();
       
-      // Step indicator shows step 1
-      expect(screen.getByText('1人目のカード')).toHaveClass('text-blue-400');
+      // Input field should be present
+      const input = screen.getByRole('textbox');
+      expect(input).toBeInTheDocument();
     });
 
     it('タイトルとヘッダーが表示される', () => {

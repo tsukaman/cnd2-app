@@ -106,7 +106,8 @@ export const createMockPrairieProfile = (name = 'Test User', index = 0) => ({
   },
   custom: {},
   meta: {
-    version: '1.0',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
 });
 

@@ -55,6 +55,10 @@ export class DiagnosisEngine {
     }
 
     if (!this.isConfigured()) {
+      // 開発環境ではフォールバックしない
+      if (process.env.NODE_ENV === 'development') {
+        throw new Error('[CND²] OpenAI APIキーが設定されていません。環境変数 OPENAI_API_KEY を設定してください。');
+      }
       console.warn('[CND²] OpenAI APIキーが設定されていません。モック診断を返します。');
       return this.generateMockDiagnosis(profiles);
     }
@@ -103,7 +107,12 @@ export class DiagnosisEngine {
     } catch (error) {
       console.error('[CND²] AI診断生成エラー:', error);
       
-      // エラー時はモック診断を返す
+      // 開発環境ではエラーを投げる
+      if (process.env.NODE_ENV === 'development') {
+        throw error;
+      }
+      
+      // 本番環境のみモック診断を返す
       return this.generateMockDiagnosis(profiles);
     }
   }

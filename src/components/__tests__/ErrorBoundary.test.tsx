@@ -104,11 +104,9 @@ describe('ErrorBoundary', () => {
 
   it('resets error state when reset button is clicked', () => {
     // Component that can toggle between error and no error
-    const TestComponent = ({ shouldThrow }: { shouldThrow: boolean }) => {
-      const [hasThrown, setHasThrown] = React.useState(false);
-      
-      if (shouldThrow && !hasThrown) {
-        setHasThrown(true);
+    let shouldThrow = true;
+    const TestComponent = () => {
+      if (shouldThrow) {
         throw new Error('Test error');
       }
       return <div>No error</div>;
@@ -116,24 +114,29 @@ describe('ErrorBoundary', () => {
     
     const { rerender } = render(
       <ErrorBoundary>
-        <TestComponent shouldThrow={true} />
+        <TestComponent />
       </ErrorBoundary>
     );
     
     expect(screen.getByText('エラーが発生しました')).toBeInTheDocument();
     
     const resetButton = screen.getByText('再試行');
+    
+    // Set shouldThrow to false before clicking reset
+    shouldThrow = false;
     fireEvent.click(resetButton);
     
-    // After reset, rerender with shouldThrow = false
+    // Force rerender to apply the state change
     rerender(
       <ErrorBoundary>
-        <TestComponent shouldThrow={false} />
+        <TestComponent />
       </ErrorBoundary>
     );
     
     // After reset, component should render normally
     expect(screen.getByText('No error')).toBeInTheDocument();
+    // Verify error UI is gone
+    expect(screen.queryByText('エラーが発生しました')).not.toBeInTheDocument();
   });
 
   it('has a link to home page', () => {
