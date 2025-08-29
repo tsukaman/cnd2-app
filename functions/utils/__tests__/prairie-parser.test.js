@@ -137,7 +137,7 @@ describe('Prairie Card Parser', () => {
 
       const result = parseFromHTML(html);
 
-      expect(result.basic.name).toBe('CloudNative Enthusiast');
+      expect(result.basic.name).toBe('Prairie Card User');
       expect(result.basic.title).toBe('');
       expect(result.basic.company).toBe('');
       expect(result.basic.bio).toBe('');
