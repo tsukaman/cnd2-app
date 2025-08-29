@@ -366,7 +366,10 @@ function trimHtmlSafely(html, maxLength = HTML_SIZE_LIMIT) {
       // 最後の完全なタグまでで切る
       const lastCompleteTag = bodyContent.lastIndexOf('>');
       if (lastCompleteTag > 0) {
-        extractedContent += bodyContent.substring(0, lastCompleteTag + 1);
+        extractedContent += '\n' + bodyContent.substring(0, lastCompleteTag + 1);
+      } else if (bodyContent.length > 0) {
+        // タグが見つからない場合でも、テキストコンテンツを追加
+        extractedContent += '\n' + bodyContent;
       }
     }
   }
