@@ -207,6 +207,13 @@ Prairie Cardには以下のようなHTMLパターンで情報が含まれてい�
 - 「○○さんは△△使ってるんですね！実は私も...」みたいな
 - CloudNative Daysの具体的なセッションを絡める
 
+【ラッキーアイテム＆アクション（クスッと笑える）】
+必ず以下を含めてください：
+- ラッキーアイテム: 技術系の日用品をひねった面白いもの
+  例: 「エラーが出なくなるお守りUSB」「無限ループ防止のゴムダック」「503エラー回避の塩」
+- ラッキーアクション: 2人で一緒にやると吉となる技術系ジョーク行動
+  例: 「sudo rm -rf /で乾杯の真似」「Vimの終了方法を3回唱和」「お互いのコードを褒め合う儀式」
+
 【出力フォーマット】
 必ず以下のJSON形式で返答してください：
 {
@@ -250,7 +257,9 @@ Prairie Cardには以下のようなHTMLパターンで情報が含まれてい�
       "『CloudNative Daysの[具体的なセッション名]一緒に聞きに行きませんか？[理由]について議論したいです！』"
     ],
     "hiddenGems": "占い師の第三の目が視た！実は2人とも[完全にでっち上げた共通の趣味]が好きなはず！そして[根拠のない予言]という運命が待っています！",
-    "shareTag": "#CNDxCnD 🎉 [オリジナルtype名]の2人が邂逅！[面白い一言]で世界が変わる予感...！ #CloudNativeDays"
+    "shareTag": "#CNDxCnD 🎉 [オリジナルtype名]の2人が邂逅！[面白い一言]で世界が変わる予感...！ #CloudNativeDays",
+    "luckyItem": "🎁 [技術系アイテムをひねった面白いもの]（例：壊れたUSBメモリ、404エラーのスクショ、無限ループのコード片）",
+    "luckyAction": "🌟 [一緒にやると吉なクスッとくる行動]（例：kubectl get podsを3回唱える、gitコミットメッセージを俳句にする、ラバーダック相手にペアプロ）"
   }
 }
 
@@ -341,6 +350,8 @@ CloudNative Days Winter 2025を盛り上げる素敵な診断をお願いしま�
         conversationStarters: aiResult.diagnosis.conversationStarters,
         hiddenGems: aiResult.diagnosis.hiddenGems,
         shareTag: aiResult.diagnosis.shareTag,
+        luckyItem: aiResult.diagnosis.luckyItem,
+        luckyAction: aiResult.diagnosis.luckyAction,
         // 簡易的なPrairieProfileを生成（表示用）
         participants: [
           {

@@ -191,6 +191,32 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             </motion.div>
           )}
 
+          {/* ラッキーアイテム＆アクション */}
+          {(result.luckyItem || result.luckyAction) && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.6 }}
+              className="mb-8 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-5 border border-purple-400/30"
+            >
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-4">
+                  ✨ 今日のラッキー占い ✨
+                </h3>
+                {result.luckyItem && (
+                  <div className="mb-3">
+                    <span className="text-white/90">{result.luckyItem}</span>
+                  </div>
+                )}
+                {result.luckyAction && (
+                  <div>
+                    <span className="text-white/90">{result.luckyAction}</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {/* アクションボタン */}
           <motion.div
             initial={{ opacity: 0 }}

@@ -52,6 +52,8 @@ export interface DiagnosisResult {
   conversationStarters?: string[];
   hiddenGems?: string;
   shareTag?: string;
+  luckyItem?: string;
+  luckyAction?: string;
   // V3 engine metadata
   metadata?: {
     engine?: string;
