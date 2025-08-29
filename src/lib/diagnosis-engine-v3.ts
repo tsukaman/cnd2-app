@@ -484,6 +484,7 @@ CloudNative Days Winter 2025を盛り上げる素敵な診断をお願いしま�
     return {
       id: `fallback-${Date.now()}`,
       mode: 'duo',
+      type: randomType,
       participants: participants,
       compatibility: randomScore,
       summary: `素晴らしい組み合わせです！相性度は${randomScore}%です。`,
@@ -525,11 +526,8 @@ CloudNative Days Winter 2025を盛り上げる素敵な診断をお願いしま�
    * 汎用診断メソッド（テスト互換性のため）
    */
   async generateDiagnosis(profiles: PrairieProfile[], mode: 'duo' | 'group' = 'duo'): Promise<DiagnosisResult> {
-    // キャッシュキーを生成
-    const cacheKey = profiles.map(p => p.basic?.name || '').join('-');
-    
     // キャッシュから結果を取得
-    const cached = this.cache.get(cacheKey);
+    const cached = this.cache.get(profiles, mode);
     if (cached) {
       return cached;
     }
@@ -551,7 +549,7 @@ CloudNative Days Winter 2025を盛り上げる素敵な診断をお願いしま�
     }
     
     // 結果をキャッシュに保存
-    this.cache.set(cacheKey, result);
+    this.cache.set(profiles, mode, result);
     
     return result;
   }

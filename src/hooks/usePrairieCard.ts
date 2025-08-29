@@ -23,42 +23,42 @@ export function usePrairieCard(): UsePrairieCardReturn {
     try {
       const data = await apiClient.prairie.fetch(url);
       
-      if (!data.success) {
-        throw new Error(data.error || 'Prairie Cardの取得に失敗しました');
+      if (!data || !data.name) {
+        throw new Error('Prairie Cardの取得に失敗しました');
       }
 
       // APIレスポンスをPrairieProfile形式に変換
       const prairieProfile: PrairieProfile = {
         basic: {
-          name: data.data.name || '名前未設定',
-          title: data.data.title || '',
-          company: data.data.company || '',
-          bio: data.data.bio || '',
-          avatar: data.data.avatar,
+          name: data.name || '名前未設定',
+          title: data.title || '',
+          company: data.company || '',
+          bio: data.bio || '',
+          avatar: data.avatar,
         },
         details: {
-          tags: data.data.tags || [],
-          skills: data.data.skills || [],
-          interests: data.data.interests || [],
-          certifications: data.data.certifications || [],
-          communities: data.data.communities || [],
-          motto: data.data.motto,
+          tags: data.tags || [],
+          skills: data.skills || [],
+          interests: data.interests || [],
+          certifications: data.certifications || [],
+          communities: data.communities || [],
+          motto: data.motto,
         },
         social: {
-          twitter: data.data.twitter,
-          github: data.data.github,
-          linkedin: data.data.linkedin,
-          website: data.data.website,
-          blog: data.data.blog,
-          qiita: data.data.qiita,
-          zenn: data.data.zenn,
+          twitter: data.twitter,
+          github: data.github,
+          linkedin: data.linkedin,
+          website: data.website,
+          blog: data.blog,
+          qiita: data.qiita,
+          zenn: data.zenn,
         },
-        custom: data.data.custom || {},
+        custom: data.custom || {},
         meta: {
-          createdAt: data.data.createdAt || undefined,
-          updatedAt: data.data.updatedAt || undefined,
-          connectedBy: data.data.connectedBy,
-          hashtag: data.data.hashtag,
+          createdAt: data.createdAt || undefined,
+          updatedAt: data.updatedAt || undefined,
+          connectedBy: data.connectedBy,
+          hashtag: data.hashtag,
         },
       };
 
