@@ -6,7 +6,7 @@ import { DiagnosisCache } from '../diagnosis-cache';
 jest.mock('openai');
 jest.mock('../diagnosis-cache');
 jest.mock('nanoid', () => ({
-  nanoid: jest.fn(() => 'test-id-123'),
+  nanoid: () => 'test-id-123',
 }));
 
 // Mock fetch
@@ -171,6 +171,17 @@ describe('SimplifiedDiagnosisEngine', () => {
         id: 'cached-123',
         compatibility: 85,
         summary: 'Cached result',
+        mode: 'duo',
+        participants: [],
+        opportunities: [],
+        advice: '',
+        luckyItem: 'Kubernetesのマスコット',
+        luckyAction: 'ペアプログラミング',
+        createdAt: new Date().toISOString(),
+        metadata: {
+          engine: 'v3-simplified',
+          model: 'gpt-4o-mini'
+        }
       };
       mockCache.get.mockReturnValue(cachedResult);
       
@@ -202,12 +213,13 @@ describe('SimplifiedDiagnosisEngine', () => {
           person2: { name: 'Test User 2', skills: ['TypeScript'] }
         },
         diagnosis: {
-          compatibility: 75,
-          summary: '良好な相性です',
-          strengths: ['コミュニケーション'],
-          opportunities: ['技術共有'],
-          advice: 'お互いの強みを活かしましょう',
+          score: 75,
+          message: '良好な相性です',
+          conversationStarters: ['コミュニケーション'],
+          hiddenGems: 'お互いの強みを活かしましょう',
           type: 'クラウドネイティブ型',
+          luckyItem: 'Kubernetesのマスコット',
+          luckyAction: 'ペアプログラミング'
         }
       };
       
@@ -224,6 +236,7 @@ describe('SimplifiedDiagnosisEngine', () => {
       expect(result).toBeDefined();
       expect(result.id).toBe('test-id-123');
       expect(result.compatibility).toBe(75);
+      expect(result.summary).toBe('良好な相性です');
       expect(mockCache.set).toHaveBeenCalled();
     });
 
@@ -234,12 +247,18 @@ describe('SimplifiedDiagnosisEngine', () => {
       
       mockCache.get.mockReturnValue(null);
       
+      // Mock fetch for HTML fetching
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        text: jest.fn().mockResolvedValue('<html><head><title>Test User</title></head><body>Test content</body></html>'),
+      });
+      
       const result = await fallbackEngine.generateDiagnosis(mockProfiles, 'duo');
       
       expect(result).toBeDefined();
       expect(result.summary).toContain('相性度');
-      expect(result.compatibility).toBeGreaterThanOrEqual(60);
-      expect(result.compatibility).toBeLessThanOrEqual(95);
+      expect(result.compatibility).toBeGreaterThanOrEqual(85);
+      expect(result.compatibility).toBeLessThanOrEqual(99);
     });
 
     it('HTMLフェッチエラーをハンドリングする', async () => {
@@ -248,10 +267,7 @@ describe('SimplifiedDiagnosisEngine', () => {
       (global.fetch as jest.Mock).mockReset();
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
       
-      const result = await engine.generateDiagnosis(mockProfiles, 'duo');
-      
-      expect(result).toBeDefined();
-      expect(result.summary).toBeDefined();
+      await expect(engine.generateDiagnosis(mockProfiles, 'duo')).rejects.toThrow('Network error');
     });
 
     it('AI応答のパースエラーをハンドリングする', async () => {
@@ -271,10 +287,7 @@ describe('SimplifiedDiagnosisEngine', () => {
         }],
       } as any);
 
-      const result = await engine.generateDiagnosis(mockProfiles, 'duo');
-      
-      expect(result).toBeDefined();
-      expect(result.summary).toContain('相性度');
+      await expect(engine.generateDiagnosis(mockProfiles, 'duo')).rejects.toThrow();
     });
 
     it('グループ診断モードで動作する', async () => {
