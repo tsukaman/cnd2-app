@@ -100,7 +100,8 @@ ${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p,
     
     if (!content) {
       console.error('[CND²] Empty OpenAI response');
-      return null;
+      // Provide a fallback diagnosis instead of null
+      return generateFallbackDiagnosis(profiles, mode);
     }
 
     // Safe JSON parsing with try-catch
@@ -113,12 +114,14 @@ ${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p,
       };
     } catch (parseError) {
       console.error('[CND²] Failed to parse OpenAI response:', parseError);
-      return null;
+      // Provide a fallback diagnosis instead of null
+      return generateFallbackDiagnosis(profiles, mode);
     }
     
   } catch (error) {
     console.error('[CND²] OpenAI diagnosis failed:', error);
-    return null;
+    // Return fallback diagnosis on any error
+    return generateFallbackDiagnosis(profiles, mode);
   }
 }
 
