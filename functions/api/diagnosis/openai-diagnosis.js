@@ -103,16 +103,25 @@ ${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p,
       return null;
     }
 
-    // Safe JSON parsing with try-catch
+    // Validate JSON before parsing
+    let result;
     try {
-      const result = JSON.parse(content);
-      
+      // First, check if content is valid JSON
+      result = JSON.parse(content);
+    } catch (parseError) {
+      console.error('[CND²] OpenAI response is not valid JSON:', content);
+      console.error('[CND²] Parse error:', parseError);
+      return null;
+    }
+
+    // Return the parsed result with aiPowered flag
+    try {
       return {
         ...result,
         aiPowered: true
       };
-    } catch (parseError) {
-      console.error('[CND²] Failed to parse OpenAI response:', parseError);
+    } catch (error) {
+      console.error('[CND²] Failed to process parsed result:', error);
       return null;
     }
     
