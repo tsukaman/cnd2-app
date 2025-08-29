@@ -11,8 +11,8 @@ import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { useDiagnosisV3 } from '@/hooks/useDiagnosisV3';
 import type { PrairieProfile } from '@/types';
 
-// 環境変数でエンジンバージョンを切り替え
-const USE_V3_ENGINE = process.env.NEXT_PUBLIC_USE_DIAGNOSIS_V3 === 'true';
+// 環境変数でエンジンバージョンを切り替え（デフォルトはv3を使用）
+const USE_V3_ENGINE = process.env.NEXT_PUBLIC_USE_DIAGNOSIS_V3 !== 'false';
 
 export default function DuoPage() {
   const router = useRouter();
