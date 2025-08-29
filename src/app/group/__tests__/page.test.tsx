@@ -175,9 +175,9 @@ describe('GroupPage', () => {
         fireEvent.click(addButton);
       }
       
-      // Check that we now have 6 members
+      // Check that we now have 6 members - currentIndex will be 3 (4th member) after adding 3
       await waitFor(() => {
-        expect(screen.getByText(/メンバー.*1.*\/.*6/)).toBeInTheDocument();
+        expect(screen.getByText(/メンバー.*4.*\/.*6/)).toBeInTheDocument();
       });
       
       // 6人になったら追加ボタンが表示されなくなる
