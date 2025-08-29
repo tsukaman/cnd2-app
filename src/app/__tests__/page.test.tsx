@@ -5,11 +5,13 @@ import HomePage from '../page';
 import { useRouter } from 'next/navigation';
 
 // Next.js navigationモック
+const mockSearchParams = {
+  get: jest.fn(() => null),
+};
+
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
-  useSearchParams: jest.fn(() => ({
-    get: jest.fn(() => null),
-  })),
+  useSearchParams: jest.fn(() => mockSearchParams),
 }));
 
 // localStorageのモック

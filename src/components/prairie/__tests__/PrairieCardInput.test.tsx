@@ -183,7 +183,8 @@ describe('PrairieCardInput', () => {
   it('disables button when input is empty', () => {
     render(<PrairieCardInput {...defaultProps} />);
     
-    const button = screen.getByRole('button');
+    // スキャンボタンを特定して取得
+    const button = screen.getByRole('button', { name: /スキャン/i });
     expect(button).toBeDisabled();
   });
 

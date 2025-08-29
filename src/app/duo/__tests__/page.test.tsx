@@ -38,6 +38,7 @@ jest.mock('@/components/prairie/PrairieCardInput', () => ({
   __esModule: true,
   default: ({ onProfileLoaded, disabled }: any) => (
     <div data-testid="prairie-card-input">
+      <input type="text" placeholder="Prairie Card URL" />
       <button onClick={() => onProfileLoaded(createMockPrairieProfile('Test User'))} disabled={disabled}>
         スキャン
       </button>
@@ -137,8 +138,8 @@ describe('DuoPage', () => {
     it('タイトルとヘッダーが表示される', () => {
       render(<DuoPage />);
       
-      expect(screen.getByText('2人の相性診断')).toBeInTheDocument();
-      expect(screen.getByText('Prairie Cardから相性を診断します')).toBeInTheDocument();
+      expect(screen.getByText('2人診断モード')).toBeInTheDocument();
+      expect(screen.getByText('2つのPrairie Cardから相性を診断します')).toBeInTheDocument();
     });
 
     it('診断開始ボタンが初期状態で無効になっている', () => {
