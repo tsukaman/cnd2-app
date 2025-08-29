@@ -80,8 +80,8 @@ export class DiagnosisEngine {
             content: prompt
           }
         ],
-        temperature: 0.8,
-        max_tokens: 1000,
+        temperature: 0.85,  // エンタメ性向上
+        max_tokens: 1200,  // ラッキーアイテム分追加
         response_format: { type: "json_object" }
       });
 

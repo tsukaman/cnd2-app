@@ -11,7 +11,7 @@ import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import type { PrairieProfile } from '@/types';
 
-export default function DuoPage() {
+export default function DuoPageImproved() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<'first' | 'second' | 'ready'>('first');
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);

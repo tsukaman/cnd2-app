@@ -1,3 +1,6 @@
+// @ts-ignore - JS module without types
+import { parseFromHTML, validatePrairieCardUrl } from '../utils/prairie-parser.js';
+
 export async function onRequest(context: any) {
   // Handle CORS
   if (context.request.method === 'OPTIONS') {
@@ -15,17 +18,66 @@ export async function onRequest(context: any) {
   }
 
   try {
-    const { html } = await context.request.json();
+    const { url, html } = await context.request.json();
     
-    // Prairie Card解析の簡易版
+    // Validation
+    if (!url && !html) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'URL or HTML content is required' 
+      }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+    
+    let prairieData;
+    let htmlContent = html;
+    
+    if (url && !html) {
+      // Validate URL before fetching
+      if (!validatePrairieCardUrl(url)) {
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: 'Invalid Prairie Card URL' 
+        }), {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+      
+      // Fetch Prairie Card HTML from URL
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'CND2/2.0 PrairieCardParser',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch Prairie Card: ${response.status}`);
+      }
+      
+      htmlContent = await response.text();
+    }
+    
+    // Parse the HTML content
+    prairieData = parseFromHTML(htmlContent) as any;
+    
+    // Add source URL to metadata if provided
+    if (url && prairieData?.meta) {
+      prairieData.meta.sourceUrl = url;
+    }
+    
     const result = {
       success: true,
-      data: {
-        name: 'CloudNative Enthusiast',
-        bio: 'クラウドネイティブ技術に情熱を注ぐエンジニア',
-        interests: ['Kubernetes', 'Docker', 'CI/CD', 'Observability'],
-        tags: ['#CloudNative', '#DevOps', '#SRE'],
-      }
+      data: prairieData
     };
 
     return new Response(JSON.stringify(result), {
@@ -34,8 +86,12 @@ export async function onRequest(context: any) {
         'Access-Control-Allow-Origin': '*',
       },
     });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: 'Failed to parse Prairie Card' }), {
+  } catch (error: any) {
+    console.error('[Prairie API] Error:', error);
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: error.message || 'Failed to parse Prairie Card' 
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',

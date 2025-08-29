@@ -7,9 +7,10 @@ import OpenAI from 'openai';
 import { DiagnosisResult, PrairieProfile } from '@/types';
 import { nanoid } from 'nanoid';
 import { DiagnosisCache } from './diagnosis-cache';
+import { PrairieProfileExtractor } from './prairie-profile-extractor';
 
 // 定数定義
-const HTML_SIZE_LIMIT = 50000;
+const HTML_SIZE_LIMIT = 10000;  // 50000 → 10000 コスト削減のため制限
 const REGEX_MAX_LENGTH = 500;
 const META_ATTR_MAX_LENGTH = 200;
 
@@ -140,12 +141,20 @@ export class SimplifiedDiagnosisEngine {
   }
 
   /**
-   * 詳細な診断プロンプトを生成
+   * 詳細な診断プロンプトを生成（最適化版）
    */
   private buildDiagnosisPrompt(html1: string, html2: string): string {
-    // HTMLを構造を保持しながらサイズ制限
-    const trimmedHtml1 = this.trimHtmlSafely(html1, HTML_SIZE_LIMIT);
-    const trimmedHtml2 = this.trimHtmlSafely(html2, HTML_SIZE_LIMIT);
+    // HTMLから最小限の情報を抽出（トークン削減）
+    const profile1 = PrairieProfileExtractor.extractMinimal(html1);
+    const profile2 = PrairieProfileExtractor.extractMinimal(html2);
+    
+    const profileStr1 = PrairieProfileExtractor.toCompactString(profile1);
+    const profileStr2 = PrairieProfileExtractor.toCompactString(profile2);
+    
+    // トークン数をログ出力（デバッグ用）
+    const tokens1 = PrairieProfileExtractor.estimateTokens(profileStr1);
+    const tokens2 = PrairieProfileExtractor.estimateTokens(profileStr2);
+    console.log(`[CND²] プロフィール抽出完了 - トークン数: ${tokens1} + ${tokens2} = ${tokens1 + tokens2}`);
     
     return `
 あなたは伝説の占い師「クラウドネイティブの賢者」です！
@@ -271,11 +280,11 @@ Prairie Cardには以下のようなHTMLパターンで情報が含まれてい�
 - 根拠がなくても自信満々に断言する
 - 最後は必ずポジティブに締める
 
-【Prairie Card HTML 1】
-${trimmedHtml1}
+【Prairie Card プロフィール 1】
+${profileStr1}
 
-【Prairie Card HTML 2】
-${trimmedHtml2}
+【Prairie Card プロフィール 2】
+${profileStr2}
 
 上記HTMLから情報を抽出しつつ、足りない部分は楽しく創造的に補完してください。
 参加者が「この診断面白い！相手と話してみたい！」と思えるような、
