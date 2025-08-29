@@ -89,11 +89,10 @@ export async function onRequest(context: any) {
   } catch (error: any) {
     console.error('[Prairie API] Error:', error);
     
-    // 本番環境では詳細なエラーメッセージを隠す
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const errorMessage = isDevelopment 
-      ? (error.message || 'Failed to parse Prairie Card')
-      : 'Failed to parse Prairie Card';
+    // プロダクション環境では汎用的なエラーメッセージを返す
+    // Cloudflare Workers環境では NODE_ENV が期待通りに動作しない可能性があるため、
+    // より安全にエラーメッセージを汎用化
+    const errorMessage = 'Failed to parse Prairie Card';
     
     return new Response(JSON.stringify({ 
       success: false,

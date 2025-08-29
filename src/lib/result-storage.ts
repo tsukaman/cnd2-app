@@ -46,6 +46,9 @@ export class ResultStorage {
 
   // 結果を取得
   getResult(id: string): DiagnosisResult | null {
+    // リクエスト時にクリーンアップを実行（Edge Runtime対応）
+    this.cleanupOldResults();
+    
     // メモリから取得
     const memoryResult = this.results.get(id);
     if (memoryResult) return memoryResult;
@@ -72,6 +75,9 @@ export class ResultStorage {
 
   // 全結果を取得
   getAllResults(): DiagnosisResult[] {
+    // リクエスト時にクリーンアップを実行（Edge Runtime対応）
+    this.cleanupOldResults();
+    
     const results: DiagnosisResult[] = [];
     
     // メモリから
@@ -140,16 +146,17 @@ export class ResultStorage {
     }
   }
 
-  // クリーンアップタイマーを開始
+  // クリーンアップを初期化
   private startCleanupTimer(): void {
-    // Edge Runtimeではタイマーが使用できないため、
-    // 各操作時にクリーンアップを実行
+    // Edge Runtime対応: setIntervalの代わりにリクエスト時クリーンアップを採用
+    // 各操作時（saveResult, getResult, getAllResults）にクリーンアップを実行
     // 初回実行
     this.cleanupOldResults();
   }
 
   // 統計情報を取得
   getStats(): { total: number; recentCount: number } {
+    // getAllResults() 内でクリーンアップが実行されるため、ここでは不要
     const all = this.getAllResults();
     const now = Date.now();
     const oneDayAgo = now - (24 * 60 * 60 * 1000);
