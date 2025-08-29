@@ -4,8 +4,9 @@ import { NextResponse } from 'next/server';
 describe('ApiError', () => {
   it('ApiErrorインスタンスを正しく作成する', () => {
     const error = new ApiError(
-      ApiErrorCode.VALIDATION_ERROR,
       'Invalid input',
+      ApiErrorCode.VALIDATION_ERROR,
+      undefined,
       { field: 'email' }
     );
 
@@ -32,15 +33,16 @@ describe('ApiError', () => {
     ];
 
     testCases.forEach(({ code, expectedStatus }) => {
-      const error = new ApiError(code, 'Test message');
+      const error = new ApiError('Test message', code);
       expect(error.statusCode).toBe(expectedStatus);
     });
   });
 
   it('JSON形式で正しくシリアライズする', () => {
     const error = new ApiError(
-      ApiErrorCode.VALIDATION_ERROR,
       'Invalid input',
+      ApiErrorCode.VALIDATION_ERROR,
+      undefined,
       { field: 'email', required: true }
     );
 
@@ -54,7 +56,7 @@ describe('ApiError', () => {
   });
 
   it('詳細情報なしでもシリアライズできる', () => {
-    const error = new ApiError(ApiErrorCode.INTERNAL_ERROR, 'Server error');
+    const error = new ApiError('Server error', ApiErrorCode.INTERNAL_ERROR);
     const json = error.toJSON();
 
     expect(json).toEqual({
@@ -77,8 +79,8 @@ describe('handleApiError', () => {
 
   it('ApiErrorインスタンスを正しく処理する', () => {
     const apiError = new ApiError(
-      ApiErrorCode.VALIDATION_ERROR,
-      'Invalid email format'
+      'Invalid email format',
+      ApiErrorCode.VALIDATION_ERROR
     );
 
     const response = handleApiError(apiError);
@@ -177,7 +179,7 @@ describe('createErrorResponse', () => {
   });
 
   it('カスタムステータスコードを使用できる', () => {
-    const error = new ApiError(ApiErrorCode.INTERNAL_ERROR, 'Server error');
+    const error = new ApiError('Server error', ApiErrorCode.INTERNAL_ERROR);
     const response = createErrorResponse(
       error.code,
       error.message,
@@ -192,8 +194,9 @@ describe('Error Chaining', () => {
   it('エラーの連鎖を適切に処理する', () => {
     const originalError = new Error('Database connection failed');
     const apiError = new ApiError(
-      ApiErrorCode.SERVICE_UNAVAILABLE,
       'Service temporarily unavailable',
+      ApiErrorCode.SERVICE_UNAVAILABLE,
+      undefined,
       { originalError: originalError.message }
     );
 
@@ -204,8 +207,9 @@ describe('Error Chaining', () => {
 
   it('複数のエラー詳細を含められる', () => {
     const error = new ApiError(
-      ApiErrorCode.VALIDATION_ERROR,
       'Multiple validation errors',
+      ApiErrorCode.VALIDATION_ERROR,
+      undefined,
       {
         errors: [
           { field: 'email', message: 'Invalid format' },

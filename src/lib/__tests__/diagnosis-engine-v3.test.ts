@@ -45,6 +45,9 @@ describe('SimplifiedDiagnosisEngine', () => {
     // Set environment
     process.env.OPENAI_API_KEY = 'test-api-key';
     
+    // Reset singleton instance to pick up the new environment variable
+    (SimplifiedDiagnosisEngine as any).instance = undefined;
+    
     // Get instance
     engine = SimplifiedDiagnosisEngine.getInstance();
   });

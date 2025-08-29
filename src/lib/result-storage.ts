@@ -31,6 +31,10 @@ export class ResultStorage {
           createdAt: result.createdAt,
         };
         localStorage.setItem('cnd2_results', JSON.stringify(results));
+        
+        // 保存時にクリーンアップを実行（Edge Runtime対応）
+        // setIntervalの代わりにリクエストベースでクリーンアップ
+        this.cleanupOldResults();
       } catch (error) {
         console.error('[CND²] 結果の保存エラー:', error);
       }
@@ -138,11 +142,8 @@ export class ResultStorage {
 
   // クリーンアップタイマーを開始
   private startCleanupTimer(): void {
-    // 1時間ごとにクリーンアップを実行
-    setInterval(() => {
-      this.cleanupOldResults();
-    }, 60 * 60 * 1000);
-    
+    // Edge Runtimeではタイマーが使用できないため、
+    // 各操作時にクリーンアップを実行
     // 初回実行
     this.cleanupOldResults();
   }

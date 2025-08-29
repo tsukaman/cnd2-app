@@ -1,16 +1,25 @@
+// Mock getApiConfig before importing rate-limit
+jest.mock('../env', () => ({
+  getApiConfig: () => ({
+    rateLimit: 10,
+    rateLimitWindow: 60, // 60 seconds  
+    timeout: 30000,
+    corsOrigins: ['*'],
+  }),
+  env: {
+    API_RATE_LIMIT: 10,
+    API_RATE_LIMIT_WINDOW: 60,
+    API_TIMEOUT: 30000,
+    CORS_ORIGINS: '*',
+  },
+}));
+
 import { checkRateLimit } from '../rate-limit';
 import { NextRequest } from 'next/server';
 import { ApiError, ApiErrorCode } from '../api-errors';
 
 // Mock the global Map used in rate-limit
 const mockRateLimitStore = new Map();
-
-// Mock getApiConfig
-jest.mock('../env', () => ({
-  getApiConfig: jest.fn(() => ({
-    rateLimitPerMinute: 10,
-  })),
-}));
 
 describe('Rate Limiting', () => {
   beforeEach(() => {

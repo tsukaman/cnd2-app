@@ -88,9 +88,16 @@ export async function onRequest(context: any) {
     });
   } catch (error: any) {
     console.error('[Prairie API] Error:', error);
+    
+    // 本番環境では詳細なエラーメッセージを隠す
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const errorMessage = isDevelopment 
+      ? (error.message || 'Failed to parse Prairie Card')
+      : 'Failed to parse Prairie Card';
+    
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message || 'Failed to parse Prairie Card' 
+      error: errorMessage
     }), {
       status: 500,
       headers: {

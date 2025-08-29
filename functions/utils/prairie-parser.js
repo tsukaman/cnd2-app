@@ -324,12 +324,15 @@ function parseFromHTML(html) {
     ...extractArrayByClass(html, 'badge'),
   ];
   
-  // Extract hashtags from text
-  const hashtagMatches = html.matchAll(/#([\w日本語ぁ-んァ-ヶー一-龠]+)/g);
-  for (const match of hashtagMatches) {
-    const hashtag = '#' + match[1];
+  // Extract hashtags from text (最大10個まで、パフォーマンス最適化)
+  const hashtagPattern = /#([\w]{1,50}|[ぁ-んァ-ヶー]{1,20}|[一-龠]{1,20})/g;
+  let hashtagCount = 0;
+  let hashtagMatch;
+  while ((hashtagMatch = hashtagPattern.exec(html)) !== null && hashtagCount < 10) {
+    const hashtag = '#' + hashtagMatch[1];
     if (!tags.includes(hashtag)) {
       tags.push(hashtag);
+      hashtagCount++;
     }
   }
   
