@@ -33,11 +33,12 @@ describe('SimplifiedDiagnosisEngine', () => {
     } as any;
     (DiagnosisCache.getInstance as jest.Mock).mockReturnValue(mockCache);
     
-    // Setup OpenAI mock
+    // Setup OpenAI mock with proper typing
+    const mockCreate = jest.fn();
     mockOpenAI = {
       chat: {
         completions: {
-          create: jest.fn() as any,
+          create: mockCreate,
         },
       },
     } as any;
@@ -157,7 +158,7 @@ describe('SimplifiedDiagnosisEngine', () => {
       };
       
       // Setup mock OpenAI response for all tests by default
-      mockOpenAI.chat.completions.create.mockResolvedValue({
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue({
         choices: [{
           message: {
             content: JSON.stringify(mockAIResponse),
@@ -225,7 +226,7 @@ describe('SimplifiedDiagnosisEngine', () => {
         }
       };
       
-      mockOpenAI.chat.completions.create.mockResolvedValue({
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue({
         choices: [{
           message: {
             content: JSON.stringify(mockAIResponse),
@@ -281,7 +282,7 @@ describe('SimplifiedDiagnosisEngine', () => {
         text: jest.fn().mockResolvedValue(mockHtml1),
       });
       
-      mockOpenAI.chat.completions.create.mockResolvedValue({
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue({
         choices: [{
           message: {
             content: 'Invalid JSON',
@@ -338,8 +339,8 @@ describe('SimplifiedDiagnosisEngine', () => {
       
       expect(result).toBeDefined();
       // Check that HTML was trimmed (verify through AI call)
-      if (mockOpenAI.chat.completions.create.mock.calls.length > 0) {
-        const aiCallContent = mockOpenAI.chat.completions.create.mock.calls[0][0].messages[0].content;
+      if ((mockOpenAI.chat.completions.create as jest.Mock).mock.calls.length > 0) {
+        const aiCallContent = (mockOpenAI.chat.completions.create as jest.Mock).mock.calls[0][0].messages[0].content;
         expect(aiCallContent.length).toBeLessThan(150000); // Reasonable limit for prompt
       }
     });
