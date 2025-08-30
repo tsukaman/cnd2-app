@@ -17,7 +17,7 @@ describe('AstrologicalDiagnosisEngineV4', () => {
     jest.clearAllMocks();
     
     // Reset singleton instance
-    (AstrologicalDiagnosisEngineV4 as any).instance = undefined;
+    AstrologicalDiagnosisEngineV4.resetInstance();
     
     // Save original fetch
     originalFetch = global.fetch;
