@@ -3,6 +3,21 @@
  * Simplified version without cheerio (using regex for Edge Runtime compatibility)
  */
 
+// Constants for array limits and string lengths
+const LIMITS = {
+  SKILLS: 15,           // Maximum number of skills to extract
+  TAGS: 15,             // Maximum number of tags to extract
+  INTERESTS: 10,        // Maximum number of interests to extract
+  CERTIFICATIONS: 10,   // Maximum number of certifications to extract
+  COMMUNITIES: 10,      // Maximum number of communities to extract
+  HASHTAGS: 10,         // Maximum number of hashtags to extract
+  BIO_LENGTH: 500,      // Maximum bio length in characters
+  COMPANY_LENGTH: 100,  // Maximum company name length in characters
+  TITLE_LENGTH: 100,    // Maximum title length in characters
+  META_TAG_LENGTH: 1000, // Maximum meta tag content length (ReDoS protection)
+  META_ATTR_LENGTH: 500  // Maximum meta tag attribute length (ReDoS protection)
+};
+
 /**
  * Extract text content from HTML using regex
  * @param {string} html - HTML content
@@ -109,10 +124,14 @@ function extractMetaContent(html, property) {
   
   // Try multiple patterns for meta tags (with length limits for ReDoS protection)
   const patterns = [
-    new RegExp(`<meta[^>]{0,500}property=["']${escapedProperty}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
-    new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}property=["']${escapedProperty}["']`, 'i'),
-    new RegExp(`<meta[^>]{0,500}name=["']${property}["'][^>]{0,500}content=["']([^"']{1,1000})["']`, 'i'),
-    new RegExp(`<meta[^>]{0,500}content=["']([^"']{1,1000})["'][^>]{0,500}name=["']${property}["']`, 'i')
+    // Pattern: <meta property="og:title" content="value">
+    new RegExp(`<meta[^>]{0,${LIMITS.META_ATTR_LENGTH}}property=["']${escapedProperty}["'][^>]{0,${LIMITS.META_ATTR_LENGTH}}content=["']([^"']{1,${LIMITS.META_TAG_LENGTH}})["']`, 'i'),
+    // Pattern: <meta content="value" property="og:title">
+    new RegExp(`<meta[^>]{0,${LIMITS.META_ATTR_LENGTH}}content=["']([^"']{1,${LIMITS.META_TAG_LENGTH}})["'][^>]{0,${LIMITS.META_ATTR_LENGTH}}property=["']${escapedProperty}["']`, 'i'),
+    // Pattern: <meta name="description" content="value">
+    new RegExp(`<meta[^>]{0,${LIMITS.META_ATTR_LENGTH}}name=["']${property}["'][^>]{0,${LIMITS.META_ATTR_LENGTH}}content=["']([^"']{1,${LIMITS.META_TAG_LENGTH}})["']`, 'i'),
+    // Pattern: <meta content="value" name="description">
+    new RegExp(`<meta[^>]{0,${LIMITS.META_ATTR_LENGTH}}content=["']([^"']{1,${LIMITS.META_TAG_LENGTH}})["'][^>]{0,${LIMITS.META_ATTR_LENGTH}}name=["']${property}["']`, 'i')
   ];
   
   for (const pattern of patterns) {
@@ -192,10 +211,14 @@ function extractProfileFromMeta(html) {
   
   // Extract company from various patterns (with length limits for ReDoS protection)
   const companyPatterns = [
-    // @Company format checked first (higher priority)
-    /@\s*([^。、\n|]{1,100}?)(?:\s*[|]|$)/,  // From @ to | or end of string
-    /(?:所属|勤務|在籍)[：:]?\s*([^。、\n|]{1,100})/,
-    // Pattern for company keywords (captures only the company name part)
+    // Pattern 1: @Company format checked first (higher priority)
+    // Matches: @CompanyName | ... or @CompanyName (end of string)
+    /@\s*([^。、\n|]{1,${LIMITS.COMPANY_LENGTH}}?)(?:\s*[|]|$)/,
+    // Pattern 2: Japanese affiliation patterns
+    // Matches: 所属：CompanyName, 勤務:CompanyName, 在籍：CompanyName
+    /(?:所属|勤務|在籍)[：:]?\s*([^。、\n|]{1,${LIMITS.COMPANY_LENGTH}})/,
+    // Pattern 3: Company with keywords (captures only the company name part)
+    // Matches: at CompanyName Inc., @ CompanyName株式会社
     /(?:at |@ )?([\w\s]{1,30}(?:会社|Company|Corp|Inc|Ltd|株式会社)\.?)(?:\s*[|]|$)/
   ];
   
@@ -207,9 +230,9 @@ function extractProfileFromMeta(html) {
     }
   }
   
-  // Use entire description as bio (up to 500 chars)
+  // Use entire description as bio (up to BIO_LENGTH chars)
   if (description && description.length > 0) {
-    result.bio = description.substring(0, 500);
+    result.bio = description.substring(0, LIMITS.BIO_LENGTH);
   }
   
   return result;
@@ -269,6 +292,14 @@ function extractTextByDataField(html, fieldName) {
 function parseFromHTML(html, env) {
   const debugMode = env?.DEBUG_MODE === 'true';
   
+  // Handle null or undefined input
+  if (!html) {
+    html = '';
+  }
+  
+  // Convert to string if not already
+  html = String(html);
+  
   if (debugMode) {
     console.log('[DEBUG] Prairie Parser - Starting HTML parsing...');
     console.log('[DEBUG] HTML length:', html.length);
@@ -323,15 +354,18 @@ function parseFromHTML(html, env) {
                   metaProfile.company ||
                   '';
                   
-  const bio = extractTextByClass(html, 'bio') ||
-              extractTextByClass(html, 'description') ||
-              extractTextByClass(html, 'about') ||
-              extractTextByClass(html, 'introduction') ||
-              extractTextByClass(html, 'profile-text') ||
-              extractTextByDataField(html, 'bio') ||
-              extractTextByDataField(html, 'about') ||
-              metaProfile.bio ||
-              '';
+  const bioCandidate = extractTextByClass(html, 'bio') ||
+                       extractTextByClass(html, 'description') ||
+                       extractTextByClass(html, 'about') ||
+                       extractTextByClass(html, 'introduction') ||
+                       extractTextByClass(html, 'profile-text') ||
+                       extractTextByDataField(html, 'bio') ||
+                       extractTextByDataField(html, 'about') ||
+                       metaProfile.bio ||
+                       '';
+  
+  // Limit bio length to BIO_LENGTH
+  const bio = bioCandidate ? bioCandidate.substring(0, LIMITS.BIO_LENGTH) : '';
               
   // Extract skills and tags with enhanced patterns
   const skills = [
@@ -353,11 +387,15 @@ function parseFromHTML(html, env) {
     ...extractArrayByClass(html, 'badge'),
   ];
   
-  // Extract hashtags from text (最大10個まで、パフォーマンス最適化)
+  // Extract hashtags from text (最大HASHTAGS個まで、パフォーマンス最適化)
+  // Pattern breakdown:
+  // [\w]{1,50}           - English alphanumeric and underscore (1-50 chars)
+  // [ぁ-んァ-ヶー]{1,20}  - Hiragana and Katakana (1-20 chars)
+  // [一-龠]{1,20}        - Kanji characters (1-20 chars)
   const hashtagPattern = /#([\w]{1,50}|[ぁ-んァ-ヶー]{1,20}|[一-龠]{1,20})/g;
   let hashtagCount = 0;
   let hashtagMatch;
-  while ((hashtagMatch = hashtagPattern.exec(html)) !== null && hashtagCount < 10) {
+  while ((hashtagMatch = hashtagPattern.exec(html)) !== null && hashtagCount < LIMITS.HASHTAGS) {
     const hashtag = '#' + hashtagMatch[1];
     if (!tags.includes(hashtag)) {
       tags.push(hashtag);
@@ -407,11 +445,11 @@ function parseFromHTML(html, env) {
   const zenn = extractSocialUrl(html, 'zenn.dev');
   
   // Remove duplicates and limit arrays
-  const uniqueSkills = [...new Set(skills)].slice(0, 15);
-  const uniqueTags = [...new Set(tags)].slice(0, 15);
-  const uniqueInterests = [...new Set(interests)].slice(0, 10);
-  const uniqueCertifications = [...new Set(certifications)].slice(0, 10);
-  const uniqueCommunities = [...new Set(communities)].slice(0, 10);
+  const uniqueSkills = [...new Set(skills)].slice(0, LIMITS.SKILLS);
+  const uniqueTags = [...new Set(tags)].slice(0, LIMITS.TAGS);
+  const uniqueInterests = [...new Set(interests)].slice(0, LIMITS.INTERESTS);
+  const uniqueCertifications = [...new Set(certifications)].slice(0, LIMITS.CERTIFICATIONS);
+  const uniqueCommunities = [...new Set(communities)].slice(0, LIMITS.COMMUNITIES);
   
   // Build the profile object matching PrairieProfile type
   // Note: Don't escape HTML here as it will be handled by the frontend
