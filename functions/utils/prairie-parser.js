@@ -435,9 +435,9 @@ function parseFromHTML(html) {
   const profile = {
     basic: {
       name: name || '名前未設定',  // Use Japanese default as fallback
-      title: title || undefined,
-      company: company || undefined,
-      bio: bio || undefined,
+      title: title || '',
+      company: company || '',
+      bio: bio || '',
       avatar: metaAvatar || undefined,
     },
     details: {

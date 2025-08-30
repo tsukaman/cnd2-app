@@ -34,6 +34,8 @@ function sanitizeProfile(profile) {
 }
 
 async function generateOpenAIDiagnosis(profiles, mode, env) {
+  const debugMode = env.DEBUG_MODE === 'true';
+  
   // Check if OpenAI API key is configured
   if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY === 'your-openai-api-key-here') {
     console.log('[CND²] OpenAI API key not configured, using fallback');
@@ -43,6 +45,10 @@ async function generateOpenAIDiagnosis(profiles, mode, env) {
   try {
     // Sanitize profiles to protect PII
     const sanitizedProfiles = profiles.map(sanitizeProfile);
+    
+    if (debugMode) {
+      console.log('[DEBUG] Sanitized profiles:', JSON.stringify(sanitizedProfiles, null, 2));
+    }
     
     // Build prompt based on mode
     let prompt = '';
@@ -62,6 +68,10 @@ ${JSON.stringify(sanitizedProfiles[1], null, 2)}
 ${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p, null, 2)}`).join('\n\n')}
 
 グループ全体のダイナミクスと、チームとしての強みを評価してください。`;
+    }
+    
+    if (debugMode) {
+      console.log('[DEBUG] OpenAI prompt:', prompt);
     }
 
     // Call OpenAI API using fetch
