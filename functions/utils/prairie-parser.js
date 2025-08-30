@@ -130,8 +130,8 @@ function extractMetaContent(html, property) {
  * @param {string} html - HTML content
  * @returns {string} - Extracted name or empty string
  */
-function extractNameFromMeta(html) {
-  const debugMode = process.env.DEBUG_MODE === 'true';
+function extractNameFromMeta(html, env) {
+  const debugMode = env?.DEBUG_MODE === 'true';
   
   // Try multiple sources for name extraction
   const ogTitle = extractMetaContent(html, 'og:title');
@@ -266,8 +266,8 @@ function extractTextByDataField(html, fieldName) {
  * @param {string} html - Prairie Card HTML content
  * @returns {Object} - Parsed profile object
  */
-function parseFromHTML(html) {
-  const debugMode = process.env.DEBUG_MODE === 'true';
+function parseFromHTML(html, env) {
+  const debugMode = env?.DEBUG_MODE === 'true';
   
   if (debugMode) {
     console.log('[DEBUG] Prairie Parser - Starting HTML parsing...');
@@ -276,7 +276,7 @@ function parseFromHTML(html) {
   }
   
   // Extract information from meta tags first
-  const metaName = extractNameFromMeta(html);
+  const metaName = extractNameFromMeta(html, env);
   const metaProfile = extractProfileFromMeta(html);
   const metaAvatar = extractAvatarFromMeta(html);
   
