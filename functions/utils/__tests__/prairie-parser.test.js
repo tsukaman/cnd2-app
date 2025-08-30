@@ -184,5 +184,94 @@ describe('Prairie Card Parser', () => {
       expect(result.basic.bio).toContain('long bio paragraph');
       expect(result.basic.bio).toContain('more than 20 characters');
     });
+
+    describe('Error handling', () => {
+      it('should not crash with malformed HTML', () => {
+        const malformedHtml = '<div><span>unclosed tags';
+        expect(() => parseFromHTML(malformedHtml)).not.toThrow();
+        
+        const result = parseFromHTML(malformedHtml);
+        expect(result).toBeDefined();
+        expect(result.basic).toBeDefined();
+        expect(result.basic.name).toBe('名前未設定');
+      });
+
+      it('should handle empty HTML', () => {
+        const emptyHtml = '';
+        expect(() => parseFromHTML(emptyHtml)).not.toThrow();
+        
+        const result = parseFromHTML(emptyHtml);
+        expect(result).toBeDefined();
+        expect(result.basic.name).toBe('名前未設定');
+      });
+
+      it('should handle null or undefined input', () => {
+        expect(() => parseFromHTML(null)).not.toThrow();
+        expect(() => parseFromHTML(undefined)).not.toThrow();
+        
+        const resultNull = parseFromHTML(null);
+        expect(resultNull).toBeDefined();
+        expect(resultNull.basic.name).toBe('名前未設定');
+        
+        const resultUndefined = parseFromHTML(undefined);
+        expect(resultUndefined).toBeDefined();
+        expect(resultUndefined.basic.name).toBe('名前未設定');
+      });
+
+      it('should handle HTML with broken meta tags', () => {
+        const brokenMetaHtml = `
+          <html>
+            <meta property="og:title content="Test
+            <meta name="description" content="
+            <body>
+              <h1>Fallback Name</h1>
+            </body>
+          </html>
+        `;
+        
+        expect(() => parseFromHTML(brokenMetaHtml)).not.toThrow();
+        
+        const result = parseFromHTML(brokenMetaHtml);
+        expect(result).toBeDefined();
+        expect(result.basic.name).toBe('Fallback Name'); // Should fall back to h1
+      });
+
+      it('should handle extremely long strings gracefully', () => {
+        const longString = 'a'.repeat(10000);
+        const htmlWithLongString = `
+          <html>
+            <body>
+              <h1>Normal Name</h1>
+              <div class="bio">${longString}</div>
+            </body>
+          </html>
+        `;
+        
+        expect(() => parseFromHTML(htmlWithLongString)).not.toThrow();
+        
+        const result = parseFromHTML(htmlWithLongString);
+        expect(result).toBeDefined();
+        expect(result.basic.bio.length).toBeLessThanOrEqual(500); // Should be limited
+      });
+
+      it('should handle special characters in HTML', () => {
+        const specialCharsHtml = `
+          <html>
+            <body>
+              <h1>&lt;script&gt;alert('XSS')&lt;/script&gt;</h1>
+              <div class="bio">Bio with <script>malicious</script> content</div>
+              <div class="skill">JavaScript"></div>
+            </body>
+          </html>
+        `;
+        
+        expect(() => parseFromHTML(specialCharsHtml)).not.toThrow();
+        
+        const result = parseFromHTML(specialCharsHtml);
+        expect(result).toBeDefined();
+        expect(result.basic.name).not.toContain('<script>');
+        expect(result.basic.bio).toBeDefined();
+      });
+    });
   });
 });
