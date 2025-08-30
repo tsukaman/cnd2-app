@@ -22,7 +22,7 @@ describe('SimplifiedDiagnosisEngine', () => {
     jest.clearAllMocks();
     
     // Reset singleton instance
-    (SimplifiedDiagnosisEngine as any).instance = undefined;
+    SimplifiedDiagnosisEngine.resetInstance();
     
     // Setup cache mock
     mockCache = {
@@ -68,7 +68,7 @@ describe('SimplifiedDiagnosisEngine', () => {
       (global as any).window = originalWindow;
     }
     // Reset singleton instance
-    (SimplifiedDiagnosisEngine as any).instance = undefined;
+    SimplifiedDiagnosisEngine.resetInstance();
   });
 
   describe('getInstance', () => {

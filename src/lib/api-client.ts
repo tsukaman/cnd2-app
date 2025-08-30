@@ -1,6 +1,8 @@
 // API Client for Cloudflare Functions
 // 環境に応じてエンドポイントを切り替え
 
+import { logger } from './logger';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 // ブラウザ環境かどうかを初期化時に一度だけ判定（パフォーマンス最適化）
@@ -42,7 +44,7 @@ function getApiUrl(path: string): string {
 }
 
 // 共通のエラーハンドリング関数
-async function handleApiError(response: Response, defaultMessage: string = 'Network error'): Promise<never> {
+async function handleApiError(response: Response, defaultMessage: string = 'Network error'): Promise<void> {
   const errorData: ApiErrorResponse = await response.json().catch(() => ({ 
     error: { message: defaultMessage } 
   }));
@@ -51,13 +53,32 @@ async function handleApiError(response: Response, defaultMessage: string = 'Netw
   const errorMessage = typeof errorData.error === 'object' 
     ? errorData.error?.message 
     : errorData.error || `HTTP error! status: ${response.status}`;
+  
+  const finalMessage = errorMessage || defaultMessage;
+  
+  // Log the error for debugging
+  logger.error('[API Client] Request failed:', {
+    status: response.status,
+    message: finalMessage,
+    url: response.url
+  });
     
-  throw new Error(errorMessage || defaultMessage);
+  throw new Error(finalMessage);
 }
 
 // 共通のレスポンス処理関数
 async function handleApiResponse<T = any>(response: Response): Promise<T> {
   const result = await response.json();
+  
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    logger.debug('[API Client] Response received:', {
+      url: response.url,
+      status: response.status,
+      hasData: 'data' in result
+    });
+  }
+  
   // Handle the new response format with success/data structure
   return result.data || result;
 }
