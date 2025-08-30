@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { PrairieProfile } from '@/types';
 import { logger } from '@/lib/logger';
 import { apiClient } from '@/lib/api-client';
-import { MinimalProfile } from '@/lib/prairie-profile-extractor';
 
 interface UsePrairieCardReturn {
   loading: boolean;
@@ -22,38 +21,15 @@ export function usePrairieCard(): UsePrairieCardReturn {
     setError(null);
     
     try {
-      const data: MinimalProfile = await apiClient.prairie.fetch(url);
+      const response = await apiClient.prairie.fetch(url);
       
-      if (!data || !data.name) {
+      // Check if response has the expected structure
+      if (!response || !response.basic || !response.basic.name) {
         throw new Error('Prairie Cardの取得に失敗しました');
       }
 
-      // APIレスポンスをPrairieProfile形式に変換
-      const prairieProfile: PrairieProfile = {
-        basic: {
-          name: data.name || '名前未設定',
-          title: data.title || '',
-          company: data.company || '',
-          bio: data.bio || '',
-          avatar: undefined,
-        },
-        details: {
-          tags: [],
-          skills: data.skills || [],
-          interests: data.interests || [],
-          certifications: [],
-          communities: [],
-          motto: data.motto,
-        },
-        social: {},
-        custom: {},
-        meta: {
-          createdAt: undefined,
-          updatedAt: undefined,
-          connectedBy: undefined,
-          hashtag: undefined,
-        },
-      };
+      // The response is already in PrairieProfile format from the API
+      const prairieProfile: PrairieProfile = response;
 
       setProfile(prairieProfile);
       return prairieProfile;
