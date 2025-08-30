@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { PrairieProfile } from '@/types';
 import { logger } from '@/lib/logger';
 import { apiClient } from '@/lib/api-client';
+import { MinimalProfile } from '@/lib/prairie-profile-extractor';
 
 interface UsePrairieCardReturn {
   loading: boolean;
@@ -21,44 +22,36 @@ export function usePrairieCard(): UsePrairieCardReturn {
     setError(null);
     
     try {
-      const data = await apiClient.prairie.fetch(url);
+      const data: MinimalProfile = await apiClient.prairie.fetch(url);
       
-      if (!data.success) {
-        throw new Error(data.error || 'Prairie Cardの取得に失敗しました');
+      if (!data || !data.name) {
+        throw new Error('Prairie Cardの取得に失敗しました');
       }
 
       // APIレスポンスをPrairieProfile形式に変換
       const prairieProfile: PrairieProfile = {
         basic: {
-          name: data.data.name || '名前未設定',
-          title: data.data.title || '',
-          company: data.data.company || '',
-          bio: data.data.bio || '',
-          avatar: data.data.avatar,
+          name: data.name || '名前未設定',
+          title: data.title || '',
+          company: data.company || '',
+          bio: data.bio || '',
+          avatar: undefined,
         },
         details: {
-          tags: data.data.tags || [],
-          skills: data.data.skills || [],
-          interests: data.data.interests || [],
-          certifications: data.data.certifications || [],
-          communities: data.data.communities || [],
-          motto: data.data.motto,
+          tags: [],
+          skills: data.skills || [],
+          interests: data.interests || [],
+          certifications: [],
+          communities: [],
+          motto: data.motto,
         },
-        social: {
-          twitter: data.data.twitter,
-          github: data.data.github,
-          linkedin: data.data.linkedin,
-          website: data.data.website,
-          blog: data.data.blog,
-          qiita: data.data.qiita,
-          zenn: data.data.zenn,
-        },
-        custom: data.data.custom || {},
+        social: {},
+        custom: {},
         meta: {
-          createdAt: data.data.createdAt || undefined,
-          updatedAt: data.data.updatedAt || undefined,
-          connectedBy: data.data.connectedBy,
-          hashtag: data.data.hashtag,
+          createdAt: undefined,
+          updatedAt: undefined,
+          connectedBy: undefined,
+          hashtag: undefined,
         },
       };
 

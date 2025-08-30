@@ -37,7 +37,7 @@ describe('SimplifiedDiagnosisEngine', () => {
     mockOpenAI = {
       chat: {
         completions: {
-          create: jest.fn(),
+          create: jest.fn() as any,
         },
       },
     } as any;
@@ -171,8 +171,10 @@ describe('SimplifiedDiagnosisEngine', () => {
         id: 'cached-123',
         compatibility: 85,
         summary: 'Cached result',
-        mode: 'duo',
+        mode: 'duo' as const,
+        type: 'クラウドネイティブ型',
         participants: [],
+        strengths: [],
         opportunities: [],
         advice: '',
         luckyItem: 'Kubernetesのマスコット',
