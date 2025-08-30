@@ -29,7 +29,7 @@ export async function onRequestPost({ request, env }) {
       if (html) {
         // Parse from HTML
         logger.info('Parsing Prairie Card from HTML');
-        prairieData = parseFromHTML(html);
+        prairieData = parseFromHTML(html, env);
       } else {
         // Validate URL before fetching
         if (!validatePrairieCardUrl(url)) {
@@ -74,7 +74,7 @@ export async function onRequestPost({ request, env }) {
           htmlPreview: html.substring(0, 500),
         });
         
-        prairieData = parseFromHTML(html);
+        prairieData = parseFromHTML(html, env);
         
         logger.info('Prairie Card parsed successfully', {
           url,
