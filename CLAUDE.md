@@ -347,7 +347,7 @@ try {
    - temperature: 0.85で創造的な診断文生成
 
 2. **Prairie Card解析の完全修正** ✅
-   - functions/api/prairie.tsが実際にHTMLを解析するように修正
+   - functions/api/prairie.jsが実際にHTMLを解析するように修正
    - prairie-parser.jsに包括的な抽出パターンを追加
    - 技術キーワードの自動検出（JavaScript、Docker、Kubernetes等）
    - ハッシュタグ抽出機能
