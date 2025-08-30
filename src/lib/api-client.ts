@@ -45,11 +45,15 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: { message: 'Network error' } }));
+        // Handle both old format (error.error) and new format (error.error.message)
+        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
       
-      return response.json();
+      // Handle the new response format with success/data structure
+      const result = await response.json();
+      return result.data || result;
     }
   },
   
@@ -65,11 +69,15 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: { message: 'Network error' } }));
+        // Handle both old format (error.error) and new format (error.error.message)
+        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
       
-      return response.json();
+      // Handle the new response format with success/data structure
+      const result = await response.json();
+      return result.data || result;
     }
   },
   
@@ -84,11 +92,13 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Not found' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: { message: 'Not found' } }));
+        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
       
-      return response.json();
+      const result = await response.json();
+      return result.data || result;
     },
     
     async save(result: any) {
@@ -101,11 +111,13 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Failed to save' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: { message: 'Failed to save' } }));
+        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
       
-      return response.json();
+      const responseData = await response.json();
+      return responseData.data || responseData;
     },
     
     async delete(id: string) {
@@ -117,11 +129,13 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Failed to delete' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: { message: 'Failed to delete' } }));
+        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
       
-      return response.json();
+      const responseData = await response.json();
+      return responseData.data || responseData;
     }
   }
 };
