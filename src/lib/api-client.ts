@@ -6,6 +6,15 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 // ブラウザ環境かどうかを初期化時に一度だけ判定（パフォーマンス最適化）
 const isBrowser = typeof window !== 'undefined';
 
+// API Error Response types
+interface ApiErrorResponse {
+  error?: {
+    message?: string;
+    code?: string;
+  } | string;
+  success?: boolean;
+}
+
 // 開発環境では/api、本番環境ではCloudflare FunctionsのURLを使用
 function getApiUrl(path: string): string {
   // pathの正規化を統一処理
@@ -32,6 +41,27 @@ function getApiUrl(path: string): string {
   return `${cleanBaseUrl}/${cleanPath}`;
 }
 
+// 共通のエラーハンドリング関数
+async function handleApiError(response: Response, defaultMessage: string = 'Network error'): Promise<never> {
+  const errorData: ApiErrorResponse = await response.json().catch(() => ({ 
+    error: { message: defaultMessage } 
+  }));
+  
+  // Handle both old format (error.error) and new format (error.error.message)
+  const errorMessage = typeof errorData.error === 'object' 
+    ? errorData.error?.message 
+    : errorData.error || `HTTP error! status: ${response.status}`;
+    
+  throw new Error(errorMessage || defaultMessage);
+}
+
+// 共通のレスポンス処理関数
+async function handleApiResponse<T = any>(response: Response): Promise<T> {
+  const result = await response.json();
+  // Handle the new response format with success/data structure
+  return result.data || result;
+}
+
 export const apiClient = {
   // Prairie Card API
   prairie: {
@@ -45,15 +75,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: { message: 'Network error' } }));
-        // Handle both old format (error.error) and new format (error.error.message)
-        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+        await handleApiError(response, 'Network error');
       }
       
-      // Handle the new response format with success/data structure
-      const result = await response.json();
-      return result.data || result;
+      return handleApiResponse(response);
     }
   },
   
@@ -69,15 +94,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: { message: 'Network error' } }));
-        // Handle both old format (error.error) and new format (error.error.message)
-        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+        await handleApiError(response, 'Network error');
       }
       
-      // Handle the new response format with success/data structure
-      const result = await response.json();
-      return result.data || result;
+      return handleApiResponse(response);
     }
   },
   
@@ -92,13 +112,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: { message: 'Not found' } }));
-        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+        await handleApiError(response, 'Not found');
       }
       
-      const result = await response.json();
-      return result.data || result;
+      return handleApiResponse(response);
     },
     
     async save(result: any) {
@@ -111,13 +128,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: { message: 'Failed to save' } }));
-        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+        await handleApiError(response, 'Failed to save');
       }
       
-      const responseData = await response.json();
-      return responseData.data || responseData;
+      return handleApiResponse(response);
     },
     
     async delete(id: string) {
@@ -129,13 +143,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: { message: 'Failed to delete' } }));
-        const errorMessage = errorData.error?.message || errorData.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+        await handleApiError(response, 'Failed to delete');
       }
       
-      const responseData = await response.json();
-      return responseData.data || responseData;
+      return handleApiResponse(response);
     }
   }
 };
