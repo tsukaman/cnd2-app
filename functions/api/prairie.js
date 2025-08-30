@@ -1,3 +1,4 @@
+// @ts-check
 // Prairie Card API for Cloudflare Functions
 import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../utils/response.js';
 import { createLogger, logRequest } from '../utils/logger.js';
