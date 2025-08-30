@@ -451,8 +451,20 @@ CloudNative Days Winter 2025を盛り上げる素敵な診断をお願いしま�
 
       return diagnosisResult;
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('[CND²] 診断エラー:', error);
+      
+      // OpenAI API特有のエラーハンドリング
+      if (error?.status === 429) {
+        throw new Error('AI診断APIのレート制限に達しました。しばらく待ってから再試行してください。');
+      }
+      if (error?.status === 401) {
+        throw new Error('AI診断APIの認証に失敗しました。');
+      }
+      if (error?.status === 500 || error?.status === 503) {
+        throw new Error('AI診断サービスが一時的に利用できません。');
+      }
+      
       throw error;
     }
   }

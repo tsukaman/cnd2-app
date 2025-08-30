@@ -35,23 +35,42 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
         );
       }
 
-      // Fetch HTML from URL
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'CND2/2.0 PrairieCardParser',
-          'Accept': 'text/html,application/xhtml+xml',
-        },
-      });
+      // Fetch HTML from URL with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒タイムアウト
+      
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'CND2/2.0 PrairieCardParser',
+            'Accept': 'text/html,application/xhtml+xml',
+          },
+          signal: controller.signal,
+        });
 
-      if (!response.ok) {
-        throw new ApiError(
-          `Failed to fetch Prairie Card: ${response.status}`,
-          ApiErrorCode.EXTERNAL_SERVICE_ERROR,
-          502
-        );
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new ApiError(
+            `Failed to fetch Prairie Card: ${response.status}`,
+            ApiErrorCode.EXTERNAL_SERVICE_ERROR,
+            502
+          );
+        }
+
+        htmlContent = await response.text();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new ApiError(
+            'Prairie Card fetch timeout',
+            ApiErrorCode.EXTERNAL_SERVICE_ERROR,
+            504
+          );
+        }
+        throw error;
       }
-
-      htmlContent = await response.text();
     }
 
     // Parse the HTML content

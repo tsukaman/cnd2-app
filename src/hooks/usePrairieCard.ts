@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { PrairieProfile } from '@/types';
 import { logger } from '@/lib/logger';
 import { apiClient } from '@/lib/api-client';
+import { MinimalProfile } from '@/lib/prairie-profile-extractor';
 
 interface UsePrairieCardReturn {
   loading: boolean;
@@ -21,7 +22,7 @@ export function usePrairieCard(): UsePrairieCardReturn {
     setError(null);
     
     try {
-      const data = await apiClient.prairie.fetch(url);
+      const data: MinimalProfile = await apiClient.prairie.fetch(url);
       
       if (!data || !data.name) {
         throw new Error('Prairie Cardの取得に失敗しました');
@@ -34,31 +35,23 @@ export function usePrairieCard(): UsePrairieCardReturn {
           title: data.title || '',
           company: data.company || '',
           bio: data.bio || '',
-          avatar: data.avatar,
+          avatar: undefined,
         },
         details: {
-          tags: data.tags || [],
+          tags: [],
           skills: data.skills || [],
           interests: data.interests || [],
-          certifications: data.certifications || [],
-          communities: data.communities || [],
+          certifications: [],
+          communities: [],
           motto: data.motto,
         },
-        social: {
-          twitter: data.twitter,
-          github: data.github,
-          linkedin: data.linkedin,
-          website: data.website,
-          blog: data.blog,
-          qiita: data.qiita,
-          zenn: data.zenn,
-        },
-        custom: data.custom || {},
+        social: {},
+        custom: {},
         meta: {
-          createdAt: data.createdAt || undefined,
-          updatedAt: data.updatedAt || undefined,
-          connectedBy: data.connectedBy,
-          hashtag: data.hashtag,
+          createdAt: undefined,
+          updatedAt: undefined,
+          connectedBy: undefined,
+          hashtag: undefined,
         },
       };
 
