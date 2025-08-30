@@ -312,8 +312,6 @@ function parseFromHTML(html, env) {
                 extractTextByClass(html, 'position') ||
                 extractTextByDataField(html, 'title') ||
                 extractTextByDataField(html, 'role') ||
-                // Look for job titles in text
-                html.match(/>([^<]*(?:Engineer|Developer|Designer|Manager|Lead|Architect|Analyst|Consultant|Specialist|Director)[^<]*)</i)?.[1]?.trim() ||
                 '';
                 
   const company = extractTextByClass(html, 'company') ||
@@ -323,8 +321,6 @@ function parseFromHTML(html, env) {
                   extractTextByDataField(html, 'company') ||
                   extractTextByDataField(html, 'organization') ||
                   metaProfile.company ||
-                  // Look for company patterns
-                  html.match(/>([^<]*(?:株式会社|会社|Inc\.|Inc|Corp\.|Corp|Ltd\.|Ltd|LLC|GmbH)[^<]*)</i)?.[1]?.trim() ||
                   '';
                   
   const bio = extractTextByClass(html, 'bio') ||
@@ -334,7 +330,6 @@ function parseFromHTML(html, env) {
               extractTextByClass(html, 'profile-text') ||
               extractTextByDataField(html, 'bio') ||
               extractTextByDataField(html, 'about') ||
-              html.match(/<p[^>]*>([^<]{20,500})<\/p>/i)?.[1]?.trim() ||
               metaProfile.bio ||
               '';
               
@@ -347,20 +342,8 @@ function parseFromHTML(html, env) {
     ...extractArrayByClass(html, 'technology'),
   ];
   
-  // Add technology keywords found in HTML
-  const techKeywords = [
-    'JavaScript', 'TypeScript', 'Python', 'Go', 'Rust', 'Java', 'C++', 'C#', 'Ruby', 'PHP',
-    'React', 'Vue', 'Angular', 'Next.js', 'Nuxt.js', 'Node.js', 'Express', 'Django', 'Rails',
-    'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Terraform', 'Ansible',
-    'Git', 'GitHub', 'GitLab', 'CI/CD', 'DevOps', 'Cloud Native', 'Microservices',
-    'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'GraphQL', 'REST API', 'gRPC'
-  ];
-  
-  for (const keyword of techKeywords) {
-    if (html.includes(keyword) && !skills.includes(keyword)) {
-      skills.push(keyword);
-    }
-  }
+  // Note: Removed automatic tech keyword extraction as it was causing false positives
+  // Skills should only come from explicitly marked elements in the HTML
   
   const tags = [
     ...extractArrayByClass(html, 'tag'),
