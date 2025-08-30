@@ -42,17 +42,8 @@ describe('usePrairieCard', () => {
   });
 
   it('successfully fetches a profile', async () => {
+    // Mock data should be in PrairieProfile format (as returned by the API)
     const mockData = {
-      name: 'Test User',
-      title: 'Developer',
-      company: 'Test Company',
-      bio: 'Test bio',
-      skills: ['React', 'TypeScript'],
-      tags: ['dev'],
-      interests: ['coding'],
-    };
-
-    const expectedProfile = {
       basic: {
         name: 'Test User',
         title: 'Developer',
@@ -61,7 +52,7 @@ describe('usePrairieCard', () => {
         avatar: undefined,
       },
       details: {
-        tags: [],
+        tags: ['dev'],
         skills: ['React', 'TypeScript'],
         interests: ['coding'],
         certifications: [],
@@ -77,6 +68,9 @@ describe('usePrairieCard', () => {
         hashtag: undefined,
       },
     };
+
+    // Expected profile is the same as mock data since no transformation is done
+    const expectedProfile = mockData;
 
     (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce(mockData);
 
