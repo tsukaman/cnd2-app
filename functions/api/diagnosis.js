@@ -3,6 +3,7 @@ import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } fr
 import { createLogger, logRequest } from '../utils/logger.js';
 import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
+import { generateAstrologicalDiagnosis } from './diagnosis-v4.js';
 
 export async function onRequestPost({ request, env }) {
   const logger = createLogger(env);
@@ -30,8 +31,8 @@ export async function onRequestPost({ request, env }) {
         participantCount: profiles.length 
       });
       
-      // Generate diagnosis result
-      const result = await generateDiagnosis(profiles, mode, env);
+      // Generate diagnosis result using V4 engine
+      const result = await generateAstrologicalDiagnosis(profiles, mode, env);
       
       // Store in KV if available
       if (env.DIAGNOSIS_KV) {
@@ -83,43 +84,4 @@ export async function onRequestOptions({ request }) {
   });
 }
 
-async function generateDiagnosis(profiles, mode, env) {
-  const logger = createLogger(env);
-  const startTime = Date.now();
-  
-  // Simplified diagnosis generation with guaranteed valid ID
-  const id = generateId();
-  const compatibility = Math.floor(Math.random() * 30) + 70; // 70-100%
-  
-  const result = {
-    id,
-    mode,
-    type: 'クラウドネイティブ・パートナー',
-    compatibility,
-    summary: `${profiles[0].basic?.name || 'User 1'}さんと${profiles[1].basic?.name || 'User 2'}さんは、クラウドネイティブ技術への情熱を共有する素晴らしいパートナーです。`,
-    strengths: [
-      '技術的な興味の共通点が多い',
-      '学習意欲が高い組み合わせ',
-      'イノベーションを推進する相性',
-    ],
-    opportunities: [
-      '一緒にOSSプロジェクトに貢献',
-      '技術ブログの共同執筆',
-      'ハッカソンでのチーム参加',
-    ],
-    advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
-    participants: profiles,
-    createdAt: new Date().toISOString(),
-  };
-  
-  logger.metric('diagnosis_generation', Date.now() - startTime, 'ms', {
-    mode,
-    compatibility,
-  });
-  
-  if (debugMode) {
-    console.log('[DEBUG] Generated diagnosis result:', JSON.stringify(result, null, 2));
-  }
-  
-  return result;
-}
+// 古いgenerateDiagnosis関数は削除され、diagnosis-v4.jsのgenerateAstrologicalDiagnosisに置き換えられました
