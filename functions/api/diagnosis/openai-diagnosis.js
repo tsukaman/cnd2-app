@@ -98,6 +98,11 @@ ${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p,
     const data = await response.json();
     const content = data.choices[0].message.content;
     
+    if (debugMode) {
+      console.log('[DEBUG] OpenAI raw response:', content);
+      console.log('[DEBUG] Token usage:', data.usage);
+    }
+    
     if (!content) {
       console.error('[CND²] Empty OpenAI response');
       return null;
@@ -108,9 +113,16 @@ ${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p,
     try {
       // First, check if content is valid JSON
       result = JSON.parse(content);
+      
+      if (debugMode) {
+        console.log('[DEBUG] Parsed diagnosis result:', result);
+      }
     } catch (parseError) {
       console.error('[CND²] OpenAI response is not valid JSON:', content);
       console.error('[CND²] Parse error:', parseError);
+      if (debugMode) {
+        console.log('[DEBUG] Failed content:', content);
+      }
       return null;
     }
 

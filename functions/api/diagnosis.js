@@ -117,5 +117,9 @@ async function generateDiagnosis(profiles, mode, env) {
     compatibility,
   });
   
+  if (debugMode) {
+    console.log('[DEBUG] Generated diagnosis result:', JSON.stringify(result, null, 2));
+  }
+  
   return result;
 }

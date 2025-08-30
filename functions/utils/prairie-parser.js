@@ -131,24 +131,49 @@ function extractMetaContent(html, property) {
  * @returns {string} - Extracted name or empty string
  */
 function extractNameFromMeta(html) {
+  const debugMode = process.env.DEBUG_MODE === 'true';
+  
   // Try multiple sources for name extraction
   const ogTitle = extractMetaContent(html, 'og:title');
   const twitterTitle = extractMetaContent(html, 'twitter:title');
   const titleTag = html.match(/<title>([^<]+)<\/title>/i)?.[1]?.trim();
+  
+  if (debugMode) {
+    console.log('[DEBUG] Name extraction sources:', {
+      ogTitle,
+      twitterTitle,
+      titleTag
+    });
+  }
   
   const titleSource = ogTitle || twitterTitle || titleTag || '';
   
   // Extract name from various patterns
   // Pattern 1: "名前 のプロフィール" or "名前 の プロフィール"
   const nameMatch = titleSource.match(/^(.+?)\s*の?\s*(?:プロフィール|Profile|Prairie Card)/i);
-  if (nameMatch) return nameMatch[1].trim();
+  if (nameMatch) {
+    const extractedName = nameMatch[1].trim();
+    if (debugMode) {
+      console.log('[DEBUG] Name extracted with pattern 1:', extractedName);
+    }
+    return extractedName;
+  }
   
   // Pattern 2: Remove " - Prairie Card" or " | Prairie Card" suffix
   if (titleSource) {
     let cleanName = titleSource.replace(/\s*[-–—|]\s*Prairie\s*Card.*$/i, '').trim();
     // Also remove just "Prairie Card" at the end
     cleanName = cleanName.replace(/\s*Prairie\s*Card\s*$/i, '').trim();
-    if (cleanName) return cleanName;
+    if (cleanName) {
+      if (debugMode) {
+        console.log('[DEBUG] Name extracted with pattern 2:', cleanName);
+      }
+      return cleanName;
+    }
+  }
+  
+  if (debugMode) {
+    console.log('[DEBUG] No name extracted from meta tags');
   }
   
   return '';
@@ -242,7 +267,13 @@ function extractTextByDataField(html, fieldName) {
  * @returns {Object} - Parsed profile object
  */
 function parseFromHTML(html) {
-  console.log('[Prairie Parser] Starting HTML parsing...');
+  const debugMode = process.env.DEBUG_MODE === 'true';
+  
+  if (debugMode) {
+    console.log('[DEBUG] Prairie Parser - Starting HTML parsing...');
+    console.log('[DEBUG] HTML length:', html.length);
+    console.log('[DEBUG] HTML sample (first 500 chars):', html.substring(0, 500));
+  }
   
   // Extract information from meta tags first
   const metaName = extractNameFromMeta(html);
@@ -250,14 +281,29 @@ function parseFromHTML(html) {
   const metaAvatar = extractAvatarFromMeta(html);
   
   // Extract basic information with multiple fallbacks
-  const name = extractTextByClass(html, 'profile-name') || 
-               extractTextByClass(html, 'name') ||
-               extractTextByDataField(html, 'name') ||
-               extractTextByClass(html, 'user-name') ||
-               extractTextByClass(html, 'display-name') ||
-               html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1]?.trim() ||
-               html.match(/<h2[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)</i)?.[1]?.trim() ||
-               metaName ||
+  const nameCandidates = {
+    'profile-name': extractTextByClass(html, 'profile-name'),
+    'name': extractTextByClass(html, 'name'),
+    'data-name': extractTextByDataField(html, 'name'),
+    'user-name': extractTextByClass(html, 'user-name'),
+    'display-name': extractTextByClass(html, 'display-name'),
+    'h1': html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1]?.trim(),
+    'h2-name': html.match(/<h2[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)</i)?.[1]?.trim(),
+    'meta': metaName
+  };
+  
+  if (debugMode) {
+    console.log('[DEBUG] Name extraction candidates:', nameCandidates);
+  }
+  
+  const name = nameCandidates['profile-name'] || 
+               nameCandidates['name'] ||
+               nameCandidates['data-name'] ||
+               nameCandidates['user-name'] ||
+               nameCandidates['display-name'] ||
+               nameCandidates['h1'] ||
+               nameCandidates['h2-name'] ||
+               nameCandidates['meta'] ||
                '';
                
   const title = extractTextByClass(html, 'title') ||
@@ -385,21 +431,22 @@ function parseFromHTML(html) {
   const uniqueCommunities = [...new Set(communities)].slice(0, 10);
   
   // Build the profile object matching PrairieProfile type
+  // Note: Don't escape HTML here as it will be handled by the frontend
   const profile = {
     basic: {
-      name: escapeHtml(name) || 'Prairie Card User',
-      title: escapeHtml(title),
-      company: escapeHtml(company),
-      bio: escapeHtml(bio),
-      avatar: metaAvatar ? escapeHtml(metaAvatar) : undefined,
+      name: name || '名前未設定',  // Use Japanese default as fallback
+      title: title || undefined,
+      company: company || undefined,
+      bio: bio || undefined,
+      avatar: metaAvatar || undefined,
     },
     details: {
-      tags: uniqueTags.map(escapeHtml).filter(Boolean),
-      skills: uniqueSkills.map(escapeHtml).filter(Boolean),
-      interests: uniqueInterests.map(escapeHtml).filter(Boolean),
-      certifications: uniqueCertifications.map(escapeHtml).filter(Boolean),
-      communities: uniqueCommunities.map(escapeHtml).filter(Boolean),
-      motto: motto ? escapeHtml(motto) : undefined,
+      tags: uniqueTags.filter(Boolean),
+      skills: uniqueSkills.filter(Boolean),
+      interests: uniqueInterests.filter(Boolean),
+      certifications: uniqueCertifications.filter(Boolean),
+      communities: uniqueCommunities.filter(Boolean),
+      motto: motto || undefined,
     },
     social: {
       twitter,
@@ -421,12 +468,31 @@ function parseFromHTML(html) {
     },
   };
   
-  console.log('[Prairie Parser] Parsed profile:', {
-    name: profile.basic.name,
-    hasSkills: profile.details.skills.length > 0,
-    hasTags: profile.details.tags.length > 0,
-    hasInterests: profile.details.interests.length > 0,
-  });
+  if (debugMode) {
+    console.log('[DEBUG] Final profile structure:', {
+      basic: {
+        name: profile.basic.name,
+        title: profile.basic.title,
+        company: profile.basic.company,
+        bio: profile.basic.bio ? profile.basic.bio.substring(0, 100) + '...' : undefined,
+        hasAvatar: !!profile.basic.avatar
+      },
+      details: {
+        skills: profile.details.skills,
+        interests: profile.details.interests,
+        tags: profile.details.tags,
+        motto: profile.details.motto
+      },
+      social: Object.keys(profile.social).filter(key => profile.social[key]).length + ' links found'
+    });
+  } else {
+    console.log('[Prairie Parser] Parsed profile:', {
+      name: profile.basic.name,
+      hasSkills: profile.details.skills.length > 0,
+      hasTags: profile.details.tags.length > 0,
+      hasInterests: profile.details.interests.length > 0,
+    });
+  }
   
   return profile;
 }
