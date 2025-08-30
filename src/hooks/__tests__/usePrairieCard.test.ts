@@ -12,8 +12,12 @@ jest.mock('@/lib/api-client', () => ({
 }));
 
 describe('usePrairieCard', () => {
+  let consoleErrorSpy: jest.SpyInstance;
+  
   beforeEach(() => {
     jest.clearAllMocks();
+    // Suppress console.error for expected error scenarios
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     // Set up default successful fetch mock
     (apiClient.prairie.fetch as jest.Mock).mockResolvedValue({
       success: true,
@@ -31,6 +35,7 @@ describe('usePrairieCard', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    consoleErrorSpy.mockRestore();
   });
 
   it('initializes with correct default state', () => {

@@ -1,13 +1,9 @@
 import { AstrologicalDiagnosisEngineV4 } from '../diagnosis-engine-v4-openai';
-import OpenAI from 'openai';
 import { PrairieProfile } from '@/types';
-
-// Mock OpenAI
-jest.mock('openai');
 
 describe('AstrologicalDiagnosisEngineV4', () => {
   let engine: AstrologicalDiagnosisEngineV4;
-  let mockOpenAI: jest.Mocked<OpenAI>;
+  let originalFetch: typeof global.fetch;
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -15,16 +11,8 @@ describe('AstrologicalDiagnosisEngineV4', () => {
     // Reset singleton instance
     (AstrologicalDiagnosisEngineV4 as any).instance = undefined;
     
-    // Setup OpenAI mock
-    const mockCreate = jest.fn();
-    mockOpenAI = {
-      chat: {
-        completions: {
-          create: mockCreate,
-        },
-      },
-    } as any;
-    (OpenAI as jest.MockedClass<typeof OpenAI>).mockImplementation(() => mockOpenAI);
+    // Save original fetch
+    originalFetch = global.fetch;
     
     // Set environment
     process.env.OPENAI_API_KEY = 'test-api-key';
@@ -32,6 +20,8 @@ describe('AstrologicalDiagnosisEngineV4', () => {
   
   afterEach(() => {
     delete process.env.OPENAI_API_KEY;
+    // Restore original fetch
+    global.fetch = originalFetch;
   });
   
   describe('getInstance', () => {
@@ -96,46 +86,55 @@ describe('AstrologicalDiagnosisEngineV4', () => {
     
     it('generates diagnosis with OpenAI when configured', async () => {
       const mockResponse = {
-        astrologicalSign: '♈ 牡羊座',
-        energyFlow: '火のエレメント',
-        cosmicAlignment: '新月のエネルギー',
-        soulConnection: '深い魂の共鳴',
-        techStackCompatibility: {
-          harmony: ['コンテナ技術'],
-          challenges: ['フロントエンド'],
-          opportunities: ['DevOps文化'],
-        },
-        conversationTopics: ['クラウドアーキテクチャ'],
+        type: '運命のCloud Nativeパートナー',
         compatibility: 92,
+        summary: 'テストユーザー1さんとテストユーザー2さんの技術的な波動が共鳴しています。',
+        astrologicalAnalysis: '二人のエンジニアリング・エナジーが美しく調和しています。',
+        techStackCompatibility: 'お互いの技術スタックが素晴らしい相性を示しています。',
+        conversationTopics: ['クラウドアーキテクチャ'],
         strengths: ['技術力', '創造性'],
         opportunities: ['協業の可能性'],
-        luckyItem: 'キーボード',
-        luckyAction: 'ペアプログラミング',
+        advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
+        luckyItem: '🎧 ノイズキャンセリングヘッドフォン',
+        luckyAction: '🎯 一緒にハッカソンに参加する',
       };
       
-      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue({
-        choices: [{
-          message: {
-            content: JSON.stringify(mockResponse),
+      // Mock fetch for OpenAI API
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify(mockResponse),
+            },
+          }],
+          usage: {
+            prompt_tokens: 500,
+            completion_tokens: 300,
+            total_tokens: 800,
           },
-        }],
-      });
+        }),
+      } as Response);
       
       engine = AstrologicalDiagnosisEngineV4.getInstance();
       const result = await engine.generateDuoDiagnosis(mockProfile1, mockProfile2);
       
       expect(result).toBeDefined();
-      expect(result.type).toBe('占星術的クラウドネイティブ診断');
-      expect(result.astrologicalAnalysis).toEqual(mockResponse);
+      expect(result.type).toBe('運命のCloud Nativeパートナー');
       expect(result.compatibility).toBe(92);
-      expect(result.names).toEqual(['テストユーザー1', 'テストユーザー2']);
+      expect(result.summary).toBe('テストユーザー1さんとテストユーザー2さんの技術的な波動が共鳴しています。');
+      expect(result.participants).toEqual([mockProfile1, mockProfile2]);
+      expect(result.aiPowered).toBe(true);
       
-      // Verify OpenAI was called
-      expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
+      // Verify fetch was called with correct parameters
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.openai.com/v1/chat/completions',
         expect.objectContaining({
-          model: 'gpt-4o-mini',
-          temperature: 0.9,
-          max_tokens: 2000,
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer test-api-key',
+          }),
         })
       );
     });
@@ -147,44 +146,49 @@ describe('AstrologicalDiagnosisEngineV4', () => {
       const result = await engine.generateDuoDiagnosis(mockProfile1, mockProfile2);
       
       expect(result).toBeDefined();
-      expect(result.type).toBe('占星術的クラウドネイティブ診断');
+      // The type varies based on compatibility score
+      expect(result.type).toMatch(/運命のCloud Nativeパートナー|Container Orchestrationの調和|DevOps Journeyの同志/);
+      expect(result.compatibility).toBeGreaterThanOrEqual(70);
+      expect(result.compatibility).toBeLessThanOrEqual(100);
       expect(result.astrologicalAnalysis).toBeDefined();
-      expect(result.astrologicalAnalysis?.astrologicalSign).toMatch(/♈|♉|♊|♋|♌|♍|♎|♏|♐|♑|♒|♓/);
-      
-      // Verify OpenAI was not called
-      expect(mockOpenAI.chat.completions.create).not.toHaveBeenCalled();
+      expect(result.aiPowered).toBe(false);
     });
     
     it('handles OpenAI API errors gracefully', async () => {
-      (mockOpenAI.chat.completions.create as jest.Mock).mockRejectedValue(
-        new Error('API Error')
-      );
+      // Mock fetch to reject
+      global.fetch = jest.fn().mockRejectedValue(new Error('API Error'));
       
       engine = AstrologicalDiagnosisEngineV4.getInstance();
       const result = await engine.generateDuoDiagnosis(mockProfile1, mockProfile2);
       
       // Should fall back to rule-based
       expect(result).toBeDefined();
-      expect(result.type).toBe('占星術的クラウドネイティブ診断');
+      expect(result.type).toMatch(/運命のCloud Nativeパートナー|Container Orchestrationの調和|DevOps Journeyの同志/);
       expect(result.astrologicalAnalysis).toBeDefined();
+      expect(result.aiPowered).toBe(false);
     });
     
     it('handles invalid JSON response from OpenAI', async () => {
-      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue({
-        choices: [{
-          message: {
-            content: 'Invalid JSON',
-          },
-        }],
-      });
+      // Mock fetch to return invalid JSON
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: 'Invalid JSON',
+            },
+          }],
+        }),
+      } as Response);
       
       engine = AstrologicalDiagnosisEngineV4.getInstance();
       const result = await engine.generateDuoDiagnosis(mockProfile1, mockProfile2);
       
       // Should fall back to rule-based
       expect(result).toBeDefined();
-      expect(result.type).toBe('占星術的クラウドネイティブ診断');
+      expect(result.type).toMatch(/運命のCloud Nativeパートナー|Container Orchestrationの調和|DevOps Journeyの同志/);
       expect(result.astrologicalAnalysis).toBeDefined();
+      expect(result.aiPowered).toBe(false);
     });
   });
   
