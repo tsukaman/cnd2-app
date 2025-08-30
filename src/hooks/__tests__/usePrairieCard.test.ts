@@ -86,10 +86,7 @@ describe('usePrairieCard', () => {
       },
     };
 
-    (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce({
-      success: true,
-      data: mockData,
-    });
+    (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce(mockData);
 
     const { result } = renderHook(() => usePrairieCard());
 
@@ -112,10 +109,7 @@ describe('usePrairieCard', () => {
   it('handles fetch errors correctly', async () => {
     const errorMessage = 'Prairie Cardの取得に失敗しました';
     
-    (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce({
-      success: false,
-      error: errorMessage,
-    });
+    (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce(null);
 
     const { result } = renderHook(() => usePrairieCard());
 
