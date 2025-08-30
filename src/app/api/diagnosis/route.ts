@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
-import { SimplifiedDiagnosisEngine } from '@/lib/diagnosis-engine-v3';
+import { astrologicalDiagnosisEngine } from '@/lib/diagnosis-engine-v4';
 import { PrairieProfile } from '@/types';
 
 /**
@@ -66,17 +66,23 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       };
     });
 
-    // Generate diagnosis
-    const engine = SimplifiedDiagnosisEngine.getInstance();
-    
-    // Check if configured
-    if (!engine.isConfigured()) {
-      // Return fallback diagnosis
-      const fallbackResult = await engine.generateFallbackDiagnosis(prairieProfiles, mode);
-      return NextResponse.json(fallbackResult);
+    // Generate diagnosis using v4 astological engine
+    let result;
+    if (mode === 'duo') {
+      result = await astrologicalDiagnosisEngine.generateDuoDiagnosis(
+        prairieProfiles[0],
+        prairieProfiles[1]
+      );
+    } else {
+      // For group mode, generate multiple duo diagnoses
+      // This is a simplified approach - could be enhanced
+      result = await astrologicalDiagnosisEngine.generateDuoDiagnosis(
+        prairieProfiles[0],
+        prairieProfiles[1]
+      );
+      result.mode = 'group';
+      result.participants = prairieProfiles;
     }
-
-    const result = await engine.generateDiagnosis(prairieProfiles, mode);
 
     return NextResponse.json(result);
   } catch (error) {

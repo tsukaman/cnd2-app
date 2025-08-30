@@ -192,6 +192,52 @@ Located in `functions/*` - Used for production deployment on Cloudflare Pages
 - **KV Storage**: Cloudflare Workers KV bindings
 - **Edge Deployment**: Global edge network deployment
 
+## 🔧 デバッグモード
+
+開発中のデバッグのため、詳細なログを出力するデバッグモードを実装しています。
+
+### 有効化方法
+
+```bash
+# .env.development ファイルに設定
+DEBUG_MODE=true
+```
+
+### デバッグ情報
+
+デバッグモードでは以下の情報がコンソールに出力されます：
+
+#### Prairie Card解析
+- HTMLの長さとサンプル（最初の500文字）
+- 名前抽出の候補（og:title, twitter:title, titleタグ等）  
+- 各フィールドの抽出候補と最終選択
+- 最終的なプロフィール構造
+
+#### 診断エンジン
+- サニタイズされたプロフィール情報
+- OpenAIへ送信されるプロンプト
+- OpenAIからの生レスポンス
+- トークン使用量
+- 最終的な診断結果
+
+### ログ例
+
+```javascript
+[DEBUG] Name extraction sources: {
+  ogTitle: "＿・）つかまん のプロフィール",
+  twitterTitle: undefined,
+  titleTag: "＿・）つかまん - Prairie Card"
+}
+[DEBUG] Name extracted with pattern 1: "＿・）つかまん"
+[DEBUG] Token usage: {
+  prompt_tokens: 450,
+  completion_tokens: 230,
+  total_tokens: 680
+}
+```
+
+**注意**: デバッグモードは開発環境でのみ使用し、本番環境では無効にしてください。
+
 ## 🌐 デプロイ環境
 
 ### 開発環境（現在稼働中）

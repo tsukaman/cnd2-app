@@ -46,6 +46,10 @@ export interface DiagnosisResult {
   participants: PrairieProfile[];
   createdAt: string;
   aiPowered?: boolean;
+  // V4 Astological style fields
+  astrologicalAnalysis?: string;
+  techStackCompatibility?: string;
+  conversationTopics?: string[];
   // Legacy fields for backward compatibility
   score?: number;
   message?: string;

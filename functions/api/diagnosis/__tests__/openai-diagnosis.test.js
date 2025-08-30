@@ -113,7 +113,9 @@ describe('OpenAI Diagnosis Functions', () => {
       expect(promptContent).toContain('React');
       expect(promptContent).toContain('Python');
       
-      expect(result.aiPowered).toBe(true);
+      // resultがnullでないことを先に確認
+      expect(result).not.toBeNull();
+      expect(result?.aiPowered).toBe(true);
     });
 
     it('should handle API errors gracefully', async () => {
