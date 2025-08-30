@@ -120,16 +120,11 @@ export async function onRequestPost(context) {
       });
     }
     
-    // Import diagnosis functions
-    const { generateOpenAIDiagnosis, generateFallbackDiagnosis } = require('./openai-diagnosis');
+    // Import v4 astrology-style diagnosis with OpenAI
+    const { generateAstrologicalDiagnosis } = require('../diagnosis-v4-openai');
     
-    // Try OpenAI diagnosis first, fallback if not available
-    let diagnosisData = await generateOpenAIDiagnosis(profiles, mode || 'duo', env);
-    
-    if (!diagnosisData) {
-      console.log('[CND²] Using fallback diagnosis');
-      diagnosisData = generateFallbackDiagnosis(profiles, mode || 'duo');
-    }
+    // Generate diagnosis using v4 OpenAI engine
+    const diagnosisData = await generateAstrologicalDiagnosis(profiles, mode || 'duo', env);
     
     // Create full result object
     const result = {

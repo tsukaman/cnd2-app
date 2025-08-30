@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
-import { astrologicalDiagnosisEngine } from '@/lib/diagnosis-engine-v4';
+import { astrologicalDiagnosisEngineV4 } from '@/lib/diagnosis-engine-v4-openai';
 import { PrairieProfile } from '@/types';
 
 /**
@@ -66,17 +66,17 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       };
     });
 
-    // Generate diagnosis using v4 astological engine
+    // Generate diagnosis using v4 OpenAI-powered astological engine
     let result;
     if (mode === 'duo') {
-      result = await astrologicalDiagnosisEngine.generateDuoDiagnosis(
+      result = await astrologicalDiagnosisEngineV4.generateDuoDiagnosis(
         prairieProfiles[0],
         prairieProfiles[1]
       );
     } else {
       // For group mode, generate multiple duo diagnoses
       // This is a simplified approach - could be enhanced
-      result = await astrologicalDiagnosisEngine.generateDuoDiagnosis(
+      result = await astrologicalDiagnosisEngineV4.generateDuoDiagnosis(
         prairieProfiles[0],
         prairieProfiles[1]
       );
