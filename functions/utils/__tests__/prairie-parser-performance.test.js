@@ -179,11 +179,14 @@ describe('Prairie Parser Performance Benchmarks', () => {
       }
       
       // Check that time doesn't grow exponentially
-      // If it scales linearly or better, doubling size should less than triple the time
-      for (let i = 1; i < times.length; i++) {
-        const ratio = times[i] / times[i - 1];
-        expect(ratio).toBeLessThan(3); // Should not grow too fast
-      }
+      // In CI environments, initial warm-up can cause higher ratios for small sizes
+      // We'll check the overall trend rather than individual ratios
+      const overallRatio = times[times.length - 1] / times[0]; // 80KB time / 10KB time
+      const sizeRatio = sizes[sizes.length - 1] / sizes[0]; // 80 / 10 = 8
+      
+      // If perfectly linear, overallRatio should equal sizeRatio
+      // Allow up to 2x degradation (16x time for 8x size)
+      expect(overallRatio).toBeLessThan(sizeRatio * 2);
     });
   });
 });
