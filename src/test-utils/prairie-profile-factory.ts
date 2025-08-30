@@ -133,7 +133,11 @@ export class PrairieProfileFactory {
   static createInvalid(): Partial<PrairieProfile> {
     return {
       details: {
+        tags: [],
         skills: ['React'],
+        interests: [],
+        certifications: [],
+        communities: [],
       },
       social: {},
       custom: {},
