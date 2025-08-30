@@ -34,6 +34,15 @@ const ASTROLOGY_SYSTEM_PROMPT = `あなたは「Cloud Native占星術師」で�
 - ラッキーアクションは実際にできる技術活動（ハッカソン参加、OSS貢献、ペアプロ等）
 - 診断全体を通して、エンターテイメント性と実用性のバランスを保つ`;
 
+// Configuration constants
+const CONFIG = {
+  TEMPERATURE: 0.9,
+  MAX_TOKENS: 2000,
+  FALLBACK_COMPATIBILITY_MIN: 70,
+  FALLBACK_COMPATIBILITY_MAX: 100,
+  MODEL: 'gpt-4o-mini'
+} as const;
+
 export class AstrologicalDiagnosisEngineV4 {
   private static instance: AstrologicalDiagnosisEngineV4 | null = null;
   private openaiApiKey: string | undefined;
@@ -107,7 +116,7 @@ ${JSON.stringify(summary2, null, 2)}
           'Authorization': `Bearer ${this.openaiApiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: CONFIG.MODEL,
           messages: [
             {
               role: 'system',
@@ -118,8 +127,8 @@ ${JSON.stringify(summary2, null, 2)}
               content: prompt
             }
           ],
-          temperature: 0.9, // より創造的で豊かな出力
-          max_tokens: 2000,  // 豊かな診断結果のために十分なトークン
+          temperature: CONFIG.TEMPERATURE,
+          max_tokens: CONFIG.MAX_TOKENS,
           response_format: { type: "json_object" }
         })
       });
@@ -164,7 +173,8 @@ ${JSON.stringify(summary2, null, 2)}
     profile1: PrairieProfile,
     profile2: PrairieProfile
   ): DiagnosisResult {
-    const compatibility = 70 + Math.floor(Math.random() * 30);
+    const compatibility = CONFIG.FALLBACK_COMPATIBILITY_MIN + 
+      Math.floor(Math.random() * (CONFIG.FALLBACK_COMPATIBILITY_MAX - CONFIG.FALLBACK_COMPATIBILITY_MIN));
     const name1 = profile1.basic.name || 'エンジニア1';
     const name2 = profile2.basic.name || 'エンジニア2';
     

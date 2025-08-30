@@ -5,6 +5,15 @@
 
 import { generateId } from '../utils/id.js';
 
+// Configuration constants
+const CONFIG = {
+  TEMPERATURE: 0.9,
+  MAX_TOKENS: 2000,
+  FALLBACK_COMPATIBILITY_MIN: 70,
+  FALLBACK_COMPATIBILITY_MAX: 100,
+  MODEL: 'gpt-4o-mini'
+};
+
 const ASTROLOGY_SYSTEM_PROMPT = `あなたは「Cloud Native占星術師」です。
 エンジニアのプロフィールから、占星術的な表現を使って技術的な相性を診断します。
 
@@ -108,7 +117,7 @@ ${JSON.stringify(summary2, null, 2)}
         'Authorization': `Bearer ${openaiApiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: CONFIG.MODEL,
         messages: [
           {
             role: 'system',
@@ -119,8 +128,8 @@ ${JSON.stringify(summary2, null, 2)}
             content: prompt
           }
         ],
-        temperature: 0.9, // より創造的で豊かな出力
-        max_tokens: 2000, // 豊かな診断結果のために十分なトークン
+        temperature: CONFIG.TEMPERATURE,
+        max_tokens: CONFIG.MAX_TOKENS,
         response_format: { type: "json_object" }
       })
     });
@@ -162,7 +171,8 @@ ${JSON.stringify(summary2, null, 2)}
  * フォールバック診断（OpenAI利用不可時）
  */
 function generateFallbackDiagnosis(profile1, profile2) {
-  const compatibility = 70 + Math.floor(Math.random() * 30);
+  const compatibility = CONFIG.FALLBACK_COMPATIBILITY_MIN + 
+    Math.floor(Math.random() * (CONFIG.FALLBACK_COMPATIBILITY_MAX - CONFIG.FALLBACK_COMPATIBILITY_MIN));
   const name1 = profile1.basic?.name || profile1.name || 'エンジニア1';
   const name2 = profile2.basic?.name || profile2.name || 'エンジニア2';
   
