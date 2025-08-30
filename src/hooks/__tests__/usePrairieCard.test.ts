@@ -19,17 +19,24 @@ describe('usePrairieCard', () => {
     // Suppress console.error for expected error scenarios
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
     // Set up default successful fetch mock
+    // Note: apiClient.prairie.fetch returns the extracted data directly, not the wrapper
     (apiClient.prairie.fetch as jest.Mock).mockResolvedValue({
-      success: true,
-      data: {
+      basic: {
         name: 'Default User',
         title: 'Developer',
         company: 'Company',
         bio: 'Bio',
+      },
+      details: {
         skills: [],
         tags: [],
         interests: [],
+        certifications: [],
+        communities: [],
       },
+      social: {},
+      custom: {},
+      meta: {},
     });
   });
 

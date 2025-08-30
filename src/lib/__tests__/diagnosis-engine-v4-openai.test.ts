@@ -1,6 +1,14 @@
 import { AstrologicalDiagnosisEngineV4 } from '../diagnosis-engine-v4-openai';
 import { PrairieProfile } from '@/types';
 
+// Test constants
+const TEST_CONSTANTS = {
+  OPENAI_API_KEY: 'test-api-key',
+  OPENAI_MODEL: 'gpt-4o-mini',
+  OPENAI_TEMPERATURE: 0.9,
+  OPENAI_MAX_TOKENS: 2000,
+} as const;
+
 describe('AstrologicalDiagnosisEngineV4', () => {
   let engine: AstrologicalDiagnosisEngineV4;
   let originalFetch: typeof global.fetch;
@@ -15,7 +23,7 @@ describe('AstrologicalDiagnosisEngineV4', () => {
     originalFetch = global.fetch;
     
     // Set environment
-    process.env.OPENAI_API_KEY = 'test-api-key';
+    process.env.OPENAI_API_KEY = TEST_CONSTANTS.OPENAI_API_KEY;
   });
   
   afterEach(() => {
@@ -133,7 +141,7 @@ describe('AstrologicalDiagnosisEngineV4', () => {
           method: 'POST',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-api-key',
+            'Authorization': `Bearer ${TEST_CONSTANTS.OPENAI_API_KEY}`,
           }),
         })
       );
