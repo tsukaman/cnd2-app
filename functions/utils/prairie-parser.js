@@ -15,7 +15,8 @@ const LIMITS = {
   COMPANY_LENGTH: 100,  // Maximum company name length in characters
   TITLE_LENGTH: 100,    // Maximum title length in characters
   META_TAG_LENGTH: 1000, // Maximum meta tag content length (ReDoS protection)
-  META_ATTR_LENGTH: 500  // Maximum meta tag attribute length (ReDoS protection)
+  META_ATTR_LENGTH: 500,  // Maximum meta tag attribute length (ReDoS protection)
+  FETCH_TIMEOUT_MS: 5000 // Fetch timeout in milliseconds
 };
 
 /**
@@ -83,6 +84,45 @@ function extractArrayByClass(html, className) {
   }
   
   return [...new Set(items)]; // Remove duplicates
+}
+
+/**
+ * Extract hashtags from specific elements only (not from entire HTML)
+ * @param {string} html - HTML content
+ * @param {string[]} classNames - Array of class names to search within
+ * @returns {string[]} - Array of extracted hashtags
+ */
+function extractHashtagsFromElements(html, classNames) {
+  const hashtags = [];
+  // Hashtag extraction pattern
+  // Regex breakdown: /#([\w]{1,50}|[ぁ-んァ-ヶー]{1,20}|[一-龠]{1,20})/g
+  //   #            - Literal hashtag symbol
+  //   (...)        - Capture group for hashtag content
+  //   [\w]{1,50}   - Alphanumeric characters (1-50 chars) for English hashtags
+  //   |            - OR operator
+  //   [ぁ-んァ-ヶー]{1,20} - Hiragana/Katakana (1-20 chars) for Japanese hashtags
+  //   |            - OR operator
+  //   [一-龠]{1,20} - Kanji characters (1-20 chars) for Japanese/Chinese hashtags
+  //   g            - Global flag to find all matches
+  const hashtagPattern = /#([\w]{1,50}|[ぁ-んァ-ヶー]{1,20}|[一-龠]{1,20})/g;
+  
+  // Extract content from specified elements
+  for (const className of classNames) {
+    const elements = extractArrayByClass(html, className);
+    
+    // Search for hashtags within these elements
+    for (const element of elements) {
+      const matches = element.matchAll(hashtagPattern);
+      for (const match of matches) {
+        const hashtag = '#' + match[1];
+        if (!hashtags.includes(hashtag) && hashtags.length < LIMITS.HASHTAGS) {
+          hashtags.push(hashtag);
+        }
+      }
+    }
+  }
+  
+  return hashtags;
 }
 
 /**
@@ -169,7 +209,17 @@ function extractNameFromMeta(html, env) {
   
   // Extract name from various patterns
   // Pattern 1: "名前 のプロフィール" or "名前 の プロフィール"
-  const nameMatch = titleSource.match(/^(.+?)\s*の?\s*(?:プロフィール|Profile|Prairie Card)/i);
+  // Improved with stricter boundaries: limit name length and ensure end of string
+  // Regex breakdown: /^(.{1,100}?)\s*の?\s*(?:プロフィール|Profile|Prairie Card)(?:\s|$)/i
+  //   ^            - Start of string
+  //   (.{1,100}?)  - Capture group: 1-100 characters (non-greedy) for the name
+  //   \s*          - Optional whitespace
+  //   の?          - Optional Japanese possessive particle
+  //   \s*          - Optional whitespace
+  //   (?:...)      - Non-capturing group for suffix keywords
+  //   (?:\s|$)     - End with whitespace or end of string
+  //   i            - Case insensitive flag
+  const nameMatch = titleSource.match(/^(.{1,100}?)\s*の?\s*(?:プロフィール|Profile|Prairie Card)(?:\s|$)/i);
   if (nameMatch) {
     const extractedName = nameMatch[1].trim();
     if (debugMode) {
@@ -387,19 +437,15 @@ function parseFromHTML(html, env) {
     ...extractArrayByClass(html, 'badge'),
   ];
   
-  // Extract hashtags from text (最大HASHTAGS個まで、パフォーマンス最適化)
-  // Pattern breakdown:
-  // [\w]{1,50}           - English alphanumeric and underscore (1-50 chars)
-  // [ぁ-んァ-ヶー]{1,20}  - Hiragana and Katakana (1-20 chars)
-  // [一-龠]{1,20}        - Kanji characters (1-20 chars)
-  const hashtagPattern = /#([\w]{1,50}|[ぁ-んァ-ヶー]{1,20}|[一-龠]{1,20})/g;
-  let hashtagCount = 0;
-  let hashtagMatch;
-  while ((hashtagMatch = hashtagPattern.exec(html)) !== null && hashtagCount < LIMITS.HASHTAGS) {
-    const hashtag = '#' + hashtagMatch[1];
+  // Extract hashtags ONLY from explicit hashtag-related elements
+  // This prevents false positives from general HTML content
+  const hashtagElements = ['hashtag', 'hashtags', 'tag', 'tags', 'keyword', 'keywords'];
+  const extractedHashtags = extractHashtagsFromElements(html, hashtagElements);
+  
+  // Merge hashtags with existing tags (avoiding duplicates)
+  for (const hashtag of extractedHashtags) {
     if (!tags.includes(hashtag)) {
       tags.push(hashtag);
-      hashtagCount++;
     }
   }
   
@@ -452,7 +498,13 @@ function parseFromHTML(html, env) {
   const uniqueCommunities = [...new Set(communities)].slice(0, LIMITS.COMMUNITIES);
   
   // Build the profile object matching PrairieProfile type
-  // Note: Don't escape HTML here as it will be handled by the frontend
+  // IMPORTANT: HTML Escaping Strategy
+  // We DO NOT escape HTML in this parser for the following reasons:
+  // 1. The frontend components use DOMPurify for sanitization
+  // 2. Double-escaping would cause display issues (e.g., "&amp;lt;" instead of "<")
+  // 3. The extracted text from HTML is already plain text (tags removed)
+  // 4. The escapeHtml() function is available for specific use cases if needed
+  // Security Note: Always ensure the frontend properly sanitizes before rendering
   const profile = {
     basic: {
       name: name || '名前未設定',  // Use Japanese default as fallback

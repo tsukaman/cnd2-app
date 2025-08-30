@@ -136,12 +136,14 @@ describe('DiagnosisCache', () => {
       const profiles = [mockProfile1, mockProfile2];
       
       // TTLを超えた時刻を設定するため、内部実装をモック
-      jest.spyOn(Date, 'now').mockReturnValueOnce(0); // 保存時
+      const nowSpy = jest.spyOn(Date, 'now');
+      nowSpy.mockReturnValue(0); // 保存時
       cache.set(profiles, 'duo', mockResult);
       
-      jest.spyOn(Date, 'now').mockReturnValueOnce(2 * 60 * 60 * 1000 + 1); // 2時間後
+      nowSpy.mockReturnValue(2 * 60 * 60 * 1000 + 1); // 2時間後
       const result = cache.get(profiles, 'duo');
       
+      nowSpy.mockRestore(); // モックをリストア
       expect(result).toBeNull();
     });
   });
