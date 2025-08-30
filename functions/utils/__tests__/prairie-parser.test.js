@@ -168,13 +168,13 @@ describe('Prairie Card Parser', () => {
       expect(result.social.zenn).toBe('https://zenn.dev/user');
     });
 
-    it('should extract multiple paragraphs as bio', () => {
+    it('should extract bio from explicitly marked elements', () => {
       const html = `
         <html>
           <body>
             <h1>Test User</h1>
-            <p>This is a long bio paragraph that contains more than 20 characters and should be extracted as the bio.</p>
-            <p>Short text</p>
+            <div class="bio">This is a long bio paragraph that contains more than 20 characters and should be extracted as the bio.</div>
+            <p>Random paragraph that should not be extracted</p>
           </body>
         </html>
       `;
