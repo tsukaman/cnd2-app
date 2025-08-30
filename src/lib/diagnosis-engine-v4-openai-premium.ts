@@ -76,8 +76,7 @@ export class AstrologicalDiagnosisEngineV4Premium {
       skills: profile.details?.skills || [],
       interests: profile.details?.interests || [],
       motto: profile.details?.motto || '',
-      tags: profile.details?.tags || [],
-      achievements: profile.details?.achievements || []
+      tags: profile.details?.tags || []
     };
   }
 
