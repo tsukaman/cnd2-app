@@ -68,7 +68,7 @@ export async function onRequest(context: any) {
     }
     
     // Parse the HTML content
-    prairieData = parseFromHTML(htmlContent) as any;
+    prairieData = parseFromHTML(htmlContent, context.env) as any;
     
     // Add source URL to metadata if provided
     if (url && prairieData?.meta) {
