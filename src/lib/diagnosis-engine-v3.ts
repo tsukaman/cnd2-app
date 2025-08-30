@@ -41,6 +41,14 @@ export class SimplifiedDiagnosisEngine {
     return SimplifiedDiagnosisEngine.instance;
   }
 
+  /**
+   * Reset the singleton instance (for testing purposes only)
+   * @internal
+   */
+  static resetInstance(): void {
+    (SimplifiedDiagnosisEngine as any).instance = undefined;
+  }
+
   isConfigured(): boolean {
     return this.openai !== null;
   }

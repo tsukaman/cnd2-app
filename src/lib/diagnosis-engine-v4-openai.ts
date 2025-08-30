@@ -59,6 +59,14 @@ export class AstrologicalDiagnosisEngineV4 {
   }
 
   /**
+   * Reset the singleton instance (for testing purposes only)
+   * @internal
+   */
+  static resetInstance(): void {
+    this.instance = null;
+  }
+
+  /**
    * OpenAI APIが設定されているか確認
    */
   isConfigured(): boolean {

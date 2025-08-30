@@ -5,6 +5,13 @@ import { createLogger, logRequest } from '../utils/logger.js';
 import { safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { parseFromHTML, validatePrairieCardUrl } from '../utils/prairie-parser.js';
 
+/**
+ * Handle POST requests to fetch and parse Prairie Card data
+ * @param {Object} context - Cloudflare Workers context
+ * @param {Request} context.request - The incoming request
+ * @param {Object} context.env - Environment bindings
+ * @returns {Promise<Response>} The response with Prairie Card data or error
+ */
 export async function onRequestPost({ request, env }) {
   const logger = createLogger(env);
   const origin = request.headers.get('origin');
@@ -138,6 +145,12 @@ export async function onRequestPost({ request, env }) {
   });
 }
 
+/**
+ * Handle OPTIONS requests for CORS preflight
+ * @param {Object} context - Cloudflare Workers context
+ * @param {Request} context.request - The incoming request
+ * @returns {Response} CORS preflight response
+ */
 export async function onRequestOptions({ request }) {
   const origin = request.headers.get('origin');
   const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };

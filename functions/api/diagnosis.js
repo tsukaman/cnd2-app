@@ -6,6 +6,13 @@ import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { generateAstrologicalDiagnosis } from './diagnosis-v4.js';
 
+/**
+ * Handle POST requests to generate diagnosis
+ * @param {Object} context - Cloudflare Workers context
+ * @param {Request} context.request - The incoming request
+ * @param {Object} context.env - Environment bindings including KV namespace
+ * @returns {Promise<Response>} The response with diagnosis result or error
+ */
 export async function onRequestPost({ request, env }) {
   const logger = createLogger(env);
   const origin = request.headers.get('origin');
@@ -75,6 +82,12 @@ export async function onRequestPost({ request, env }) {
   });
 }
 
+/**
+ * Handle OPTIONS requests for CORS preflight
+ * @param {Object} context - Cloudflare Workers context
+ * @param {Request} context.request - The incoming request
+ * @returns {Response} CORS preflight response
+ */
 export async function onRequestOptions({ request }) {
   const origin = request.headers.get('origin');
   const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
