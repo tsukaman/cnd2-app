@@ -15,7 +15,8 @@ const LIMITS = {
   COMPANY_LENGTH: 100,  // Maximum company name length in characters
   TITLE_LENGTH: 100,    // Maximum title length in characters
   META_TAG_LENGTH: 1000, // Maximum meta tag content length (ReDoS protection)
-  META_ATTR_LENGTH: 500  // Maximum meta tag attribute length (ReDoS protection)
+  META_ATTR_LENGTH: 500,  // Maximum meta tag attribute length (ReDoS protection)
+  FETCH_TIMEOUT_MS: 5000 // Fetch timeout in milliseconds
 };
 
 /**
@@ -93,6 +94,16 @@ function extractArrayByClass(html, className) {
  */
 function extractHashtagsFromElements(html, classNames) {
   const hashtags = [];
+  // Hashtag extraction pattern
+  // Regex breakdown: /#([\w]{1,50}|[ぁ-んァ-ヶー]{1,20}|[一-龠]{1,20})/g
+  //   #            - Literal hashtag symbol
+  //   (...)        - Capture group for hashtag content
+  //   [\w]{1,50}   - Alphanumeric characters (1-50 chars) for English hashtags
+  //   |            - OR operator
+  //   [ぁ-んァ-ヶー]{1,20} - Hiragana/Katakana (1-20 chars) for Japanese hashtags
+  //   |            - OR operator
+  //   [一-龠]{1,20} - Kanji characters (1-20 chars) for Japanese/Chinese hashtags
+  //   g            - Global flag to find all matches
   const hashtagPattern = /#([\w]{1,50}|[ぁ-んァ-ヶー]{1,20}|[一-龠]{1,20})/g;
   
   // Extract content from specified elements
@@ -199,6 +210,15 @@ function extractNameFromMeta(html, env) {
   // Extract name from various patterns
   // Pattern 1: "名前 のプロフィール" or "名前 の プロフィール"
   // Improved with stricter boundaries: limit name length and ensure end of string
+  // Regex breakdown: /^(.{1,100}?)\s*の?\s*(?:プロフィール|Profile|Prairie Card)(?:\s|$)/i
+  //   ^            - Start of string
+  //   (.{1,100}?)  - Capture group: 1-100 characters (non-greedy) for the name
+  //   \s*          - Optional whitespace
+  //   の?          - Optional Japanese possessive particle
+  //   \s*          - Optional whitespace
+  //   (?:...)      - Non-capturing group for suffix keywords
+  //   (?:\s|$)     - End with whitespace or end of string
+  //   i            - Case insensitive flag
   const nameMatch = titleSource.match(/^(.{1,100}?)\s*の?\s*(?:プロフィール|Profile|Prairie Card)(?:\s|$)/i);
   if (nameMatch) {
     const extractedName = nameMatch[1].trim();
