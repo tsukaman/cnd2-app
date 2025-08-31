@@ -165,7 +165,7 @@ export class PrairieCardParser {
       }
       
       // ネットワークエラー
-      if (error.message?.includes('fetch')) {
+      if ((error as Error).message?.includes('fetch')) {
         throw new NetworkError('ネットワークエラーが発生しました。インターネット接続を確認してください。', { url });
       }
       

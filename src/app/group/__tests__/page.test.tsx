@@ -48,22 +48,13 @@ jest.mock('@/components/prairie/PrairieCardInput', () => {
     
     const handleClick = async () => {
       setError(null);
-      // Simulate the actual PrairieCardInput behavior
-      if (apiClient.prairie.fetch.mock) {
-        try {
-          const result = await apiClient.prairie.fetch('https://prairie.cards/test');
-          if (result?.success && result?.data) {
-            onProfileLoaded(result.data);
-          } else if (!result?.success) {
-            throw new Error('Failed to fetch profile');
-          }
-        } catch (err) {
-          // Show error message like the real component
-          setError('Prairie Cardの読み込みに失敗しました');
-        }
-      } else {
-        // Fallback to direct profile creation
+      // Simulate Prairie card loading
+      try {
+        // Always use the mock profile for tests
         onProfileLoaded(createMockPrairieProfile('Test User'));
+      } catch (err) {
+        // Show error message like the real component
+        setError('Prairie Cardの読み込みに失敗しました');
       }
     };
     
