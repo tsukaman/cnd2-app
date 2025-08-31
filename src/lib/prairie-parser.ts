@@ -215,7 +215,7 @@ export class PrairieCardParser {
   // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
   // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
   // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
-  private analyzeAndRecoverFromError(html: string, error: Error): PrairieProfile | null {
+  private analyzeAndRecoverFromError(html: string, _error: Error): PrairieProfile | null {
     try {
       // HTMLが空の場合
       if (!html || html.trim().length === 0) {
