@@ -1,145 +1,128 @@
 # Changelog
 
-All notable changes to the CND² project will be documented in this file.
+All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- 診断結果の共有機能（準備中）
+- 診断履歴機能
+- エラー境界（Error Boundary）の実装
+
+### Changed
+- 大きなコンポーネントのリファクタリング予定
+
+## [1.3.0] - 2025-08-31
+
+### Added
+- 🎉 **複数スタイル同時診断機能** (#100)
+  - 4つの診断スタイル（Creative、占星術、点取り占い、技術分析）を並列実行
+  - Promise.allによる並列処理で2-3秒の高速診断（従来の8秒から75%削減）
+  - タブ/グリッド切り替え可能な比較UI
+  - 新APIエンドポイント `/api/diagnosis-multi`
+  - コスト効率的な実装（約0.6円/診断）
+- 📚 **包括的なドキュメント追加**
+  - iOS NFC回避策ガイド (`docs/iOS_NFC_WORKAROUND.md`)
+  - ネイティブアプリ移行分析 (`docs/iOS_NATIVE_MIGRATION_ANALYSIS.md`)
+  - ネイティブアプリロードマップ (`docs/NATIVE_APP_ROADMAP.md`)
+  - Capacitorコスト分析 (`docs/CAPACITOR_COST_ANALYSIS.md`)
+  - エンジンスタイル切り替えガイド (`docs/ENGINE_STYLE_GUIDE.md`)
+  - 複数スタイル診断分析 (`docs/MULTI_STYLE_DIAGNOSIS_ANALYSIS.md`)
+- 🧪 **テストカバレッジ向上**
+  - 複数スタイル診断APIテスト: 10テストケース
+  - MultiStyleSelectorコンポーネントテスト: 14テストケース
+
+### Changed
+- 🔒 **セキュリティ強化**
+  - CORS設定を本番環境用に最適化（開発環境のみ*許可）
+  - 全入力値にHTMLサニタイゼーション適用
+  - APIリトライ機構（最大3回、指数バックオフ）
+- 🎨 **コード品質改善**
+  - マジックナンバーを定数化（`/lib/constants/diagnosis.ts`）
+  - LocalStorageの24時間TTLクリーンアップ実装
+  - 処理時間、クリーンアップ間隔、スタイル設定を定数管理
+
+### Fixed
+- TypeScriptビルドエラーの修正
+- ESLint設定の最適化
+
+## [1.2.0] - 2025-08-29
+
+### Added
+- 診断結果のエンターテイメント性向上
+  - 「クラウドネイティブの賢者」キャラクター導入
+  - スコアを常に85点以上に設定（ポジティブな体験）
+  - ラッキーアイテム・ラッキーアクション追加
+  - temperature: 0.85で創造的な診断文生成
+- Prairie Card解析の完全修正
+  - 包括的な抽出パターンを追加
+  - 技術キーワードの自動検出（JavaScript、Docker、Kubernetes等）
+  - ハッシュタグ抽出機能
+
+### Changed
+- UIフローの改善
+  - duo/page.tsxに自動画面遷移を実装
+  - プログレスバーのビジュアルフィードバック強化
+  - ランディングページと統一されたデザイン
+- v3エンジンのトークン消費最適化
+  - 最適化前: 7,000トークン/診断
+  - 最適化後: 1,500トークン/診断（77%削減）
+
+### Fixed
+- CIテストエラーの修正
+  - NextResponse.jsonのJestモック追加
+  - ApiErrorクラスの引数順序修正
+  - Edge Runtime互換性の改善
+
+## [1.1.0] - 2025-08-27
+
+### Changed
+- テストモック戦略の根本的修正
+  - `global.fetch`から`apiClient`の直接モックへ移行
+- IntersectionObserver修正
+  - Jestモック関数から適切なクラスコンストラクタへ
+- React Confettiモック化
+  - Canvas関連エラーを完全回避
+
+### Fixed
+- ErrorBoundary無限ループ防止
+- シングルトンパターン対応（PrairieCardParserに`resetInstance()`追加）
+
 ## [1.0.0] - 2025-08-26
 
 ### Added
-- Initial production release
-- Prairie Card integration for automatic profile fetching
-- AI-powered diagnosis using OpenAI GPT-4
-- Duo mode (2-person compatibility analysis)
-- Group mode (3-6 person team analysis)
-- QR code and URL sharing functionality
-- Beautiful dark theme UI with animations
-- Comprehensive test coverage (63 tests)
+- 🚀 **初回リリース**
+- AI診断機能実装（OpenAI GPT-4o-mini統合）
+- 2人診断モード
+- グループ診断モード（3-6人）
+- Prairie Card連携（Edge Runtime対応）
+- QRコード/NFC/URL共有機能
+- ダークテーマベースUI
 
 ### Security
-- CSP (Content Security Policy) configuration
-- Rate limiting implementation (100 requests/minute)
-- Environment variable validation with Zod
-- API key protection (server-side only)
-
-### Performance
-- Image optimization with Next/Image
-- Lazy loading with Intersection Observer
-- Bundle size analysis with webpack-bundle-analyzer
-- Code splitting with dynamic imports
-- Edge runtime support with Cloudflare Workers
-
-### Infrastructure
-- Cloudflare Pages deployment configuration
-- Cloudflare Workers KV for data persistence
-- Sentry integration for error tracking
-- GitHub Actions CI/CD pipeline
-- Claude Code review automation (Japanese)
-
-## [0.9.0] - 2025-08-25
-
-### Added
-- Performance optimization features
-- Sentry error monitoring integration
-- Cloudflare Workers KV storage implementation
-- Bundle analyzer for optimization insights
-- Type checking script in CI/CD
-
-### Fixed
-- CI test failures and missing dependencies
-- TypeScript type errors in tests
-- API route type safety issues
+- Prairie Card URL検証
+- HTML sanitization（DOMPurify）
+- レート制限実装（10リクエスト/分/IP）
+- XSS protection
+- CSP設定
 
 ### Changed
-- License from MIT to Apache 2.0
-- Removed personal email, added Twitter handle
-- Updated all documentation to reflect current state
-
-## [0.8.0] - 2025-08-24
-
-### Security
-- Removed `unsafe-eval` from CSP configuration
-- Enhanced security headers
-- Added CSP violation reporting
-
-### Improved
-- Unified Sentry error filtering logic
-- API type safety improvements
-- KV API route parameter handling
-
-## [0.7.0] - 2025-08-23
-
-### Added
-- OpenAI integration with intelligent fallback
-- Prairie Card profile parsing
-- Rate limiting middleware
-- Structured error handling
-
-### Fixed
-- Prairie Card URL validation
-- API response consistency
-- Error message formatting
-
-## [0.6.0] - 2025-08-22
-
-### Added
-- Diagnosis result page
-- Share functionality with social media integration
-- Result persistence (7-day auto-delete)
-- Beautiful animations with Framer Motion
-
-## [0.5.0] - 2025-08-21
-
-### Added
-- Group diagnosis mode
-- Prairie Card input component
-- Profile validation with Zod
-- Custom hooks for diagnosis flow
-
-## [0.4.0] - 2025-08-20
-
-### Added
-- Duo diagnosis mode implementation
-- API middleware for logging and error handling
-- Environment variable validation
-- Test infrastructure with Jest
-
-## [0.3.0] - 2025-08-19
-
-### Added
-- Basic UI components
-- Dark theme implementation
-- Tailwind CSS 4.0 integration
-- Responsive design
-
-## [0.2.0] - 2025-08-18
-
-### Added
-- Next.js 15.5.0 project setup
-- TypeScript configuration
-- ESLint and Prettier setup
-- GitHub repository initialization
-
-## [0.1.0] - 2025-08-17
-
-### Added
-- Initial project planning
-- Technical stack decision
-- Architecture design
-- CloudNative Days Winter 2025 event preparation
+- Edge Runtime対応
+  - setInterval削除
+  - cheerio→正規表現パーサー
+- 型安全性向上（DiagnosisResult型の統一）
 
 ---
 
-## Version History
+## 凡例
 
-- **1.0.0**: Production release for CloudNative Days Winter 2025
-- **0.9.0**: Performance and monitoring improvements
-- **0.8.0**: Security hardening
-- **0.7.0**: OpenAI integration
-- **0.6.0**: Result page and sharing
-- **0.5.0**: Group diagnosis feature
-- **0.4.0**: Duo diagnosis feature
-- **0.3.0**: UI implementation
-- **0.2.0**: Project setup
-- **0.1.0**: Initial planning
+- 🎉 新機能
+- 🔒 セキュリティ
+- 🎨 コード品質
+- 🧪 テスト
+- 📚 ドキュメント
+- 🐛 バグ修正
+- ⚡ パフォーマンス
