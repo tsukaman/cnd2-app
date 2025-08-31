@@ -1,13 +1,16 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { DiagnosisResult } from "@/types";
+import { DiagnosisResult, FortuneTelling } from "@/types";
 import { CND2_CONFIG } from "@/config/cnd2.config";
 import { Download, RefreshCw, Trophy, MessageCircle, Sparkles, QrCode } from "lucide-react";
 import ShareButton from '@/components/share/ShareButton';
 import { QRCodeModal } from '@/components/share/QRCodeModal';
 import Confetti from "react-confetti";
 import { useState, useEffect } from "react";
+
+// 定数定義
+const DEFAULT_COMPATIBILITY_SCORE = 85; // デフォルトの相性スコア（ポジティブな体験を保証）
 
 interface DiagnosisResultProps {
   result: DiagnosisResult;
@@ -99,7 +102,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
           >
             <div className="inline-flex items-center justify-center">
               <Trophy className="w-8 h-8 text-yellow-500 mr-2" />
-              <span className="text-5xl font-bold text-white">{result.compatibility || result.score || 85}</span>
+              <span className="text-5xl font-bold text-white">{result.compatibility || result.score || DEFAULT_COMPATIBILITY_SCORE}</span>
               <span className="text-2xl text-white/80 ml-1">/100</span>
             </div>
             <div className="text-sm text-white/60 mt-2">相性スコア</div>
@@ -107,7 +110,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
 
           {/* 診断タイプ */}
           <motion.h2 
-            className={`text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r ${getScoreColor(result.compatibility || result.score || 85)} bg-clip-text text-transparent`}
+            className={`text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r ${getScoreColor(result.compatibility || result.score || DEFAULT_COMPATIBILITY_SCORE)} bg-clip-text text-transparent`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
@@ -162,6 +165,42 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             </div>
           </motion.div>
 
+          {/* 点取り占い */}
+          {result.fortuneTelling && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.3 }}
+              className="mb-8"
+            >
+              <div className="flex items-center mb-4">
+                <Sparkles className="w-5 h-5 text-yellow-400 mr-2" />
+                <h3 className="text-lg font-semibold text-white">今日の運勢（点取り占い）</h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-cyan-400">{result.fortuneTelling.overall}</div>
+                  <div className="text-xs text-white/60 mt-1">総合運</div>
+                </div>
+                <div className="bg-white/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-400">{result.fortuneTelling.tech}</div>
+                  <div className="text-xs text-white/60 mt-1">技術運</div>
+                </div>
+                <div className="bg-white/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-pink-400">{result.fortuneTelling.collaboration}</div>
+                  <div className="text-xs text-white/60 mt-1">コラボ運</div>
+                </div>
+                <div className="bg-white/10 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-green-400">{result.fortuneTelling.growth}</div>
+                  <div className="text-xs text-white/60 mt-1">成長運</div>
+                </div>
+              </div>
+              <p className="text-center text-white/80 mt-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-3">
+                💫 {result.fortuneTelling.message}
+              </p>
+            </motion.div>
+          )}
+
           {/* アドバイスと機会 */}
           {(result.advice || result.hiddenGems || result.opportunities) && (
             <motion.div
@@ -171,7 +210,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
               className="mb-8"
             >
               <div className="flex items-center mb-3">
-                <Sparkles className="w-5 h-5 text-yellow-400 mr-2" />
+                <MessageCircle className="w-5 h-5 text-cyan-400 mr-2" />
                 <h3 className="text-lg font-semibold text-white">アドバイス</h3>
               </div>
               <p className="text-white/80 bg-white/10 rounded-xl p-4">

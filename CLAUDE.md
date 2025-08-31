@@ -265,6 +265,40 @@ if (process.env.NODE_ENV === 'test') {
 }
 ```
 
+## 🎭 E2Eテスト（Claude Code利用時）
+
+Claude Codeを使用している場合、E2EテストはPlaywright MCPを通じて実行します。
+
+### Playwright MCP経由での実行
+
+```typescript
+// Claude Code内で以下のMCPツールを使用
+// - mcp__playwright__browser_navigate: ページ遷移
+// - mcp__playwright__browser_snapshot: ページ要素の取得
+// - mcp__playwright__browser_click: クリック操作
+// - mcp__playwright__browser_fill_form: フォーム入力
+// - mcp__playwright__browser_take_screenshot: スクリーンショット
+```
+
+### 使用例
+
+1. **Prairie Card入力フローのテスト**
+   - `/duo`ページへ遷移
+   - Prairie Card URLを入力
+   - 診断実行ボタンをクリック
+   - 結果表示を確認
+
+2. **診断結果表示のテスト**
+   - 診断結果が表示されることを確認
+   - 相性スコアが85点以上であることを確認
+   - 点取り占い結果が表示されることを確認
+
+### 注意事項
+
+- 個別のPlaywrightインストールは不要（MCP経由で実行）
+- `playwright.config.ts`や`e2e/`ディレクトリは作成不要
+- テスト実行時はClaude CodeのMCPツールを直接使用
+
 ## 🔍 トラブルシューティング
 
 ### ビルドエラー

@@ -5,7 +5,7 @@ import {
   CND2_SYSTEM_PROMPT, 
   buildDuoDiagnosisPrompt, 
   buildGroupDiagnosisPrompt 
-} from './prompts';
+} from './prompts/diagnosis-prompts';
 import { nanoid } from 'nanoid';
 
 import { DiagnosisCache } from './diagnosis-cache';

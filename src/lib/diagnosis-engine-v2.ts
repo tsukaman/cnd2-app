@@ -5,6 +5,7 @@ import { DiagnosisRequest } from './validators/diagnosis';
 import { KVStorage } from './workers/kv-storage-v2';
 import { nanoid } from 'nanoid';
 import { DiagnosisResult, AIResponse } from '@/types/diagnosis';
+import { PrairieProfile } from '@/types';
 import { logger } from './logger';
 
 export class DiagnosisEngine {
@@ -22,20 +23,45 @@ export class DiagnosisEngine {
     const aiResponse = await this.callOpenAI(request);
     
     // 結果を整形
+    // Convert participants to PrairieProfile format
+    const prairieProfiles: PrairieProfile[] = request.participants.map(p => ({
+      basic: {
+        name: p.name,
+        title: p.prairieData?.role || '',
+        company: p.prairieData?.company || '',
+        bio: p.prairieData?.bio || '',
+        avatar: undefined
+      },
+      details: {
+        tags: p.prairieData?.tags || [],
+        skills: p.prairieData?.skills || [],
+        interests: p.prairieData?.interests || [],
+        certifications: [],
+        communities: [],
+        motto: undefined
+      },
+      social: {
+        twitter: p.prairieData?.twitter,
+        github: p.prairieData?.github
+      },
+      custom: {},
+      meta: {
+        sourceUrl: p.prairieUrl
+      }
+    }));
+
     const result: DiagnosisResult = {
       id: resultId,
       mode: request.mode,
       type: aiResponse.type || this.generateType(request),
       compatibility: aiResponse.compatibility || this.calculateCompatibility(request),
-      description: aiResponse.description || this.generateDescription(request),
-      tips: aiResponse.tips || this.generateTips(request),
-      hashtag: '#CNDxCnD',
-      participants: request.participants,
-      metadata: {
-        createdAt: timestamp,
-        expiresAt: this.getExpiryDate(),
-        version: '2.0',
-      },
+      summary: aiResponse.description || this.generateDescription(request),
+      strengths: aiResponse.tips || this.generateTips(request),
+      opportunities: [],
+      advice: '',
+      participants: prairieProfiles,
+      createdAt: timestamp,
+      aiPowered: false
     };
     
     // KVに保存（7日間の有効期限付き）

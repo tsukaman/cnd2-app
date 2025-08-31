@@ -1,7 +1,16 @@
 /**
  * 診断関連の型定義
+ * 
+ * Note: FortuneTelling と DiagnosisResult は index.ts から再エクスポート
  */
 
+// index.ts から型をインポート
+import type { FortuneTelling, DiagnosisResult } from './index';
+
+// 型を再エクスポート
+export type { FortuneTelling, DiagnosisResult };
+
+// diagnosis.ts 固有の型定義
 export interface DiagnosisParticipant {
   name: string;
   prairieUrl?: string;
@@ -18,25 +27,10 @@ export interface DiagnosisParticipant {
   };
 }
 
-export interface DiagnosisResult {
-  id: string;
-  mode: 'duo' | 'group';
-  type: string;
-  compatibility: number;
-  description: string;
-  tips: string[];
-  hashtag: string;
-  participants: DiagnosisParticipant[];
-  metadata: {
-    createdAt: string;
-    expiresAt: string;
-    version: string;
-  };
-}
-
 export interface AIResponse {
   type: string;
   compatibility: number;
   description: string;
   tips: string[];
+  fortuneTelling?: FortuneTelling;
 }
