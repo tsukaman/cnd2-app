@@ -54,12 +54,31 @@ export default function GroupPage() {
         // LocalStorageに保存
         localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
         
-        // KVにも保存（非同期、エラーは無視）
-        fetch(`/api/results/${result.id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(result),
-        }).catch(err => console.log('[Group] Failed to save to KV:', err));
+        // KVにも保存（非同期、リトライ付き）
+        const saveToKV = async (retries = 3) => {
+          for (let i = 0; i < retries; i++) {
+            try {
+              const response = await fetch(`/api/results/${result.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(result),
+              });
+              if (response.ok) {
+                console.log('[Group] Successfully saved to KV');
+                return;
+              }
+              console.warn(`[Group] KV save attempt ${i + 1} failed:`, response.status);
+            } catch (err) {
+              console.warn(`[Group] KV save attempt ${i + 1} error:`, err);
+            }
+            // Wait before retry (exponential backoff)
+            if (i < retries - 1) {
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+          }
+          console.error('[Group] Failed to save to KV after all retries');
+        };
+        saveToKV();
         
         // Navigate to home with result in state
         router.push(`/?result=${result.id}&mode=group`);

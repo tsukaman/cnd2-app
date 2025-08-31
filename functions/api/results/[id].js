@@ -97,6 +97,116 @@ export async function onRequestGet({ params, env, request }) {
   });
 }
 
+export async function onRequestPost({ params, env, request }) {
+  const logger = createLogger(env);
+  const { id } = params;
+  const origin = request.headers.get('origin');
+  const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
+  
+  return await logRequest(request, env, null, async () => {
+    try {
+      logger.info('Saving diagnosis result', { id });
+      
+      // Validate ID format
+      if (!validateId(id)) {
+        logger.warn('Invalid result ID format', { id });
+        return errorResponse(
+          new Error('Invalid result ID format'),
+          400,
+          corsHeaders
+        );
+      }
+      
+      // Parse request body
+      let result;
+      try {
+        result = await request.json();
+      } catch (parseError) {
+        logger.error('Failed to parse request body', parseError);
+        return errorResponse(
+          new Error('Invalid JSON in request body'),
+          400,
+          corsHeaders
+        );
+      }
+      
+      // Ensure the result has an ID
+      if (!result.id) {
+        result.id = id;
+      }
+      
+      // Save to KV if available
+      if (env.DIAGNOSIS_KV) {
+        const key = `diagnosis:${id}`;
+        const startKV = Date.now();
+        
+        try {
+          // Save with 7 days TTL (604800 seconds)
+          const ttl = 60 * 60 * 24 * 7;
+          await env.DIAGNOSIS_KV.put(
+            key,
+            JSON.stringify(result),
+            { expirationTtl: ttl }
+          );
+          
+          logger.metric('kv_write_duration', Date.now() - startKV, 'ms', {
+            key,
+            operation: 'put',
+            ttl,
+          });
+          
+          logger.info('Result saved to KV', { 
+            id,
+            ttl,
+            size: JSON.stringify(result).length,
+          });
+          
+          // Track save metrics
+          try {
+            const metricsKey = METRICS_KEYS.TOTAL_SAVES || 'metrics:total_saves';
+            const currentCount = await env.DIAGNOSIS_KV.get(metricsKey);
+            const count = safeParseInt(currentCount, 0);
+            await env.DIAGNOSIS_KV.put(metricsKey, String(count + 1));
+          } catch (e) {
+            logger.debug('Failed to update save metrics', { error: e.message });
+          }
+          
+          return successResponse(
+            {
+              message: 'Result saved successfully',
+              id,
+              storage: 'kv',
+              ttl,
+            },
+            corsHeaders
+          );
+        } catch (kvError) {
+          logger.error('KV write error', kvError, { id });
+          return errorResponse(
+            new Error('Failed to save result to storage'),
+            500,
+            corsHeaders
+          );
+        }
+      }
+      
+      // KV not available (development mode)
+      logger.info('KV not available, returning success for development', { id });
+      return successResponse(
+        {
+          message: 'Result saved successfully (local only)',
+          id,
+          storage: 'local',
+        },
+        corsHeaders
+      );
+    } catch (error) {
+      logger.error('Results API save error', error, { id });
+      return errorResponse(error, 500, corsHeaders);
+    }
+  });
+}
+
 export async function onRequestDelete({ params, env, request }) {
   const logger = createLogger(env);
   const { id } = params;
