@@ -243,7 +243,7 @@ ci: CI/CD設定の変更
 ### 実行方法
 
 ```bash
-# 全テスト実行（76テスト）
+# 全テスト実行（460テスト: 419パス、41スキップ）
 npm test
 
 # カバレッジ付き
@@ -383,14 +383,21 @@ try {
    - PR #100でマージ完了
 
 2. **セキュリティ強化** ✅
-   - CORS設定を本番環境用に最適化（開発環境のみ*許可）
-   - 全入力値にHTMLサニタイゼーション適用
+   - CORS設定を本番環境用に最適化
+     ```typescript
+     // 開発環境と本番環境で異なるCORS設定
+     const allowedOrigins = process.env.NODE_ENV === 'development' 
+       ? ['http://localhost:3000', 'http://localhost:3001'] 
+       : ['https://cnd2.cloudnativedays.jp', 'https://cnd2-app.pages.dev'];
+     ```
+   - 全入力値にHTMLサニタイゼーション適用（DOMPurify使用）
    - APIリトライ機構（最大3回、指数バックオフ）
 
 3. **テストカバレッジ向上** ✅
    - 複数スタイル診断APIテスト: 10テストケース追加
    - MultiStyleSelectorコンポーネントテスト: 14テストケース追加
-   - すべてのテストがパス
+   - 総テスト数: 460テスト（419パス、41スキップ）
+   - v1.2.0の76テストから大幅増加
 
 4. **コード品質改善** ✅
    - マジックナンバーを定数化（`/lib/constants/diagnosis.ts`）
