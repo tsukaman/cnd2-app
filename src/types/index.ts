@@ -1,3 +1,18 @@
+/**
+ * Fortune grade constants with Japanese meanings
+ * 占い結果のグレード定数
+ */
+export const FORTUNE_GRADES = {
+  DAIKICHI: 'daikichi' as const,  // 大吉 - Great blessing
+  KICHI: 'kichi' as const,         // 吉 - Good fortune
+  CHUKICHI: 'chukichi' as const,   // 中吉 - Middle fortune
+  SHOKICHI: 'shokichi' as const,   // 小吉 - Small fortune
+  SUEKICHI: 'suekichi' as const,   // 末吉 - Future fortune
+  KYO: 'kyo' as const              // 凶 - Misfortune (rarely used)
+} as const;
+
+export type FortuneGrade = typeof FORTUNE_GRADES[keyof typeof FORTUNE_GRADES];
+
 export interface PrairieProfile {
   basic: {
     name: string;
@@ -67,6 +82,13 @@ export interface DiagnosisResult {
   shareTag?: string;
   luckyItem?: string;
   luckyAction?: string;
+  // Fortune telling elements (点取り占い)
+  fortuneScore?: number; // 0-100点の運勢スコア
+  fortuneGrade?: FortuneGrade; // 運勢グレード (大吉/吉/中吉/小吉/末吉/凶)
+  fortuneMessage?: string; // 今日の運勢メッセージ
+  luckyColor?: string; // ラッキーカラー
+  luckyNumber?: number; // ラッキーナンバー
+  techFortune?: string; // 技術運（例：「今日はバグが少ない日」）
   // V3 engine metadata
   metadata?: {
     engine?: string;
