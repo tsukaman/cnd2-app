@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare Pages (Production)
 
 on:
   push:
@@ -10,30 +10,41 @@ env:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy to Production
     runs-on: ubuntu-latest
     permissions:
       contents: read
       deployments: write
     steps:
-      - name: Checkout code
+      - name: Checkout repository code
         uses: actions/checkout@v5
         
-      - name: Setup Node.js
+      - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           
-      - name: Install dependencies
+      - name: Install npm dependencies
         run: npm ci
         
-      - name: Create .env.production
+      - name: Run tests
+        run: npm test
+        env:
+          CI: true
+          
+      - name: Run linting checks
+        run: npm run lint
+        
+      - name: Run TypeScript type checking
+        run: npm run type-check
+        
+      - name: Create production environment file
         run: |
           echo "NEXT_PUBLIC_APP_URL=https://cdn2.cloudnativedays.jp" >> .env.production
           echo "PRAIRIE_CARD_BASE_URL=https://prairie-card.cloudnativedays.jp" >> .env.production
           
-      - name: Build application
+      - name: Build Next.js application
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
