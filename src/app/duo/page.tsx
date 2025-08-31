@@ -7,16 +7,20 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
+import { MultiStyleSelector } from '@/components/diagnosis/MultiStyleSelector';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
 import type { PrairieProfile } from '@/types';
+import type { DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
 
 export default function DuoPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<'first' | 'second' | 'ready'>('first');
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [multiStyleMode, setMultiStyleMode] = useState(false);
+  const [selectedStyles, setSelectedStyles] = useState<DiagnosisStyle[]>(['creative']);
   const { loading: parsingLoading, error: parseError } = usePrairieCard();
   const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
 
@@ -50,38 +54,69 @@ export default function DuoPage() {
 
   const handleStartDiagnosis = async () => {
     if (profiles[0] && profiles[1]) {
-      const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
-      if (result) {
-        // LocalStorageに保存
-        localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
-        
-        // KVにも保存（非同期、リトライ付き）
-        const saveToKV = async () => {
-          for (let i = 0; i < RETRY_CONFIG.maxRetries; i++) {
-            try {
-              const response = await fetch(`/api/results/${result.id}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(result),
-              });
-              if (response.ok) {
-                console.log('[Duo] Successfully saved to KV');
-                return;
-              }
-              console.warn(`[Duo] KV save attempt ${i + 1} failed:`, response.status);
-            } catch (err) {
-              console.warn(`[Duo] KV save attempt ${i + 1} error:`, err);
-            }
-            // Wait before retry (exponential backoff)
-            if (i < RETRY_CONFIG.maxRetries - 1) {
-              await new Promise(resolve => setTimeout(resolve, calculateBackoffDelay(i)));
-            }
+      if (multiStyleMode && selectedStyles.length > 0) {
+        // 複数スタイル診断モード
+        try {
+          const response = await fetch('/api/diagnosis-multi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              profiles: [profiles[0], profiles[1]],
+              mode: 'duo',
+              styles: selectedStyles
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to generate multi-style diagnosis');
           }
-          console.error('[Duo] Failed to save to KV after all retries');
-        };
-        saveToKV();
-        
-        router.push(`/?result=${result.id}&mode=duo`);
+
+          const data = await response.json();
+          
+          // 結果をLocalStorageに保存
+          const resultId = `multi-${Date.now()}`;
+          localStorage.setItem(`diagnosis-multi-${resultId}`, JSON.stringify(data));
+          
+          // 複数スタイル結果ページへ遷移
+          router.push(`/duo/multi-results?id=${resultId}`);
+        } catch (error) {
+          console.error('Multi-style diagnosis error:', error);
+        }
+      } else {
+        // 通常の診断モード
+        const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
+        if (result) {
+          // LocalStorageに保存
+          localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
+          
+          // KVにも保存（非同期、リトライ付き）
+          const saveToKV = async () => {
+            for (let i = 0; i < RETRY_CONFIG.maxRetries; i++) {
+              try {
+                const response = await fetch(`/api/results/${result.id}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(result),
+                });
+                if (response.ok) {
+                  console.log('[Duo] Successfully saved to KV');
+                  return;
+                }
+                console.warn(`[Duo] KV save attempt ${i + 1} failed:`, response.status);
+              } catch (err) {
+                console.warn(`[Duo] KV save attempt ${i + 1} error:`, err);
+              }
+              // Wait before retry (exponential backoff)
+              if (i < RETRY_CONFIG.maxRetries - 1) {
+                await new Promise(resolve => setTimeout(resolve, calculateBackoffDelay(i)));
+              }
+            }
+            console.error('[Duo] Failed to save to KV after all retries');
+          };
+          saveToKV();
+          
+          router.push(`/?result=${result.id}&mode=duo`);
+        }
       }
     }
   };
@@ -99,6 +134,8 @@ export default function DuoPage() {
   const handleReset = () => {
     setProfiles([null, null]);
     setCurrentStep('first');
+    setMultiStyleMode(false);
+    setSelectedStyles(['creative']);
   };
 
   return (
@@ -326,6 +363,27 @@ export default function DuoPage() {
                     2人の相性を診断します
                   </p>
                   
+                  {/* 複数スタイル診断モード切り替え */}
+                  <div className="mb-6">
+                    <button
+                      onClick={() => setMultiStyleMode(!multiStyleMode)}
+                      className="inline-flex items-center px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition-colors border border-purple-500/30"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      {multiStyleMode ? '通常診断に戻る' : '複数スタイルで診断'}
+                    </button>
+                  </div>
+
+                  {/* 複数スタイル選択UI */}
+                  {multiStyleMode && (
+                    <div className="mb-8">
+                      <MultiStyleSelector
+                        selectedStyles={selectedStyles}
+                        onStylesChange={setSelectedStyles}
+                      />
+                    </div>
+                  )}
+                  
                   <div className="flex justify-center space-x-4">
                     <button
                       onClick={handleReset}
@@ -335,7 +393,7 @@ export default function DuoPage() {
                     </button>
                     <button
                       onClick={handleStartDiagnosis}
-                      disabled={diagnosisLoading}
+                      disabled={diagnosisLoading || (multiStyleMode && selectedStyles.length === 0)}
                       className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                     >
                       {diagnosisLoading ? (
@@ -346,7 +404,10 @@ export default function DuoPage() {
                       ) : (
                         <>
                           <Sparkles className="w-5 h-5 mr-2" />
-                          診断開始
+                          {multiStyleMode && selectedStyles.length > 1 
+                            ? `${selectedStyles.length}スタイルで診断` 
+                            : '診断開始'
+                          }
                         </>
                       )}
                     </button>
