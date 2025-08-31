@@ -13,6 +13,24 @@ export const FORTUNE_GRADES = {
 
 export type FortuneGrade = typeof FORTUNE_GRADES[keyof typeof FORTUNE_GRADES];
 
+// API Response Types
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface DiagnosisApiResponse extends ApiResponse<{
+  result: DiagnosisResult;
+}> {}
+
+export interface PrairieApiResponse extends ApiResponse<PrairieProfile> {}
+
+export interface ResultApiResponse extends ApiResponse<{
+  result: DiagnosisResult;
+}> {}
+
 export interface PrairieProfile {
   basic: {
     name: string;

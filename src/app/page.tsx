@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -10,8 +10,19 @@ import { ConsentDialog } from "@/components/ui/ConsentDialog";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { BackgroundEffects } from "@/components/effects/BackgroundEffects";
 import { DiagnosisResult as DiagnosisResultComponent } from "@/components/diagnosis/DiagnosisResult";
-import type { DiagnosisResult } from "@/types";
+import type { DiagnosisResult, ResultApiResponse } from "@/types";
+import { sanitizer } from "@/lib/sanitizer";
 import { BarChart3 } from "lucide-react";
+
+// Constants
+const LOADING_SCREEN_DURATION = 1000;
+const TAGLINE_ROTATION_INTERVAL = 5000;
+const RESULT_ID_MAX_LENGTH = 50;
+const ERROR_MESSAGES = {
+  RESULT_NOT_FOUND: '診断結果の読み込みに失敗しました。URLを確認してください。',
+  INVALID_STRUCTURE: 'Invalid diagnosis result structure from API',
+  INVALID_RESPONSE_FORMAT: 'Invalid API response format'
+} as const;
 
 const taglines = [
   { en: "Connect Your Future", ja: "エンジニアの出会いを、データで可視化する" },
@@ -24,19 +35,68 @@ export default function Home() {
   const [isReady, setIsReady] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
   const [taglineIndex, setTaglineIndex] = useState(0);
+  const [isLoadingResult, setIsLoadingResult] = useState(false);
+  const [resultError, setResultError] = useState<string | null>(null);
+  const [loadingResultId, setLoadingResultId] = useState<string | null>(null); // 重複リクエスト防止用
   const searchParams = useSearchParams();
   const resultId = searchParams.get("result");
   const mode = searchParams.get("mode");
+
+  // Result ID検証関数
+  const validateResultId = (id: string): boolean => {
+    return /^[a-zA-Z0-9-_]+$/.test(id) && id.length <= RESULT_ID_MAX_LENGTH;
+  };
+
+  // イベントハンドラの最適化
+  const handleRetry = useCallback(() => {
+    window.location.reload();
+  }, []);
+
+  const handleGoHome = useCallback(() => {
+    setResultError(null);
+    setIsLoadingResult(false);
+    setDiagnosisResult(null);
+    window.history.replaceState({}, '', '/');
+  }, []);
   
+  // データ検証関数
+  const validateDiagnosisResult = (data: any): DiagnosisResult | null => {
+    if (!data || typeof data !== 'object') return null;
+    
+    // 必須フィールドの存在確認
+    if (!data.id || !data.createdAt || !data.participants || !Array.isArray(data.participants)) {
+      console.warn('[CND²] Invalid diagnosis result structure:', data);
+      return null;
+    }
+    
+    // XSS対策: 文字列フィールドをサニタイズ
+    const sanitized = {
+      ...data,
+      type: data.type ? sanitizer.sanitizeText(data.type) : '',
+      summary: data.summary ? sanitizer.sanitizeText(data.summary) : '',
+      message: data.message ? sanitizer.sanitizeText(data.message) : '',
+      advice: data.advice ? sanitizer.sanitizeText(data.advice) : undefined,
+      strengths: data.strengths ? data.strengths.map((s: string) => sanitizer.sanitizeText(s)) : [],
+      opportunities: data.opportunities ? data.opportunities.map((o: string) => sanitizer.sanitizeText(o)) : [],
+      conversationStarters: data.conversationStarters ? data.conversationStarters.map((c: string) => sanitizer.sanitizeText(c)) : [],
+    };
+    
+    return sanitized as DiagnosisResult;
+  };
+
   // 初期状態で、localStorageから結果を読み込む
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(() => {
     if (resultId && typeof window !== 'undefined') {
       const stored = localStorage.getItem(`diagnosis-result-${resultId}`);
       if (stored) {
         try {
-          return JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          // データ検証とサニタイズ
+          if (parsed && parsed.id === resultId) {
+            return validateDiagnosisResult(parsed);
+          }
         } catch (e) {
-          console.error("Failed to parse stored result:", e);
+          console.error(`[CND²] Failed to parse stored result for ID ${resultId}:`, e);
         }
       }
     }
@@ -49,25 +109,64 @@ export default function Home() {
     if (consent) {
       setHasConsented(true);
     }
-    // ローディング画面を1秒間表示
-    setTimeout(() => setIsReady(true), 1000);
+    // ローディング画面を表示
+    const timeoutId = setTimeout(() => setIsReady(true), LOADING_SCREEN_DURATION);
+    
+    // クリーンアップ関数でタイマーをクリア
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // 診断結果を読み込む
   useEffect(() => {
+    let cancelled = false; // Race condition防止用フラグ
+    
     const loadResult = async () => {
-      if (!resultId) return;
+      if (!resultId || cancelled) return;
       
-      // まずLocalStorageから結果を取得
+      // 重複リクエストのチェック
+      if (loadingResultId === resultId) {
+        console.log(`[CND²] Already loading result: ${resultId}`);
+        return;
+      }
+      
+      // Result IDの検証
+      if (!validateResultId(resultId)) {
+        console.error(`[CND²] Invalid result ID format: ${resultId}`);
+        setResultError('無効な結果IDの形式です。');
+        setIsLoadingResult(false);
+        return;
+      }
+      
+      // すでに結果がある場合はスキップ（初期化で読み込み済み）
+      if (diagnosisResult && diagnosisResult.id === resultId) {
+        return;
+      }
+      
+      // ローディング中のIDを記録
+      setLoadingResultId(resultId);
+      
+      // ローディング開始
+      setIsLoadingResult(true);
+      setResultError(null);
+      
+      // まずLocalStorageから結果を取得（初期化と重複チェック）
       const storedResult = localStorage.getItem(`diagnosis-result-${resultId}`);
       if (storedResult) {
         try {
           const result = JSON.parse(storedResult);
-          console.log("Loading result from localStorage:", result.id);
-          setDiagnosisResult(result);
-          return;
+          // データ検証とサニタイズ
+          if (result && result.id === resultId) {
+            const validatedResult = validateDiagnosisResult(result);
+            if (validatedResult && !cancelled) {
+              console.log("[CND²] Loading result from localStorage:", result.id);
+              setDiagnosisResult(validatedResult);
+              setIsLoadingResult(false);
+              setLoadingResultId(null); // ローディング完了
+              return;
+            }
+          }
         } catch (error) {
-          console.error("Failed to parse diagnosis result:", error);
+          console.error(`Failed to parse stored diagnosis result for ID ${resultId}:`, error);
         }
       }
       
@@ -77,44 +176,86 @@ export default function Home() {
         const response = await fetch(`/api/results/${resultId}`);
         
         if (!response.ok) {
-          throw new Error('Result not found');
+          throw new Error(`Result not found: ${response.status}`);
         }
         
-        const data = await response.json();
-        // APIレスポンスから結果を抽出
-        const result = data.data?.result || data;
+        const data: ResultApiResponse | DiagnosisResult = await response.json();
+        // APIレスポンスから結果を抽出（型チェック付き）
+        const result = 'success' in data && data.data?.result 
+          ? data.data.result 
+          : (data as DiagnosisResult).id 
+            ? data as DiagnosisResult 
+            : null;
         
-        console.log("Result fetched from API:", result.id);
+        if (!result) {
+          throw new Error(ERROR_MESSAGES.INVALID_RESPONSE_FORMAT);
+        }
+        
+        // データ検証とサニタイズ
+        const validatedResult = validateDiagnosisResult(result);
+        if (!validatedResult) {
+          throw new Error(ERROR_MESSAGES.INVALID_STRUCTURE);
+        }
+        
+        console.log("[CND²] Result fetched from API:", validatedResult.id);
+        
         // 取得した結果をLocalStorageにも保存（キャッシュ）
-        localStorage.setItem(`diagnosis-result-${resultId}`, JSON.stringify(result));
-        // 状態を更新
-        setDiagnosisResult(result);
+        localStorage.setItem(`diagnosis-result-${resultId}`, JSON.stringify(validatedResult));
+        
+        // 状態を更新（キャンセルされていない場合のみ）
+        if (!cancelled) {
+          setDiagnosisResult(validatedResult);
+          setIsLoadingResult(false);
+          setLoadingResultId(null); // ローディング完了
+        }
       } catch (error) {
-        console.error("Failed to fetch diagnosis result:", error);
+        console.error(`Failed to fetch diagnosis result for ID ${resultId}:`, error);
         
         // セッションストレージからも確認（フォールバック）
         const sessionResult = sessionStorage.getItem(`diagnosis-result-${resultId}`);
         if (sessionResult) {
           try {
             const result = JSON.parse(sessionResult);
-            console.log("Loading result from sessionStorage:", result.id);
-            setDiagnosisResult(result);
+            if (result && result.id === resultId) {
+              const validatedResult = validateDiagnosisResult(result);
+              if (validatedResult && !cancelled) {
+                console.log("[CND²] Loading result from sessionStorage:", result.id);
+                setDiagnosisResult(validatedResult);
+                setIsLoadingResult(false);
+                setLoadingResultId(null); // ローディング完了
+                return;
+              }
+            }
           } catch (parseError) {
-            console.error("Failed to parse session storage result:", parseError);
+            console.error(`Failed to parse session storage result for ID ${resultId}:`, parseError);
           }
+        }
+        
+        // 最終的にエラー状態を設定
+        if (!cancelled) {
+          setResultError(ERROR_MESSAGES.RESULT_NOT_FOUND);
+          setIsLoadingResult(false);
+          setLoadingResultId(null); // ローディング完了
         }
       }
     };
     
     loadResult();
-  }, [resultId]);
+    
+    // クリーンアップ関数で競合状態を防ぐ
+    return () => {
+      cancelled = true;
+    };
+  }, [resultId, diagnosisResult, loadingResultId, validateResultId]);
 
   useEffect(() => {
-    // タグラインを5秒ごとに切り替える
-    const interval = setInterval(() => {
+    // タグラインを定期的に切り替える
+    const intervalId = setInterval(() => {
       setTaglineIndex((prev) => (prev + 1) % taglines.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    }, TAGLINE_ROTATION_INTERVAL);
+    
+    // クリーンアップ関数でインターバルをクリア
+    return () => clearInterval(intervalId);
   }, []);
 
   if (!isReady) {
@@ -132,6 +273,64 @@ export default function Home() {
     );
   }
 
+  // ローディング中の表示
+  if (isLoadingResult && resultId) {
+    return (
+      <main className="min-h-screen relative overflow-hidden stars-bg flex items-center justify-center">
+        <BackgroundEffects />
+        <div className="relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-effect rounded-3xl p-8 max-w-md mx-auto"
+          >
+            <div className="mb-6">
+              <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">診断結果を読み込み中...</h2>
+            <p className="text-gray-300">結果ID: {resultId}</p>
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
+
+  // エラー表示
+  if (resultError && resultId) {
+    return (
+      <main className="min-h-screen relative overflow-hidden stars-bg flex items-center justify-center">
+        <BackgroundEffects />
+        <div className="relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-effect rounded-3xl p-8 max-w-md mx-auto"
+          >
+            <div className="mb-6">
+              <div className="text-6xl">⚠️</div>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-4">診断結果の読み込みに失敗しました</h2>
+            <p className="text-gray-300 mb-6">{resultError}</p>
+            <div className="space-y-4">
+              <button
+                onClick={handleRetry}
+                className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-semibold transition-colors"
+              >
+                再試行
+              </button>
+              <button
+                onClick={handleGoHome}
+                className="block w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-colors"
+              >
+                ホームに戻る
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
+
   // 診断結果がある場合は結果を表示
   if (diagnosisResult) {
     return (
@@ -142,6 +341,8 @@ export default function Home() {
             result={diagnosisResult} 
             onReset={() => {
               setDiagnosisResult(null);
+              setResultError(null);
+              setIsLoadingResult(false);
               // URLパラメータをクリア
               window.history.replaceState({}, '', '/');
               // localStorageもクリア
