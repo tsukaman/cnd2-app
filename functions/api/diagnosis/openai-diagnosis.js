@@ -12,10 +12,18 @@ const CND2_SYSTEM_PROMPT = `あなたはCND² - CloudNative Days × Connect 'n' 
   "summary": "診断結果のサマリー（100文字程度）",
   "strengths": ["強み1", "強み2", "強み3"],
   "opportunities": ["機会1", "機会2"],
-  "advice": "アドバイス（100文字程度）"
+  "advice": "アドバイス（100文字程度）",
+  "fortuneTelling": {
+    "overall": "総合運の点数（100点満点）",
+    "tech": "技術運の点数（100点満点）",
+    "collaboration": "コラボ運の点数（100点満点）",
+    "growth": "成長運の点数（100点満点）",
+    "message": "運勢メッセージ（50文字程度）"
+  }
 }
 
-診断は前向きで建設的な内容にし、技術的な共通点や補完関係を見つけてください。`;
+診断は前向きで建設的な内容にし、技術的な共通点や補完関係を見つけてください。
+点取り占いは、プロフィールの内容から判断して、各運勢を100点満点で評価してください。`;
 
 /**
  * Sanitize profile to remove PII before sending to OpenAI
@@ -155,6 +163,26 @@ function generateFallbackDiagnosis(profiles, mode) {
     'アジャイル・チーム'
   ];
 
+  // 点取り占い機能の追加
+  const calculateFortune = () => {
+    // スキル数や興味分野の多さに基づいて運勢を計算
+    const skillCount = allSkills.size;
+    const interestCount = allInterests.size;
+    
+    // 基本スコア（60〜90点のレンジ）
+    const baseScore = 60 + Math.floor(Math.random() * 30);
+    
+    return {
+      overall: Math.min(100, baseScore + Math.floor(skillCount * 2)),
+      tech: Math.min(100, baseScore + Math.floor(skillCount * 3)),
+      collaboration: Math.min(100, baseScore + Math.floor(compatibility * 0.8)),
+      growth: Math.min(100, baseScore + Math.floor(interestCount * 2.5)),
+      message: commonSkills.length > 0 
+        ? `${commonSkills[0]}での大きな飛躍が期待できる！` 
+        : '新しい技術との出会いが運気を上げる！'
+    };
+  };
+
   return {
     type: types[Math.floor(Math.random() * types.length)],
     compatibility,
@@ -169,6 +197,7 @@ function generateFallbackDiagnosis(profiles, mode) {
       '技術勉強会の共同開催'
     ],
     advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
+    fortuneTelling: calculateFortune(),
     aiPowered: false
   };
 }

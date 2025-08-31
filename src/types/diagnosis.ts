@@ -18,6 +18,14 @@ export interface DiagnosisParticipant {
   };
 }
 
+export interface FortuneTelling {
+  overall: number;
+  tech: number;
+  collaboration: number;
+  growth: number;
+  message: string;
+}
+
 export interface DiagnosisResult {
   id: string;
   mode: 'duo' | 'group';
@@ -27,6 +35,7 @@ export interface DiagnosisResult {
   tips: string[];
   hashtag: string;
   participants: DiagnosisParticipant[];
+  fortuneTelling?: FortuneTelling;
   metadata: {
     createdAt: string;
     expiresAt: string;
@@ -39,4 +48,5 @@ export interface AIResponse {
   compatibility: number;
   description: string;
   tips: string[];
+  fortuneTelling?: FortuneTelling;
 }

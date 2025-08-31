@@ -33,6 +33,14 @@ export interface PrairieProfile {
   };
 }
 
+export interface FortuneTelling {
+  overall: number;
+  tech: number;
+  collaboration: number;
+  growth: number;
+  message: string;
+}
+
 export interface DiagnosisResult {
   id: string;
   mode: 'duo' | 'group';
@@ -45,6 +53,7 @@ export interface DiagnosisResult {
   participants: PrairieProfile[];
   createdAt: string;
   aiPowered?: boolean;
+  fortuneTelling?: FortuneTelling;
   // Legacy fields for backward compatibility
   score?: number;
   message?: string;
