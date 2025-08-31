@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
-import { astrologicalDiagnosisEngineV4 } from '@/lib/diagnosis-engine-v4-openai';
+import { unifiedDiagnosisEngine, type DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
 import { PrairieProfile } from '@/types';
 
 /**
@@ -11,7 +11,7 @@ import { PrairieProfile } from '@/types';
 export const POST = withApiMiddleware(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { profiles, mode = 'duo' } = body;
+    const { profiles, mode = 'duo', style = 'creative' } = body;
 
     if (!profiles || !Array.isArray(profiles)) {
       throw new ApiError(
@@ -66,22 +66,26 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       };
     });
 
-    // Generate diagnosis using v4 OpenAI-powered astological engine
+    // Generate diagnosis using unified engine
+    const diagnosisOptions = {
+      style: (style as DiagnosisStyle) || 'creative',
+      model: 'gpt-4o-mini' as const,
+      enableFortuneTelling: true
+    };
+
     let result;
     if (mode === 'duo') {
-      result = await astrologicalDiagnosisEngineV4.generateDuoDiagnosis(
+      result = await unifiedDiagnosisEngine.generateDuoDiagnosis(
         prairieProfiles[0],
-        prairieProfiles[1]
+        prairieProfiles[1],
+        diagnosisOptions
       );
     } else {
-      // For group mode, generate multiple duo diagnoses
-      // This is a simplified approach - could be enhanced
-      result = await astrologicalDiagnosisEngineV4.generateDuoDiagnosis(
-        prairieProfiles[0],
-        prairieProfiles[1]
+      // For group mode, use proper group diagnosis
+      result = await unifiedDiagnosisEngine.generateGroupDiagnosis(
+        prairieProfiles,
+        diagnosisOptions
       );
-      result.mode = 'group';
-      result.participants = prairieProfiles;
     }
 
     return NextResponse.json(result);
