@@ -37,6 +37,7 @@ export default function Home() {
   const [taglineIndex, setTaglineIndex] = useState(0);
   const [isLoadingResult, setIsLoadingResult] = useState(false);
   const [resultError, setResultError] = useState<string | null>(null);
+  const [loadingResultId, setLoadingResultId] = useState<string | null>(null); // 重複リクエスト防止用
   const searchParams = useSearchParams();
   const resultId = searchParams.get("result");
   const mode = searchParams.get("mode");
@@ -109,7 +110,10 @@ export default function Home() {
       setHasConsented(true);
     }
     // ローディング画面を表示
-    setTimeout(() => setIsReady(true), LOADING_SCREEN_DURATION);
+    const timeoutId = setTimeout(() => setIsReady(true), LOADING_SCREEN_DURATION);
+    
+    // クリーンアップ関数でタイマーをクリア
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // 診断結果を読み込む
@@ -118,6 +122,12 @@ export default function Home() {
     
     const loadResult = async () => {
       if (!resultId || cancelled) return;
+      
+      // 重複リクエストのチェック
+      if (loadingResultId === resultId) {
+        console.log(`[CND²] Already loading result: ${resultId}`);
+        return;
+      }
       
       // Result IDの検証
       if (!validateResultId(resultId)) {
@@ -131,6 +141,9 @@ export default function Home() {
       if (diagnosisResult && diagnosisResult.id === resultId) {
         return;
       }
+      
+      // ローディング中のIDを記録
+      setLoadingResultId(resultId);
       
       // ローディング開始
       setIsLoadingResult(true);
@@ -148,6 +161,7 @@ export default function Home() {
               console.log("[CND²] Loading result from localStorage:", result.id);
               setDiagnosisResult(validatedResult);
               setIsLoadingResult(false);
+              setLoadingResultId(null); // ローディング完了
               return;
             }
           }
@@ -192,6 +206,7 @@ export default function Home() {
         if (!cancelled) {
           setDiagnosisResult(validatedResult);
           setIsLoadingResult(false);
+          setLoadingResultId(null); // ローディング完了
         }
       } catch (error) {
         console.error(`Failed to fetch diagnosis result for ID ${resultId}:`, error);
@@ -207,6 +222,7 @@ export default function Home() {
                 console.log("[CND²] Loading result from sessionStorage:", result.id);
                 setDiagnosisResult(validatedResult);
                 setIsLoadingResult(false);
+                setLoadingResultId(null); // ローディング完了
                 return;
               }
             }
@@ -219,6 +235,7 @@ export default function Home() {
         if (!cancelled) {
           setResultError(ERROR_MESSAGES.RESULT_NOT_FOUND);
           setIsLoadingResult(false);
+          setLoadingResultId(null); // ローディング完了
         }
       }
     };
@@ -229,14 +246,16 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [resultId, diagnosisResult]);
+  }, [resultId, diagnosisResult, loadingResultId, validateResultId]);
 
   useEffect(() => {
-    // タグラインを5秒ごとに切り替える
-    const interval = setInterval(() => {
+    // タグラインを定期的に切り替える
+    const intervalId = setInterval(() => {
       setTaglineIndex((prev) => (prev + 1) % taglines.length);
     }, TAGLINE_ROTATION_INTERVAL);
-    return () => clearInterval(interval);
+    
+    // クリーンアップ関数でインターバルをクリア
+    return () => clearInterval(intervalId);
   }, []);
 
   if (!isReady) {
