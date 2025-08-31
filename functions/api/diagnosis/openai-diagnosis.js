@@ -2,6 +2,28 @@
  * OpenAI Diagnosis Implementation for Cloudflare Functions
  */
 
+// エラー分類定数
+const ERROR_TYPES = {
+  API_KEY_MISSING: 'API_KEY_MISSING',
+  NETWORK_ERROR: 'NETWORK_ERROR',
+  RATE_LIMIT: 'RATE_LIMIT',
+  INVALID_RESPONSE: 'INVALID_RESPONSE',
+  JSON_PARSE_ERROR: 'JSON_PARSE_ERROR',
+  TIMEOUT: 'TIMEOUT',
+  UNKNOWN: 'UNKNOWN'
+};
+
+// エラーメッセージマッピング
+const ERROR_MESSAGES = {
+  [ERROR_TYPES.API_KEY_MISSING]: 'OpenAI API key not configured',
+  [ERROR_TYPES.NETWORK_ERROR]: 'Network request failed',
+  [ERROR_TYPES.RATE_LIMIT]: 'OpenAI API rate limit exceeded',
+  [ERROR_TYPES.INVALID_RESPONSE]: 'Invalid response from OpenAI API',
+  [ERROR_TYPES.JSON_PARSE_ERROR]: 'Failed to parse OpenAI response as JSON',
+  [ERROR_TYPES.TIMEOUT]: 'Request timeout',
+  [ERROR_TYPES.UNKNOWN]: 'Unknown error occurred'
+};
+
 const CND2_SYSTEM_PROMPT = `あなたはCND² - CloudNative Days × Connect 'n' Discoverの相性診断AIアシスタントです。
 エンジニアのPrairieカード情報から、技術的な相性やコラボレーション可能性を診断します。
 
@@ -46,8 +68,12 @@ async function generateOpenAIDiagnosis(profiles, mode, env) {
   
   // Check if OpenAI API key is configured
   if (!env.OPENAI_API_KEY || env.OPENAI_API_KEY === 'your-openai-api-key-here') {
-    console.log('[CND²] OpenAI API key not configured, using fallback');
-    return null;
+    console.log(`[CND²] ${ERROR_MESSAGES[ERROR_TYPES.API_KEY_MISSING]}, using fallback`);
+    return {
+      error: ERROR_TYPES.API_KEY_MISSING,
+      message: ERROR_MESSAGES[ERROR_TYPES.API_KEY_MISSING],
+      fallback: true
+    };
   }
 
   try {
@@ -108,9 +134,27 @@ ${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p,
     });
 
     if (!response.ok) {
-      // Avoid logging sensitive information
-      console.error('[CND²] OpenAI API error: HTTP', response.status);
-      return null;
+      // Classify error based on HTTP status
+      let errorType = ERROR_TYPES.UNKNOWN;
+      let errorMessage = `HTTP ${response.status}`;
+      
+      if (response.status === 429) {
+        errorType = ERROR_TYPES.RATE_LIMIT;
+        errorMessage = ERROR_MESSAGES[ERROR_TYPES.RATE_LIMIT];
+      } else if (response.status >= 500) {
+        errorType = ERROR_TYPES.NETWORK_ERROR;
+        errorMessage = `${ERROR_MESSAGES[ERROR_TYPES.NETWORK_ERROR]} (HTTP ${response.status})`;
+      } else if (response.status === 401) {
+        errorType = ERROR_TYPES.API_KEY_MISSING;
+        errorMessage = 'Invalid API key';
+      }
+      
+      console.error(`[CND²] OpenAI API error: ${errorMessage}`);
+      return {
+        error: errorType,
+        message: errorMessage,
+        statusCode: response.status
+      };
     }
 
     const data = await response.json();
@@ -156,8 +200,29 @@ ${sanitizedProfiles.map((p, i) => `エンジニア${i + 1}:\n${JSON.stringify(p,
     }
     
   } catch (error) {
-    console.error('[CND²] OpenAI diagnosis failed:', error);
-    return null;
+    // Classify the error type
+    let errorType = ERROR_TYPES.UNKNOWN;
+    let errorMessage = ERROR_MESSAGES[ERROR_TYPES.UNKNOWN];
+    
+    if (error.name === 'AbortError' || error.message?.includes('timeout')) {
+      errorType = ERROR_TYPES.TIMEOUT;
+      errorMessage = ERROR_MESSAGES[ERROR_TYPES.TIMEOUT];
+    } else if (error.name === 'TypeError' || error.message?.includes('fetch')) {
+      errorType = ERROR_TYPES.NETWORK_ERROR;
+      errorMessage = ERROR_MESSAGES[ERROR_TYPES.NETWORK_ERROR];
+    }
+    
+    console.error(`[CND²] OpenAI diagnosis failed: ${errorMessage}`, {
+      type: errorType,
+      message: error.message,
+      name: error.name
+    });
+    
+    return {
+      error: errorType,
+      message: errorMessage,
+      originalError: error.message
+    };
   }
 }
 

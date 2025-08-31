@@ -11,7 +11,7 @@ describe('OpenAI Diagnosis Functions', () => {
   });
 
   describe('generateOpenAIDiagnosis', () => {
-    it('should return null when API key is not configured', async () => {
+    it('should return error object when API key is not configured', async () => {
       const env = {
         OPENAI_API_KEY: undefined
       };
@@ -22,10 +22,11 @@ describe('OpenAI Diagnosis Functions', () => {
         env
       );
       
-      expect(result).toBeNull();
+      expect(result).toHaveProperty('error', 'API_KEY_MISSING');
+      expect(result).toHaveProperty('fallback', true);
     });
 
-    it('should return null when API key is placeholder', async () => {
+    it('should return error object when API key is placeholder', async () => {
       const env = {
         OPENAI_API_KEY: 'your-openai-api-key-here'
       };
@@ -36,7 +37,8 @@ describe('OpenAI Diagnosis Functions', () => {
         env
       );
       
-      expect(result).toBeNull();
+      expect(result).toHaveProperty('error', 'API_KEY_MISSING');
+      expect(result).toHaveProperty('fallback', true);
     });
 
     it('should sanitize profiles before sending to OpenAI', async () => {
@@ -135,7 +137,8 @@ describe('OpenAI Diagnosis Functions', () => {
         env
       );
 
-      expect(result).toBeNull();
+      expect(result).toHaveProperty('error', 'NETWORK_ERROR');
+      expect(result).toHaveProperty('statusCode', 500);
     });
 
     it('should handle JSON parsing errors', async () => {

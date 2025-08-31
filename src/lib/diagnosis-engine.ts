@@ -1,20 +1,11 @@
 import OpenAI from 'openai';
 import { PrairieProfile, DiagnosisResult } from '@/types';
 import { CND2_CONFIG } from '@/config/cnd2.config';
-// プロンプト定義を直接記述（prompts.tsが削除されたため）
-const CND2_SYSTEM_PROMPT = `
-あなたはCND²（CloudNative Days × Connect 'n' Discover）の診断システムです。
-「出会いを二乗でスケール」するという理念のもと、
-参加者同士の交流を楽しく促進する診断を行います。
-`;
-
-const buildDuoDiagnosisPrompt = (profiles: [PrairieProfile, PrairieProfile]): string => {
-  return `2人の相性を診断してください。`;
-};
-
-const buildGroupDiagnosisPrompt = (profiles: PrairieProfile[]): string => {
-  return `${profiles.length}人のグループ診断を行います。`;
-};
+import { 
+  CND2_SYSTEM_PROMPT, 
+  buildDuoDiagnosisPrompt, 
+  buildGroupDiagnosisPrompt 
+} from './prompts/diagnosis-prompts';
 import { nanoid } from 'nanoid';
 
 import { DiagnosisCache } from './diagnosis-cache';

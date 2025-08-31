@@ -9,6 +9,9 @@ import { QRCodeModal } from '@/components/share/QRCodeModal';
 import Confetti from "react-confetti";
 import { useState, useEffect } from "react";
 
+// 定数定義
+const DEFAULT_COMPATIBILITY_SCORE = 85; // デフォルトの相性スコア（ポジティブな体験を保証）
+
 interface DiagnosisResultProps {
   result: DiagnosisResult;
   onReset?: () => void;
@@ -99,7 +102,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
           >
             <div className="inline-flex items-center justify-center">
               <Trophy className="w-8 h-8 text-yellow-500 mr-2" />
-              <span className="text-5xl font-bold text-white">{result.compatibility || result.score || 85}</span>
+              <span className="text-5xl font-bold text-white">{result.compatibility || result.score || DEFAULT_COMPATIBILITY_SCORE}</span>
               <span className="text-2xl text-white/80 ml-1">/100</span>
             </div>
             <div className="text-sm text-white/60 mt-2">相性スコア</div>
@@ -107,7 +110,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
 
           {/* 診断タイプ */}
           <motion.h2 
-            className={`text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r ${getScoreColor(result.compatibility || result.score || 85)} bg-clip-text text-transparent`}
+            className={`text-3xl md:text-4xl font-bold text-center mb-6 bg-gradient-to-r ${getScoreColor(result.compatibility || result.score || DEFAULT_COMPATIBILITY_SCORE)} bg-clip-text text-transparent`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
