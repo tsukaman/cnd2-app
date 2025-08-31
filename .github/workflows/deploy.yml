@@ -48,5 +48,7 @@ jobs:
           projectName: cnd2-app
           directory: out
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          deploymentName: Production
           wranglerVersion: '3'
+        env:
+          # Avoid UTF-8 issues with commit messages
+          CF_PAGES_COMMIT_SHA: ${{ github.sha }}
