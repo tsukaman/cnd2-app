@@ -24,10 +24,24 @@ export default function Home() {
   const [isReady, setIsReady] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
   const [taglineIndex, setTaglineIndex] = useState(0);
-  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const searchParams = useSearchParams();
   const resultId = searchParams.get("result");
   const mode = searchParams.get("mode");
+  
+  // 初期状態で、localStorageから結果を読み込む
+  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(() => {
+    if (resultId && typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`diagnosis-result-${resultId}`);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          console.error("Failed to parse stored result:", e);
+        }
+      }
+    }
+    return null;
+  });
 
   useEffect(() => {
     // プライバシー同意確認
@@ -41,47 +55,58 @@ export default function Home() {
 
   // 診断結果を読み込む
   useEffect(() => {
-    if (resultId) {
+    const loadResult = async () => {
+      if (!resultId) return;
+      
       // まずLocalStorageから結果を取得
       const storedResult = localStorage.getItem(`diagnosis-result-${resultId}`);
       if (storedResult) {
         try {
           const result = JSON.parse(storedResult);
+          console.log("Loading result from localStorage:", result.id);
           setDiagnosisResult(result);
+          return;
         } catch (error) {
           console.error("Failed to parse diagnosis result:", error);
         }
-      } else {
-        // LocalStorageにない場合はAPIから取得
-        fetch(`/api/results/${resultId}`)
-          .then(response => {
-            if (response.ok) {
-              return response.json();
-            }
-            throw new Error('Result not found');
-          })
-          .then((response) => {
-            // APIレスポンスから結果を抽出
-            const result = response.data?.result || response;
-            // 取得した結果をLocalStorageにも保存（キャッシュ）
-            localStorage.setItem(`diagnosis-result-${resultId}`, JSON.stringify(result));
-            setDiagnosisResult(result);
-          })
-          .catch(error => {
-            console.error("Failed to fetch diagnosis result:", error);
-            // セッションストレージからも確認（フォールバック）
-            const sessionResult = sessionStorage.getItem(`diagnosis-result-${resultId}`);
-            if (sessionResult) {
-              try {
-                const result = JSON.parse(sessionResult);
-                setDiagnosisResult(result);
-              } catch (parseError) {
-                console.error("Failed to parse session storage result:", parseError);
-              }
-            }
-          });
       }
-    }
+      
+      // LocalStorageにない場合はAPIから取得
+      try {
+        console.log("Fetching result from API:", resultId);
+        const response = await fetch(`/api/results/${resultId}`);
+        
+        if (!response.ok) {
+          throw new Error('Result not found');
+        }
+        
+        const data = await response.json();
+        // APIレスポンスから結果を抽出
+        const result = data.data?.result || data;
+        
+        console.log("Result fetched from API:", result.id);
+        // 取得した結果をLocalStorageにも保存（キャッシュ）
+        localStorage.setItem(`diagnosis-result-${resultId}`, JSON.stringify(result));
+        // 状態を更新
+        setDiagnosisResult(result);
+      } catch (error) {
+        console.error("Failed to fetch diagnosis result:", error);
+        
+        // セッションストレージからも確認（フォールバック）
+        const sessionResult = sessionStorage.getItem(`diagnosis-result-${resultId}`);
+        if (sessionResult) {
+          try {
+            const result = JSON.parse(sessionResult);
+            console.log("Loading result from sessionStorage:", result.id);
+            setDiagnosisResult(result);
+          } catch (parseError) {
+            console.error("Failed to parse session storage result:", parseError);
+          }
+        }
+      }
+    };
+    
+    loadResult();
   }, [resultId]);
 
   useEffect(() => {
@@ -115,10 +140,14 @@ export default function Home() {
         <div className="relative z-10">
           <DiagnosisResultComponent 
             result={diagnosisResult} 
-            onReset={() => {
+            onClose={() => {
               setDiagnosisResult(null);
               // URLパラメータをクリア
               window.history.replaceState({}, '', '/');
+              // localStorageもクリア
+              if (resultId) {
+                localStorage.removeItem(`diagnosis-result-${resultId}`);
+              }
             }}
           />
         </div>
