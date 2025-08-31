@@ -51,7 +51,16 @@ export default function DuoPage() {
     if (profiles[0] && profiles[1]) {
       const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
       if (result) {
+        // LocalStorageに保存
         localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
+        
+        // KVにも保存（非同期、エラーは無視）
+        fetch(`/api/results/${result.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(result),
+        }).catch(err => console.log('[Duo] Failed to save to KV:', err));
+        
         router.push(`/?result=${result.id}&mode=duo`);
       }
     }

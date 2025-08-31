@@ -51,8 +51,16 @@ export default function GroupPage() {
     if (validProfiles.length >= 3) {
       const result = await generateDiagnosis(validProfiles, 'group');
       if (result) {
-        // Store result in localStorage for now (until deployment is fixed)
+        // LocalStorageに保存
         localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
+        
+        // KVにも保存（非同期、エラーは無視）
+        fetch(`/api/results/${result.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(result),
+        }).catch(err => console.log('[Group] Failed to save to KV:', err));
+        
         // Navigate to home with result in state
         router.push(`/?result=${result.id}&mode=group`);
       }
