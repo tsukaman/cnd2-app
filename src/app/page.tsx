@@ -9,7 +9,7 @@ import { MenuCard } from "@/components/ui/MenuCard";
 import { ConsentDialog } from "@/components/ui/ConsentDialog";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { BackgroundEffects } from "@/components/effects/BackgroundEffects";
-import { AstrologicalDiagnosisResult } from "@/components/diagnosis/AstrologicalDiagnosisResult";
+import { DiagnosisResult as DiagnosisResultComponent } from "@/components/diagnosis/DiagnosisResult";
 import type { DiagnosisResult } from "@/types";
 import { BarChart3 } from "lucide-react";
 
@@ -84,7 +84,7 @@ export default function Home() {
       <main className="min-h-screen relative overflow-hidden stars-bg">
         <BackgroundEffects />
         <div className="relative z-10">
-          <AstrologicalDiagnosisResult 
+          <DiagnosisResultComponent 
             result={diagnosisResult} 
             onReset={() => {
               setDiagnosisResult(null);
