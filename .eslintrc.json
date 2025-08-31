@@ -1,7 +1,6 @@
 {
   "extends": [
-    "next/core-web-vitals",
-    "next/typescript"
+    "next/core-web-vitals"
   ],
   "rules": {
     "@typescript-eslint/no-explicit-any": "warn",
@@ -12,6 +11,8 @@
         "varsIgnorePattern": "^_"
       }
     ],
+    "@typescript-eslint/no-require-imports": "warn",
+    "react/display-name": "warn",
     "@next/next/no-img-element": "warn"
   },
   "overrides": [
@@ -22,7 +23,7 @@
       }
     },
     {
-      "files": ["**/__tests__/**/*.ts", "**/__tests__/**/*.tsx", "**/*.test.ts", "**/*.test.tsx"],
+      "files": ["**/__tests__/**/*.ts", "**/__tests__/**/*.tsx", "**/*.test.ts", "**/*.test.tsx", "**/test-utils/**/*.ts", "**/test-utils/**/*.tsx"],
       "rules": {
         "@typescript-eslint/no-require-imports": "off",
         "@typescript-eslint/no-explicit-any": "off",
