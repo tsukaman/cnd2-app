@@ -67,6 +67,13 @@ export interface DiagnosisResult {
   shareTag?: string;
   luckyItem?: string;
   luckyAction?: string;
+  // Fortune telling elements (点取り占い)
+  fortuneScore?: number; // 0-100点の運勢スコア
+  fortuneGrade?: 'daikichi' | 'kichi' | 'chukichi' | 'shokichi' | 'suekichi' | 'kyo';
+  fortuneMessage?: string; // 今日の運勢メッセージ
+  luckyColor?: string; // ラッキーカラー
+  luckyNumber?: number; // ラッキーナンバー
+  techFortune?: string; // 技術運（例：「今日はバグが少ない日」）
   // V3 engine metadata
   metadata?: {
     engine?: string;
