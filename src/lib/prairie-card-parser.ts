@@ -1,6 +1,12 @@
 /**
  * Simplified Prairie Card Parser for Cloudflare Workers
  */
+
+// 定数定義
+const COMPANY_NAME_MAX_LENGTH = 50;
+const REGEX_ATTR_MAX_LENGTH = 200;
+const CONTENT_MAX_LENGTH = 500;
+
 export class PrairieCardParser {
   async parseFromHTML(html: string): Promise<PrairieData> {
     // 簡易的なHTML解析（cheerioなしで動作）
@@ -53,11 +59,14 @@ export class PrairieCardParser {
       
       const result: { company?: string; bio?: string } = {};
       
-      // 会社名の抽出パターン
+      // 会社名の抽出パターン（ReDoS対策済み）
       const companyPatterns = [
-        /(?:会社|Company|Corp|Inc|Ltd|株式会社)[:：]?\s*([^。、\n]+)/,
-        /(?:所属|勤務|在籍)[:：]?\s*([^。、\n]+)/,
-        /@\s*([^。、\n\s]+(?:\s+[^。、\n\s]+)*)/  // @Company形式
+        // @Company形式を最初にチェック（固定長で安全）
+        /@\s{0,3}([^。、\n|]{1,50})(?:[|]|$)/,  // スペース数を固定
+        // 所属等のキーワード後の会社名
+        /(?:所属|勤務|在籍)[:：]?\s{0,3}([^。、\n|]{1,50})/,
+        // 会社名キーワードを含むパターン（シンプルなマッチング）
+        /([\w\s]{1,30}(?:会社|Company|Corp|Inc|Ltd|株式会社))/
       ];
       
       for (const pattern of companyPatterns) {
@@ -112,6 +121,27 @@ export class PrairieCardParser {
   }
 
   async parseFromURL(url: string): Promise<PrairieData> {
+    // Validate URL for security
+    try {
+      const parsed = new URL(url);
+      
+      // Only allow HTTPS protocol
+      if (parsed.protocol !== 'https:') {
+        throw new Error('Only HTTPS URLs are allowed');
+      }
+      
+      // Only allow prairie.cards domains
+      const validHosts = ['prairie.cards', 'my.prairie.cards'];
+      if (!validHosts.includes(parsed.hostname) && !parsed.hostname.endsWith('.prairie.cards')) {
+        throw new Error('Invalid Prairie Card domain');
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Invalid URL');
+    }
+    
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'CND2/1.0',
@@ -128,12 +158,15 @@ export class PrairieCardParser {
   }
 
   private extractMetaContent(html: string, property: string): string | undefined {
-    // og:propertyまたはnameでメタタグを検索
+    // プロパティ名を安全にエスケープ（ReDoS対策）
+    const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(':', '\\:');
+    
+    // 固定長のパターンを使用してパフォーマンスを最適化
     const patterns = [
-      new RegExp(`<meta[^>]*property=["']${property.replace(':', '\\:')}["'][^>]*content=["']([^"']+)["']`, 'i'),
-      new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*property=["']${property.replace(':', '\\:')}["']`, 'i'),
-      new RegExp(`<meta[^>]*name=["']${property}["'][^>]*content=["']([^"']+)["']`, 'i'),
-      new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*name=["']${property}["']`, 'i')
+      new RegExp(`<meta[^>]{0,200}property=["']${escapedProperty}["'][^>]{0,200}content=["']([^"']{0,500})["']`, 'i'),
+      new RegExp(`<meta[^>]{0,200}content=["']([^"']{0,500})["'][^>]{0,200}property=["']${escapedProperty}["']`, 'i'),
+      new RegExp(`<meta[^>]{0,200}name=["']${escapedProperty}["'][^>]{0,200}content=["']([^"']{0,500})["']`, 'i'),
+      new RegExp(`<meta[^>]{0,200}content=["']([^"']{0,500})["'][^>]{0,200}name=["']${escapedProperty}["']`, 'i')
     ];
     
     for (const pattern of patterns) {

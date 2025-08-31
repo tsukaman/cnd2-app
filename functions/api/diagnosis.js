@@ -1,9 +1,18 @@
+// @ts-check
 // Diagnosis API for Cloudflare Functions
 import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } from '../utils/response.js';
 import { createLogger, logRequest } from '../utils/logger.js';
 import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
+import { generateAstrologicalDiagnosis } from './diagnosis-v4.js';
 
+/**
+ * Handle POST requests to generate diagnosis
+ * @param {Object} context - Cloudflare Workers context
+ * @param {Request} context.request - The incoming request
+ * @param {Object} context.env - Environment bindings including KV namespace
+ * @returns {Promise<Response>} The response with diagnosis result or error
+ */
 export async function onRequestPost({ request, env }) {
   const logger = createLogger(env);
   const origin = request.headers.get('origin');
@@ -30,8 +39,8 @@ export async function onRequestPost({ request, env }) {
         participantCount: profiles.length 
       });
       
-      // Generate diagnosis result
-      const result = await generateDiagnosis(profiles, mode, env);
+      // Generate diagnosis result using V4 engine
+      const result = await generateAstrologicalDiagnosis(profiles, mode, env);
       
       // Store in KV if available
       if (env.DIAGNOSIS_KV) {
@@ -73,6 +82,12 @@ export async function onRequestPost({ request, env }) {
   });
 }
 
+/**
+ * Handle OPTIONS requests for CORS preflight
+ * @param {Object} context - Cloudflare Workers context
+ * @param {Request} context.request - The incoming request
+ * @returns {Response} CORS preflight response
+ */
 export async function onRequestOptions({ request }) {
   const origin = request.headers.get('origin');
   const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
@@ -83,39 +98,4 @@ export async function onRequestOptions({ request }) {
   });
 }
 
-async function generateDiagnosis(profiles, mode, env) {
-  const logger = createLogger(env);
-  const startTime = Date.now();
-  
-  // Simplified diagnosis generation with guaranteed valid ID
-  const id = generateId();
-  const compatibility = Math.floor(Math.random() * 30) + 70; // 70-100%
-  
-  const result = {
-    id,
-    mode,
-    type: 'クラウドネイティブ・パートナー',
-    compatibility,
-    summary: `${profiles[0].basic?.name || 'User 1'}さんと${profiles[1].basic?.name || 'User 2'}さんは、クラウドネイティブ技術への情熱を共有する素晴らしいパートナーです。`,
-    strengths: [
-      '技術的な興味の共通点が多い',
-      '学習意欲が高い組み合わせ',
-      'イノベーションを推進する相性',
-    ],
-    opportunities: [
-      '一緒にOSSプロジェクトに貢献',
-      '技術ブログの共同執筆',
-      'ハッカソンでのチーム参加',
-    ],
-    advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
-    participants: profiles,
-    createdAt: new Date().toISOString(),
-  };
-  
-  logger.metric('diagnosis_generation', Date.now() - startTime, 'ms', {
-    mode,
-    compatibility,
-  });
-  
-  return result;
-}
+// 古いgenerateDiagnosis関数は削除され、diagnosis-v4.jsのgenerateAstrologicalDiagnosisに置き換えられました

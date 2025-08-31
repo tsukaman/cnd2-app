@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Sparkles, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Users, Sparkles, ArrowLeft, Check, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
@@ -12,10 +13,33 @@ import type { PrairieProfile } from '@/types';
 
 export default function DuoPage() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<'first' | 'second' | 'ready'>('first');
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const { loading: parsingLoading, error: parseError } = usePrairieCard();
   const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
+
+  // 1人目のプロフィール読み込み完了時に自動で2人目へ
+  useEffect(() => {
+    if (profiles[0] && currentStep === 'first' && !isTransitioning) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep('second');
+        setIsTransitioning(false);
+      }, 1500); // 成功メッセージを見せてから遷移
+    }
+  }, [profiles[0], currentStep, isTransitioning]);
+
+  // 2人目のプロフィール読み込み完了時に診断準備完了へ
+  useEffect(() => {
+    if (profiles[1] && currentStep === 'second' && !isTransitioning) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentStep('ready');
+        setIsTransitioning(false);
+      }, 1500);
+    }
+  }, [profiles[1], currentStep, isTransitioning]);
 
   const handleProfileParsed = (profile: PrairieProfile, index: 0 | 1) => {
     const newProfiles = [...profiles] as [PrairieProfile | null, PrairieProfile | null];
@@ -23,247 +47,297 @@ export default function DuoPage() {
     setProfiles(newProfiles);
   };
 
-  const handleNextStep = () => {
-    if (step === 1 && profiles[0]) {
-      setStep(2);
-    }
-  };
-
-  const handlePrevStep = () => {
-    if (step === 2) {
-      setStep(1);
-    }
-  };
-
   const handleStartDiagnosis = async () => {
     if (profiles[0] && profiles[1]) {
       const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
       if (result) {
-        // Store result in localStorage for now (until deployment is fixed)
         localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
-        // Navigate to home with result in state
         router.push(`/?result=${result.id}&mode=duo`);
       }
     }
   };
 
-  const isLoading = parsingLoading || diagnosisLoading;
-  const error = parseError || diagnosisError;
+  const handleBack = () => {
+    if (currentStep === 'second') {
+      setCurrentStep('first');
+      // 2人目のプロフィールをクリア
+      setProfiles([profiles[0], null]);
+    } else if (currentStep === 'ready') {
+      setCurrentStep('second');
+    }
+  };
+
+  const handleReset = () => {
+    setProfiles([null, null]);
+    setCurrentStep('first');
+  };
 
   return (
-    <div className="min-h-screen stars-bg">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
+    <div className="min-h-screen relative overflow-hidden stars-bg flex items-center justify-center">
+      {/* 背景エフェクト */}
+      <BackgroundEffects />
+      
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
+        {/* ヘッダー */}
+        <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="mb-8"
         >
-          <Link href="/" className="inline-block mb-4">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-2 font-medium"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>ホームに戻る</span>
-            </motion.div>
+          <Link href="/" className="inline-flex items-center text-white hover:text-cyan-400 transition-colors mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            <span className="text-sm">ホームに戻る</span>
           </Link>
           
-          <h1 className="text-4xl font-bold gradient-text mb-2">
-            2人の相性診断
-          </h1>
-          <p className="text-gray-400 flex items-center justify-center gap-2">
-            <Users className="w-5 h-5" />
-            Prairie Cardから相性を診断します
-          </p>
+          <div className="text-center">
+            <motion.div 
+              className="inline-flex items-center justify-center mb-4"
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 4,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              <Users className="w-16 h-16 text-cyan-400" />
+            </motion.div>
+            <h1 className="text-5xl md:text-6xl font-black mb-3 gradient-text-orange-soft">
+              2人診断
+            </h1>
+            <p className="text-gray-300 text-lg">
+              Prairie Cardから相性を診断します
+            </p>
+          </div>
         </motion.div>
 
-        {/* Progress Indicator */}
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="flex items-center justify-between">
-            <div className={`flex-1 h-2 bg-gray-200 rounded-full overflow-hidden`}>
-              <motion.div
-                className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
-                initial={{ width: '0%' }}
-                animate={{ width: step === 1 ? '50%' : '100%' }}
-                transition={{ duration: 0.5 }}
-              />
+        {/* プログレスバー */}
+        <div className="mb-8">
+          <div className="flex items-center justify-center space-x-2">
+            {/* Step 1 */}
+            <div className="flex items-center">
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500
+                ${profiles[0] ? 'bg-green-500 scale-110' : currentStep === 'first' ? 'bg-cyan-500 animate-pulse' : 'bg-gray-600'}
+              `}>
+                {profiles[0] ? <Check className="w-5 h-5 text-white" /> : <span className="text-white font-bold">1</span>}
+              </div>
+              <span className={`ml-2 text-sm ${profiles[0] ? 'text-green-400' : 'text-gray-400'}`}>
+                {profiles[0] ? profiles[0].basic.name : '1人目'}
+              </span>
             </div>
-          </div>
-          <div className="flex justify-between mt-2">
-            <span className={`text-sm ${step >= 1 ? 'text-blue-400 font-semibold' : 'text-gray-500'}`}>
-              1人目のカード
-            </span>
-            <span className={`text-sm ${step >= 2 ? 'text-blue-400 font-semibold' : 'text-gray-500'}`}>
-              2人目のカード
-            </span>
+
+            {/* Connector */}
+            <div className={`w-16 h-0.5 transition-all duration-500 ${profiles[0] ? 'bg-green-500' : 'bg-gray-600'}`} />
+
+            {/* Step 2 */}
+            <div className="flex items-center">
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500
+                ${profiles[1] ? 'bg-green-500 scale-110' : currentStep === 'second' ? 'bg-cyan-500 animate-pulse' : 'bg-gray-600'}
+              `}>
+                {profiles[1] ? <Check className="w-5 h-5 text-white" /> : <span className="text-white font-bold">2</span>}
+              </div>
+              <span className={`ml-2 text-sm ${profiles[1] ? 'text-green-400' : 'text-gray-400'}`}>
+                {profiles[1] ? profiles[1].basic.name : '2人目'}
+              </span>
+            </div>
+
+            {/* Connector */}
+            <div className={`w-16 h-0.5 transition-all duration-500 ${profiles[1] ? 'bg-green-500' : 'bg-gray-600'}`} />
+
+            {/* Ready */}
+            <div className="flex items-center">
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500
+                ${currentStep === 'ready' ? 'bg-purple-500 animate-bounce' : 'bg-gray-600'}
+              `}>
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className={`ml-2 text-sm ${currentStep === 'ready' ? 'text-purple-400' : 'text-gray-400'}`}>
+                診断
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* メインコンテンツ */}
         <AnimatePresence mode="wait">
-          {step === 1 && (
+          {currentStep === 'first' && (
             <motion.div
               key="step1"
-              initial={{ opacity: 0, x: 100 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              className="max-w-2xl mx-auto"
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
             >
-              <div className="card-dark p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <span className="text-2xl">👤</span>
+              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg rounded-3xl p-8 border border-gray-700/50">
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+                  <span className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center mr-3 text-sm">1</span>
                   1人目のPrairie Card
                 </h2>
                 
-                <PrairieCardInput
+                <PrairieCardInput 
                   onProfileLoaded={(profile) => handleProfileParsed(profile, 0)}
+                  placeholder="Prairie CardのURLを入力またはQRコードをスキャン"
                 />
                 
                 {profiles[0] && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-green-500/10 rounded-lg border border-green-500/30 backdrop-blur-sm"
+                    className="mt-6 p-4 bg-green-500/10 rounded-xl border border-green-500/30"
                   >
-                    <p className="text-green-400 font-semibold">
-                      ✅ {profiles[0].basic.name}さんのカードを読み込みました
-                    </p>
+                    <div className="flex items-center text-green-400">
+                      <Check className="w-5 h-5 mr-2" />
+                      <span className="font-semibold">{profiles[0].basic.name}さんのプロフィールを読み込みました！</span>
+                    </div>
+                    <p className="text-gray-400 text-sm mt-2">自動的に次のステップへ進みます...</p>
                   </motion.div>
                 )}
-                
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200"
-                  >
-                    <p className="text-red-600">{error}</p>
-                  </motion.div>
-                )}
-                
-                <div className="mt-8 flex justify-end">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleNextStep}
-                    disabled={!profiles[0] || isLoading}
-                    className={`px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all ${
-                      profiles[0] && !isLoading
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    次へ
-                    <ArrowRight className="w-5 h-5" />
-                  </motion.button>
-                </div>
               </div>
             </motion.div>
           )}
-          
-          {step === 2 && (
+
+          {currentStep === 'second' && (
             <motion.div
               key="step2"
-              initial={{ opacity: 0, x: 100 }}
+              initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              className="max-w-2xl mx-auto"
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
             >
-              <div className="card-dark p-8">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <span className="text-2xl">👥</span>
-                  2人目のPrairie Card
-                </h2>
+              <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg rounded-3xl p-8 border border-gray-700/50">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white flex items-center">
+                    <span className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+                    2人目のPrairie Card
+                  </h2>
+                  <button
+                    onClick={handleBack}
+                    className="text-gray-400 hover:text-white transition-colors text-sm flex items-center"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    1人目に戻る
+                  </button>
+                </div>
                 
-                <PrairieCardInput
+                <PrairieCardInput 
                   onProfileLoaded={(profile) => handleProfileParsed(profile, 1)}
+                  placeholder="Prairie CardのURLを入力またはQRコードをスキャン"
                 />
                 
                 {profiles[1] && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200"
+                    className="mt-6 p-4 bg-green-500/10 rounded-xl border border-green-500/30"
                   >
-                    <p className="text-green-800 font-semibold">
-                      ✅ {profiles[1].basic.name}さんのカードを読み込みました
-                    </p>
+                    <div className="flex items-center text-green-400">
+                      <Check className="w-5 h-5 mr-2" />
+                      <span className="font-semibold">{profiles[1].basic.name}さんのプロフィールを読み込みました！</span>
+                    </div>
+                    <p className="text-gray-400 text-sm mt-2">診断の準備をしています...</p>
                   </motion.div>
                 )}
-                
-                {error && (
+              </div>
+            </motion.div>
+          )}
+
+          {currentStep === 'ready' && (
+            <motion.div
+              key="ready"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 backdrop-blur-lg rounded-3xl p-8 border border-purple-500/30">
+                <div className="text-center">
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200"
+                    animate={{ 
+                      rotate: [0, 360],
+                      scale: [1, 1.2, 1]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                    className="inline-block mb-6"
                   >
-                    <p className="text-red-600">{error}</p>
+                    <Sparkles className="w-20 h-20 text-purple-400" />
                   </motion.div>
-                )}
-                
-                <div className="mt-8 flex justify-between">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handlePrevStep}
-                    disabled={isLoading}
-                    className="px-6 py-3 rounded-full font-semibold flex items-center gap-2 border-2 border-gray-300 hover:border-gray-400 transition-all"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                    戻る
-                  </motion.button>
                   
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleStartDiagnosis}
-                    disabled={!profiles[1] || isLoading}
-                    className={`px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all ${
-                      profiles[1] && !isLoading
-                        ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white hover:shadow-lg'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {diagnosisLoading ? (
-                      '診断中...'
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5" />
-                        診断開始
-                      </>
-                    )}
-                  </motion.button>
+                  <h2 className="text-3xl font-bold text-white mb-4">
+                    診断準備完了！
+                  </h2>
+                  
+                  <div className="flex justify-center items-center space-x-4 mb-8">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center mb-2">
+                        <span className="text-white font-bold text-xl">1</span>
+                      </div>
+                      <p className="text-gray-300 text-sm">{profiles[0]?.basic.name}</p>
+                    </div>
+                    
+                    <div className="text-gray-400 text-2xl">×</div>
+                    
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center mb-2">
+                        <span className="text-white font-bold text-xl">2</span>
+                      </div>
+                      <p className="text-gray-300 text-sm">{profiles[1]?.basic.name}</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-400 mb-8">
+                    2人の相性を診断します
+                  </p>
+                  
+                  <div className="flex justify-center space-x-4">
+                    <button
+                      onClick={handleReset}
+                      className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
+                    >
+                      やり直す
+                    </button>
+                    <button
+                      onClick={handleStartDiagnosis}
+                      disabled={diagnosisLoading}
+                      className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      {diagnosisLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          診断中...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5 mr-2" />
+                          診断開始
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        
-        {/* Summary Card (Always Visible) */}
-        {(profiles[0] || profiles[1]) && (
+
+        {/* エラー表示 */}
+        {(parseError || diagnosisError) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto mt-8"
+            className="mt-6 p-4 bg-red-500/10 rounded-xl border border-red-500/30"
           >
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-semibold mb-4">診断対象</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className={`p-4 rounded-lg ${profiles[0] ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
-                  <p className="text-sm text-gray-600 mb-1">1人目</p>
-                  <p className="font-semibold">
-                    {profiles[0] ? profiles[0].basic.name : '未設定'}
-                  </p>
-                </div>
-                <div className={`p-4 rounded-lg ${profiles[1] ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50 border border-gray-200'}`}>
-                  <p className="text-sm text-gray-600 mb-1">2人目</p>
-                  <p className="font-semibold">
-                    {profiles[1] ? profiles[1].basic.name : '未設定'}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center text-red-400">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              <span>エラー: {parseError || diagnosisError}</span>
             </div>
           </motion.div>
         )}

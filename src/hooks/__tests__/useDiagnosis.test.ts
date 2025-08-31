@@ -102,10 +102,7 @@ describe('useDiagnosis', () => {
       createdAt: new Date().toISOString(),
     };
 
-    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce({
-      success: true,
-      result: mockResult,
-    });
+    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce(mockResult);
 
     const { result } = renderHook(() => useDiagnosis());
 
@@ -134,10 +131,7 @@ describe('useDiagnosis', () => {
   it('handles diagnosis errors correctly', async () => {
     const errorMessage = '診断の生成に失敗しました';
     
-    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce({
-      success: false,
-      error: errorMessage,
-    });
+    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce(null);
 
     const { result } = renderHook(() => useDiagnosis());
 
@@ -163,10 +157,7 @@ describe('useDiagnosis', () => {
       createdAt: new Date().toISOString(),
     };
 
-    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce({
-      success: true,
-      result: mockResult,
-    });
+    (apiClient.diagnosis.generate as jest.Mock).mockResolvedValueOnce(mockResult);
 
     // Simulate localStorage error
     localStorageMock.setItem.mockImplementationOnce(() => {

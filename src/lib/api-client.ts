@@ -1,10 +1,21 @@
 // API Client for Cloudflare Functions
 // 環境に応じてエンドポイントを切り替え
 
+import { logger } from './logger';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 // ブラウザ環境かどうかを初期化時に一度だけ判定（パフォーマンス最適化）
 const isBrowser = typeof window !== 'undefined';
+
+// API Error Response types
+interface ApiErrorResponse {
+  error?: {
+    message?: string;
+    code?: string;
+  } | string;
+  success?: boolean;
+}
 
 // 開発環境では/api、本番環境ではCloudflare FunctionsのURLを使用
 function getApiUrl(path: string): string {
@@ -32,6 +43,46 @@ function getApiUrl(path: string): string {
   return `${cleanBaseUrl}/${cleanPath}`;
 }
 
+// 共通のエラーハンドリング関数
+async function handleApiError(response: Response, defaultMessage: string = 'Network error'): Promise<void> {
+  const errorData: ApiErrorResponse = await response.json().catch(() => ({ 
+    error: { message: defaultMessage } 
+  }));
+  
+  // Handle both old format (error.error) and new format (error.error.message)
+  const errorMessage = typeof errorData.error === 'object' 
+    ? errorData.error?.message 
+    : errorData.error || `HTTP error! status: ${response.status}`;
+  
+  const finalMessage = errorMessage || defaultMessage;
+  
+  // Log the error for debugging
+  logger.error('[API Client] Request failed:', {
+    status: response.status,
+    message: finalMessage,
+    url: response.url
+  });
+    
+  throw new Error(finalMessage);
+}
+
+// 共通のレスポンス処理関数
+async function handleApiResponse<T = any>(response: Response): Promise<T> {
+  const result = await response.json();
+  
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    logger.debug('[API Client] Response received:', {
+      url: response.url,
+      status: response.status,
+      hasData: 'data' in result
+    });
+  }
+  
+  // Handle the new response format with success/data structure
+  return result.data || result;
+}
+
 export const apiClient = {
   // Prairie Card API
   prairie: {
@@ -45,11 +96,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        await handleApiError(response, 'Network error');
       }
       
-      return response.json();
+      return handleApiResponse(response);
     }
   },
   
@@ -65,11 +115,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Network error' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        await handleApiError(response, 'Network error');
       }
       
-      return response.json();
+      return handleApiResponse(response);
     }
   },
   
@@ -84,11 +133,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Not found' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        await handleApiError(response, 'Not found');
       }
       
-      return response.json();
+      return handleApiResponse(response);
     },
     
     async save(result: any) {
@@ -101,11 +149,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Failed to save' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        await handleApiError(response, 'Failed to save');
       }
       
-      return response.json();
+      return handleApiResponse(response);
     },
     
     async delete(id: string) {
@@ -117,11 +164,10 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Failed to delete' }));
-        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+        await handleApiError(response, 'Failed to delete');
       }
       
-      return response.json();
+      return handleApiResponse(response);
     }
   }
 };

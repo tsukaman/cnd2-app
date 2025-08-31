@@ -30,6 +30,7 @@ export interface PrairieProfile {
     connectedBy?: string;
     hashtag?: string;
     isPartialData?: boolean;
+    sourceUrl?: string;
   };
 }
 
@@ -54,12 +55,24 @@ export interface DiagnosisResult {
   createdAt: string;
   aiPowered?: boolean;
   fortuneTelling?: FortuneTelling;
+  // V4 Astological style fields
+  astrologicalAnalysis?: string;
+  techStackCompatibility?: string;
+  conversationTopics?: string[];
   // Legacy fields for backward compatibility
   score?: number;
   message?: string;
   conversationStarters?: string[];
   hiddenGems?: string;
   shareTag?: string;
+  luckyItem?: string;
+  luckyAction?: string;
+  // V3 engine metadata
+  metadata?: {
+    engine?: string;
+    model?: string;
+    analysis?: any;
+  };
 }
 
 export interface CND2State {

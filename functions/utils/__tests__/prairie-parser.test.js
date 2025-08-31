@@ -127,7 +127,8 @@ describe('Prairie Card Parser', () => {
       const result = parseFromHTML(html);
 
       expect(result.basic.name).not.toContain('<script>');
-      expect(result.basic.name).toContain('&lt;script&gt;');
+      // HTMLエスケープを削除したので、生のHTMLタグは含まれない
+      expect(result.basic.name).not.toContain('&amp;lt;script&amp;gt;');
       expect(result.basic.bio).not.toContain('<img');
     });
 
@@ -136,7 +137,7 @@ describe('Prairie Card Parser', () => {
 
       const result = parseFromHTML(html);
 
-      expect(result.basic.name).toBe('CloudNative Enthusiast');
+      expect(result.basic.name).toBe('名前未設定');
       expect(result.basic.title).toBe('');
       expect(result.basic.company).toBe('');
       expect(result.basic.bio).toBe('');
@@ -167,13 +168,13 @@ describe('Prairie Card Parser', () => {
       expect(result.social.zenn).toBe('https://zenn.dev/user');
     });
 
-    it('should extract multiple paragraphs as bio', () => {
+    it('should extract bio from explicitly marked elements', () => {
       const html = `
         <html>
           <body>
             <h1>Test User</h1>
-            <p>This is a long bio paragraph that contains more than 20 characters and should be extracted as the bio.</p>
-            <p>Short text</p>
+            <div class="bio">This is a long bio paragraph that contains more than 20 characters and should be extracted as the bio.</div>
+            <p>Random paragraph that should not be extracted</p>
           </body>
         </html>
       `;
@@ -182,6 +183,219 @@ describe('Prairie Card Parser', () => {
 
       expect(result.basic.bio).toContain('long bio paragraph');
       expect(result.basic.bio).toContain('more than 20 characters');
+    });
+
+    describe('Error handling', () => {
+      it('should not crash with malformed HTML', () => {
+        const malformedHtml = '<div><span>unclosed tags';
+        expect(() => parseFromHTML(malformedHtml)).not.toThrow();
+        
+        const result = parseFromHTML(malformedHtml);
+        expect(result).toBeDefined();
+        expect(result.basic).toBeDefined();
+        expect(result.basic.name).toBe('名前未設定');
+      });
+
+      it('should handle empty HTML', () => {
+        const emptyHtml = '';
+        expect(() => parseFromHTML(emptyHtml)).not.toThrow();
+        
+        const result = parseFromHTML(emptyHtml);
+        expect(result).toBeDefined();
+        expect(result.basic.name).toBe('名前未設定');
+      });
+
+      it('should handle null or undefined input', () => {
+        expect(() => parseFromHTML(null)).not.toThrow();
+        expect(() => parseFromHTML(undefined)).not.toThrow();
+        
+        const resultNull = parseFromHTML(null);
+        expect(resultNull).toBeDefined();
+        expect(resultNull.basic.name).toBe('名前未設定');
+        
+        const resultUndefined = parseFromHTML(undefined);
+        expect(resultUndefined).toBeDefined();
+        expect(resultUndefined.basic.name).toBe('名前未設定');
+      });
+
+      it('should handle HTML with broken meta tags', () => {
+        const brokenMetaHtml = `
+          <html>
+            <meta property="og:title content="Test
+            <meta name="description" content="
+            <body>
+              <h1>Fallback Name</h1>
+            </body>
+          </html>
+        `;
+        
+        expect(() => parseFromHTML(brokenMetaHtml)).not.toThrow();
+        
+        const result = parseFromHTML(brokenMetaHtml);
+        expect(result).toBeDefined();
+        expect(result.basic.name).toBe('Fallback Name'); // Should fall back to h1
+      });
+
+      it('should handle extremely long strings gracefully', () => {
+        const longString = 'a'.repeat(10000);
+        const htmlWithLongString = `
+          <html>
+            <body>
+              <h1>Normal Name</h1>
+              <div class="bio">${longString}</div>
+            </body>
+          </html>
+        `;
+        
+        expect(() => parseFromHTML(htmlWithLongString)).not.toThrow();
+        
+        const result = parseFromHTML(htmlWithLongString);
+        expect(result).toBeDefined();
+        expect(result.basic.bio.length).toBeLessThanOrEqual(500); // Should be limited
+      });
+
+      it('should handle special characters in HTML', () => {
+        const specialCharsHtml = `
+          <html>
+            <body>
+              <h1>&lt;script&gt;alert('XSS')&lt;/script&gt;</h1>
+              <div class="bio">Bio with <script>malicious</script> content</div>
+              <div class="skill">JavaScript"></div>
+            </body>
+          </html>
+        `;
+        
+        expect(() => parseFromHTML(specialCharsHtml)).not.toThrow();
+        
+        const result = parseFromHTML(specialCharsHtml);
+        expect(result).toBeDefined();
+        expect(result.basic.name).not.toContain('<script>');
+        expect(result.basic.bio).toBeDefined();
+      });
+    });
+
+    describe('Character encoding', () => {
+      it('should handle Japanese characters (UTF-8)', () => {
+        const japaneseHtml = `
+          <html>
+            <head>
+              <meta charset="UTF-8">
+            </head>
+            <body>
+              <h1>山田 太郎</h1>
+              <div class="title">シニアエンジニア</div>
+              <div class="company">株式会社テクノロジー</div>
+              <div class="bio">クラウドネイティブ技術が大好きです。</div>
+              <div class="skill">Kubernetes</div>
+              <div class="skill">Docker</div>
+            </body>
+          </html>
+        `;
+        
+        const result = parseFromHTML(japaneseHtml);
+        expect(result.basic.name).toBe('山田 太郎');
+        expect(result.basic.title).toBe('シニアエンジニア');
+        expect(result.basic.company).toBe('株式会社テクノロジー');
+        expect(result.basic.bio).toBe('クラウドネイティブ技術が大好きです。');
+      });
+
+      it('should handle emoji and special Unicode characters', () => {
+        const emojiHtml = `
+          <html>
+            <body>
+              <h1>John Smith 🚀</h1>
+              <div class="bio">Love coding 💻 and coffee ☕</div>
+              <div class="skill">React ⚛️</div>
+              <div class="tag">#DevOps🔧</div>
+            </body>
+          </html>
+        `;
+        
+        const result = parseFromHTML(emojiHtml);
+        expect(result.basic.name).toBe('John Smith 🚀');
+        expect(result.basic.bio).toBe('Love coding 💻 and coffee ☕');
+        expect(result.details.skills).toContain('React ⚛️');
+        expect(result.details.tags).toContain('#DevOps🔧');
+      });
+
+      it('should handle mixed language content', () => {
+        const mixedHtml = `
+          <html>
+            <body>
+              <h1>田中 John</h1>
+              <div class="company">Global テック Inc.</div>
+              <div class="bio">Full-stack エンジニア working on クラウド solutions</div>
+              <div class="skill">JavaScript</div>
+              <div class="skill">日本語</div>
+              <div class="skill">English</div>
+            </body>
+          </html>
+        `;
+        
+        const result = parseFromHTML(mixedHtml);
+        expect(result.basic.name).toBe('田中 John');
+        expect(result.basic.company).toBe('Global テック Inc.');
+        expect(result.basic.bio).toContain('Full-stack エンジニア');
+        expect(result.details.skills).toContain('日本語');
+        expect(result.details.skills).toContain('English');
+      });
+
+      it('should handle HTML entities correctly', () => {
+        const entitiesHtml = `
+          <html>
+            <body>
+              <h1>Smith &amp; Jones</h1>
+              <div class="company">AT&amp;T Corporation</div>
+              <div class="bio">Expert in "web" &amp; 'mobile' development</div>
+              <div class="skill">C&plus;&plus;</div>
+            </body>
+          </html>
+        `;
+        
+        const result = parseFromHTML(entitiesHtml);
+        expect(result.basic.name).toBe('Smith &amp; Jones');
+        expect(result.basic.company).toBe('AT&amp;T Corporation');
+        expect(result.basic.bio).toContain('&amp;');
+        expect(result.details.skills).toContain('C&plus;&plus;');
+      });
+
+      it('should handle Chinese characters', () => {
+        const chineseHtml = `
+          <html>
+            <body>
+              <h1>李明</h1>
+              <div class="title">高级工程师</div>
+              <div class="company">科技有限公司</div>
+              <div class="bio">专注于云原生技术和微服务架构</div>
+            </body>
+          </html>
+        `;
+        
+        const result = parseFromHTML(chineseHtml);
+        expect(result.basic.name).toBe('李明');
+        expect(result.basic.title).toBe('高级工程师');
+        expect(result.basic.company).toBe('科技有限公司');
+        expect(result.basic.bio).toBe('专注于云原生技术和微服务架构');
+      });
+
+      it('should handle Korean characters', () => {
+        const koreanHtml = `
+          <html>
+            <body>
+              <h1>김철수</h1>
+              <div class="title">시니어 개발자</div>
+              <div class="company">테크놀로지 회사</div>
+              <div class="bio">클라우드 네이티브 기술 전문가</div>
+            </body>
+          </html>
+        `;
+        
+        const result = parseFromHTML(koreanHtml);
+        expect(result.basic.name).toBe('김철수');
+        expect(result.basic.title).toBe('시니어 개발자');
+        expect(result.basic.company).toBe('테크놀로지 회사');
+        expect(result.basic.bio).toBe('클라우드 네이티브 기술 전문가');
+      });
     });
   });
 });

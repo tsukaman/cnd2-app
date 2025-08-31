@@ -21,46 +21,15 @@ export function usePrairieCard(): UsePrairieCardReturn {
     setError(null);
     
     try {
-      const data = await apiClient.prairie.fetch(url);
+      const response = await apiClient.prairie.fetch(url);
       
-      if (!data.success) {
-        throw new Error(data.error || 'Prairie Cardの取得に失敗しました');
+      // Check if response has the expected structure
+      if (!response || !response.basic || !response.basic.name) {
+        throw new Error('Prairie Cardの取得に失敗しました');
       }
 
-      // APIレスポンスをPrairieProfile形式に変換
-      const prairieProfile: PrairieProfile = {
-        basic: {
-          name: data.data.name || '名前未設定',
-          title: data.data.title || '',
-          company: data.data.company || '',
-          bio: data.data.bio || '',
-          avatar: data.data.avatar,
-        },
-        details: {
-          tags: data.data.tags || [],
-          skills: data.data.skills || [],
-          interests: data.data.interests || [],
-          certifications: data.data.certifications || [],
-          communities: data.data.communities || [],
-          motto: data.data.motto,
-        },
-        social: {
-          twitter: data.data.twitter,
-          github: data.data.github,
-          linkedin: data.data.linkedin,
-          website: data.data.website,
-          blog: data.data.blog,
-          qiita: data.data.qiita,
-          zenn: data.data.zenn,
-        },
-        custom: data.data.custom || {},
-        meta: {
-          createdAt: data.data.createdAt || undefined,
-          updatedAt: data.data.updatedAt || undefined,
-          connectedBy: data.data.connectedBy,
-          hashtag: data.data.hashtag,
-        },
-      };
+      // The response is already in PrairieProfile format from the API
+      const prairieProfile: PrairieProfile = response;
 
       setProfile(prairieProfile);
       return prairieProfile;

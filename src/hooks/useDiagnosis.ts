@@ -25,13 +25,16 @@ export function useDiagnosis(): UseDiagnosisReturn {
     setError(null);
     
     try {
-      const data = await apiClient.diagnosis.generate(profiles, mode);
+      const response = await apiClient.diagnosis.generate(profiles, mode);
       
-      if (!data.success) {
-        throw new Error(data.error || '診断の生成に失敗しました');
+      // APIレスポンスから実際の診断結果を取得
+      // レスポンス構造: { result: DiagnosisResult } または DiagnosisResult
+      const result = response?.result || response;
+      
+      if (!result || !result.id) {
+        throw new Error('診断の生成に失敗しました');
       }
 
-      const result = data.data?.result || data.result;
       setResult(result);
       
       // 結果を保存（クライアント側）

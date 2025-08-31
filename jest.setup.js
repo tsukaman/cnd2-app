@@ -8,6 +8,57 @@ if (typeof globalThis.TextEncoder === 'undefined') {
   globalThis.TextDecoder = TextDecoder;
 }
 
+// Mock NextResponse for Jest environment
+jest.mock('next/server', () => {
+  const actual = jest.requireActual('next/server');
+  
+  class MockNextResponse {
+    constructor(body, init) {
+      this.body = body;
+      this.status = (init && init.status) || 200;
+      this.statusText = (init && init.statusText) || 'OK';
+      this.headers = new Map();
+      
+      // Add headers from init
+      if (init && init.headers) {
+        Object.entries(init.headers).forEach(([key, value]) => {
+          this.headers.set(key, value);
+        });
+      }
+    }
+    
+    // Mock json method for tests
+    json() {
+      return Promise.resolve(this.body);
+    }
+    
+    // Static json method that creates a MockNextResponse
+    static json(data, init) {
+      return new MockNextResponse(data, init);
+    }
+  }
+  
+  return {
+    ...actual,
+    NextResponse: MockNextResponse,
+    NextRequest: actual.NextRequest || class MockNextRequest {
+      constructor(url, init) {
+        this.url = url;
+        this.method = (init && init.method) || 'GET';
+        this.headers = new Map();
+        this.nextUrl = {
+          pathname: new URL(url).pathname,
+          searchParams: new URL(url).searchParams,
+        };
+      }
+      
+      json() {
+        return Promise.resolve({});
+      }
+    },
+  };
+});
+
 // Polyfill for Response, Headers, Request and fetch in test environment
 const fetch = require('node-fetch');
 if (!global.Response) {
@@ -224,13 +275,7 @@ if (!global.fetch || !global.fetch.mockImplementation) {
 }
 
 // Clean up after each test
-beforeEach(() => {
-  jest.useFakeTimers();
-});
-
+// Remove global timer setup - let individual tests handle their own timer setup
 afterEach(() => {
-  jest.clearAllTimers();
-  jest.runOnlyPendingTimers();
-  jest.useRealTimers();
   jest.clearAllMocks();
 });

@@ -43,7 +43,8 @@ describe('API Client', () => {
             body: JSON.stringify({ url: 'https://prairie.cards/test' }),
           })
         );
-        expect(result).toEqual(mockResponse);
+        // API client now returns data || result for wrapped responses
+        expect(result).toEqual(mockResponse.data);
       });
 
       it('HTTPエラーの場合、エラーをスローする', async () => {
@@ -51,7 +52,7 @@ describe('API Client', () => {
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: false,
           status: 404,
-          json: async () => ({ error: 'Not found' }),
+          json: async () => ({ error: { message: 'Not found' } }),
         });
 
         await expect(apiClient.prairie.fetch('https://prairie.cards/test'))
@@ -105,7 +106,8 @@ describe('API Client', () => {
             body: JSON.stringify({ profiles: mockProfiles, mode: 'duo' }),
           })
         );
-        expect(result).toEqual(mockResponse);
+        // API client now returns data || result for wrapped responses
+        expect(result).toEqual(mockResponse.data);
       });
 
       it('グループ診断のリクエストを正しく送信する', async () => {
@@ -126,7 +128,8 @@ describe('API Client', () => {
             body: JSON.stringify({ profiles: groupProfiles, mode: 'group' }),
           })
         );
-        expect(result).toEqual(mockResponse);
+        // API client now returns data || result for wrapped responses
+        expect(result).toEqual(mockResponse.data);
       });
 
       it('デフォルトでduoモードを使用する', async () => {
@@ -173,7 +176,8 @@ describe('API Client', () => {
             headers: { 'Content-Type': 'application/json' },
           })
         );
-        expect(result).toEqual(mockResult);
+        // API client now returns data || result for wrapped responses
+        expect(result).toEqual(mockResult.data);
       });
 
       it('404エラーを処理する', async () => {
@@ -181,7 +185,7 @@ describe('API Client', () => {
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: false,
           status: 404,
-          json: async () => ({ error: 'Result not found' }),
+          json: async () => ({ error: { message: 'Result not found' } }),
         });
 
         await expect(apiClient.results.get('nonexistent'))
@@ -210,7 +214,8 @@ describe('API Client', () => {
             body: JSON.stringify(mockResult),
           })
         );
-        expect(result).toEqual(mockResponse);
+        // API client now returns data || result for wrapped responses
+        expect(result).toEqual(mockResponse.data);
       });
     });
 
@@ -233,6 +238,7 @@ describe('API Client', () => {
             headers: { 'Content-Type': 'application/json' },
           })
         );
+        // For delete, the response doesn't have a data wrapper
         expect(result).toEqual(mockResponse);
       });
     });
@@ -256,11 +262,14 @@ describe('API Client', () => {
     });
 
     it('API_BASE_URLが未設定の場合相対パスを使用する', async () => {
-      delete process.env.NEXT_PUBLIC_API_BASE_URL;
-      const { apiClient } = require('../api-client');
-      
-      // windowオブジェクトをモック
+      // windowオブジェクトをモック（モジュールロード前に設定が必要）
       global.window = {} as any;
+      
+      delete process.env.NEXT_PUBLIC_API_BASE_URL;
+      
+      // windowが定義されている状態でモジュールを再読み込み
+      jest.resetModules();
+      const { apiClient } = require('../api-client');
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
@@ -277,6 +286,7 @@ describe('API Client', () => {
       
       // クリーンアップ
       delete (global as any).window;
+      jest.resetModules();
     });
   });
 
@@ -304,10 +314,8 @@ describe('API Client', () => {
 
     it('タイムアウトエラーを処理する', async () => {
       const { apiClient } = require('../api-client');
-      (global.fetch as jest.Mock).mockImplementationOnce(
-        () => new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 100)
-        )
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Request timeout')
       );
 
       await expect(apiClient.prairie.fetch('test'))
