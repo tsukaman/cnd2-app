@@ -7,6 +7,7 @@ import { ArrowLeft, Users, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import { MultiStyleResults } from '@/components/diagnosis/MultiStyleResults';
+import { CLEANUP_INTERVALS } from '@/lib/constants/diagnosis';
 
 export default function MultiResultsPage() {
   const searchParams = useSearchParams();
@@ -23,7 +24,7 @@ export default function MultiResultsPage() {
         try {
           const timestamp = parseInt(key.split('-').pop() || '0');
           const age = Date.now() - timestamp;
-          if (age > 24 * 60 * 60 * 1000) { // 24 hours
+          if (age > CLEANUP_INTERVALS.TTL_MS) {
             localStorage.removeItem(key);
           }
         } catch (e) {

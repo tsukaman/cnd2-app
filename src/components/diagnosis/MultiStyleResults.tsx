@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
 import { DiagnosisResult } from '@/types';
+import { STYLE_CONFIG, COLOR_CLASSES } from '@/lib/constants/diagnosis';
 
 interface MultiStyleResult {
   style: DiagnosisStyle;
@@ -25,23 +26,11 @@ export function MultiStyleResults({ results, summary }: MultiStyleResultsProps) 
   const [viewMode, setViewMode] = useState<'tabs' | 'grid'>('tabs');
 
   const getStyleInfo = (style: DiagnosisStyle) => {
-    const styleMap = {
-      creative: { label: 'クリエイティブ', icon: '🎨', color: 'purple' },
-      astrological: { label: '占星術', icon: '⭐', color: 'blue' },
-      fortune: { label: '点取り占い', icon: '🔮', color: 'pink' },
-      technical: { label: '技術分析', icon: '📊', color: 'green' }
-    };
-    return styleMap[style];
+    return STYLE_CONFIG[style];
   };
 
   const getColorClasses = (color: string) => {
-    const colorMap = {
-      purple: 'bg-purple-600 text-purple-400 border-purple-500',
-      blue: 'bg-blue-600 text-blue-400 border-blue-500',
-      pink: 'bg-pink-600 text-pink-400 border-pink-500',
-      green: 'bg-green-600 text-green-400 border-green-500'
-    };
-    return colorMap[color as keyof typeof colorMap] || colorMap.purple;
+    return COLOR_CLASSES[color as keyof typeof COLOR_CLASSES] || COLOR_CLASSES.purple;
   };
 
   return (

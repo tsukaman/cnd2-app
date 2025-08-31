@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
-
-interface StyleOption {
-  value: DiagnosisStyle;
-  label: string;
-  icon: string;
-  description: string;
-}
+import { STYLE_CONFIG, PROCESSING_TIME_ESTIMATES } from '@/lib/constants/diagnosis';
 
 interface MultiStyleSelectorProps {
   onStylesChange: (styles: DiagnosisStyle[]) => void;
@@ -16,32 +10,10 @@ interface MultiStyleSelectorProps {
 }
 
 export function MultiStyleSelector({ onStylesChange, selectedStyles }: MultiStyleSelectorProps) {
-  const styleOptions: StyleOption[] = [
-    {
-      value: 'creative',
-      label: 'クリエイティブ',
-      icon: '🎨',
-      description: '予想外の化学反応'
-    },
-    {
-      value: 'astrological',
-      label: '占星術',
-      icon: '⭐',
-      description: '星が導く運命'
-    },
-    {
-      value: 'fortune',
-      label: '点取り占い',
-      icon: '🔮',
-      description: '運勢を診断'
-    },
-    {
-      value: 'technical',
-      label: '技術分析',
-      icon: '📊',
-      description: 'データドリブン'
-    }
-  ];
+  const styleOptions = Object.entries(STYLE_CONFIG).map(([value, config]) => ({
+    value: value as DiagnosisStyle,
+    ...config
+  }));
 
   const toggleStyle = (style: DiagnosisStyle) => {
     if (selectedStyles.includes(style)) {
@@ -127,8 +99,8 @@ export function MultiStyleSelector({ onStylesChange, selectedStyles }: MultiStyl
           </p>
           <p className="text-xs text-gray-500 mt-1">
             {selectedStyles.length === 4 
-              ? '全スタイルで診断します（約2-3秒）'
-              : `${selectedStyles.length}つのスタイルで診断します`
+              ? `全スタイルで診断します（${PROCESSING_TIME_ESTIMATES.ALL_STYLES}）`
+              : PROCESSING_TIME_ESTIMATES.PARTIAL_STYLES(selectedStyles.length)
             }
           </p>
         </div>

@@ -11,6 +11,7 @@ import { MultiStyleSelector } from '@/components/diagnosis/MultiStyleSelector';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
+import { MULTI_STYLE_RETRY_CONFIG, ANIMATION_DURATIONS } from '@/lib/constants/diagnosis';
 import type { PrairieProfile } from '@/types';
 import type { DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
 
@@ -31,7 +32,7 @@ export default function DuoPage() {
       setTimeout(() => {
         setCurrentStep('second');
         setIsTransitioning(false);
-      }, 1500); // 成功メッセージを見せてから遷移
+      }, ANIMATION_DURATIONS.TRANSITION_MS);
     }
   }, [profiles[0], currentStep, isTransitioning]);
 
@@ -42,7 +43,7 @@ export default function DuoPage() {
       setTimeout(() => {
         setCurrentStep('ready');
         setIsTransitioning(false);
-      }, 1500);
+      }, ANIMATION_DURATIONS.TRANSITION_MS);
     }
   }, [profiles[1], currentStep, isTransitioning]);
 
@@ -58,7 +59,7 @@ export default function DuoPage() {
         // 複数スタイル診断モード with retry mechanism
         let lastError: Error | null = null;
         
-        for (let attempt = 1; attempt <= 3; attempt++) {
+        for (let attempt = 1; attempt <= MULTI_STYLE_RETRY_CONFIG.MAX_ATTEMPTS; attempt++) {
           try {
             const response = await fetch('/api/diagnosis-multi', {
               method: 'POST',
@@ -88,8 +89,8 @@ export default function DuoPage() {
             console.warn(`Multi-style diagnosis attempt ${attempt} failed:`, error);
             
             // Wait before retry with exponential backoff
-            if (attempt < 3) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            if (attempt < MULTI_STYLE_RETRY_CONFIG.MAX_ATTEMPTS) {
+              await new Promise(resolve => setTimeout(resolve, MULTI_STYLE_RETRY_CONFIG.getDelay(attempt)));
             }
           }
         }
