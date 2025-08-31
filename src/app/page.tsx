@@ -60,14 +60,23 @@ export default function Home() {
             }
             throw new Error('Result not found');
           })
-          .then(result => {
+          .then((data: DiagnosisResult) => {
             // 取得した結果をLocalStorageにも保存（キャッシュ）
-            localStorage.setItem(`diagnosis-${resultId}`, JSON.stringify(result));
-            setDiagnosisResult(result);
+            localStorage.setItem(`diagnosis-${resultId}`, JSON.stringify(data));
+            setDiagnosisResult(data);
           })
           .catch(error => {
             console.error("Failed to fetch diagnosis result:", error);
-            // 結果が見つからない場合はエラーメッセージを表示可能
+            // セッションストレージからも確認（フォールバック）
+            const sessionResult = sessionStorage.getItem(`diagnosis-${resultId}`);
+            if (sessionResult) {
+              try {
+                const result = JSON.parse(sessionResult);
+                setDiagnosisResult(result);
+              } catch (parseError) {
+                console.error("Failed to parse session storage result:", parseError);
+              }
+            }
           });
       }
     }

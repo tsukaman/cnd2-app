@@ -9,6 +9,7 @@ import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
+import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
 import type { PrairieProfile } from '@/types';
 
 export default function DuoPage() {
@@ -55,8 +56,8 @@ export default function DuoPage() {
         localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
         
         // KVにも保存（非同期、リトライ付き）
-        const saveToKV = async (retries = 3) => {
-          for (let i = 0; i < retries; i++) {
+        const saveToKV = async () => {
+          for (let i = 0; i < RETRY_CONFIG.maxRetries; i++) {
             try {
               const response = await fetch(`/api/results/${result.id}`, {
                 method: 'POST',
@@ -72,8 +73,8 @@ export default function DuoPage() {
               console.warn(`[Duo] KV save attempt ${i + 1} error:`, err);
             }
             // Wait before retry (exponential backoff)
-            if (i < retries - 1) {
-              await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            if (i < RETRY_CONFIG.maxRetries - 1) {
+              await new Promise(resolve => setTimeout(resolve, calculateBackoffDelay(i)));
             }
           }
           console.error('[Duo] Failed to save to KV after all retries');
