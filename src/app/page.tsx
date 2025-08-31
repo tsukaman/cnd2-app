@@ -140,7 +140,7 @@ export default function Home() {
         <div className="relative z-10">
           <DiagnosisResultComponent 
             result={diagnosisResult} 
-            onClose={() => {
+            onReset={() => {
               setDiagnosisResult(null);
               // URLパラメータをクリア
               window.history.replaceState({}, '', '/');
