@@ -3,6 +3,7 @@ import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
 import { unifiedDiagnosisEngine, type DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
 import { PrairieProfile } from '@/types';
+import { sanitizer } from '@/lib/sanitizer';
 
 /**
  * Multi-style Diagnosis API endpoint
@@ -49,22 +50,33 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       );
     }
 
-    // Convert profiles to PrairieProfile format if needed
+    // Convert profiles to PrairieProfile format if needed with sanitization
     const prairieProfiles: PrairieProfile[] = profiles.map(p => {
       if (p.basic) {
-        return p;
+        // Sanitize existing profile data
+        return {
+          ...p,
+          basic: {
+            ...p.basic,
+            name: sanitizer.sanitizeHTML(p.basic.name || ''),
+            title: sanitizer.sanitizeHTML(p.basic.title || ''),
+            company: sanitizer.sanitizeHTML(p.basic.company || ''),
+            bio: sanitizer.sanitizeHTML(p.basic.bio || '')
+          }
+        };
       }
       
+      // Convert from minimal format with sanitization
       return {
         basic: {
-          name: p.name || '名称未設定',
-          title: p.title || '',
-          company: p.company || '',
-          bio: p.bio || ''
+          name: sanitizer.sanitizeHTML(p.name || '名称未設定'),
+          title: sanitizer.sanitizeHTML(p.title || ''),
+          company: sanitizer.sanitizeHTML(p.company || ''),
+          bio: sanitizer.sanitizeHTML(p.bio || '')
         },
         details: {
-          skills: p.skills || [],
-          interests: p.interests || [],
+          skills: (p.skills || []).map((s: string) => sanitizer.sanitizeHTML(s)),
+          interests: (p.interests || []).map((i: string) => sanitizer.sanitizeHTML(i)),
           achievements: []
         },
         social: {},
@@ -168,7 +180,9 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': process.env.NODE_ENV === 'development' 
+        ? '*' 
+        : 'https://cnd2.cloudnativedays.jp',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },

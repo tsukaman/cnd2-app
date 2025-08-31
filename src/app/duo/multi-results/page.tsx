@@ -15,6 +15,25 @@ export default function MultiResultsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Clean up old diagnosis results (older than 24 hours)
+    const cleanupOldResults = () => {
+      const keys = Object.keys(localStorage).filter(key => 
+        key.startsWith('diagnosis-multi-'));
+      keys.forEach(key => {
+        try {
+          const timestamp = parseInt(key.split('-').pop() || '0');
+          const age = Date.now() - timestamp;
+          if (age > 24 * 60 * 60 * 1000) { // 24 hours
+            localStorage.removeItem(key);
+          }
+        } catch (e) {
+          // Remove corrupted data
+          localStorage.removeItem(key);
+        }
+      });
+    };
+    cleanupOldResults();
+
     const resultId = searchParams.get('id');
     if (!resultId) {
       router.push('/duo');

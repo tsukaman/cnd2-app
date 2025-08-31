@@ -55,33 +55,48 @@ export default function DuoPage() {
   const handleStartDiagnosis = async () => {
     if (profiles[0] && profiles[1]) {
       if (multiStyleMode && selectedStyles.length > 0) {
-        // 複数スタイル診断モード
-        try {
-          const response = await fetch('/api/diagnosis-multi', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              profiles: [profiles[0], profiles[1]],
-              mode: 'duo',
-              styles: selectedStyles
-            })
-          });
+        // 複数スタイル診断モード with retry mechanism
+        let lastError: Error | null = null;
+        
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const response = await fetch('/api/diagnosis-multi', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                profiles: [profiles[0], profiles[1]],
+                mode: 'duo',
+                styles: selectedStyles
+              })
+            });
 
-          if (!response.ok) {
-            throw new Error('Failed to generate multi-style diagnosis');
+            if (!response.ok) {
+              throw new Error(`Failed to generate multi-style diagnosis: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            // 結果をLocalStorageに保存
+            const resultId = `multi-${Date.now()}`;
+            localStorage.setItem(`diagnosis-multi-${resultId}`, JSON.stringify(data));
+            
+            // 複数スタイル結果ページへ遷移
+            router.push(`/duo/multi-results?id=${resultId}`);
+            return; // Success - exit the function
+          } catch (error) {
+            lastError = error as Error;
+            console.warn(`Multi-style diagnosis attempt ${attempt} failed:`, error);
+            
+            // Wait before retry with exponential backoff
+            if (attempt < 3) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
           }
-
-          const data = await response.json();
-          
-          // 結果をLocalStorageに保存
-          const resultId = `multi-${Date.now()}`;
-          localStorage.setItem(`diagnosis-multi-${resultId}`, JSON.stringify(data));
-          
-          // 複数スタイル結果ページへ遷移
-          router.push(`/duo/multi-results?id=${resultId}`);
-        } catch (error) {
-          console.error('Multi-style diagnosis error:', error);
         }
+        
+        // All attempts failed
+        console.error('Multi-style diagnosis failed after 3 attempts:', lastError);
+        alert('診断の生成に失敗しました。もう一度お試しください。');
       } else {
         // 通常の診断モード
         const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
