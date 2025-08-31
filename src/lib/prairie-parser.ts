@@ -30,7 +30,7 @@ export class PrairieCardParser {
   // テスト用: シングルトンインスタンスをリセット
   static resetInstance(): void {
     if (process.env.NODE_ENV === 'test') {
-      PrairieCardParser.instance = null as any;
+      PrairieCardParser.instance = null as unknown as PrairieCardParser;
     }
   }
 
@@ -157,9 +157,10 @@ export class PrairieCardParser {
       }
 
       return html;
-    } catch (error: any) {
+    } catch (error) {
       // タイムアウトエラー
-      if (error.name === 'AbortError' || error.message === 'AbortError') {
+      const errorAsAny = error as { name?: string; message?: string };
+      if (errorAsAny.name === 'AbortError' || errorAsAny.message === 'AbortError') {
         throw new NetworkError('Prairie Card取得がタイムアウトしました。', { url });
       }
       

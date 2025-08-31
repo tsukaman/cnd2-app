@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import DuoPage from '../page';
 import { useRouter } from 'next/navigation';
 import { createLocalStorageMock, createMockPrairieProfile } from '@/test-utils/mocks';
+import type { PrairieProfile, DiagnosisResult } from '@/types';
 
 // Next.js navigationモック
 jest.mock('next/navigation', () => ({
@@ -36,10 +37,10 @@ jest.mock('@/lib/api-client', () => ({
 // コンポーネントモック
 jest.mock('@/components/prairie/PrairieCardInput', () => ({
   __esModule: true,
-  default: ({ onProfileLoaded, disabled }: any) => {
-    const React = require('react');
-    const { apiClient } = require('@/lib/api-client');
-    const [error, setError] = React.useState(null);
+  default: function MockPrairieCardInput({ onProfileLoaded, disabled }: { onProfileLoaded: (profile: PrairieProfile) => void; disabled?: boolean }) {
+    const React = jest.requireActual('react') as typeof import('react');
+    const { apiClient } = jest.requireActual('@/lib/api-client') as { apiClient: { fetchPrairieCard: (url: string) => Promise<PrairieProfile> } };
+    const [error, setError] = React.useState<string | null>(null);
     
     const handleClick = async () => {
       if (disabled) return;
@@ -54,7 +55,7 @@ jest.mock('@/components/prairie/PrairieCardInput', () => ({
           } else if (!result?.success) {
             throw new Error('Failed to fetch profile');
           }
-        } catch (err: any) {
+        } catch (err) {
           // Show error message like the real component
           setError('Prairie Cardの読み込みに失敗しました');
         }
@@ -77,7 +78,7 @@ jest.mock('@/components/prairie/PrairieCardInput', () => ({
 }));
 
 jest.mock('@/components/diagnosis/DiagnosisResult', () => ({
-  DiagnosisResult: ({ result }: any) => (
+  DiagnosisResult: ({ result }: { result: DiagnosisResult }) => (
     <div data-testid="diagnosis-result">
       {result.compatibility}% - {result.summary}
     </div>

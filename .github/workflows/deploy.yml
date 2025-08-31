@@ -32,14 +32,12 @@ jobs:
         run: npm test
         env:
           CI: true
-        continue-on-error: true
           
-      - name: Run linting checks (non-blocking)
-        run: npm run lint || true
+      - name: Run linting checks
+        run: npm run lint
         
       - name: Run TypeScript type checking
         run: npm run type-check
-        continue-on-error: true
         
       - name: Create production environment file
         run: |
