@@ -43,7 +43,7 @@ export default function Home() {
   useEffect(() => {
     if (resultId) {
       // まずLocalStorageから結果を取得
-      const storedResult = localStorage.getItem(`diagnosis-${resultId}`);
+      const storedResult = localStorage.getItem(`diagnosis-result-${resultId}`);
       if (storedResult) {
         try {
           const result = JSON.parse(storedResult);
@@ -60,15 +60,17 @@ export default function Home() {
             }
             throw new Error('Result not found');
           })
-          .then((data: DiagnosisResult) => {
+          .then((response) => {
+            // APIレスポンスから結果を抽出
+            const result = response.data?.result || response;
             // 取得した結果をLocalStorageにも保存（キャッシュ）
-            localStorage.setItem(`diagnosis-${resultId}`, JSON.stringify(data));
-            setDiagnosisResult(data);
+            localStorage.setItem(`diagnosis-result-${resultId}`, JSON.stringify(result));
+            setDiagnosisResult(result);
           })
           .catch(error => {
             console.error("Failed to fetch diagnosis result:", error);
             // セッションストレージからも確認（フォールバック）
-            const sessionResult = sessionStorage.getItem(`diagnosis-${resultId}`);
+            const sessionResult = sessionStorage.getItem(`diagnosis-result-${resultId}`);
             if (sessionResult) {
               try {
                 const result = JSON.parse(sessionResult);
