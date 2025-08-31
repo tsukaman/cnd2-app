@@ -154,7 +154,7 @@ export class PrairieProfileFactory {
         title: 'Developer',
         company: 'Test Company',
         bio: 'Test bio',
-      } as any, // Intentionally invalid
+      } as unknown as PrairieProfile['basic'], // Intentionally invalid
       details: {
         tags: [],
         skills: [],
