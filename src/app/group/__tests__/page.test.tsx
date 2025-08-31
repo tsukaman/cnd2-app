@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import GroupPage from '../page';
 import { useRouter } from 'next/navigation';
 import { createLocalStorageMock, createMockPrairieProfile } from '@/test-utils/mocks';
+import type { PrairieProfile, DiagnosisResult } from '@/types';
 
 // Next.js navigationモック
 jest.mock('next/navigation', () => ({
@@ -40,10 +41,10 @@ jest.mock('@/lib/api-client', () => ({
 
 // コンポーネントモック
 jest.mock('@/components/prairie/PrairieCardInput', () => {
-  return function MockPrairieCardInput({ onProfileLoaded }: any) {
-    const React = require('react');
-    const { apiClient } = require('@/lib/api-client');
-    const [error, setError] = React.useState(null);
+  return function MockPrairieCardInput({ onProfileLoaded }: { onProfileLoaded: (profile: PrairieProfile) => void }) {
+    const React = jest.requireActual('react') as typeof import('react');
+    const { apiClient } = jest.requireActual('@/lib/api-client') as { apiClient: { prairie: { fetch: { mock?: boolean } } } };
+    const [error, setError] = React.useState<string | null>(null);
     
     const handleClick = async () => {
       setError(null);
@@ -56,7 +57,7 @@ jest.mock('@/components/prairie/PrairieCardInput', () => {
           } else if (!result?.success) {
             throw new Error('Failed to fetch profile');
           }
-        } catch (err: any) {
+        } catch (err) {
           // Show error message like the real component
           setError('Prairie Cardの読み込みに失敗しました');
         }
@@ -78,7 +79,7 @@ jest.mock('@/components/prairie/PrairieCardInput', () => {
 });
 
 jest.mock('@/components/diagnosis/DiagnosisResult', () => ({
-  DiagnosisResult: ({ result }: any) => (
+  DiagnosisResult: ({ result }: { result: DiagnosisResult }) => (
     <div data-testid="diagnosis-result">
       {result.mode} - {result.compatibility}% - {result.summary}
     </div>

@@ -87,7 +87,7 @@ export function createErrorResponse(
     statusCode = error.statusCode;
     errorMessage = error.message;
     errorCode = error.code;
-    errorMeta = (error as any).meta || {};
+    errorMeta = (error as { meta?: Record<string, unknown> }).meta || {};
   } else if (error instanceof Error) {
     // Keep generic message for security
     errorMessage = 'Internal server error';
