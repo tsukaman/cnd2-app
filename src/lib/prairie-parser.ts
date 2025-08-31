@@ -64,7 +64,7 @@ export class PrairieCardParser {
       }
       
       // パース処理
-      const profile = this.extractProfile(html, normalizedUrl);
+      const profile = this.extractProfile(html);
       
       // XSS対策: プロフィールデータをサニタイズ
       const sanitizedProfile = sanitizer.sanitizePrairieProfile(profile) as PrairieProfile;
@@ -79,7 +79,7 @@ export class PrairieCardParser {
       return sanitizedProfile;
     } catch (error) {
       // エラーリカバリーを試みる
-      const recoveredProfile = this.analyzeAndRecoverFromError(html, error as Error);
+      const recoveredProfile = this.analyzeAndRecoverFromError(html);
       if (recoveredProfile) {
         console.warn('[CND²] Prairie Card部分的にリカバリー成功');
         
@@ -174,7 +174,7 @@ export class PrairieCardParser {
     }
   }
 
-  private extractProfile(html: string, _url: string): PrairieProfile {
+  private extractProfile(html: string): PrairieProfile {
     const $ = cheerio.load(html);
     
     return {
@@ -216,7 +216,7 @@ export class PrairieCardParser {
   // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
   // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
   // Prairie Cardのエラーを詳しく分析して適切なフォールバックを提供
-  private analyzeAndRecoverFromError(html: string, _error: Error): PrairieProfile | null {
+  private analyzeAndRecoverFromError(html: string): PrairieProfile | null {
     try {
       // HTMLが空の場合
       if (!html || html.trim().length === 0) {
