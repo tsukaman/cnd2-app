@@ -42,7 +42,7 @@ export default function Home() {
   // 診断結果を読み込む
   useEffect(() => {
     if (resultId) {
-      // LocalStorageから結果を取得
+      // まずLocalStorageから結果を取得
       const storedResult = localStorage.getItem(`diagnosis-${resultId}`);
       if (storedResult) {
         try {
@@ -51,6 +51,33 @@ export default function Home() {
         } catch (error) {
           console.error("Failed to parse diagnosis result:", error);
         }
+      } else {
+        // LocalStorageにない場合はAPIから取得
+        fetch(`/api/results/${resultId}`)
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Result not found');
+          })
+          .then((data: DiagnosisResult) => {
+            // 取得した結果をLocalStorageにも保存（キャッシュ）
+            localStorage.setItem(`diagnosis-${resultId}`, JSON.stringify(data));
+            setDiagnosisResult(data);
+          })
+          .catch(error => {
+            console.error("Failed to fetch diagnosis result:", error);
+            // セッションストレージからも確認（フォールバック）
+            const sessionResult = sessionStorage.getItem(`diagnosis-${resultId}`);
+            if (sessionResult) {
+              try {
+                const result = JSON.parse(sessionResult);
+                setDiagnosisResult(result);
+              } catch (parseError) {
+                console.error("Failed to parse session storage result:", parseError);
+              }
+            }
+          });
       }
     }
   }, [resultId]);
