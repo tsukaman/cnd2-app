@@ -93,7 +93,7 @@ export interface DiagnosisResult {
   metadata?: {
     engine?: string;
     model?: string;
-    analysis?: any;
+    analysis?: unknown;
   };
 }
 
