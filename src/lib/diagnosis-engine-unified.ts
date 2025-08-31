@@ -13,6 +13,24 @@ import { logger } from '@/lib/logger';
 export type DiagnosisStyle = 'astrological' | 'fortune' | 'technical' | 'creative';
 
 /**
+ * 設定定数
+ */
+const DIAGNOSIS_CONFIG = {
+  TEMPERATURE: {
+    BASE: 0.85,
+    VARIANCE: 0.1
+  },
+  COMPATIBILITY: {
+    MIN: 85,
+    MAX: 100
+  },
+  MAX_TOKENS: {
+    'gpt-4o-mini': 2000,
+    'gpt-4o': 3000
+  }
+} as const;
+
+/**
  * モデルタイプ
  */
 export type ModelType = 'gpt-4o-mini' | 'gpt-4o';
@@ -112,7 +130,7 @@ export class UnifiedDiagnosisEngine {
     const {
       style = 'creative',
       model = 'gpt-4o-mini',
-      temperature = 0.85 + Math.random() * 0.1, // 0.85-0.95でランダム化
+      temperature = DIAGNOSIS_CONFIG.TEMPERATURE.BASE + Math.random() * DIAGNOSIS_CONFIG.TEMPERATURE.VARIANCE, // 0.85-0.95でランダム化
       enableFortuneTelling = true
     } = options;
 
@@ -138,7 +156,7 @@ export class UnifiedDiagnosisEngine {
             { role: 'user', content: userPrompt }
           ],
           temperature,
-          max_tokens: model === 'gpt-4o' ? 3000 : 2000,
+          max_tokens: DIAGNOSIS_CONFIG.MAX_TOKENS[model],
           response_format: { type: "json_object" }
         })
       });
@@ -150,7 +168,21 @@ export class UnifiedDiagnosisEngine {
       }
 
       const data = await response.json();
-      const result = JSON.parse(data.choices[0].message.content);
+      
+      // OpenAIレスポンスのバリデーション
+      if (!data.choices || data.choices.length === 0) {
+        logger.error('[Unified Engine] No choices in OpenAI response');
+        return this.generateDynamicFallback(profile1, profile2, style, enableFortuneTelling);
+      }
+      
+      // JSON.parseのエラーハンドリング
+      let result;
+      try {
+        result = JSON.parse(data.choices[0].message.content);
+      } catch (parseError) {
+        logger.error('[Unified Engine] Failed to parse AI response', parseError);
+        return this.generateDynamicFallback(profile1, profile2, style, enableFortuneTelling);
+      }
 
       return {
         id: this.generateId(),
@@ -179,7 +211,7 @@ export class UnifiedDiagnosisEngine {
     const {
       style = 'creative',
       model = 'gpt-4o-mini',
-      temperature = 0.85 + Math.random() * 0.1,
+      temperature = DIAGNOSIS_CONFIG.TEMPERATURE.BASE + Math.random() * DIAGNOSIS_CONFIG.TEMPERATURE.VARIANCE,
       enableFortuneTelling = true
     } = options;
 
@@ -204,7 +236,7 @@ export class UnifiedDiagnosisEngine {
             { role: 'user', content: userPrompt }
           ],
           temperature,
-          max_tokens: model === 'gpt-4o' ? 3000 : 2000,
+          max_tokens: DIAGNOSIS_CONFIG.MAX_TOKENS[model],
           response_format: { type: "json_object" }
         })
       });
@@ -214,7 +246,21 @@ export class UnifiedDiagnosisEngine {
       }
 
       const data = await response.json();
-      const result = JSON.parse(data.choices[0].message.content);
+      
+      // OpenAIレスポンスのバリデーション
+      if (!data.choices || data.choices.length === 0) {
+        logger.error('[Unified Engine] No choices in OpenAI response');
+        return this.generateGroupFallback(profiles, style, enableFortuneTelling);
+      }
+      
+      // JSON.parseのエラーハンドリング
+      let result;
+      try {
+        result = JSON.parse(data.choices[0].message.content);
+      } catch (parseError) {
+        logger.error('[Unified Engine] Failed to parse AI response', parseError);
+        return this.generateGroupFallback(profiles, style, enableFortuneTelling);
+      }
 
       return {
         id: this.generateId(),
@@ -312,7 +358,8 @@ ${members}
     style: DiagnosisStyle,
     enableFortuneTelling: boolean
   ): DiagnosisResult {
-    const compatibility = 85 + Math.floor(Math.random() * 15);
+    const compatibility = DIAGNOSIS_CONFIG.COMPATIBILITY.MIN + 
+      Math.floor(Math.random() * (DIAGNOSIS_CONFIG.COMPATIBILITY.MAX - DIAGNOSIS_CONFIG.COMPATIBILITY.MIN));
     const name1 = profile1.basic.name || 'エンジニア1';
     const name2 = profile2.basic.name || 'エンジニア2';
     
@@ -393,7 +440,8 @@ ${members}
     style: DiagnosisStyle,
     enableFortuneTelling: boolean
   ): DiagnosisResult {
-    const compatibility = 85 + Math.floor(Math.random() * 15);
+    const compatibility = DIAGNOSIS_CONFIG.COMPATIBILITY.MIN + 
+      Math.floor(Math.random() * (DIAGNOSIS_CONFIG.COMPATIBILITY.MAX - DIAGNOSIS_CONFIG.COMPATIBILITY.MIN));
     const names = profiles.map(p => p.basic.name || `メンバー${profiles.indexOf(p) + 1}`);
     
     // グループの共通スキルと興味を分析

@@ -67,8 +67,11 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     });
 
     // Generate diagnosis using unified engine
+    const isValidStyle = (s: string): s is DiagnosisStyle => 
+      ['astrological', 'fortune', 'technical', 'creative'].includes(s);
+    
     const diagnosisOptions = {
-      style: (style as DiagnosisStyle) || 'creative',
+      style: isValidStyle(style) ? style : 'creative',
       model: 'gpt-4o-mini' as const,
       enableFortuneTelling: true
     };
