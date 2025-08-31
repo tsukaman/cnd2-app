@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -13,6 +13,16 @@ import { DiagnosisResult as DiagnosisResultComponent } from "@/components/diagno
 import type { DiagnosisResult, ResultApiResponse } from "@/types";
 import { sanitizer } from "@/lib/sanitizer";
 import { BarChart3 } from "lucide-react";
+
+// Constants
+const LOADING_SCREEN_DURATION = 1000;
+const TAGLINE_ROTATION_INTERVAL = 5000;
+const RESULT_ID_MAX_LENGTH = 50;
+const ERROR_MESSAGES = {
+  RESULT_NOT_FOUND: '診断結果の読み込みに失敗しました。URLを確認してください。',
+  INVALID_STRUCTURE: 'Invalid diagnosis result structure from API',
+  INVALID_RESPONSE_FORMAT: 'Invalid API response format'
+} as const;
 
 const taglines = [
   { en: "Connect Your Future", ja: "エンジニアの出会いを、データで可視化する" },
@@ -30,6 +40,23 @@ export default function Home() {
   const searchParams = useSearchParams();
   const resultId = searchParams.get("result");
   const mode = searchParams.get("mode");
+
+  // Result ID検証関数
+  const validateResultId = (id: string): boolean => {
+    return /^[a-zA-Z0-9-_]+$/.test(id) && id.length <= RESULT_ID_MAX_LENGTH;
+  };
+
+  // イベントハンドラの最適化
+  const handleRetry = useCallback(() => {
+    window.location.reload();
+  }, []);
+
+  const handleGoHome = useCallback(() => {
+    setResultError(null);
+    setIsLoadingResult(false);
+    setDiagnosisResult(null);
+    window.history.replaceState({}, '', '/');
+  }, []);
   
   // データ検証関数
   const validateDiagnosisResult = (data: any): DiagnosisResult | null => {
@@ -81,8 +108,8 @@ export default function Home() {
     if (consent) {
       setHasConsented(true);
     }
-    // ローディング画面を1秒間表示
-    setTimeout(() => setIsReady(true), 1000);
+    // ローディング画面を表示
+    setTimeout(() => setIsReady(true), LOADING_SCREEN_DURATION);
   }, []);
 
   // 診断結果を読み込む
@@ -91,6 +118,14 @@ export default function Home() {
     
     const loadResult = async () => {
       if (!resultId || cancelled) return;
+      
+      // Result IDの検証
+      if (!validateResultId(resultId)) {
+        console.error(`[CND²] Invalid result ID format: ${resultId}`);
+        setResultError('無効な結果IDの形式です。');
+        setIsLoadingResult(false);
+        return;
+      }
       
       // すでに結果がある場合はスキップ（初期化で読み込み済み）
       if (diagnosisResult && diagnosisResult.id === resultId) {
@@ -139,13 +174,13 @@ export default function Home() {
             : null;
         
         if (!result) {
-          throw new Error('Invalid API response format');
+          throw new Error(ERROR_MESSAGES.INVALID_RESPONSE_FORMAT);
         }
         
         // データ検証とサニタイズ
         const validatedResult = validateDiagnosisResult(result);
         if (!validatedResult) {
-          throw new Error('Invalid diagnosis result structure from API');
+          throw new Error(ERROR_MESSAGES.INVALID_STRUCTURE);
         }
         
         console.log("[CND²] Result fetched from API:", validatedResult.id);
@@ -182,7 +217,7 @@ export default function Home() {
         
         // 最終的にエラー状態を設定
         if (!cancelled) {
-          setResultError('診断結果の読み込みに失敗しました。URLを確認してください。');
+          setResultError(ERROR_MESSAGES.RESULT_NOT_FOUND);
           setIsLoadingResult(false);
         }
       }
@@ -200,7 +235,7 @@ export default function Home() {
     // タグラインを5秒ごとに切り替える
     const interval = setInterval(() => {
       setTaglineIndex((prev) => (prev + 1) % taglines.length);
-    }, 5000);
+    }, TAGLINE_ROTATION_INTERVAL);
     return () => clearInterval(interval);
   }, []);
 
@@ -259,16 +294,13 @@ export default function Home() {
             <p className="text-gray-300 mb-6">{resultError}</p>
             <div className="space-y-4">
               <button
-                onClick={() => window.location.reload()}
+                onClick={handleRetry}
                 className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-semibold transition-colors"
               >
                 再試行
               </button>
               <button
-                onClick={() => {
-                  setResultError(null);
-                  window.history.replaceState({}, '', '/');
-                }}
+                onClick={handleGoHome}
                 className="block w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-colors"
               >
                 ホームに戻る
