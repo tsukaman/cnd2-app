@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, Sparkles, Heart, MessageCircle, Target, TrendingUp, Gift, Star, Share2 } from 'lucide-react';
+import { ArrowLeft, Users, Sparkles, Heart, MessageCircle, Target, TrendingUp, Gift, Star } from 'lucide-react';
 import Link from 'next/link';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import { DiagnosisResult } from '@/types';

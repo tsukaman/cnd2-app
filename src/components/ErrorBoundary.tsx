@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import Link from 'next/link';
 import { ErrorHandler, CND2Error } from '@/lib/errors';
+// Global type declarations are now in src/types/globals.d.ts
 
 interface Props {
   children: ReactNode;
@@ -47,8 +48,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
     // 本番環境では外部サービスにエラーを送信
     if (process.env.NODE_ENV === 'production') {
       // Send to Sentry if configured
-      if (typeof window !== 'undefined' && (window as any).Sentry) {
-        (window as any).Sentry.captureException(error, {
+      if (typeof window !== 'undefined' && window.Sentry) {
+        window.Sentry.captureException(error, {
           contexts: {
             react: {
               componentStack: errorInfo.componentStack,
