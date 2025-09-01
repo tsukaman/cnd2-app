@@ -31,7 +31,7 @@ export default function DuoV3Page() {
 
   // 診断結果が返ってきたら遷移
   if (result) {
-    localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
+    localStorage.setItem(`diagnosis-result-${result.id}`, JSON.stringify(result));
     router.push(`/?result=${result.id}&mode=duo`);
   }
 
