@@ -170,7 +170,7 @@ describe('API Client', () => {
         const result = await apiClient.results.get('test-123');
 
         expect(global.fetch).toHaveBeenCalledWith(
-          'https://test-api.example.com/api/results/test-123',
+          'https://test-api.example.com/api/results?id=test-123',
           expect.objectContaining({
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
@@ -232,7 +232,7 @@ describe('API Client', () => {
         const result = await apiClient.results.delete('test-123');
 
         expect(global.fetch).toHaveBeenCalledWith(
-          'https://test-api.example.com/api/results/test-123',
+          'https://test-api.example.com/api/results?id=test-123',
           expect.objectContaining({
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },

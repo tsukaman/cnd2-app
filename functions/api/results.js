@@ -32,25 +32,48 @@ export async function onRequestGet({ request, env }) {
       const data = await env.DIAGNOSIS_KV.get(key);
       
       if (data) {
-        const result = JSON.parse(data);
-        
-        return new Response(
-          JSON.stringify({
-            success: true,
-            result,
-            cache: {
-              hit: true,
-              source: 'kv',
-            },
-          }),
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Cache-Control': 'public, max-age=3600, s-maxage=7200',
-              ...corsHeaders,
-            },
+        try {
+          const result = JSON.parse(data);
+          
+          // データの基本的な検証
+          if (!result || typeof result !== 'object') {
+            throw new Error('Invalid result format');
           }
-        );
+          
+          return new Response(
+            JSON.stringify({
+              success: true,
+              result,
+              cache: {
+                hit: true,
+                source: 'kv',
+              },
+            }),
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'public, max-age=3600, s-maxage=7200',
+                ...corsHeaders,
+              },
+            }
+          );
+        } catch (parseError) {
+          console.error('Failed to parse KV data:', parseError, { id, dataLength: data?.length });
+          // 破損データの場合は404として扱う
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'Result data is corrupted' 
+            }),
+            {
+              status: 404,
+              headers: {
+                'Content-Type': 'application/json',
+                ...corsHeaders,
+              },
+            }
+          );
+        }
       }
     }
     
