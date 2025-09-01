@@ -5,12 +5,19 @@
 
 import { generateId } from '../utils/id.js';
 
+// Fallback configuration
+import { 
+  FALLBACK_CONFIG, 
+  isFallbackAllowed, 
+  getFallbackScoreRange, 
+  generateFallbackScore, 
+  getFallbackWarning 
+} from '../utils/fallback-config.js';
+
 // Configuration constants
 const CONFIG = {
   TEMPERATURE: 0.9,
   MAX_TOKENS: 2000,
-  FALLBACK_COMPATIBILITY_MIN: 70,
-  FALLBACK_COMPATIBILITY_MAX: 100,
   MODEL: 'gpt-4o-mini'
 };
 
@@ -89,10 +96,19 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   
   // OpenAI未設定時はフォールバック
   if (!openaiApiKey || openaiApiKey === 'your-openai-api-key-here') {
-    if (debugMode) {
-      console.log('[DEBUG] V4-OpenAI Engine - OpenAI API key not configured, using fallback');
+    const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+    
+    // 開発環境でフォールバックが無効の場合はエラーを投げる
+    if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
+      const error = new Error('OpenAI API key is not configured. Fallback is disabled in development.');
+      console.error('[V4-OpenAI Engine] ' + error.message);
+      throw error;
     }
-    return generateFallbackDiagnosis(profile1, profile2);
+    
+    if (debugMode || isDevelopment) {
+      console.warn('[V4-OpenAI Engine] WARNING: Using fallback diagnosis. OpenAI API key not configured.');
+    }
+    return generateFallbackDiagnosis(profile1, profile2, env);
   }
   
   try {
@@ -137,7 +153,14 @@ ${JSON.stringify(summary2, null, 2)}
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       console.error('[V4-OpenAI Engine] OpenAI API error:', error);
-      return generateFallbackDiagnosis(profile1, profile2);
+      const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+      
+      // 開発環境でフォールバックが無効の場合はエラーを投げる
+      if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
+        throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+      }
+      
+      return generateFallbackDiagnosis(profile1, profile2, env);
     }
     
     const data = await response.json();
@@ -163,16 +186,32 @@ ${JSON.stringify(summary2, null, 2)}
     
   } catch (error) {
     console.error('[V4-OpenAI Engine] Failed to generate diagnosis:', error);
-    return generateFallbackDiagnosis(profile1, profile2);
+    const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+    
+    // 開発環境でフォールバックが無効の場合はエラーを投げる
+    if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
+      throw error;
+    }
+    
+    return generateFallbackDiagnosis(profile1, profile2, env);
   }
 }
 
 /**
  * フォールバック診断（OpenAI利用不可時）
  */
-function generateFallbackDiagnosis(profile1, profile2) {
-  const compatibility = CONFIG.FALLBACK_COMPATIBILITY_MIN + 
-    Math.floor(Math.random() * (CONFIG.FALLBACK_COMPATIBILITY_MAX - CONFIG.FALLBACK_COMPATIBILITY_MIN));
+function generateFallbackDiagnosis(profile1, profile2, env) {
+  const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+  const scoreRange = isDevelopment 
+    ? FALLBACK_CONFIG.DEVELOPMENT_SCORE 
+    : FALLBACK_CONFIG.PRODUCTION_SCORE;
+  
+  const compatibility = Math.floor(Math.random() * scoreRange.RANGE) + scoreRange.MIN;
+  
+  // 開発環境で警告をログ出力
+  if (isDevelopment) {
+    console.warn(FALLBACK_CONFIG.WARNING_MESSAGE.DEVELOPMENT);
+  }
   const name1 = profile1.basic?.name || profile1.name || 'エンジニア1';
   const name2 = profile2.basic?.name || profile2.name || 'エンジニア2';
   
@@ -192,12 +231,15 @@ function generateFallbackDiagnosis(profile1, profile2) {
     '🎮 オンラインゲームでチームビルディング'
   ];
   
+  // 開発環境では型を明確にフォールバックとわかるようにする
+  const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
+  
   return {
-    id: generateId(),
+    id: isDevelopment ? `${FALLBACK_CONFIG.ID_PREFIX}${generateId()}` : generateId(),
     mode: 'duo',
-    type: compatibility >= 90 ? '運命のCloud Nativeパートナー' : 
+    type: typePrefix + (compatibility >= 90 ? '運命のCloud Nativeパートナー' : 
           compatibility >= 80 ? 'Container Orchestrationの調和' : 
-          'DevOps Journeyの同志',
+          'DevOps Journeyの同志'),
     compatibility,
     summary: `${name1}さんと${name2}さんの技術的な波動が共鳴しています。`,
     astrologicalAnalysis: `二人のエンジニアリング・エナジーが美しく調和し、まさに分散システムのように補完し合っています。`,
@@ -222,6 +264,8 @@ function generateFallbackDiagnosis(profile1, profile2) {
     luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
     participants: [profile1, profile2],
     createdAt: new Date().toISOString(),
-    aiPowered: false
+    aiPowered: false,
+    ...(isDevelopment ? { metadata: FALLBACK_CONFIG.METADATA } : {}),
+    ...(isDevelopment ? { warning: FALLBACK_CONFIG.WARNING_MESSAGE.DEVELOPMENT } : {})
   };
 }

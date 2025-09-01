@@ -260,6 +260,13 @@ DEBUG_MODE=true
 - **URL**: https://cnd2.cloudnativedays.jp （※開発完了後に設定）
 - **カスタムドメイン**: 開発完了後にCloudflareで設定
 
+## 📚 ドキュメント
+
+- [開発ガイドライン](./CLAUDE.md) - 開発ワークフロー、コード規約
+- [変更履歴](./CHANGELOG.md) - バージョン履歴と変更内容
+- [環境変数設定ガイド](./docs/ENVIRONMENT_VARIABLES.md) - すべての環境変数の詳細説明
+- [イベント運用ガイド](./docs/EVENT_OPERATION_GUIDE.md) - CloudNative Days Winter 2025運用手順
+
 ## 🏗️ アーキテクチャ
 
 ### ディレクトリ構造
