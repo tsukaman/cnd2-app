@@ -4,6 +4,7 @@
  */
 
 import { generateId } from '../utils/id.js';
+import { CNCF_PROJECTS } from '../utils/cncf-projects.js';
 
 // Fallback configuration
 import { 
@@ -21,33 +22,94 @@ const CONFIG = {
   MODEL: 'gpt-4o-mini'
 };
 
-const ASTROLOGY_SYSTEM_PROMPT = `あなたは「Cloud Native占星術師」です。
-エンジニアのプロフィールから、占星術的な表現を使って技術的な相性を診断します。
+const ASTROLOGY_SYSTEM_PROMPT = `あなたは「クラウドネイティブの賢者」です。相性スコアは0-100点の全範囲で出力してください。
 
-診断結果は以下のJSON形式で返してください：
+最重要：低いスコアでも必ずポジティブで楽しい診断にしてください！
+- 0-20点: 「奇跡のレアケース！」「話題作りに最高！」「伝説に残る低スコア！」
+- 20-40点: 「チャレンジングでワクワク！」「成長の余地が無限大！」
+- 40-60点: 「これからが本番！」「可能性に満ちている！」
+- 60-80点: 「バランスの良い関係！」「相性良好！」
+- 80-100点: 「最高の相性！」「運命的な出会い！」
+
+診断はエンターテイメントとして楽しく、前向きなメッセージを必ず含めてください。
+
+以下の要素を総合的に評価して、0-100点の相性スコアを算出してください：
+
+＜技術的相性（最大35点）＞
+- 共通スキル5個以上: +30-35点「奇跡的な技術スタック一致！」
+- 共通スキル3-4個: +20-30点「高度な技術的共鳴」
+- 共通スキル1-2個: +10-20点「基本的な技術理解の共有」
+- 共通スキル0個: +0-10点「新しい学びの機会！」
+- 補完的スキル（フロント/バック等）: +5点ボーナス
+
+＜コミュニケーション相性（最大25点）＞
+- 両者活発型: +20-25点「賑やかで楽しい関係！」
+- 片方リード型: +15-20点「バランスの良い対話」
+- 静かな関係: +5-15点「落ち着いた深い繋がり」
+- OSS/コミュニティ活動: +5点ボーナス
+
+＜価値観の一致（最大20点）＞
+- 共通の趣味/興味3個以上: +15-20点「運命的な共通点！」
+- 共通の趣味/興味1-2個: +10-15点「楽しい発見がある」
+- 異なる趣味: +5-10点「お互いの世界が広がる！」
+
+＜成長の可能性（最大20点）＞
+- 相互補完的なスキル: +15-20点「最高の学習パートナー」
+- 経験レベルの違い: +10-15点「メンタリングの機会」
+- 同レベル: +5-10点「切磋琢磨できる関係」
+
+必ず以下のJSON形式で出力してください：
 {
-  "type": "診断タイプ名（例：運命のCloud Nativeパートナー）",
-  "compatibility": 相性スコア（70-100の整数）,
-  "summary": "診断結果のサマリー（150文字程度、占星術的で詩的な表現を使用）",
-  "astrologicalAnalysis": "占星術的分析（技術を「エナジー」として表現、250-300文字程度）",
-  "techStackCompatibility": "技術スタック相性分析（具体的な技術の相性、200文字程度）",
-  "conversationTopics": ["会話トピック1", "会話トピック2", "...最大7個"],
-  "strengths": ["強み1", "強み2", "強み3"],
-  "opportunities": ["機会1", "機会2", "機会3"],
-  "advice": "アドバイス（150文字程度、具体的で実践的な内容）",
-  "luckyItem": "ラッキーアイテム（エンジニアに関連するもの、絵文字付き）",
-  "luckyAction": "ラッキーアクション（一緒にできる技術的な活動、絵文字付き）"
-}
-
-重要な指示：
-- 相性スコアは必ず70以上にして、ポジティブな体験にする
-- 技術を「エナジー」「波動」「星回り」「宇宙の配置」などの占星術的な表現で豊かに表現
-- Container Orchestration、分散システム、マイクロサービスなどの技術用語を占星術的にクリエイティブに表現
-- 両者の技術スタック、経験、興味を深く分析し、具体的な相性を導き出す
-- conversationTopicsは実際の会話のきっかけになるような具体的で興味深い内容にする
-- ラッキーアイテムはエンジニアが共感できるもの（ラバーダック、メカニカルキーボード、Vimステッカー等）
-- ラッキーアクションは実際にできる技術活動（ハッカソン参加、OSS貢献、ペアプロ等）
-- 診断全体を通して、エンターテイメント性と実用性のバランスを保つ`;
+  "diagnosis": {
+    "type": "診断タイプ名（クラウドネイティブ型、エンジニア型など）",
+    "score": スコア（0-100の数値、必ず分布させる）,
+    "message": "総合的な診断結果（ポジティブで楽しい内容、特に低スコアの場合は必ず前向きに）",
+    "conversationStarters": [
+      "2人のプロフィールから導き出される、最も盛り上がりそうな具体的な話題を5つ",
+      "技術系、キャリア系、趣味系、日常系、イベント系など幅広いカテゴリーから",
+      "固定的な質問ではなく、2人の共通点や違いから生まれる独自の話題を生成",
+      "例：もし2人ともPythonが得意なら『Pythonの型ヒントについてどう思う？』",
+      "例：片方がフロントエンド、もう片方がバックエンドなら『APIデザインで重視することは？』"
+    ],
+    "hiddenGems": "意外な共通点や発見（前向きで実践的な内容）",
+    "shareTag": "#CND2診断",
+    "luckyItem": "2人のプロフィールや相性から導き出される独自のラッキーアイテムを自由に生成（エンジニアに限定せず、日用品、食べ物、趣味のもの、文房具、本、音楽など何でもOK。創造的で面白いものを）",
+    "luckyAction": "2人の相性や特徴から導き出される独自のラッキーアクションを自由に生成（技術活動に限定せず、日常の行動、趣味、運動、食事、コミュニケーション、学習など何でもOK。実践しやすく楽しいものを）",
+    "luckyProject": "CNCFプロジェクトから1つ選択して、なぜそれが2人にとってラッキーなのか短い説明付きで（プロジェクト名は正確に）",
+    "metadata": {
+      "participant1": "1人目の名前",
+      "participant2": "2人目の名前",
+      "calculatedScore": {
+        "technical": 技術的相性スコア,
+        "communication": コミュニケーションスコア,
+        "values": 価値観スコア,
+        "growth": 成長可能性スコア
+      }
+    }
+  },
+  "extracted_profiles": {
+    "person1": {
+      "name": "1人目の名前",
+      "title": "肩書き",
+      "company": "会社名",
+      "skills": ["スキル1", "スキル2"],
+      "interests": ["興味1", "興味2"],
+      "summary": "プロフィール要約"
+    },
+    "person2": {
+      "name": "2人目の名前",
+      "title": "肩書き",
+      "company": "会社名",
+      "skills": ["スキル1", "スキル2"],
+      "interests": ["興味1", "興味2"],
+      "summary": "プロフィール要約"
+    }
+  },
+  "analysis": {
+    "astrologicalAnalysis": "運勢的な観点からの分析",
+    "techStackCompatibility": "技術スタックの互換性分析"
+  }
+}`;
 
 /**
  * 占星術的な診断結果の生成（OpenAI使用）
@@ -116,15 +178,21 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
     const summary1 = summarizeProfile(profile1);
     const summary2 = summarizeProfile(profile2);
     
-    const prompt = `以下の2人のエンジニアの相性を占星術的に診断してください。
+    // CNCFプロジェクトリストをプロンプトに含める
+    const cncfProjectsList = CNCF_PROJECTS.join(', ');
+    
+    const prompt = `以下の2人のプロフィールから相性を診断してください。
 
-エンジニア1:
+＜1人目のプロフィール＞
 ${JSON.stringify(summary1, null, 2)}
 
-エンジニア2:
+＜2人目のプロフィール＞
 ${JSON.stringify(summary2, null, 2)}
 
-二人の技術的な「エナジー」の調和、補完関係、そして運命的な出会いの可能性を評価してください。`;
+＜利用可能なCNCFプロジェクト＞
+${cncfProjectsList}
+
+上記のCNCFプロジェクトから、2人にとって最もラッキーなプロジェクトを1つ選んでください。`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -175,13 +243,30 @@ ${JSON.stringify(summary2, null, 2)}
       });
     }
     
+    // レスポンスを新しい形式に変換
+    const { diagnosis, extracted_profiles, analysis } = result;
+    
     return {
       id: generateId(),
       mode: 'duo',
-      ...result,
+      type: diagnosis?.type || '運命のCloud Nativeパートナー',
+      compatibility: diagnosis?.score || 85,
+      summary: diagnosis?.message || '',
+      conversationStarters: diagnosis?.conversationStarters || [],
+      hiddenGems: diagnosis?.hiddenGems || '',
+      shareTag: diagnosis?.shareTag || '#CND2診断',
+      luckyItem: diagnosis?.luckyItem || '',
+      luckyAction: diagnosis?.luckyAction || '',
+      luckyProject: diagnosis?.luckyProject || '',
+      astrologicalAnalysis: analysis?.astrologicalAnalysis || '',
+      techStackCompatibility: analysis?.techStackCompatibility || '',
+      strengths: [],
+      opportunities: [],
+      advice: '',
       participants: [profile1, profile2],
       createdAt: new Date().toISOString(),
-      aiPowered: true
+      aiPowered: true,
+      metadata: diagnosis?.metadata || {}
     };
     
   } catch (error) {

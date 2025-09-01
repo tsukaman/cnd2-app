@@ -4,6 +4,7 @@
  */
 
 import { generateId } from '../utils/id.js';
+import { getRandomCNCFProject } from '../utils/cncf-projects.js';
 
 /**
  * 占星術的な診断結果の生成
@@ -35,6 +36,9 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   const compatibility = calculateCompatibility(profile1, profile2);
   const type = generateDiagnosisType(compatibility);
   
+  const conversationTopics = generateConversationTopics(profile1, profile2);
+  const luckyProject = getRandomCNCFProject();
+  
   const result = {
     id: generateId(),
     mode: 'duo',
@@ -43,12 +47,14 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
     summary: generateSummary(profile1, profile2, compatibility),
     astrologicalAnalysis: generateAstrologicalAnalysis(profile1, profile2),
     techStackCompatibility: generateTechStackAnalysis(profile1, profile2),
-    conversationTopics: generateConversationTopics(profile1, profile2),
+    conversationTopics,
+    conversationStarters: conversationTopics.slice(0, 5), // 最初の5個を基本質問として使用
     strengths: generateStrengths(profile1, profile2),
     opportunities: generateOpportunities(profile1, profile2),
     advice: generateAdvice(profile1, profile2),
     luckyItem: generateLuckyItem(profile1, profile2),
     luckyAction: generateLuckyAction(profile1, profile2),
+    luckyProject: `${luckyProject}: 2人の技術的なシナジーを最大化するプロジェクト`,
     participants: [profile1, profile2],
     createdAt: new Date().toISOString(),
     aiPowered: false, // V4はルールベースエンジン
