@@ -502,6 +502,20 @@ try {
      - OGP対応（metadata export）
      - レースコンディション考慮事項追加
 
+### 2025-09-01の変更（その3）
+1. **Dependabot PRの対応** 🔧
+   - **PR #124（本番依存関係）**: クローズ
+     - Zod v4へのアップデートがOpenAI SDK v5.16.0と非互換
+     - OpenAI SDKはpeer dependencyとしてZod v3を要求
+     - npm installがERESOLVEエラーで失敗
+     - OpenAI SDKがZod v4対応するまで保留
+   - **PR #126（開発依存関係）**: マージ済み
+     - @types/node: 22.5.4 → 22.5.5
+     - @types/react: 18.3.5 → 18.3.11
+     - eslint-config-next: 14.2.8 → 14.2.13
+     - typescript: 5.5.4 → 5.6.2
+     - 本番環境への影響なし、安全な更新
+
 ### 2025-09-01の変更（その2）
 1. **診断システムの多様性向上** ✅（PR #123）
    - **LLMによる自由生成**
