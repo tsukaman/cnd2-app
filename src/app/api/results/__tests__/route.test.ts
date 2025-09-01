@@ -34,7 +34,7 @@ describe('Results API', () => {
   describe('GET /api/results/[id]', () => {
     it('開発環境でモック結果を返す', async () => {
       const request = new NextRequest('http://localhost:3000/api/results/test-id');
-      const params = { id: 'test-id' };
+      const params = Promise.resolve({ id: 'test-id' });
 
       const response = await GET(request, { params });
       const data = await response.json();
@@ -49,7 +49,7 @@ describe('Results API', () => {
 
     it('IDが指定されていない場合エラーを返す', async () => {
       const request = new NextRequest('http://localhost:3000/api/results/');
-      const params = { id: '' };
+      const params = Promise.resolve({ id: '' });
 
       const response = await GET(request, { params });
       const data = await response.json();
@@ -88,7 +88,7 @@ describe('Results API', () => {
           .mockResolvedValueOnce(mockResult); // 実際の結果
 
         const request = new NextRequest('http://localhost:3000/api/results/prod-test-id');
-        const params = { id: 'prod-test-id' };
+        const params = Promise.resolve({ id: 'prod-test-id' });
 
         const response = await GET(request, { params });
         const data = await response.json();
@@ -105,7 +105,7 @@ describe('Results API', () => {
         mockKVGet.mockResolvedValueOnce('30'); // 制限値に達している
 
         const request = new NextRequest('http://localhost:3000/api/results/rate-limit-test');
-        const params = { id: 'rate-limit-test' };
+        const params = Promise.resolve({ id: 'rate-limit-test' });
 
         const response = await GET(request, { params });
         const data = await response.json();
@@ -121,7 +121,7 @@ describe('Results API', () => {
           .mockResolvedValueOnce(null); // 結果が存在しない
 
         const request = new NextRequest('http://localhost:3000/api/results/not-found');
-        const params = { id: 'not-found' };
+        const params = Promise.resolve({ id: 'not-found' });
 
         const response = await GET(request, { params });
         const data = await response.json();
@@ -137,7 +137,7 @@ describe('Results API', () => {
           .mockRejectedValueOnce(new Error('KV storage error')); // 結果取得でエラー
 
         const request = new NextRequest('http://localhost:3000/api/results/error-id');
-        const params = { id: 'error-id' };
+        const params = Promise.resolve({ id: 'error-id' });
 
         const response = await GET(request, { params });
         const data = await response.json();
@@ -171,7 +171,7 @@ describe('Results API', () => {
 
       it('503エラーを返す', async () => {
         const request = new NextRequest('http://localhost:3000/api/results/test-id');
-        const params = { id: 'test-id' };
+        const params = Promise.resolve({ id: 'test-id' });
 
         const response = await GET(request, { params });
         const data = await response.json();
