@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import QRCode from "qrcode";
 import { X, Download, Share2 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -47,7 +48,7 @@ export function QRCodeModal({ isOpen, onClose, resultId, score }: QRCodeModalPro
           files: [file],
         });
       } catch (error) {
-        console.error("Share failed:", error);
+        logger.error("[QRCodeModal] Share failed:", error);
       }
     }
   };

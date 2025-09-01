@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import { DiagnosisResult } from '@/types';
 import ShareButton from '@/components/share/ShareButton';
+import { logger } from '@/lib/logger';
 import dynamic from 'next/dynamic';
 
 const Confetti = dynamic(() => import('react-confetti').then(mod => mod.default), { ssr: false });
@@ -63,7 +64,7 @@ export default function ResultsPage() {
           router.push('/duo');
         }
       } catch (error) {
-        console.error('Failed to load result from KV:', error);
+        logger.error('[Results] Failed to load result from KV:', error);
         router.push('/duo');
       }
       setLoading(false);

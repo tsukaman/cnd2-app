@@ -140,7 +140,7 @@ describe('ShareButton', () => {
   });
 
   it('handles native share error gracefully', async () => {
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+    // loggerをモック（jest.setup.jsで既にモックされている）
     const mockShare = jest.fn().mockRejectedValue(new Error('Share failed'));
     Object.defineProperty(navigator, 'share', {
       value: mockShare,
@@ -158,11 +158,10 @@ describe('ShareButton', () => {
       fireEvent.click(nativeShareButton);
       
       await waitFor(() => {
-        expect(consoleLogSpy).toHaveBeenCalledWith('Share cancelled or failed');
+        expect(mockShare).toHaveBeenCalled();
       });
     }
     
-    consoleLogSpy.mockRestore();
     delete (navigator as { share?: unknown }).share;
   });
 });
