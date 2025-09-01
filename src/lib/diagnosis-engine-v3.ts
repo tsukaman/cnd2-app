@@ -5,12 +5,14 @@
 
 import OpenAI from 'openai';
 import { DiagnosisResult, PrairieProfile } from '@/types';
+import { AIResponse } from '@/types/ai-response';
 import { nanoid } from 'nanoid';
 import { DiagnosisCache } from './diagnosis-cache';
 import { PrairieProfileExtractor } from './prairie-profile-extractor';
 import { DIAGNOSIS_PROMPTS } from './prompts/diagnosis-prompts';
 import { HTML_SIZE_LIMIT, SCORE_DISTRIBUTION, TIMEOUTS } from './constants/scoring';
 import { getRandomCNCFProject, getRandomLuckyItem, getRandomLuckyAction } from './constants/cncf-projects';
+import { parseLuckyProject } from './utils/lucky-project-parser';
 
 // 定数定義
 const REGEX_MAX_LENGTH = 500;
@@ -245,7 +247,7 @@ export class SimplifiedDiagnosisEngine {
         throw new Error('AI応答が空でした');
       }
 
-      const aiResult = JSON.parse(content);
+      const aiResult: AIResponse = JSON.parse(content);
       
       // AIが生成したラッキーアイテム/アクション/プロジェクトをそのまま使用
       // （LLMが自由に生成するため、多様性が保証される）
@@ -253,17 +255,13 @@ export class SimplifiedDiagnosisEngine {
       const luckyAction = aiResult.diagnosis.luckyAction || getRandomLuckyAction();
       const luckyProjectInfo = aiResult.diagnosis.luckyProject;
       
-      // luckyProjectの処理
+      // luckyProjectの処理（共通関数を使用）
       let luckyProject = '';
       let luckyProjectDescription = '';
       if (luckyProjectInfo) {
-        if (luckyProjectInfo.includes(' - ')) {
-          const [projectName, ...descParts] = luckyProjectInfo.split(' - ');
-          luckyProject = projectName.trim();
-          luckyProjectDescription = descParts.join(' - ').trim();
-        } else {
-          luckyProject = luckyProjectInfo;
-        }
+        const parsed = parseLuckyProject(luckyProjectInfo);
+        luckyProject = parsed.name;
+        luckyProjectDescription = parsed.description;
       } else {
         // フォールバック：CNCFプロジェクトをランダムに選択
         const randomProject = getRandomCNCFProject();
@@ -379,7 +377,7 @@ export class SimplifiedDiagnosisEngine {
   /**
    * AIの結果から強みを抽出
    */
-  private extractStrengths(aiResult: any): string[] {
+  private extractStrengths(aiResult: AIResponse): string[] {
     // まず診断結果に直接strengths配列があるか確認
     if (aiResult.diagnosis?.strengths && Array.isArray(aiResult.diagnosis.strengths)) {
       return aiResult.diagnosis.strengths;
@@ -426,7 +424,7 @@ export class SimplifiedDiagnosisEngine {
   /**
    * AIの結果から改善機会を抽出
    */
-  private extractOpportunities(aiResult: any): string[] {
+  private extractOpportunities(aiResult: AIResponse): string[] {
     // まず診断結果に直接opportunities配列があるか確認
     if (aiResult.diagnosis?.opportunities && Array.isArray(aiResult.diagnosis.opportunities)) {
       return aiResult.diagnosis.opportunities;

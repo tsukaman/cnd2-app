@@ -5,6 +5,7 @@
  */
 
 import { PrairieProfile, DiagnosisResult, FortuneTelling } from '@/types';
+import { UnifiedAIResponse } from '@/types/ai-response';
 import { logger } from '@/lib/logger';
 import { 
   isFallbackAllowed, 
@@ -18,6 +19,7 @@ import {
   getRandomLuckyItem, 
   getRandomLuckyAction 
 } from '@/lib/constants/cncf-projects';
+import { parseLuckyProject } from '@/lib/utils/lucky-project-parser';
 
 /**
  * 診断スタイル
@@ -206,7 +208,7 @@ export class UnifiedDiagnosisEngine {
       }
       
       // JSON.parseのエラーハンドリング
-      let result;
+      let result: UnifiedAIResponse;
       try {
         result = JSON.parse(data.choices[0].message.content);
       } catch (parseError) {
@@ -214,12 +216,12 @@ export class UnifiedDiagnosisEngine {
         return this.generateDynamicFallback(profile1, profile2, style, enableFortuneTelling);
       }
 
-      // luckyProjectがある場合は分解
+      // luckyProjectがある場合は分解（共通関数を使用）
       let processedResult = { ...result };
-      if (result.luckyProject && result.luckyProject.includes(' - ')) {
-        const [projectName, description] = result.luckyProject.split(' - ');
-        processedResult.luckyProject = projectName.trim();
-        processedResult.luckyProjectDescription = description?.trim();
+      if (result.luckyProject) {
+        const { name, description } = parseLuckyProject(result.luckyProject);
+        processedResult.luckyProject = name;
+        processedResult.luckyProjectDescription = description;
       }
 
       return {
@@ -292,7 +294,7 @@ export class UnifiedDiagnosisEngine {
       }
       
       // JSON.parseのエラーハンドリング
-      let result;
+      let result: UnifiedAIResponse;
       try {
         result = JSON.parse(data.choices[0].message.content);
       } catch (parseError) {
@@ -300,12 +302,12 @@ export class UnifiedDiagnosisEngine {
         return this.generateGroupFallback(profiles, style, enableFortuneTelling);
       }
 
-      // luckyProjectがある場合は分解
+      // luckyProjectがある場合は分解（共通関数を使用）
       let processedResult = { ...result };
-      if (result.luckyProject && result.luckyProject.includes(' - ')) {
-        const [projectName, description] = result.luckyProject.split(' - ');
-        processedResult.luckyProject = projectName.trim();
-        processedResult.luckyProjectDescription = description?.trim();
+      if (result.luckyProject) {
+        const { name, description } = parseLuckyProject(result.luckyProject);
+        processedResult.luckyProject = name;
+        processedResult.luckyProjectDescription = description;
       }
 
       return {

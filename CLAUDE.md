@@ -502,7 +502,22 @@ try {
      - OGP対応（metadata export）
      - レースコンディション考慮事項追加
 
-### 2025-09-01の変更（その他）
+### 2025-09-01の変更（その2）
+1. **診断システムの多様性向上** ✅（PR #123）
+   - **LLMによる自由生成**
+     - 診断タイプ名、会話トピック、ラッキーアイテムなど全項目を自由生成
+     - 固定リストからの選択を廃止（フォールバック時のみ使用）
+   - **会話機能の強化**
+     - `conversationStarters`フィールド追加（5つの基本質問）
+     - `conversationTopics`改善（最大10個、多様なカテゴリー）
+   - **CNCFプロジェクト機能**
+     - 207個のCNCFプロジェクトリスト実装
+     - Graduated/Incubating/Sandboxすべて網羅
+   - **改善実装**
+     - luckyProjectパーサーの共通関数化（`utils/lucky-project-parser.ts`）
+     - AIレスポンス用の型定義追加（`types/ai-response.ts`）
+     - any型の除去による型安全性向上
+
 2. **localStorage キー不一致バグの緊急修正** 🚨
    - **問題**: 診断結果が「読み込み中...」で無限待機
    - **原因**: 保存時と読込時でキーパターンが異なる
@@ -643,13 +658,9 @@ PR #119のレビューで指摘された軽微な改善：
     private promptBuilder: PromptBuilder;
   }
   ```
-- [ ] **型安全性の向上**
-  ```typescript
-  interface AnalysisMetadata {
-    astrologicalAnalysis?: string;
-    techStackCompatibility?: string;
-  }
-  ```
+- [x] **型安全性の向上** ✅ PR #123で実装済み
+  - AIレスポンス用の型定義を`types/ai-response.ts`に追加
+  - any型を除去し、適切な型定義を使用
 - [ ] **Results画面のテスト追加**
   - スコア別カラーリングのテスト
   - 紙吹雪エフェクトの表示テスト
