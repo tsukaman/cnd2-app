@@ -7,11 +7,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
-import { MultiStyleSelector } from '@/components/diagnosis/MultiStyleSelector';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
-import { MULTI_STYLE_RETRY_CONFIG, ANIMATION_DURATIONS } from '@/lib/constants/diagnosis';
+import { MULTI_STYLE_RETRY_CONFIG, ANIMATION_DURATIONS, DIAGNOSIS_STYLES } from '@/lib/constants/diagnosis';
 import type { PrairieProfile } from '@/types';
 import type { DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
 
@@ -20,8 +19,8 @@ export default function DuoPage() {
   const [currentStep, setCurrentStep] = useState<'first' | 'second' | 'ready'>('first');
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [multiStyleMode, setMultiStyleMode] = useState(false);
-  const [selectedStyles, setSelectedStyles] = useState<DiagnosisStyle[]>(['creative']);
+  // 常に全スタイルで診断を実行
+  const allStyles = [...DIAGNOSIS_STYLES] as DiagnosisStyle[];
   const { loading: parsingLoading, error: parseError } = usePrairieCard();
   const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
 
@@ -55,8 +54,7 @@ export default function DuoPage() {
 
   const handleStartDiagnosis = async () => {
     if (profiles[0] && profiles[1]) {
-      if (multiStyleMode && selectedStyles.length > 0) {
-        // 複数スタイル診断モード with retry mechanism
+      // 常に全4スタイルで診断を実行 with retry mechanism
         let lastError: Error | null = null;
         
         for (let attempt = 1; attempt <= MULTI_STYLE_RETRY_CONFIG.MAX_ATTEMPTS; attempt++) {
@@ -67,7 +65,7 @@ export default function DuoPage() {
               body: JSON.stringify({
                 profiles: [profiles[0], profiles[1]],
                 mode: 'duo',
-                styles: selectedStyles
+                styles: allStyles
               })
             });
 
@@ -95,45 +93,10 @@ export default function DuoPage() {
           }
         }
         
-        // All attempts failed
-        console.error('Multi-style diagnosis failed after 3 attempts:', lastError);
-        alert('診断の生成に失敗しました。もう一度お試しください。');
-      } else {
-        // 通常の診断モード
-        const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
-        if (result) {
-          // LocalStorageに保存
-          localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
-          
-          // KVにも保存（非同期、リトライ付き）
-          const saveToKV = async () => {
-            for (let i = 0; i < RETRY_CONFIG.maxRetries; i++) {
-              try {
-                const response = await fetch(`/api/results/${result.id}`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(result),
-                });
-                if (response.ok) {
-                  console.log('[Duo] Successfully saved to KV');
-                  return;
-                }
-                console.warn(`[Duo] KV save attempt ${i + 1} failed:`, response.status);
-              } catch (err) {
-                console.warn(`[Duo] KV save attempt ${i + 1} error:`, err);
-              }
-              // Wait before retry (exponential backoff)
-              if (i < RETRY_CONFIG.maxRetries - 1) {
-                await new Promise(resolve => setTimeout(resolve, calculateBackoffDelay(i)));
-              }
-            }
-            console.error('[Duo] Failed to save to KV after all retries');
-          };
-          saveToKV();
-          
-          router.push(`/?result=${result.id}&mode=duo`);
-        }
-      }
+      // All attempts failed
+      console.error('Multi-style diagnosis failed after 3 attempts:', lastError);
+      // TODO: Toast通知やエラーコンポーネントへの置き換えを検討
+      alert('診断の生成に失敗しました。もう一度お試しください。');
     }
   };
 
@@ -150,8 +113,6 @@ export default function DuoPage() {
   const handleReset = () => {
     setProfiles([null, null]);
     setCurrentStep('first');
-    setMultiStyleMode(false);
-    setSelectedStyles(['creative']);
   };
 
   return (
@@ -375,30 +336,31 @@ export default function DuoPage() {
                     </div>
                   </div>
                   
-                  <p className="text-gray-400 mb-8">
-                    2人の相性を診断します
+                  <p className="text-gray-400 mb-6">
+                    2人の相性を4つのスタイルで診断します
                   </p>
                   
-                  {/* 複数スタイル診断モード切り替え */}
-                  <div className="mb-6">
-                    <button
-                      onClick={() => setMultiStyleMode(!multiStyleMode)}
-                      className="inline-flex items-center px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg transition-colors border border-purple-500/30"
-                    >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      {multiStyleMode ? '通常診断に戻る' : '複数スタイルで診断'}
-                    </button>
-                  </div>
-
-                  {/* 複数スタイル選択UI */}
-                  {multiStyleMode && (
-                    <div className="mb-8">
-                      <MultiStyleSelector
-                        selectedStyles={selectedStyles}
-                        onStylesChange={setSelectedStyles}
-                      />
+                  {/* 診断スタイル一覧 */}
+                  <div className="mb-8">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-purple-600/20 rounded-lg p-3 border border-purple-500/30">
+                        <span className="text-2xl mb-1 block">🎨</span>
+                        <span className="text-xs text-purple-400">クリエイティブ</span>
+                      </div>
+                      <div className="bg-blue-600/20 rounded-lg p-3 border border-blue-500/30">
+                        <span className="text-2xl mb-1 block">⭐</span>
+                        <span className="text-xs text-blue-400">占星術</span>
+                      </div>
+                      <div className="bg-pink-600/20 rounded-lg p-3 border border-pink-500/30">
+                        <span className="text-2xl mb-1 block">🔮</span>
+                        <span className="text-xs text-pink-400">点取り占い</span>
+                      </div>
+                      <div className="bg-green-600/20 rounded-lg p-3 border border-green-500/30">
+                        <span className="text-2xl mb-1 block">📊</span>
+                        <span className="text-xs text-green-400">技術分析</span>
+                      </div>
                     </div>
-                  )}
+                  </div>
                   
                   <div className="flex justify-center space-x-4">
                     <button
@@ -409,21 +371,18 @@ export default function DuoPage() {
                     </button>
                     <button
                       onClick={handleStartDiagnosis}
-                      disabled={diagnosisLoading || (multiStyleMode && selectedStyles.length === 0)}
+                      disabled={diagnosisLoading}
                       className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl font-bold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                     >
                       {diagnosisLoading ? (
                         <>
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          診断中...
+                          4つのスタイルで診断中...
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-5 h-5 mr-2" />
-                          {multiStyleMode && selectedStyles.length > 1 
-                            ? `${selectedStyles.length}スタイルで診断` 
-                            : '診断開始'
-                          }
+                          4つのスタイルで診断開始
                         </>
                       )}
                     </button>
