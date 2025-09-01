@@ -6,6 +6,21 @@ import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import Link from 'next/link';
 import { ErrorHandler, CND2Error } from '@/lib/errors';
 
+// Sentry type declaration
+declare global {
+  interface Window {
+    Sentry?: {
+      captureException: (error: Error, context?: {
+        contexts?: {
+          react?: {
+            componentStack?: string;
+          };
+        };
+      }) => void;
+    };
+  }
+}
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -47,8 +62,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
     // 本番環境では外部サービスにエラーを送信
     if (process.env.NODE_ENV === 'production') {
       // Send to Sentry if configured
-      if (typeof window !== 'undefined' && (window as any).Sentry) {
-        (window as any).Sentry.captureException(error, {
+      if (typeof window !== 'undefined' && window.Sentry) {
+        window.Sentry.captureException(error, {
           contexts: {
             react: {
               componentStack: errorInfo.componentStack,

@@ -21,7 +21,7 @@ const localStorageMock = {
   removeItem: jest.fn(),
   clear: jest.fn(),
 };
-global.localStorage = localStorageMock as any;
+global.localStorage = localStorageMock as Storage;
 
 // コンポーネントモック
 jest.mock('@/components/effects/BackgroundEffects', () => ({
@@ -33,7 +33,7 @@ jest.mock('@/components/effects/CloudAnimation', () => ({
 }));
 
 jest.mock('@/components/ui/MenuCard', () => ({
-  MenuCard: ({ title, href }: any) => <a href={href} data-testid="menu-card">{title}</a>,
+  MenuCard: ({ title, href }: { title: string; href: string }) => <a href={href} data-testid="menu-card">{title}</a>,
 }));
 
 jest.mock('@/components/ui/ConsentDialog', () => ({
