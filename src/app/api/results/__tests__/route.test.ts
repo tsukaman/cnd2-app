@@ -16,6 +16,15 @@ describe('Results API', () => {
     jest.clearAllMocks();
     // デフォルトは開発環境
     process.env.NODE_ENV = 'development';
+    // KVモックをリセット
+    mockKVGet.mockReset();
+    global.DIAGNOSIS_KV = {
+      get: mockKVGet,
+      put: jest.fn(),
+      delete: jest.fn(),
+      list: jest.fn(),
+      getWithMetadata: jest.fn(),
+    } as any;
   });
 
   describe('GET /api/results/[id]', () => {
@@ -51,7 +60,7 @@ describe('Results API', () => {
         process.env.NODE_ENV = 'production';
       });
 
-      it('KVから結果を取得して返す', async () => {
+      it('KVから結果を取得して返す（レート制限内）', async () => {
         const mockResult = {
           id: 'prod-test-id',
           mode: 'duo',
@@ -65,7 +74,10 @@ describe('Results API', () => {
           createdAt: new Date().toISOString(),
         };
 
-        mockKVGet.mockResolvedValueOnce(mockResult);
+        // レート制限チェックと結果取得
+        mockKVGet
+          .mockResolvedValueOnce(null) // レート制限チェック（カウントなし）
+          .mockResolvedValueOnce(mockResult); // 実際の結果
 
         const request = new NextRequest('http://localhost:3000/api/results/prod-test-id');
         const params = { id: 'prod-test-id' };
@@ -76,11 +88,29 @@ describe('Results API', () => {
         expect(response.status).toBe(200);
         expect(data.success).toBe(true);
         expect(data.data.result).toEqual(mockResult);
-        expect(mockKVGet).toHaveBeenCalledWith('prod-test-id', 'json');
+        // キャッシュヘッダーの確認
+        expect(response.headers.get('Cache-Control')).toBe('public, max-age=3600, s-maxage=7200');
+      });
+
+      it('レート制限を超えた場合429を返す', async () => {
+        // レート制限を超過
+        mockKVGet.mockResolvedValueOnce('30'); // 制限値に達している
+
+        const request = new NextRequest('http://localhost:3000/api/results/rate-limit-test');
+        const params = { id: 'rate-limit-test' };
+
+        const response = await GET(request, { params });
+        const data = await response.json();
+
+        expect(response.status).toBe(429);
+        expect(data.success).toBe(false);
+        expect(data.error).toContain('リクエスト数が制限を超えています');
       });
 
       it('KVに結果が存在しない場合404を返す', async () => {
-        mockKVGet.mockResolvedValueOnce(null);
+        mockKVGet
+          .mockResolvedValueOnce(null) // レート制限チェック
+          .mockResolvedValueOnce(null); // 結果が存在しない
 
         const request = new NextRequest('http://localhost:3000/api/results/not-found');
         const params = { id: 'not-found' };
@@ -94,7 +124,9 @@ describe('Results API', () => {
       });
 
       it('KVエラー時に500を返す', async () => {
-        mockKVGet.mockRejectedValueOnce(new Error('KV storage error'));
+        mockKVGet
+          .mockResolvedValueOnce(null) // レート制限チェック成功
+          .mockRejectedValueOnce(new Error('KV storage error')); // 結果取得でエラー
 
         const request = new NextRequest('http://localhost:3000/api/results/error-id');
         const params = { id: 'error-id' };
