@@ -392,7 +392,37 @@ try {
 
 ## 🔄 最近の重要な変更
 
-### 2025-09-02の変更（最新）
+### 2025-09-01の変更（最新）
+
+#### 緊急対応: Next.js 15.5.0 静的エクスポート互換性問題の完全解決 🚨
+1. **Cloudflare Pages デプロイ失敗の根本原因解決**
+   - **問題**: Next.js 15.5.0 で `output: 'export'` 使用時に動的ルート `[id]` が使用不可
+   - **解決**: すべての動的ルートを削除し、クエリパラメータベースに移行
+   - **影響範囲**: `/result/[id]` → `/duo/results?id=` 形式に完全移行
+
+2. **複数の緊急修正PRによる段階的解決**
+   - **PR #125**: TypeScript コンパイルエラー修正
+     - `DiagnosisResult` 型に不足していたプロパティ追加
+     - `KVNamespace` インターフェースの型定義追加
+   - **PR #127**: Next.js 15.5.0 パラメータ型変更対応
+     - 動的ルートパラメータが `Promise<{id: string}>` 型に変更
+   - **PR #128**: 動的ルート完全削除（最終解決）
+     - `/src/app/api/results/[id]/route.ts` 削除
+     - `/src/app/result/[id]/page.tsx` 削除
+     - Cloudflare Functions でのみ結果取得API提供
+
+3. **Dependabot 依存関係更新 (PR #129)**
+   - **重要な発見**: Zod v4.0.0-beta.2 は OpenAI SDK v5.16.0 と非互換
+   - **解決**: Zod を v3.25.76 に維持（OpenAI の peer dependency 要件）
+   - **更新済み**: Next.js 15.5.2、Sentry 10.8.0、その他開発依存関係
+
+4. **シェアボタンUX改善 (PR #132)**
+   - **問題1**: 「リンクをコピー」ボタンの文字が背景と同色で見えない
+   - **解決**: `text-gray-700` クラスを追加して視認性改善
+   - **問題2**: 開発環境で本番URLが使用される
+   - **解決**: `window.location.origin` で動的URL生成
+
+### 2025-09-02の変更
 
 #### PR #130 - AI診断エンジン有効化と大規模コードクリーンアップ 🎉
 1. **Cloudflare FunctionsでAI診断エンジンを有効化**
