@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import SimplifiedDiagnosisEngine from '@/lib/diagnosis-engine-v3';
 import { ErrorHandler, CND2Error } from '@/lib/errors';
+import { validateMultiplePrairieUrls } from '@/lib/validators/prairie-url-validator';
 
 // Node.js runtimeを使用（OpenAI SDKのため）
 export const runtime = 'nodejs';
@@ -21,26 +22,19 @@ export async function POST(request: NextRequest) {
     
     const urls = body.urls as [string, string];
     
-    // URLの形式チェック
-    for (const url of urls) {
-      try {
-        const parsed = new URL(url);
-        // HTTPSのみ許可
-        if (parsed.protocol !== 'https:') {
-          throw new CND2Error('HTTPSのURLのみ対応しています', 'INVALID_URL');
-        }
-        // Prairie Card ドメインのチェック
-        const validHosts = ['prairie.cards', 'my.prairie.cards'];
-        const isValid = validHosts.includes(parsed.hostname) || 
-                       parsed.hostname.endsWith('.prairie.cards');
-        if (!isValid) {
-          throw new CND2Error('Prairie CardのURLを指定してください', 'INVALID_PRAIRIE_URL');
-        }
-      } catch (error) {
-        if (error instanceof CND2Error) throw error;
-        throw new CND2Error('無効なURLです', 'INVALID_URL');
-      }
+    // URLの形式チェック（強化されたHTTPS検証とドメイン検証）
+    const validationResult = validateMultiplePrairieUrls(urls);
+    
+    if (!validationResult.allValid) {
+      // 最初のエラーメッセージを取得して詳細なエラーを返す
+      const errorMessage = validationResult.errors[0] || 'Prairie Card URLの検証に失敗しました';
+      throw new CND2Error(errorMessage, 'INVALID_PRAIRIE_URL');
     }
+    
+    // 正規化されたURLを使用（オプション）
+    const normalizedUrls = validationResult.results
+      .map(r => r.normalizedUrl)
+      .filter((url): url is string => url !== undefined);
     
     // 診断エンジンのインスタンスを取得
     const engine = SimplifiedDiagnosisEngine.getInstance();

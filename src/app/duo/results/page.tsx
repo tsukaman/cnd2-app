@@ -159,11 +159,7 @@ export default function ResultsPage() {
           {/* 詳細分析セクション */}
           <div className="grid gap-6 mb-8">
             {/* 占星術的分析 */}
-            {result.metadata?.analysis && 
-             typeof result.metadata.analysis === 'object' &&
-             result.metadata.analysis !== null &&
-             'astrologicalAnalysis' in result.metadata.analysis &&
-             (result.metadata.analysis as any).astrologicalAnalysis && (
+            {result.metadata?.analysis?.astrologicalAnalysis && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -175,17 +171,13 @@ export default function ResultsPage() {
                   <h3 className="text-lg font-bold text-blue-400">占星術的分析</h3>
                 </div>
                 <p className="text-gray-300">
-                  {(result.metadata.analysis as any).astrologicalAnalysis}
+                  {result.metadata.analysis.astrologicalAnalysis}
                 </p>
               </motion.div>
             )}
 
             {/* 技術スタック相性 */}
-            {result.metadata?.analysis && 
-             typeof result.metadata.analysis === 'object' &&
-             result.metadata.analysis !== null &&
-             'techStackCompatibility' in result.metadata.analysis &&
-             (result.metadata.analysis as any).techStackCompatibility && (
+            {result.metadata?.analysis?.techStackCompatibility && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -197,7 +189,7 @@ export default function ResultsPage() {
                   <h3 className="text-lg font-bold text-green-400">技術スタック相性</h3>
                 </div>
                 <p className="text-gray-300">
-                  {(result.metadata.analysis as any).techStackCompatibility}
+                  {result.metadata.analysis.techStackCompatibility}
                 </p>
               </motion.div>
             )}

@@ -299,8 +299,15 @@ export class PrairieCardParser {
     
     // HTMLタグを除去しつつ改行を保持
     return element.html()
+      // <br>タグを改行文字に変換
+      // <br\s*\/?> : <br> または <br/> または <br />
+      // gi フラグ : g=全て置換、i=大文字小文字区別なし
       ?.replace(/<br\s*\/?>/gi, '\n')
+      // 段落の区切りを2つの改行に変換
+      // <\/p>\s*<p> : </p>タグの後に空白を挟んで<p>タグ
       ?.replace(/<\/p>\s*<p>/gi, '\n\n')
+      // 残りの全HTMLタグを削除
+      // <[^>]*> : < で始まり > で終わる任意のタグ
       ?.replace(/<[^>]*>/g, '')
       ?.trim() || '';
   }
@@ -429,6 +436,7 @@ export class PrairieCardParser {
     }
     
     // 末尾のスラッシュを除去
+    // \/$  : 文字列の末尾（$）にあるスラッシュ（/）
     normalized = normalized.replace(/\/$/, '');
     
     return normalized;

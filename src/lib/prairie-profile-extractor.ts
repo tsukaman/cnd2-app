@@ -88,6 +88,10 @@ export class PrairieProfileExtractor {
 
     // 自己紹介文の抽出
     // 1. descriptionメタタグから
+    // 正規表現: <meta name="description" content="..."> を検索
+    // \s+ : 1つ以上の空白文字
+    // ([^"]+) : ダブルクォート以外の文字を1つ以上キャプチャ（content値）
+    // i フラグ : 大文字小文字を区別しない
     const descMatch = html.match(/<meta\s+name="description"\s+content="([^"]+)"/i);
     if (descMatch) {
       const desc = descMatch[1];
@@ -98,6 +102,11 @@ export class PrairieProfileExtractor {
     
     // 2. <p>タグから日本語の文章を抽出
     if (!profile.bio) {
+      // 正規表現: <p>タグとその内容を抽出
+      // <p[^>]*> : <p で始まり > で終わるタグ（属性を含む場合も対応）
+      // ([^<]+) : < 以外の文字を1つ以上キャプチャ（タグ内のテキスト）
+      // <\/p> : 閉じタグ </p>
+      // gi フラグ : g=全てマッチ、i=大文字小文字区別なし
       const pMatches = html.matchAll(/<p[^>]*>([^<]+)<\/p>/gi);
       let longestBio = '';
       for (const match of pMatches) {
@@ -230,7 +239,17 @@ export class PrairieProfileExtractor {
   static estimateTokens(text: string): number {
     // 日本語: 1文字 ≈ 0.4トークン
     // 英語: 1単語 ≈ 1トークン
+    
+    // 正規表現: 日本語文字のカウント
+    // [ぁ-ん] : ひらがな（ぁからん）
+    // [ァ-ヶー] : カタカナ（ァからヶ、長音符ー）
+    // [一-龠] : 漢字（CJK統合漢字の基本範囲）
+    // g フラグ : 全ての文字をマッチ
     const japaneseChars = (text.match(/[ぁ-ん|ァ-ヶー|一-龠]/g) || []).length;
+    
+    // 正規表現: 英単語のカウント
+    // [a-zA-Z]+ : 1つ以上の英字の連続（単語として扱う）
+    // g フラグ : 全ての単語をマッチ
     const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
     
     return Math.ceil(japaneseChars * 0.4 + englishWords);

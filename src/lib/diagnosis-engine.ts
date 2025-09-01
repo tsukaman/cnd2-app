@@ -72,7 +72,9 @@ export class DiagnosisEngine {
       return this.generateMockDiagnosis(profiles);
     }
 
-    const prompt = buildDuoDiagnosisPrompt(profiles);
+    const prompt = DIAGNOSIS_PROMPTS.USER_TEMPLATE
+      .replace('{profile1}', JSON.stringify(profiles[0], null, 2))
+      .replace('{profile2}', JSON.stringify(profiles[1], null, 2));
     
     try {
       console.log('[CND²] AI診断を生成中...');
@@ -82,7 +84,7 @@ export class DiagnosisEngine {
         messages: [
           {
             role: 'system',
-            content: CND2_SYSTEM_PROMPT
+            content: DIAGNOSIS_PROMPTS.SYSTEM
           },
           {
             role: 'user',
@@ -140,7 +142,11 @@ export class DiagnosisEngine {
       return this.generateMockGroupDiagnosis(profiles);
     }
 
-    const prompt = buildGroupDiagnosisPrompt(profiles);
+    // Group diagnosis - format profiles for prompt
+    const profilesText = profiles.map((p, i) => 
+      `＜${i + 1}人目のプロフィール＞\n${JSON.stringify(p, null, 2)}`
+    ).join('\n\n');
+    const prompt = DIAGNOSIS_PROMPTS.USER_TEMPLATE.replace('{profile1}', profilesText).replace('{profile2}', '');
     
     try {
       console.log('[CND²] グループAI診断を生成中...');
@@ -150,7 +156,7 @@ export class DiagnosisEngine {
         messages: [
           {
             role: 'system',
-            content: CND2_SYSTEM_PROMPT
+            content: DIAGNOSIS_PROMPTS.SYSTEM
           },
           {
             role: 'user',
