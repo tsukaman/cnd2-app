@@ -1,11 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { useParams } from 'next/navigation';
-import SharedResultPage from '../[id]/page';
+import SharedResultClient from '../[id]/SharedResultClient';
 
-// Next.js navigation モック
-jest.mock('next/navigation', () => ({
-  useParams: jest.fn(),
-}));
+// モックは削除（propsで直接IDを渡すため）
 
 // Framer Motion モック
 jest.mock('framer-motion', () => ({
@@ -30,7 +26,7 @@ jest.mock('@/components/share/ShareButton', () => {
 const mockFetch = jest.fn();
 global.fetch = mockFetch as any;
 
-describe('SharedResultPage', () => {
+describe('SharedResultClient', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -53,7 +49,6 @@ describe('SharedResultPage', () => {
       luckyAction: 'kubectl apply -f happiness.yaml',
     };
 
-    (useParams as jest.Mock).mockReturnValue({ id: 'test-123' });
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -62,7 +57,7 @@ describe('SharedResultPage', () => {
       }),
     });
 
-    render(<SharedResultPage />);
+    render(<SharedResultClient resultId="test-123" />);
 
     // ローディング表示を確認
     expect(screen.getByText('診断結果を読み込んでいます...')).toBeInTheDocument();
@@ -88,9 +83,7 @@ describe('SharedResultPage', () => {
   });
 
   it('IDが指定されていない場合エラーを表示', async () => {
-    (useParams as jest.Mock).mockReturnValue({ id: null });
-
-    render(<SharedResultPage />);
+    render(<SharedResultClient resultId="" />);
 
     await waitFor(() => {
       expect(screen.getByText('結果が見つかりません')).toBeInTheDocument();
@@ -101,7 +94,6 @@ describe('SharedResultPage', () => {
   });
 
   it('結果が見つからない場合404エラーを表示', async () => {
-    (useParams as jest.Mock).mockReturnValue({ id: 'not-found' });
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 404,
@@ -111,7 +103,7 @@ describe('SharedResultPage', () => {
       }),
     });
 
-    render(<SharedResultPage />);
+    render(<SharedResultClient resultId="not-found" />);
 
     await waitFor(() => {
       expect(screen.getByText('結果が見つかりません')).toBeInTheDocument();
@@ -122,10 +114,9 @@ describe('SharedResultPage', () => {
   });
 
   it('ネットワークエラー時にエラーを表示', async () => {
-    (useParams as jest.Mock).mockReturnValue({ id: 'test-123' });
     mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-    render(<SharedResultPage />);
+    render(<SharedResultClient resultId="test-123" />);
 
     await waitFor(() => {
       expect(screen.getByText('結果が見つかりません')).toBeInTheDocument();
@@ -150,7 +141,6 @@ describe('SharedResultPage', () => {
       // 運勢情報なし
     };
 
-    (useParams as jest.Mock).mockReturnValue({ id: 'test-456' });
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -159,7 +149,7 @@ describe('SharedResultPage', () => {
       }),
     });
 
-    render(<SharedResultPage />);
+    render(<SharedResultClient resultId="test-456" />);
 
     await waitFor(() => {
       expect(screen.getByText('75%')).toBeInTheDocument();
@@ -193,7 +183,6 @@ describe('SharedResultPage', () => {
         createdAt: new Date().toISOString(),
       };
 
-      (useParams as jest.Mock).mockReturnValue({ id: `test-${score}` });
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -202,7 +191,7 @@ describe('SharedResultPage', () => {
         }),
       });
 
-      const { unmount } = render(<SharedResultPage />);
+      const { unmount } = render(<SharedResultClient resultId={`test-${score}`} />);
 
       await waitFor(() => {
         const scoreElement = screen.getByText(`${score}%`);
