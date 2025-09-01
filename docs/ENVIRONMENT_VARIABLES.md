@@ -16,6 +16,7 @@
 | `ENABLE_FALLBACK` | フォールバック診断の有効化 | `true` / `false` | 未設定（false扱い） | `true`の時のみフォールバック有効（PR115後は削除予定） |
 | `DEBUG_MODE` | デバッグログの出力 | `true` / `false` | `false` | 詳細なログを出力 |
 | `ENVIRONMENT` | 環境識別（NODE_ENVの代替） | `development` / `production` | `production` | フォールバック動作に影響 |
+| `NEXT_PUBLIC_ENABLE_PRODUCTION_DEBUG` | 本番環境でのデバッグビュー有効化 | `true` / `false` | `false` | トークン分析デバッグビューの本番表示を許可 |
 
 ### 📊 診断エンジン設定
 

@@ -21,8 +21,10 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
   
-  // デバッグモードの判定（?debug=trueが付いている場合のみ）
-  const debugMode = searchParams.get('debug') === 'true';
+  // デバッグモードの判定（開発環境のみ、または本番で明示的に有効化された場合）
+  const isDebugEnabled = process.env.NODE_ENV === 'development' || 
+    process.env.NEXT_PUBLIC_ENABLE_PRODUCTION_DEBUG === 'true';
+  const debugMode = searchParams.get('debug') === 'true' && isDebugEnabled;
 
   useEffect(() => {
     const resultId = searchParams.get('id');

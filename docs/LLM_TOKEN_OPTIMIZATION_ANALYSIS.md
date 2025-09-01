@@ -117,8 +117,22 @@
 
 ## 🔍 デバッグ方法
 
+### 開発環境
 診断結果ページに`?debug=true`パラメータを追加すると、全LLMフィールドが表示されます：
 
+```
+http://localhost:3000/duo/results?id=xxx&debug=true
+```
+
+### 本番環境
+セキュリティのため、本番環境でデバッグモードを使用するには環境変数の設定が必要です：
+
+```env
+# .env.production
+NEXT_PUBLIC_ENABLE_PRODUCTION_DEBUG=true
+```
+
+設定後、以下のURLでアクセス：
 ```
 https://cnd2-app.pages.dev/duo/results?id=xxx&debug=true
 ```
