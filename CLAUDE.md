@@ -400,6 +400,12 @@ try {
    - **イベント運用最適化**: エラー時は即座に検知できるようデフォルト無効
    - **開発/本番で異なるスコア範囲**: 開発30-40点、本番85-100点
    - **フォールバック設定ファイル**: `/lib/constants/fallback.ts`に一元管理
+
+2. **コード品質の改善（レビュー対応）**
+   - **重複コード排除**: Cloudflare Functions用の共通設定 `/functions/utils/fallback-config.js`
+   - **型安全性向上**: `ExtractedProfileInfo`型を定義
+   - **環境判定ヘルパー**: `/lib/utils/environment.ts`で環境判定を一元化
+   - **環境変数バリデーション**: `getEnvBoolean`等の型安全な取得関数
    
 2. **コード品質の大幅改善** ✅
    - **プロンプトテンプレートの外部化**: `lib/prompts/diagnosis-prompts.ts`に分離

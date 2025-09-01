@@ -5,47 +5,20 @@
 
 import { generateId } from '../utils/id.js';
 
+// Fallback configuration
+import { 
+  FALLBACK_CONFIG, 
+  isFallbackAllowed, 
+  getFallbackScoreRange, 
+  generateFallbackScore, 
+  getFallbackWarning 
+} from '../utils/fallback-config.js';
+
 // Configuration constants
 const CONFIG = {
   TEMPERATURE: 0.9,
   MAX_TOKENS: 2000,
   MODEL: 'gpt-4o-mini'
-};
-
-// Fallback configuration
-const FALLBACK_CONFIG = {
-  // 開発環境でフォールバックを許可するか
-  ALLOW_IN_DEVELOPMENT: false,
-  
-  // フォールバック時のスコア範囲（開発環境では低めに設定）
-  DEVELOPMENT_SCORE: {
-    MIN: 30,
-    MAX: 40,
-    RANGE: 10
-  },
-  
-  // 本番環境のスコア範囲（ユーザー体験を維持）
-  PRODUCTION_SCORE: {
-    MIN: 85,
-    MAX: 100,
-    RANGE: 15
-  },
-  
-  // フォールバック時の識別子
-  ID_PREFIX: 'fallback-',
-  
-  // フォールバック時の警告メッセージ
-  WARNING_MESSAGE: {
-    DEVELOPMENT: '⚠️ フォールバック診断が動作しています。OpenAI APIキーを確認してください。',
-    PRODUCTION: ''  // 本番環境では表示しない
-  },
-  
-  // フォールバック時のメタデータ
-  METADATA: {
-    engine: 'fallback',
-    model: 'mock',
-    warning: 'This is a fallback diagnosis result'
-  }
 };
 
 const ASTROLOGY_SYSTEM_PROMPT = `あなたは「Cloud Native占星術師」です。

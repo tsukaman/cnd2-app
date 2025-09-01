@@ -223,10 +223,42 @@ console.log('OPENAI_API_KEY exists:', !!env.OPENAI_API_KEY);
 - 環境変数の変更を文書化せずに実施
 - イベント中に未検証の変数を追加
 
+## 🛠️ 開発者向け情報
+
+### 環境判定ヘルパー関数
+
+環境判定を一元化するため、`/src/lib/utils/environment.ts`を使用：
+
+```typescript
+import { isDevelopment, isProduction, getEnvBoolean } from '@/lib/utils/environment';
+
+// 開発環境チェック
+if (isDevelopment()) {
+  // 開発環境専用の処理
+}
+
+// 環境変数を型安全に取得
+const fallbackEnabled = getEnvBoolean('ENABLE_FALLBACK', false);
+```
+
+### Cloudflare Functions共通設定
+
+Cloudflare Functions環境では `/functions/utils/fallback-config.js`を使用：
+
+```javascript
+import { isFallbackAllowed, generateFallbackScore } from '../utils/fallback-config.js';
+
+// フォールバック判定
+if (!isFallbackAllowed(env)) {
+  throw new Error('Fallback is disabled');
+}
+```
+
 ## 📚 関連ドキュメント
 
 - [イベント運用ガイド](./EVENT_OPERATION_GUIDE.md)
 - [フォールバック設定](../src/lib/constants/fallback.ts)
+- [環境判定ユーティリティ](../src/lib/utils/environment.ts)
 - [Cloudflare Pages Documentation](https://developers.cloudflare.com/pages/)
 
 ---

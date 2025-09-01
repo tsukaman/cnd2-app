@@ -102,6 +102,22 @@ const RESULT_FORMAT = `{
 }`;
 
 /**
+ * プロフィールから抽出する関連情報の型
+ */
+interface ExtractedProfileInfo {
+  name: string;
+  title: string;
+  company: string;
+  bio: string;
+  skills: string[];
+  interests: string[];
+  motto: string;
+  tags: string[];
+  certifications: string[];
+  communities: string[];
+}
+
+/**
  * 統合診断エンジンクラス
  */
 export class UnifiedDiagnosisEngine {
@@ -341,7 +357,7 @@ ${members}
   /**
    * プロフィールから関連情報を抽出
    */
-  private extractRelevantInfo(profile: PrairieProfile): any {
+  private extractRelevantInfo(profile: PrairieProfile): ExtractedProfileInfo {
     return {
       name: profile.basic.name,
       title: profile.basic.title || '',

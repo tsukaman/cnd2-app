@@ -1,8 +1,7 @@
 /**
  * Fallback diagnosis configuration
+ * Cloudflare Functions用の共通設定
  */
-
-import { isDevelopment, getEnvBoolean } from '@/lib/utils/environment';
 
 export const FALLBACK_CONFIG = {
   // 開発環境でフォールバックを許可するか
@@ -40,42 +39,53 @@ export const FALLBACK_CONFIG = {
     model: 'mock',
     warning: 'This is a fallback diagnosis result'
   }
-} as const;
+};
 
 /**
  * Check if fallback is allowed in current environment
  * 
- * PR115で診断エンジン大幅更新予定のため、最小限の実装に留める
- * 環境変数 ENABLE_FALLBACK で制御（デフォルト: false）
+ * @param {Object} env - Environment variables
+ * @returns {boolean}
  */
-export function isFallbackAllowed(): boolean {
+export function isFallbackAllowed(env) {
   // シンプルに環境変数のみで制御
   // ENABLE_FALLBACK=true の時のみフォールバック有効
-  return getEnvBoolean('ENABLE_FALLBACK', false);
+  return env?.ENABLE_FALLBACK === 'true';
 }
 
 /**
  * Get appropriate score range for current environment
+ * 
+ * @param {Object} env - Environment variables
+ * @returns {Object} Score range configuration
  */
-export function getFallbackScoreRange() {
-  return isDevelopment() 
+export function getFallbackScoreRange(env) {
+  const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+  return isDevelopment 
     ? FALLBACK_CONFIG.DEVELOPMENT_SCORE 
     : FALLBACK_CONFIG.PRODUCTION_SCORE;
 }
 
 /**
  * Generate fallback compatibility score
+ * 
+ * @param {Object} env - Environment variables
+ * @returns {number} Random score within range
  */
-export function generateFallbackScore(): number {
-  const range = getFallbackScoreRange();
+export function generateFallbackScore(env) {
+  const range = getFallbackScoreRange(env);
   return Math.floor(Math.random() * range.RANGE) + range.MIN;
 }
 
 /**
  * Get warning message for current environment
+ * 
+ * @param {Object} env - Environment variables
+ * @returns {string} Warning message
  */
-export function getFallbackWarning(): string {
-  return isDevelopment() 
+export function getFallbackWarning(env) {
+  const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+  return isDevelopment 
     ? FALLBACK_CONFIG.WARNING_MESSAGE.DEVELOPMENT 
     : FALLBACK_CONFIG.WARNING_MESSAGE.PRODUCTION;
 }
