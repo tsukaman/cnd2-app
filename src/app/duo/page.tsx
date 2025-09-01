@@ -10,7 +10,7 @@ import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
-import { RETRY_CONFIG as DIAGNOSIS_RETRY_CONFIG, ANIMATION_DURATIONS } from '@/lib/constants/diagnosis';
+import { ANIMATION_DURATIONS } from '@/lib/constants/diagnosis';
 import type { PrairieProfile } from '@/types';
 
 export default function DuoPage() {
@@ -54,7 +54,7 @@ export default function DuoPage() {
       // 単一の統合診断を実行 with retry mechanism
       let lastError: Error | null = null;
       
-      for (let attempt = 1; attempt <= RETRY_CONFIG.MAX_RETRIES; attempt++) {
+      for (let attempt = 1; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
         try {
           const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
           
@@ -71,7 +71,7 @@ export default function DuoPage() {
           console.warn(`Diagnosis attempt ${attempt} failed:`, error);
           
           // Wait before retry with exponential backoff
-          if (attempt < RETRY_CONFIG.MAX_RETRIES) {
+          if (attempt < RETRY_CONFIG.maxRetries) {
             await new Promise(resolve => setTimeout(resolve, calculateBackoffDelay(attempt)));
           }
         }

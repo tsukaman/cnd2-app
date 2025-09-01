@@ -7,7 +7,7 @@ import { ArrowLeft, Users, Sparkles, Heart, MessageCircle, Target, TrendingUp, G
 import Link from 'next/link';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import { DiagnosisResult } from '@/types';
-import { ShareButton } from '@/components/share/ShareButton';
+import ShareButton from '@/components/share/ShareButton';
 import dynamic from 'next/dynamic';
 
 const Confetti = dynamic(() => import('react-confetti').then(mod => mod.default), { ssr: false });
@@ -159,7 +159,11 @@ export default function ResultsPage() {
           {/* 詳細分析セクション */}
           <div className="grid gap-6 mb-8">
             {/* 占星術的分析 */}
-            {result.metadata?.analysis?.astrologicalAnalysis && (
+            {result.metadata?.analysis && 
+             typeof result.metadata.analysis === 'object' &&
+             result.metadata.analysis !== null &&
+             'astrologicalAnalysis' in result.metadata.analysis &&
+             (result.metadata.analysis as any).astrologicalAnalysis && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -171,13 +175,17 @@ export default function ResultsPage() {
                   <h3 className="text-lg font-bold text-blue-400">占星術的分析</h3>
                 </div>
                 <p className="text-gray-300">
-                  {result.metadata.analysis.astrologicalAnalysis}
+                  {(result.metadata.analysis as any).astrologicalAnalysis}
                 </p>
               </motion.div>
             )}
 
             {/* 技術スタック相性 */}
-            {result.metadata?.analysis?.techStackCompatibility && (
+            {result.metadata?.analysis && 
+             typeof result.metadata.analysis === 'object' &&
+             result.metadata.analysis !== null &&
+             'techStackCompatibility' in result.metadata.analysis &&
+             (result.metadata.analysis as any).techStackCompatibility && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -189,7 +197,7 @@ export default function ResultsPage() {
                   <h3 className="text-lg font-bold text-green-400">技術スタック相性</h3>
                 </div>
                 <p className="text-gray-300">
-                  {result.metadata.analysis.techStackCompatibility}
+                  {(result.metadata.analysis as any).techStackCompatibility}
                 </p>
               </motion.div>
             )}
@@ -324,7 +332,7 @@ export default function ResultsPage() {
             別の2人を診断
           </Link>
           
-          <ShareButton result={result} />
+          <ShareButton resultId={result.id} score={result.compatibility || result.score || 0} />
         </motion.div>
       </div>
     </div>
