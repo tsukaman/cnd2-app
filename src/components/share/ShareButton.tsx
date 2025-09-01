@@ -18,7 +18,11 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [nfcWriting, setNfcWriting] = useState(false);
   
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2-app.pages.dev'}/duo/results?id=${resultId}`;
+  // 開発環境では現在のオリジンを使用、本番環境では環境変数を使用
+  const baseUrl = typeof window !== 'undefined' 
+    ? window.location.origin 
+    : (process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2-app.pages.dev');
+  const shareUrl = `${baseUrl}/duo/results?id=${resultId}`;
   const shareText = `CND²相性診断結果: ${score}% #CNDxCnD`;
   
   const handleShare = async () => {
@@ -147,8 +151,8 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
                     </>
                   ) : (
                     <>
-                      <Copy className="w-5 h-5" />
-                      リンクをコピー
+                      <Copy className="w-5 h-5 text-gray-700" />
+                      <span className="text-gray-700">リンクをコピー</span>
                     </>
                   )}
                 </motion.button>
