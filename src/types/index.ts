@@ -75,6 +75,22 @@ export interface FortuneTelling {
   message: string;
 }
 
+// Analysis metadata for detailed diagnosis results
+export interface AnalysisMetadata {
+  astrologicalAnalysis?: string;
+  techStackCompatibility?: string;
+  participant1?: string;
+  participant2?: string;
+  profiles?: string;
+  timestamp?: string;
+  calculatedScore?: {
+    technical?: number;
+    communication?: number;
+    values?: number;
+    growth?: number;
+  };
+}
+
 export interface DiagnosisResult {
   id: string;
   mode: 'duo' | 'group';
@@ -111,7 +127,7 @@ export interface DiagnosisResult {
   metadata?: {
     engine?: string;
     model?: string;
-    analysis?: unknown;
+    analysis?: AnalysisMetadata;
   };
 }
 
