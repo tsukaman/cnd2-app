@@ -21,7 +21,7 @@ const DIAGNOSIS_CONFIG = {
     VARIANCE: 0.1
   },
   COMPATIBILITY: {
-    MIN: 85,
+    MIN: 50,
     MAX: 100
   },
   MAX_TOKENS: {
@@ -75,7 +75,7 @@ Container Orchestration、分散システム、マイクロサービスなどの
  */
 const RESULT_FORMAT = `{
   "type": "診断タイプ名（創造的で楽しい名前）",
-  "compatibility": 相性スコア（85-100の整数）,
+  "compatibility": 相性スコア（50-100の整数）,
   "summary": "診断結果のサマリー（150-200文字、スタイルに応じた表現）",
   "astrologicalAnalysis": "詳細分析（250-300文字、スタイルに応じた深い洞察）",
   "techStackCompatibility": "技術的相性（200文字、具体的な技術の相性）",
@@ -86,10 +86,10 @@ const RESULT_FORMAT = `{
   "luckyItem": "ラッキーアイテム（エンジニアに関連、絵文字付き）",
   "luckyAction": "ラッキーアクション（技術活動、絵文字付き）",
   "fortuneTelling": {
-    "overall": 総合運（85-100）,
-    "tech": 技術運（85-100）,
-    "collaboration": コラボ運（85-100）,
-    "growth": 成長運（85-100）,
+    "overall": 総合運（50-100）,
+    "tech": 技術運（50-100）,
+    "collaboration": コラボ運（50-100）,
+    "growth": 成長運（50-100）,
     "message": "運勢メッセージ（100文字程度）"
   }
 }`;
