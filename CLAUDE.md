@@ -87,15 +87,22 @@ cnd2-app/
 │   │   │   ├── diagnosis/      # AI診断API（OpenAI GPT-4o-mini）
 │   │   │   ├── prairie/        # Prairie Card解析API
 │   │   │   └── results/        # 結果取得API（※未実装）
+│   │   └── duo/
+│   │       ├── page.tsx        # 2人診断ページ（単一診断フロー）
+│   │       └── results/        # 診断結果表示ページ
 │   ├── components/              # Reactコンポーネント
 │   │   ├── diagnosis/          # 診断関連
 │   │   ├── prairie/            # Prairie Card関連
 │   │   ├── share/              # 共有機能（QRコード、NFC）
 │   │   └── ui/                 # 汎用UIコンポーネント
 │   ├── lib/                    # ユーティリティライブラリ
+│   │   ├── constants/          # 定数管理
+│   │   │   └── scoring.ts      # スコア分布、HTMLサイズ制限等
+│   │   ├── prompts/            # AIプロンプト管理
+│   │   │   └── diagnosis-prompts.ts # 診断プロンプトテンプレート
 │   │   ├── workers/            # Cloudflare Workers関連
 │   │   │   └── kv-storage-v2.ts # KVストレージ実装
-│   │   ├── diagnosis-engine.ts # AI診断エンジン
+│   │   ├── diagnosis-engine-v3.ts # AI診断エンジン（リファクタリング済）
 │   │   ├── sanitizer.ts        # HTML/XSSサニタイゼーション
 │   │   └── logger.ts           # 環境別ログレベル制御
 │   └── types/                  # TypeScript型定義
@@ -373,21 +380,40 @@ try {
 
 ## 🔄 最近の重要な変更
 
-### 2025-09-01の変更（最新）
-1. **複数スタイル診断の簡素化** (#107) ✅
-   - 複数スタイル選択UIを削除し、常に4つのスタイル全てで診断
-   - DIAGNOSIS_STYLES定数を共通化（lib/constants/diagnosis.ts）
-   - ユーザーフィードバック対応：「全部盛り込んでください」
-   - 開発環境用モックデータ追加でテスト効率向上
+### 2025-09-01の変更（最新 - PR #115）
+1. **診断システムの大幅改善** ✅
+   - **固定85%スコア問題を解決**: 動的スコアリング（0-100%）実装
+   - **4スタイル診断を単一診断に統合**: シンプルで分かりやすいUX
+   - **低スコアでもポジティブな体験設計**: 「レアケース！」「話題作り！」として楽しめる
+   - **新しい診断結果ページ**: `/duo/results`を追加、紙吹雪エフェクト付き
+   
+2. **コード品質の大幅改善** ✅
+   - **プロンプトテンプレートの外部化**: `lib/prompts/diagnosis-prompts.ts`に分離
+   - **マジックナンバーの定数化**: `lib/constants/scoring.ts`で一元管理
+   - **HTMLサイズ制限の緩和**: 10KB→15KB（より多くのプロフィール情報取得）
+   - **alert()をToast通知に置き換え**: sonnerライブラリで優れたUX
+   - **diagnosis-engine-v3.tsのリファクタリング**: 208行のプロンプト関数を削除
+   
+3. **スコア分布の実装** ✅
+   ```typescript
+   // lib/constants/scoring.ts
+   export const SCORE_DISTRIBUTION = {
+     RARE: { threshold: 0.05, range: [0, 19], percentage: 5 },
+     CHALLENGING: { threshold: 0.15, range: [20, 39], percentage: 10 },
+     GROWING: { threshold: 0.35, range: [40, 59], percentage: 20 },
+     BALANCED: { threshold: 0.65, range: [60, 79], percentage: 30 },
+     EXCELLENT: { threshold: 0.90, range: [80, 94], percentage: 25 },
+     PERFECT: { threshold: 1.00, range: [95, 99], percentage: 10 }
+   }
+   ```
 
-### 2025-08-31の変更
-1. **複数スタイル同時診断機能の実装** ✅
-   - 4つの診断スタイル（Creative、占星術、点取り占い、技術分析）を並列実行
-   - Promise.allによる並列処理で2-3秒の高速診断（従来の8秒から75%削減）
-   - タブ/グリッド切り替え可能な比較UI実装
-   - 新APIエンドポイント `/api/diagnosis-multi` 追加
-   - コスト効率的な実装（約0.6円/診断）
-   - PR #100でマージ完了
+### 2025-08-31の変更  
+1. **~~複数スタイル同時診断機能の実装~~** → **単一診断に統合（PR #115）**
+   - ~~4つの診断スタイル（Creative、占星術、点取り占い、技術分析）を並列実行~~
+   - ~~Promise.allによる並列処理で2-3秒の高速診断~~
+   - ~~タブ/グリッド切り替え可能な比較UI実装~~
+   - ~~新APIエンドポイント `/api/diagnosis-multi` 追加~~
+   - 注: PR #115で単一診断に統合（UX改善のため）
 
 2. **セキュリティ強化** ✅
    - CORS設定を本番環境用に最適化
@@ -411,7 +437,7 @@ try {
    - LocalStorageの24時間TTLクリーンアップ実装
    - 処理時間、クリーンアップ間隔、スタイル設定を定数管理
 
-### 2025-09-01の変更（最新）
+### 2025-09-01の変更（その他）
 1. **localStorage キー不一致バグの緊急修正** 🚨
    - **問題**: 診断結果が「読み込み中...」で無限待機
    - **原因**: 保存時と読込時でキーパターンが異なる
@@ -420,14 +446,10 @@ try {
    - **検証**: Playwrightで自動テスト実施、動作確認済み
    - **教訓**: キー定数は一元管理すべき
 
-2. **4スタイル診断への統一**（PR #107）
-   - 通常診断モード廃止、常に4スタイルで診断
-   - クリエイティブ、占星術、点取り占い、技術分析
-
 ### 2025-08-29の変更
 1. **診断結果のエンターテイメント性向上**
    - 「クラウドネイティブの賢者」キャラクター導入
-   - スコアを常に85点以上に設定（ポジティブな体験）
+   - ~~スコアを常に85点以上に設定~~（9/1に0-100%動的スコアに変更）
    - ラッキーアイテム・ラッキーアクション追加
    - temperature: 0.85で創造的な診断文生成
 
@@ -474,20 +496,16 @@ try {
 ## 📝 今後の改善項目（ToDo）
 
 ### APIテスト強化（高優先度）
-- [ ] diagnosis-multi APIのテスト追加
-  - 並列処理中の部分的な失敗シナリオ
+- [ ] diagnosis APIのエッジケーステスト追加
   - サニタイザーのエッジケース
   - フォールバック結果の品質検証
   - CORSプリフライトリクエストの処理
+  - 動的スコアリング（0-100%）の分布テスト
 
 ### UI/UXの改善（中優先度）
-- [ ] 大きなコンポーネントのリファクタリング（`MultiStyleResults.tsx` 298行を分割）
-  - MultiStyleSummary.tsx（サマリー表示）
-  - StyleComparisonChart.tsx（スコア比較）
-  - StyleTabView.tsx（タブ表示）
-  - StyleGridView.tsx（グリッド表示）
 - [ ] 診断結果の共有機能実装（現在「準備中」）
 - [ ] エラー境界（Error Boundary）の実装
+- [ ] 診断結果ページのアニメーション最適化
 
 ### 機能拡張（中優先度）
 - [ ] 診断履歴機能の追加
@@ -515,32 +533,48 @@ try {
 
 ## 📋 次スプリントでの改善項目（2025-09-02）
 
-### ⚡ localStorage キー管理の改善（高優先度）
-- [ ] キー定数の一元管理
+Claude Review（PR #115）で指摘された改善項目：
+
+### ⚡ 高優先度の改善
+- [x] **プロンプトテンプレートの外部化** ✅ 完了済み
+- [x] **マジックナンバーの定数化** ✅ 完了済み  
+- [x] **HTMLサイズ制限の増加** ✅ 完了済み（10KB→15KB）
+- [x] **alert()のToast通知への置き換え** ✅ 完了済み
+
+### 中優先度の改善
+- [ ] **diagnosis-engine-v3.tsの責務分離**
   ```typescript
-  const DIAGNOSIS_RESULT_KEY_PREFIX = 'diagnosis-result-';
-  ```
-- [ ] キー生成関数の作成
-  ```typescript
-  function getDiagnosisResultKey(id: string): string {
-    return `diagnosis-result-${id}`;
+  class DiagnosisEngine {
+    private scoreCalculator: ScoreCalculator;
+    private fallbackGenerator: FallbackGenerator;
+    private promptBuilder: PromptBuilder;
   }
   ```
-- [ ] キー整合性の自動テスト追加
+- [ ] **型安全性の向上**
+  ```typescript
+  interface AnalysisMetadata {
+    astrologicalAnalysis?: string;
+    techStackCompatibility?: string;
+  }
+  ```
+- [ ] **Results画面のテスト追加**
+  - スコア別カラーリングのテスト
+  - 紙吹雪エフェクトの表示テスト
+  - LocalStorageからのデータ読み込みテスト
 
-### コード品質改善
-- [ ] 複雑な正規表現へのコメント追加（`prairie-profile-extractor.ts`）
-- [ ] マジックナンバーの定数化（タイムアウト値5000ms等）
-
-### セキュリティ強化  
-- [ ] DOMPurifyによる追加のHTMLサニタイゼーション実装
-- [ ] Prairie Card URLのHTTPSのみ許可の明示的な検証
-
-### テスト拡充
-- [ ] 実際のPrairie Card HTMLサンプルでのテスト追加
-- [ ] エラー境界条件のより詳細なテスト
-- [ ] HTMLパーサーのエッジケーステスト
-- [ ] localStorage キー整合性テストの追加
+### 低優先度の改善
+- [ ] **コード品質**
+  - 複雑な正規表現へのコメント追加（`prairie-profile-extractor.ts`）
+  - エラーハンドリングの標準化
+  
+- [ ] **セキュリティ強化**
+  - DOMPurifyによる追加のHTMLサニタイゼーション実装
+  - Prairie Card URLのHTTPSのみ許可の明示的な検証
+  
+- [ ] **テスト拡充**
+  - 実際のPrairie Card HTMLサンプルでのテスト追加
+  - エラー境界条件のより詳細なテスト
+  - HTMLパーサーのエッジケーステスト
 
 ---
 
