@@ -34,6 +34,43 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
           400
         );
       }
+      
+      // 開発環境用のモックデータ
+      if (process.env.NODE_ENV === 'development') {
+        const mockProfiles: Record<string, any> = {
+          'taro': {
+            basic: {
+              name: '田中太郎',
+              bio: 'クラウドネイティブエンジニア',
+              company: 'CloudTech Inc.',
+              location: '東京',
+              twitter: 'taro_cloud'
+            },
+            interests: ['Kubernetes', 'Docker', 'CI/CD', 'TypeScript', 'React'],
+            hashtags: ['#CloudNative', '#DevOps'],
+            links: [{ name: 'GitHub', url: 'https://github.com/taro' }]
+          },
+          'hanako': {
+            basic: {
+              name: '山田花子',
+              bio: 'SREエンジニア',
+              company: 'DevOps Solutions',
+              location: '大阪',
+              twitter: 'hanako_sre'
+            },
+            interests: ['Prometheus', 'Grafana', 'Terraform', 'Go', 'Python'],
+            hashtags: ['#SRE', '#Monitoring'],
+            links: [{ name: 'Blog', url: 'https://blog.hanako.dev' }]
+          }
+        };
+        
+        const userId = urlObj.pathname.split('/').pop();
+        const mockProfile = mockProfiles[userId || ''] || mockProfiles['taro'];
+        
+        return NextResponse.json({
+          data: mockProfile
+        });
+      }
 
       // Fetch HTML from URL with timeout
       const controller = new AbortController();
@@ -84,7 +121,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       );
     }
 
-    return NextResponse.json(profile);
+    return NextResponse.json({ data: profile });
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

@@ -162,14 +162,14 @@ describe.skip('DuoPage', () => {
     it('タイトルとヘッダーが表示される', () => {
       render(<DuoPage />);
       
-      expect(screen.getByText('2人診断モード')).toBeInTheDocument();
-      expect(screen.getByText('2つのPrairie Cardから相性を診断します')).toBeInTheDocument();
+      expect(screen.getByText('2人診断')).toBeInTheDocument();
+      expect(screen.getByText('Prairie Cardから相性を診断します')).toBeInTheDocument();
     });
 
     it('診断開始ボタンが初期状態で無効になっている', () => {
       render(<DuoPage />);
       
-      const startButton = screen.getByRole('button', { name: /診断を開始/ });
+      const startButton = screen.getByRole('button', { name: /4つのスタイルで診断開始/ });
       expect(startButton).toBeDisabled();
     });
   });
@@ -199,9 +199,10 @@ describe.skip('DuoPage', () => {
         expect(screen.getByText('Test Userさんのカードを読み込みました')).toBeInTheDocument();
       });
 
-      // 次へボタンをクリックして2人目の入力画面へ
-      const nextButton = screen.getByRole('button', { name: /次へ/ });
-      fireEvent.click(nextButton);
+      // 自動で次のステップへ遷移するのを待つ
+      await waitFor(() => {
+        expect(screen.getByText('2人目のPrairie Card')).toBeInTheDocument();
+      });
 
       // 2人目のスキャン
       await waitFor(() => {
@@ -211,7 +212,7 @@ describe.skip('DuoPage', () => {
 
       // 診断を開始ボタンが有効になることを確認
       await waitFor(() => {
-        const startButton = screen.getByRole('button', { name: /診断を開始/ });
+        const startButton = screen.getByRole('button', { name: /4つのスタイルで診断開始/ });
         expect(startButton).toBeEnabled();
       });
     });
@@ -256,7 +257,7 @@ describe.skip('DuoPage', () => {
       });
 
       // 診断開始
-      const startButton = screen.getByRole('button', { name: /診断を開始/ });
+      const startButton = screen.getByRole('button', { name: /4つのスタイルで診断開始/ });
       fireEvent.click(startButton);
 
       await waitFor(() => {
@@ -289,7 +290,7 @@ describe.skip('DuoPage', () => {
       });
 
       // 診断開始
-      const startButton = screen.getByRole('button', { name: /診断を開始/ });
+      const startButton = screen.getByRole('button', { name: /4つのスタイルで診断開始/ });
       fireEvent.click(startButton);
 
       expect(screen.getByTestId('loading-screen')).toBeInTheDocument();
@@ -316,7 +317,7 @@ describe.skip('DuoPage', () => {
       });
 
       // 診断開始
-      const startButton = screen.getByRole('button', { name: /診断を開始/ });
+      const startButton = screen.getByRole('button', { name: /4つのスタイルで診断開始/ });
       fireEvent.click(startButton);
 
       await waitFor(() => {
@@ -337,13 +338,11 @@ describe.skip('DuoPage', () => {
   });
 
   describe('ナビゲーション', () => {
-    it('戻るボタンでホームページに遷移する', () => {
+    it('ホームに戻るリンクでホームページに遷移する', () => {
       render(<DuoPage />);
       
-      const backButton = screen.getByRole('button', { name: /戻る/ });
-      fireEvent.click(backButton);
-      
-      expect(mockPush).toHaveBeenCalledWith('/');
+      const homeLink = screen.getByRole('link', { name: /ホームに戻る/ });
+      expect(homeLink).toHaveAttribute('href', '/');
     });
   });
 });
