@@ -33,16 +33,15 @@ jobs:
         env:
           CI: true
           
-      # Temporarily disabled for emergency deployment
-      # - name: Run linting checks
-      #   run: npm run lint
+      - name: Run linting checks
+        run: npm run lint
         
       - name: Run TypeScript type checking
         run: npm run type-check
         
       - name: Create production environment file
         run: |
-          echo "NEXT_PUBLIC_APP_URL=https://cdn2.cloudnativedays.jp" >> .env.production
+          echo "NEXT_PUBLIC_APP_URL=https://cnd2.cloudnativedays.jp" >> .env.production
           echo "PRAIRIE_CARD_BASE_URL=https://prairie-card.cloudnativedays.jp" >> .env.production
           
       - name: Build Next.js application
@@ -53,14 +52,11 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: cnd2-app
-          directory: out
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          wranglerVersion: '3'
-        env:
-          # Avoid UTF-8 issues with commit messages
-          CF_PAGES_COMMIT_SHA: ${{ github.sha }}
+          # --commit-dirty=true: ビルドプロセスで生成されたファイル（.env.production等）を含めてデプロイ
+          # --commit-message: UTF-8エンコーディング問題を回避するためASCII文字のみ使用
+          # --commit-hash: Cloudflare側でデプロイを追跡するため明示的に指定
+          command: pages deploy out --project-name=cnd2-app --commit-dirty=true --commit-message="Deploy from GitHub Actions - SHA ${{ github.sha }}" --commit-hash="${{ github.sha }}"
