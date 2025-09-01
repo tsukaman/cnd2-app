@@ -25,7 +25,7 @@
 - **動的スコアリング**: 0-100%の全範囲で相性を評価（低スコアでもポジティブな体験）
 - **Prairie Card連携**: Edge Runtime対応の高速パーサーで自動プロフィール取得
 - **AI診断**: OpenAI GPT-4o-miniを使用した高度な相性分析（フォールバック機構付き）
-- **結果共有**: QRコードやNFC、URLでの診断結果シェア機能
+- **結果共有**: QRコードやNFC、URLでの診断結果シェア機能（静的エクスポート対応）
 - **美しいUI**: ダークテーマベースの洗練されたデザイン
 - **プライバシー配慮**: 診断結果は7日後に自動削除
 - **セキュリティ対策**: HTML sanitization & XSS protection完備
@@ -48,9 +48,10 @@
 
 ### バックエンド
 - **Dual API Implementation**: 
-  - Next.js API Routes (src/app/api/*) for development
+  - Next.js API Routes (src/app/api/*) for development（一部未実装）
   - Cloudflare Pages Functions (functions/*) for production
   - **diagnosis-multi**: 本番環境対応済み（v1.3.2で修正）
+  - **結果共有**: クエリパラメータ形式 `/duo/results?id=[id]`（静的エクスポート対応）
 - **Runtime**: Edge Runtime compatible
 - **AI Integration**: OpenAI API (GPT-4o-mini) with 10s timeout
 - **Data Storage**: Cloudflare Workers KV (7日間自動削除)
