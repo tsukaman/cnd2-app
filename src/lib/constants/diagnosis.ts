@@ -2,6 +2,11 @@
  * Constants for diagnosis features
  */
 
+import type { DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
+
+// 診断スタイル定数
+export const DIAGNOSIS_STYLES = ['creative', 'astrological', 'fortune', 'technical'] as const satisfies DiagnosisStyle[];
+
 // Processing time estimates
 export const PROCESSING_TIME_ESTIMATES = {
   ALL_STYLES: '約2-3秒',

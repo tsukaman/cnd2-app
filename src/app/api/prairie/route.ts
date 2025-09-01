@@ -121,7 +121,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       );
     }
 
-    return NextResponse.json(profile);
+    return NextResponse.json({ data: profile });
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

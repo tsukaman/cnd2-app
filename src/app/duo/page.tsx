@@ -10,7 +10,7 @@ import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
-import { MULTI_STYLE_RETRY_CONFIG, ANIMATION_DURATIONS } from '@/lib/constants/diagnosis';
+import { MULTI_STYLE_RETRY_CONFIG, ANIMATION_DURATIONS, DIAGNOSIS_STYLES } from '@/lib/constants/diagnosis';
 import type { PrairieProfile } from '@/types';
 import type { DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
 
@@ -20,7 +20,7 @@ export default function DuoPage() {
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   // 常に全スタイルで診断を実行
-  const allStyles: DiagnosisStyle[] = ['creative', 'astrological', 'fortune', 'technical'];
+  const allStyles = [...DIAGNOSIS_STYLES] as DiagnosisStyle[];
   const { loading: parsingLoading, error: parseError } = usePrairieCard();
   const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
 
@@ -95,6 +95,7 @@ export default function DuoPage() {
         
       // All attempts failed
       console.error('Multi-style diagnosis failed after 3 attempts:', lastError);
+      // TODO: Toast通知やエラーコンポーネントへの置き換えを検討
       alert('診断の生成に失敗しました。もう一度お試しください。');
     }
   };
