@@ -13,7 +13,7 @@ jobs:
       deployments: write
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       # macOS Tart環境用: Homebrewの確認とNode.jsセットアップ
       - name: Check Node.js installation
@@ -49,6 +49,14 @@ jobs:
           npm config set cache ~/.npm-cache --global
           npm ci
       
+      - name: Run tests
+        run: npm test
+        env:
+          CI: true
+      
+      - name: Run TypeScript type checking
+        run: npm run type-check
+      
       - name: Build
         run: npm run build
         env:
@@ -63,6 +71,3 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy out --project-name=cnd2-app --commit-dirty=true --commit-message="Deploy from GitHub Actions - SHA ${{ github.sha }}" --commit-hash="${{ github.sha }}"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
