@@ -81,10 +81,35 @@ export function filterFramerMotionProps(props: MockComponentProps) {
 }
 
 /**
+ * Map of HTML element names to their corresponding DOM element types
+ */
+type ElementTypeMap = {
+  div: HTMLDivElement;
+  span: HTMLSpanElement;
+  button: HTMLButtonElement;
+  a: HTMLAnchorElement;
+  img: HTMLImageElement;
+  section: HTMLElement;
+  article: HTMLElement;
+  header: HTMLElement;
+  footer: HTMLElement;
+  nav: HTMLElement;
+  ul: HTMLUListElement;
+  li: HTMLLIElement;
+  p: HTMLParagraphElement;
+  h1: HTMLHeadingElement;
+  h2: HTMLHeadingElement;
+  h3: HTMLHeadingElement;
+  form: HTMLFormElement;
+  input: HTMLInputElement;
+  label: HTMLLabelElement;
+};
+
+/**
  * Creates a mock motion component that filters out Framer Motion props
  */
-export function createMotionComponent(element: string) {
-  return React.forwardRef<HTMLElement, MockComponentProps>(({ children, ...props }, ref) => {
+export function createMotionComponent<K extends keyof ElementTypeMap>(element: K) {
+  return React.forwardRef<ElementTypeMap[K], MockComponentProps>(({ children, ...props }, ref) => {
     const filteredProps = filterFramerMotionProps(props);
     return React.createElement(element, { ...filteredProps, ref }, children);
   });

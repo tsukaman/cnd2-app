@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { DiagnosisFullDebug } from '../DiagnosisFullDebug';
-import { DiagnosisResult } from '@/types';
+import type { DiagnosisResult } from '@/types';
 
 // モックデータ
 const mockResult: DiagnosisResult = {
