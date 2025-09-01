@@ -116,6 +116,9 @@ export interface DiagnosisResult {
   shareTag?: string;
   luckyItem?: string;
   luckyAction?: string;
+  luckyProject?: string; // CNCFプロジェクト
+  luckyProjectDescription?: string; // プロジェクトの説明
+  modelUsed?: string; // 使用したAIモデル
   // Fortune telling elements (点取り占い)
   fortuneScore?: number; // 0-100点の運勢スコア
   fortuneGrade?: FortuneGrade; // 運勢グレード (大吉/吉/中吉/小吉/末吉/凶)

@@ -217,7 +217,7 @@ export class UnifiedDiagnosisEngine {
       }
 
       // luckyProjectがある場合は分解（共通関数を使用）
-      let processedResult = { ...result };
+      let processedResult: any = { ...result };
       if (result.luckyProject) {
         const { name, description } = parseLuckyProject(result.luckyProject);
         processedResult.luckyProject = name;
@@ -231,8 +231,7 @@ export class UnifiedDiagnosisEngine {
         participants: [profile1, profile2],
         createdAt: new Date().toISOString(),
         aiPowered: true,
-        modelUsed: model,
-        style
+        modelUsed: model
       };
 
     } catch (error) {
@@ -303,7 +302,7 @@ export class UnifiedDiagnosisEngine {
       }
 
       // luckyProjectがある場合は分解（共通関数を使用）
-      let processedResult = { ...result };
+      let processedResult: any = { ...result };
       if (result.luckyProject) {
         const { name, description } = parseLuckyProject(result.luckyProject);
         processedResult.luckyProject = name;
@@ -317,8 +316,7 @@ export class UnifiedDiagnosisEngine {
         participants: profiles,
         createdAt: new Date().toISOString(),
         aiPowered: true,
-        modelUsed: model,
-        style
+        modelUsed: model
       };
 
     } catch (error) {

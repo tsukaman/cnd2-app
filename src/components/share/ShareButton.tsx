@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, QrCode, Copy, Check, X, Smartphone } from 'lucide-react';
 import QRCode from 'qrcode';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 interface ShareButtonProps {
   resultId: string;
@@ -17,7 +18,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [nfcWriting, setNfcWriting] = useState(false);
   
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2.cloudnativedays.jp'}/result/${resultId}`;
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2-app.pages.dev'}/duo/results?id=${resultId}`;
   const shareText = `CND²相性診断結果: ${score}% #CNDxCnD`;
   
   const handleShare = async () => {
@@ -53,7 +54,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
           url: shareUrl,
         });
       } catch (err) {
-        console.log('Share cancelled or failed');
+        logger.info('[ShareButton] Share cancelled or failed');
       }
     }
   };
@@ -67,7 +68,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
         await ndef.write(shareUrl);
         toast.success('NFCタグに書き込みました');
       } catch (error) {
-        console.error('NFC write failed:', error);
+        logger.error('[ShareButton] NFC write failed:', error);
         toast.error('NFCの書き込みに失敗しました');
       } finally {
         setNfcWriting(false);

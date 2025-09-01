@@ -9,6 +9,8 @@ import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
+import { isProduction } from '@/lib/utils/environment';
+import { logger } from '@/lib/logger';
 import type { PrairieProfile } from '@/types';
 
 export default function GroupPage() {
@@ -65,19 +67,19 @@ export default function GroupPage() {
                 body: JSON.stringify(result),
               });
               if (response.ok) {
-                console.log('[Group] Successfully saved to KV');
+                logger.info('[Group] Successfully saved to KV');
                 return;
               }
-              console.warn(`[Group] KV save attempt ${i + 1} failed:`, response.status);
+              logger.warn(`[Group] KV save attempt ${i + 1} failed:`, response.status);
             } catch (err) {
-              console.warn(`[Group] KV save attempt ${i + 1} error:`, err);
+              logger.warn(`[Group] KV save attempt ${i + 1} error:`, err);
             }
             // Wait before retry (exponential backoff)
             if (i < RETRY_CONFIG.maxRetries - 1) {
               await new Promise(resolve => setTimeout(resolve, calculateBackoffDelay(i)));
             }
           }
-          console.error('[Group] Failed to save to KV after all retries');
+          logger.error('[Group] Failed to save to KV after all retries');
         };
         saveToKV();
         
