@@ -34,7 +34,9 @@ jest.mock('@/hooks/useClipboardPaste', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => require('../../../test-utils/framer-motion-mock').framerMotionMock);
+jest.mock('framer-motion', () => ({
+  ...jest.requireActual('../../../test-utils/framer-motion-mock').framerMotionMock
+}));
 
 // Mock platform utils
 jest.mock('@/lib/platform', () => ({

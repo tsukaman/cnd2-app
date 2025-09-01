@@ -9,7 +9,6 @@ import { setupGlobalMocks, createMockPrairieProfile } from '@/test-utils/mocks';
 jest.mock('@/components/share/ShareButton', () => ({
   __esModule: true,
   default: ({ result }: any) => {
-    const React = require('react');
     return React.createElement('button', null, 'シェア');
   },
 }));
@@ -17,13 +16,14 @@ jest.mock('@/components/share/ShareButton', () => ({
 // Mock QRCodeModal component  
 jest.mock('@/components/share/QRCodeModal', () => ({
   QRCodeModal: ({ isOpen, onClose, url }: any) => {
-    const React = require('react');
     return isOpen ? React.createElement('div', { 'data-testid': 'qr-modal' }, url) : null;
   },
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => require('../../../test-utils/framer-motion-mock').framerMotionMock);
+jest.mock('framer-motion', () => ({
+  ...jest.requireActual('../../../test-utils/framer-motion-mock').framerMotionMock
+}));
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
@@ -103,7 +103,6 @@ const { localStorage: localStorageMock } = setupGlobalMocks();
 jest.mock('react-confetti', () => ({
   __esModule: true,
   default: () => {
-    const React = require('react');
     return React.createElement('div', { 'data-testid': 'confetti' });
   },
 }));

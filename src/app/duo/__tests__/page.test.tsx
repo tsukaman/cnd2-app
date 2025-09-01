@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import DuoPage from '../page';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createLocalStorageMock, createMockPrairieProfile } from '@/test-utils/mocks';
 import type { PrairieProfile, DiagnosisResult } from '@/types';
 
@@ -329,7 +329,6 @@ describe.skip('DuoPage', () => {
   describe('URLパラメータ処理', () => {
     it('URLパラメータが設定されていることを確認', () => {
       // useSearchParamsモックから値が取得できることを確認
-      const { useSearchParams } = require('next/navigation');
       const searchParams = useSearchParams();
       
       expect(searchParams.get('participant1')).toBe('https://prairie.cards/test1');
