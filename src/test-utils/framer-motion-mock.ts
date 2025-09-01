@@ -3,7 +3,24 @@
  * Filters out Framer Motion specific props to avoid React warnings
  */
 
-const React = require('react');
+import * as React from 'react';
+
+// Type definitions for mock components
+type MockComponentProps = {
+  children?: React.ReactNode;
+  [key: string]: unknown;
+};
+
+type MockAnimationControls = {
+  start: jest.Mock;
+  stop: jest.Mock;
+  set: jest.Mock;
+};
+
+type MockMotionValue<T = unknown> = {
+  get: () => T;
+  set: jest.Mock;
+};
 
 // Framer Motion specific props that should be filtered out
 const framerMotionProps = new Set([
@@ -51,8 +68,8 @@ const framerMotionProps = new Set([
 /**
  * Filters out Framer Motion specific props from the props object
  */
-export function filterFramerMotionProps(props: any) {
-  const filteredProps: any = {};
+export function filterFramerMotionProps(props: MockComponentProps) {
+  const filteredProps: Record<string, unknown> = {};
   
   for (const key in props) {
     if (!framerMotionProps.has(key)) {
@@ -67,7 +84,7 @@ export function filterFramerMotionProps(props: any) {
  * Creates a mock motion component that filters out Framer Motion props
  */
 export function createMotionComponent(element: string) {
-  return React.forwardRef(({ children, ...props }: any, ref: any) => {
+  return React.forwardRef<HTMLElement, MockComponentProps>(({ children, ...props }, ref) => {
     const filteredProps = filterFramerMotionProps(props);
     return React.createElement(element, { ...filteredProps, ref }, children);
   });
@@ -98,18 +115,18 @@ export const framerMotionMock = {
     input: createMotionComponent('input'),
     label: createMotionComponent('label'),
   },
-  AnimatePresence: ({ children }: any) => children,
-  useAnimation: () => ({
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  useAnimation: (): MockAnimationControls => ({
     start: jest.fn(),
     stop: jest.fn(),
     set: jest.fn(),
   }),
-  useMotionValue: (value: any) => ({ get: () => value, set: jest.fn() }),
-  useTransform: (value: any) => value,
+  useMotionValue: <T = unknown>(value: T): MockMotionValue<T> => ({ get: () => value, set: jest.fn() }),
+  useTransform: <T = unknown>(value: T) => value,
   useScroll: () => ({ scrollY: 0, scrollX: 0 }),
   useInView: () => true,
   domAnimation: {},
-  LazyMotion: ({ children }: any) => children,
+  LazyMotion: ({ children }: { children: React.ReactNode }) => children,
   m: {
     div: createMotionComponent('div'),
     span: createMotionComponent('span'),

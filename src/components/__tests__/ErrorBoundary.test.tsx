@@ -3,7 +3,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ErrorBoundary from '../ErrorBoundary';
 
 // Mock framer-motion to avoid animation issues in tests
-jest.mock('framer-motion', () => require('../../test-utils/framer-motion-mock').framerMotionMock);
+jest.mock('framer-motion', () => ({
+  ...jest.requireActual('../../test-utils/framer-motion-mock').framerMotionMock
+}));
 
 // Mock the ErrorHandler to prevent any side effects
 jest.mock('@/lib/errors', () => ({
