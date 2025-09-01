@@ -15,6 +15,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - 大きなコンポーネントのリファクタリング予定
 
+## [1.3.3] - 2025-09-01
+
+### Fixed
+- 🐛 **診断結果表示エラーを修正** (#113)
+  - Cloudflare FunctionsのsuccessResponseラッパーによるデータネスト問題を解決
+  - `TypeError: Cannot read properties of undefined (reading 'length')`エラーを修正
+  - 診断結果画面での防御的データアクセスを実装
+
+### Improved
+- **エラーハンドリング強化**
+  - レスポンスデータの安全な展開（`responseData.data || responseData`）
+  - デフォルト値設定によるundefinedエラー防止
+  - APIレスポンス形式の互換性向上
+
+## [1.3.2] - 2025-09-01
+
+### Fixed
+- 🚨 **本番環境でのdiagnosis-multi APIエンドポイント405エラーを解決** (#112)
+  - Cloudflare Functions用の`functions/api/diagnosis-multi.js`を新規作成
+  - Next.jsの静的エクスポート設定によるAPI Route無効化問題を修正
+  - Prairie Cardは正常に読み込まれるが診断開始時にエラーになる問題を解決
+
+### Added
+- **Cloudflare Functions用のdiagnosis-multi実装**
+  - 4つのスタイル（creative, astrological, fortune, technical）の並列処理
+  - エラー時のフォールバック診断機能
+  - 入力サニタイゼーションによるXSS対策
+
+### Improved
+- **セキュリティ強化**
+  - HTMLサニタイザー実装（`functions/utils/sanitizer.js`）
+  - プロファイルデータの再帰的サニタイゼーション
+- **コード品質改善**
+  - マジックナンバーを定数化（FALLBACK_COMPATIBILITY）
+  - Setを使用したスタイル検証の高速化
+  - エラータイプ別の詳細なハンドリング（400, 408, 500）
+
 ## [1.3.1] - 2025-09-01
 
 ### Changed

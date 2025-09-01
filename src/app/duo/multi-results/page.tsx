@@ -67,6 +67,18 @@ export default function MultiResultsPage() {
     return null;
   }
 
+  // APIレスポンスが直接格納されている場合と、ラップされている場合の両方に対応
+  const diagnosisData = results.result ? results.result : results;
+  const multiResults = diagnosisData.multiResults || diagnosisData.results || [];
+  const summary = diagnosisData.summary || {
+    bestStyle: 'creative',
+    bestScore: 0,
+    averageScore: 0,
+    allScores: [],
+    recommendation: ''
+  };
+  const metadata = diagnosisData.metadata || {};
+
   return (
     <div className="min-h-screen relative overflow-hidden stars-bg">
       <BackgroundEffects />
@@ -102,7 +114,7 @@ export default function MultiResultsPage() {
               複数スタイル診断結果
             </h1>
             <p className="text-gray-300 text-lg">
-              {results.multiResults.length}つのスタイルで診断しました
+              {multiResults.length}つのスタイルで診断しました
             </p>
           </div>
         </motion.div>
@@ -114,20 +126,20 @@ export default function MultiResultsPage() {
           transition={{ delay: 0.2 }}
         >
           <MultiStyleResults 
-            results={results.multiResults} 
-            summary={results.summary}
+            results={multiResults} 
+            summary={summary}
           />
         </motion.div>
 
         {/* 処理時間の表示 */}
-        {results.metadata && (
+        {metadata && metadata.processingTimeMs && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
             className="mt-8 text-center text-sm text-gray-500"
           >
-            処理時間: {(results.metadata.processingTimeMs / 1000).toFixed(2)}秒
+            処理時間: {(metadata.processingTimeMs / 1000).toFixed(2)}秒
           </motion.div>
         )}
 
