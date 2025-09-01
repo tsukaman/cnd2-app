@@ -98,4 +98,4 @@ export async function onRequestOptions({ request }) {
   });
 }
 
-// 古いgenerateDiagnosis関数は削除され、diagnosis-v4.jsのgenerateAstrologicalDiagnosisに置き換えられました
+// OpenAI APIを使用したAI診断エンジン（diagnosis-v4-openai.js）を使用
