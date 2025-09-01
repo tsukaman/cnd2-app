@@ -138,32 +138,65 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             </p>
           </motion.div>
 
-          {/* 強みと機会 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.1 }}
-            className="mb-8"
-          >
-            <div className="flex items-center mb-4">
-              <MessageCircle className="w-5 h-5 text-cyan-400 mr-2" />
-              <h3 className="text-lg font-semibold text-white">強みと相性</h3>
-            </div>
-            <div className="space-y-2">
-              {(result.strengths || result.conversationStarters || []).map((strength, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.2 + index * 0.1 }}
-                  className="flex items-start"
-                >
-                  <span className="text-cyan-400 mr-2">•</span>
-                  <span className="text-white/80">{strength}</span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+          {/* おすすめの会話トピック */}
+          {result.conversationStarters && result.conversationStarters.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1 }}
+              className="mb-8"
+            >
+              <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl p-6 border border-cyan-500/30">
+                <div className="flex items-center mb-4">
+                  <MessageCircle className="w-6 h-6 text-cyan-400 mr-3" />
+                  <h3 className="text-xl font-bold text-white">💬 おすすめの会話トピック</h3>
+                </div>
+                <div className="space-y-3">
+                  {result.conversationStarters.map((topic, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 1.2 + index * 0.1 }}
+                      className="flex items-center bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors"
+                    >
+                      <span className="text-cyan-400 text-lg mr-3">{index + 1}</span>
+                      <span className="text-white/90 flex-1">{topic}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 強みと相性 */}
+          {result.strengths && result.strengths.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.3 }}
+              className="mb-8"
+            >
+              <div className="flex items-center mb-4">
+                <Trophy className="w-5 h-5 text-yellow-400 mr-2" />
+                <h3 className="text-lg font-semibold text-white">強みと相性</h3>
+              </div>
+              <div className="space-y-2">
+                {result.strengths.map((strength, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 1.4 + index * 0.1 }}
+                    className="flex items-start"
+                  >
+                    <span className="text-yellow-400 mr-2">•</span>
+                    <span className="text-white/80">{strength}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* 点取り占い */}
           {result.fortuneTelling && (
