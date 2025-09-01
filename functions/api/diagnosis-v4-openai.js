@@ -386,6 +386,7 @@ function generateFallbackDiagnosis(profile1, profile2, env) {
   if (isDevelopment) {
     console.warn(FALLBACK_CONFIG.WARNING_MESSAGE.DEVELOPMENT);
   }
+  
   const name1 = profile1.basic?.name || profile1.name || 'エンジニア1';
   const name2 = profile2.basic?.name || profile2.name || 'エンジニア2';
   
@@ -405,6 +406,10 @@ function generateFallbackDiagnosis(profile1, profile2, env) {
     '🎮 オンラインゲームでチームビルディング'
   ];
   
+  // CNCFプロジェクトからランダムに選択
+  const randomProject = CNCF_PROJECTS[Math.floor(Math.random() * CNCF_PROJECTS.length)];
+  const luckyProject = `${randomProject} - 2人の技術的な成長を加速させる最高のプロジェクト！`;
+  
   // 開発環境では型を明確にフォールバックとわかるようにする
   const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
   
@@ -416,13 +421,20 @@ function generateFallbackDiagnosis(profile1, profile2, env) {
           'DevOps Journeyの同志'),
     compatibility,
     summary: `${name1}さんと${name2}さんの技術的な波動が共鳴しています。`,
+    conversationStarters: [
+      '最近触った新しい技術は？',
+      'デバッグで一番苦労した経験は？',
+      'コードレビューで重視するポイントは？',
+      '理想の開発環境について教えて',
+      'プログラミングを始めたきっかけは？'
+    ],
+    hiddenGems: 'お互いの技術的な視点が補完的で、一緒にプロジェクトを進めると素晴らしい成果が期待できます。',
+    shareTag: '#CND2診断',
+    luckyItem: luckyItems[Math.floor(Math.random() * luckyItems.length)],
+    luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
+    luckyProject: luckyProject,
     astrologicalAnalysis: `二人のエンジニアリング・エナジーが美しく調和し、まさに分散システムのように補完し合っています。`,
     techStackCompatibility: `お互いの技術スタックが素晴らしい相性を示しています。`,
-    conversationTopics: [
-      '最近のCloud Native界隈のトレンドについて',
-      '好きな技術書について',
-      'OSSへの貢献経験について'
-    ],
     strengths: [
       '技術的な好奇心が旺盛',
       'Cloud Nativeへの情熱を共有',
@@ -434,12 +446,14 @@ function generateFallbackDiagnosis(profile1, profile2, env) {
       'Lightning Talkでの共同発表'
     ],
     advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
-    luckyItem: luckyItems[Math.floor(Math.random() * luckyItems.length)],
-    luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
     participants: [profile1, profile2],
     createdAt: new Date().toISOString(),
     aiPowered: false,
-    ...(isDevelopment ? { metadata: FALLBACK_CONFIG.METADATA } : {}),
+    metadata: {
+      participant1: name1,
+      participant2: name2,
+      ...(isDevelopment ? FALLBACK_CONFIG.METADATA : {})
+    },
     ...(isDevelopment ? { warning: FALLBACK_CONFIG.WARNING_MESSAGE.DEVELOPMENT } : {})
   };
 }
