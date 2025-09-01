@@ -380,21 +380,41 @@ try {
 - [OpenAI API Documentation](https://platform.openai.com/docs)
 - [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
 
+## 📖 プロジェクトドキュメント
+
+- [環境変数設定ガイド](docs/ENVIRONMENT_VARIABLES.md) - すべての環境変数の詳細
+- [イベント運用ガイド](docs/EVENT_OPERATION_GUIDE.md) - CloudNative Days Winter 2025運用手順
+
 ## 🔄 最近の重要な変更
 
-### 2025-09-01の変更（最新 - PR #117）
-1. **コード品質の改善（Claude Review対応）** ✅
+### 2025-09-01の変更（最新）
+
+#### PR #117 - コード品質の改善（Claude Review対応） ✅
+1. **コード品質の改善**
    - **型安全性の向上**: `AnalysisMetadata`インターフェース追加、`as any`完全除去
    - **Prairie Card URLセキュリティ強化**: 専用バリデーター実装、HTTPS強制、攻撃対策
    - **コード可読性向上**: 複雑な正規表現への詳細コメント追加
    - **Claude Review評価**: 5.0/5.0 ⭐⭐⭐⭐⭐（完璧な実装）
 
-### 2025-09-01の変更（PR #115）
-1. **診断システムの大幅改善** ✅
+#### PR #115 - 診断システムの大幅改善 ✅
+1. **診断システムの大幅改善**
    - **固定85%スコア問題を解決**: 動的スコアリング（0-100%）実装
    - **4スタイル診断を単一診断に統合**: シンプルで分かりやすいUX
    - **低スコアでもポジティブな体験設計**: 「レアケース！」「話題作り！」として楽しめる
    - **新しい診断結果ページ**: `/duo/results`を追加、紙吹雪エフェクト付き
+
+#### フォールバック診断の環境別制御機能追加
+1. **フォールバック診断の制御強化**
+   - **環境変数による制御**: `ENABLE_FALLBACK`（デフォルト: false）
+   - **イベント運用最適化**: エラー時は即座に検知できるようデフォルト無効
+   - **開発/本番で異なるスコア範囲**: 開発30-40点、本番85-100点
+   - **フォールバック設定ファイル**: `/lib/constants/fallback.ts`に一元管理
+
+2. **コード品質の改善（レビュー対応）**
+   - **重複コード排除**: Cloudflare Functions用の共通設定 `/functions/utils/fallback-config.js`
+   - **型安全性向上**: `ExtractedProfileInfo`型を定義
+   - **環境判定ヘルパー**: `/lib/utils/environment.ts`で環境判定を一元化
+   - **環境変数バリデーション**: `getEnvBoolean`等の型安全な取得関数
    
 2. **コード品質の大幅改善** ✅
    - **プロンプトテンプレートの外部化**: `lib/prompts/diagnosis-prompts.ts`に分離

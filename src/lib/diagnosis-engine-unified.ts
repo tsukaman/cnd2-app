@@ -6,6 +6,13 @@
 
 import { PrairieProfile, DiagnosisResult, FortuneTelling } from '@/types';
 import { logger } from '@/lib/logger';
+import { 
+  isFallbackAllowed, 
+  getFallbackScoreRange, 
+  generateFallbackScore, 
+  getFallbackWarning,
+  FALLBACK_CONFIG 
+} from '@/lib/constants/fallback';
 
 /**
  * 診断スタイル
@@ -93,6 +100,22 @@ const RESULT_FORMAT = `{
     "message": "運勢メッセージ（100文字程度）"
   }
 }`;
+
+/**
+ * プロフィールから抽出する関連情報の型
+ */
+interface ExtractedProfileInfo {
+  name: string;
+  title: string;
+  company: string;
+  bio: string;
+  skills: string[];
+  interests: string[];
+  motto: string;
+  tags: string[];
+  certifications: string[];
+  communities: string[];
+}
 
 /**
  * 統合診断エンジンクラス
@@ -334,7 +357,7 @@ ${members}
   /**
    * プロフィールから関連情報を抽出
    */
-  private extractRelevantInfo(profile: PrairieProfile): any {
+  private extractRelevantInfo(profile: PrairieProfile): ExtractedProfileInfo {
     return {
       name: profile.basic.name,
       title: profile.basic.title || '',
@@ -358,8 +381,21 @@ ${members}
     style: DiagnosisStyle,
     enableFortuneTelling: boolean
   ): DiagnosisResult {
-    const compatibility = DIAGNOSIS_CONFIG.COMPATIBILITY.MIN + 
-      Math.floor(Math.random() * (DIAGNOSIS_CONFIG.COMPATIBILITY.MAX - DIAGNOSIS_CONFIG.COMPATIBILITY.MIN));
+    // 開発環境でフォールバックが無効の場合はエラーを投げる
+    if (!isFallbackAllowed()) {
+      const error = new Error('Fallback diagnosis is disabled in development. Please configure OpenAI API key.');
+      logger.error('[Unified Engine]', error);
+      throw error;
+    }
+    
+    // 環境に応じたスコアを生成
+    const compatibility = generateFallbackScore();
+    
+    // 開発環境で警告を出力
+    const warning = getFallbackWarning();
+    if (warning) {
+      logger.warn('[Unified Engine]', warning);
+    }
     const name1 = profile1.basic.name || 'エンジニア1';
     const name2 = profile2.basic.name || 'エンジニア2';
     
@@ -406,12 +442,15 @@ ${members}
       profile1, profile2, commonSkills, commonInterests
     );
     
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
+    
     const result: DiagnosisResult = {
-      id: this.generateId(),
+      id: isDevelopment ? `${FALLBACK_CONFIG.ID_PREFIX}${this.generateId()}` : this.generateId(),
       mode: 'duo',
-      type: typeNames[style][Math.floor(Math.random() * typeNames[style].length)],
+      type: typePrefix + typeNames[style][Math.floor(Math.random() * typeNames[style].length)],
       compatibility,
-      summary: this.generateDynamicSummary(name1, name2, style, commonSkills),
+      summary: (isDevelopment ? '[FALLBACK] ' : '') + this.generateDynamicSummary(name1, name2, style, commonSkills),
       astrologicalAnalysis: this.generateDynamicAnalysis(profile1, profile2, style),
       techStackCompatibility: this.generateTechCompatibility(profile1, profile2),
       conversationTopics,
@@ -422,7 +461,9 @@ ${members}
       luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
       participants: [profile1, profile2],
       createdAt: new Date().toISOString(),
-      aiPowered: false
+      aiPowered: false,
+      ...(isDevelopment ? { metadata: FALLBACK_CONFIG.METADATA } : {}),
+      ...(warning ? { warning } : {})
     };
     
     if (enableFortuneTelling) {
@@ -440,8 +481,21 @@ ${members}
     style: DiagnosisStyle,
     enableFortuneTelling: boolean
   ): DiagnosisResult {
-    const compatibility = DIAGNOSIS_CONFIG.COMPATIBILITY.MIN + 
-      Math.floor(Math.random() * (DIAGNOSIS_CONFIG.COMPATIBILITY.MAX - DIAGNOSIS_CONFIG.COMPATIBILITY.MIN));
+    // 開発環境でフォールバックが無効の場合はエラーを投げる
+    if (!isFallbackAllowed()) {
+      const error = new Error('Fallback diagnosis is disabled in development. Please configure OpenAI API key.');
+      logger.error('[Unified Engine]', error);
+      throw error;
+    }
+    
+    // 環境に応じたスコアを生成
+    const compatibility = generateFallbackScore();
+    
+    // 開発環境で警告を出力
+    const warning = getFallbackWarning();
+    if (warning) {
+      logger.warn('[Unified Engine]', warning);
+    }
     const names = profiles.map(p => p.basic.name || `メンバー${profiles.indexOf(p) + 1}`);
     
     // グループの共通スキルと興味を分析
@@ -449,12 +503,15 @@ ${members}
     const allInterests = profiles.flatMap(p => p.details?.interests || []);
     const commonElements = this.findMostCommon(allSkills.concat(allInterests));
     
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
+    
     const result: DiagnosisResult = {
-      id: this.generateId(),
+      id: isDevelopment ? `${FALLBACK_CONFIG.ID_PREFIX}${this.generateId()}` : this.generateId(),
       mode: 'group',
-      type: `${profiles.length}人の${commonElements[0] || 'Tech'}チーム`,
+      type: typePrefix + `${profiles.length}人の${commonElements[0] || 'Tech'}チーム`,
       compatibility,
-      summary: `${names.join('、')}の${profiles.length}人が素晴らしいチームダイナミクスを形成しています。`,
+      summary: (isDevelopment ? '[FALLBACK] ' : '') + `${names.join('、')}の${profiles.length}人が素晴らしいチームダイナミクスを形成しています。`,
       astrologicalAnalysis: `グループ全体のエナジーが調和し、各メンバーの強みが相乗効果を生み出しています。`,
       techStackCompatibility: `多様なスキルセットが完璧に補完し合い、あらゆる技術課題に対応可能です。`,
       conversationTopics: this.generateGroupTopics(profiles),
@@ -465,7 +522,9 @@ ${members}
       luckyAction: '🚀 全員でのモブプログラミングセッション',
       participants: profiles,
       createdAt: new Date().toISOString(),
-      aiPowered: false
+      aiPowered: false,
+      ...(isDevelopment ? { metadata: FALLBACK_CONFIG.METADATA } : {}),
+      ...(warning ? { warning } : {})
     };
     
     if (enableFortuneTelling) {

@@ -13,11 +13,40 @@ import { sanitizer } from '../utils/sanitizer.js';
 const DIAGNOSIS_STYLES = ['creative', 'astrological', 'fortune', 'technical'];
 const DIAGNOSIS_STYLES_SET = new Set(DIAGNOSIS_STYLES);
 
-// Fallback compatibility configuration
-const FALLBACK_COMPATIBILITY = {
-  MIN: 85,
-  MAX: 100,
-  RANGE: 15
+// Fallback configuration
+const FALLBACK_CONFIG = {
+  // 開発環境でフォールバックを許可するか
+  ALLOW_IN_DEVELOPMENT: false,
+  
+  // フォールバック時のスコア範囲（開発環境では低めに設定）
+  DEVELOPMENT_SCORE: {
+    MIN: 30,
+    MAX: 40,
+    RANGE: 10
+  },
+  
+  // 本番環境のスコア範囲（ユーザー体験を維持）
+  PRODUCTION_SCORE: {
+    MIN: 85,
+    MAX: 100,
+    RANGE: 15
+  },
+  
+  // フォールバック時の識別子
+  ID_PREFIX: 'fallback-',
+  
+  // フォールバック時の警告メッセージ
+  WARNING_MESSAGE: {
+    DEVELOPMENT: '⚠️ フォールバック診断が動作しています。OpenAI APIキーを確認してください。',
+    PRODUCTION: ''  // 本番環境では表示しない
+  },
+  
+  // フォールバック時のメタデータ
+  METADATA: {
+    engine: 'fallback',
+    model: 'mock',
+    warning: 'This is a fallback diagnosis result'
+  }
 };
 
 /**
@@ -117,7 +146,7 @@ export async function onRequestPost({ request, env }) {
           // Return a fallback result on error
           return {
             style,
-            result: generateFallbackResult(profiles, mode, style)
+            result: generateFallbackResult(profiles, mode, style, env)
           };
         }
       });
@@ -165,9 +194,18 @@ export async function onRequestPost({ request, env }) {
 /**
  * Generate a fallback result when diagnosis fails
  */
-function generateFallbackResult(profiles, mode, style) {
-  const compatibility = Math.floor(Math.random() * FALLBACK_COMPATIBILITY.RANGE) + FALLBACK_COMPATIBILITY.MIN;
-  const id = generateId();
+function generateFallbackResult(profiles, mode, style, env) {
+  const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+  const scoreRange = isDevelopment 
+    ? FALLBACK_CONFIG.DEVELOPMENT_SCORE 
+    : FALLBACK_CONFIG.PRODUCTION_SCORE;
+  
+  const compatibility = Math.floor(Math.random() * scoreRange.RANGE) + scoreRange.MIN;
+  
+  // 開発環境で警告をログ出力
+  if (isDevelopment) {
+    console.warn(`[${style}] ${FALLBACK_CONFIG.WARNING_MESSAGE.DEVELOPMENT}`);
+  }
   
   const styleMessages = {
     creative: 'クリエイティブな相性を分析中...',
@@ -176,17 +214,22 @@ function generateFallbackResult(profiles, mode, style) {
     technical: '技術的な相性を計算中...'
   };
   
+  // 開発環境では型を明確にフォールバックとわかるようにする
+  const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
+  
   return {
-    id,
+    id: isDevelopment ? `${FALLBACK_CONFIG.ID_PREFIX}${generateId()}` : generateId(),
     mode,
-    type: `${style}診断`,
+    type: typePrefix + `${style}診断`,
     compatibility,
-    summary: styleMessages[style] || '診断を生成中...',
+    summary: (isDevelopment ? '[FALLBACK] ' : '') + (styleMessages[style] || '診断を生成中...'),
     strengths: ['強い協調性', '補完的なスキル', '共通の価値観'],
     opportunities: ['新しいプロジェクトの可能性', '技術交流の機会', '成長の余地'],
     advice: '素晴らしい相性です。お互いの強みを活かして協力しましょう。',
     participants: profiles,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    ...(isDevelopment ? { metadata: FALLBACK_CONFIG.METADATA } : {}),
+    ...(isDevelopment ? { warning: FALLBACK_CONFIG.WARNING_MESSAGE.DEVELOPMENT } : {})
   };
 }
 
