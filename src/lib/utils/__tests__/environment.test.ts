@@ -12,6 +12,15 @@ import {
 describe('環境判定ユーティリティ', () => {
   const originalEnv = process.env;
 
+  // NODE_ENV設定用ヘルパー関数
+  const setNodeEnv = (value: string) => {
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value,
+      writable: true,
+      configurable: true
+    });
+  };
+
   beforeEach(() => {
     jest.resetModules();
     process.env = { ...originalEnv };
@@ -23,18 +32,18 @@ describe('環境判定ユーティリティ', () => {
 
   describe('isDevelopment', () => {
     it('NODE_ENV=developmentの場合trueを返す', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       expect(isDevelopment()).toBe(true);
     });
 
     it('ENVIRONMENT=developmentの場合trueを返す（Cloudflare対応）', () => {
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       process.env.ENVIRONMENT = 'development';
       expect(isDevelopment()).toBe(true);
     });
 
     it('どちらもdevelopmentでない場合falseを返す', () => {
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       process.env.ENVIRONMENT = 'production';
       expect(isDevelopment()).toBe(false);
     });
@@ -42,31 +51,31 @@ describe('環境判定ユーティリティ', () => {
 
   describe('isProduction', () => {
     it('NODE_ENV=productionかつENVIRONMENT!=developmentの場合trueを返す', () => {
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       process.env.ENVIRONMENT = 'production';
       expect(isProduction()).toBe(true);
     });
 
     it('NODE_ENV=productionでもENVIRONMENT=developmentの場合falseを返す', () => {
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       process.env.ENVIRONMENT = 'development';
       expect(isProduction()).toBe(false);
     });
 
     it('NODE_ENV!=productionの場合falseを返す', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       expect(isProduction()).toBe(false);
     });
   });
 
   describe('isTest', () => {
     it('NODE_ENV=testの場合trueを返す', () => {
-      process.env.NODE_ENV = 'test';
+      setNodeEnv('test');
       expect(isTest()).toBe(true);
     });
 
     it('NODE_ENV!=testの場合falseを返す', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       expect(isTest()).toBe(false);
     });
   });
@@ -179,7 +188,7 @@ describe('環境判定ユーティリティ', () => {
     });
 
     it('開発環境の場合環境情報をログ出力する', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       process.env.ENABLE_FALLBACK = 'true';
       
       logEnvironment();
@@ -194,7 +203,7 @@ describe('環境判定ユーティリティ', () => {
     });
 
     it('DEBUG_MODE=trueの場合も環境情報をログ出力する', () => {
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       process.env.DEBUG_MODE = 'true';
       
       logEnvironment();
@@ -203,7 +212,7 @@ describe('環境判定ユーティリティ', () => {
     });
 
     it('本番環境かつDEBUG_MODE!=trueの場合ログ出力しない', () => {
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       process.env.DEBUG_MODE = 'false';
       
       logEnvironment();
