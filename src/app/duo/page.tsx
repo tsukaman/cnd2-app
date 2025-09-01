@@ -12,6 +12,8 @@ import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
 import { ANIMATION_DURATIONS } from '@/lib/constants/diagnosis';
+import { isProduction } from '@/lib/utils/environment';
+import { logger } from '@/lib/logger';
 import type { PrairieProfile } from '@/types';
 
 export default function DuoPage() {
@@ -63,13 +65,28 @@ export default function DuoPage() {
             // 結果をLocalStorageに保存
             localStorage.setItem(`diagnosis-result-${result.id}`, JSON.stringify(result));
             
+            // KVストレージにも保存（本番環境のみ、エラーがあっても続行）
+            if (isProduction() || process.env.NEXT_PUBLIC_APP_URL) {
+              try {
+                await fetch(`/api/results/${result.id}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(result),
+                });
+                logger.info('[Duo] Result saved to KV storage');
+              } catch (kvError) {
+                logger.warn('[Duo] Failed to save to KV storage:', kvError);
+                // KV保存に失敗してもユーザー体験を妨げない
+              }
+            }
+            
             // 診断結果ページへ遷移
             router.push(`/duo/results?id=${result.id}`);
             return; // Success - exit the function
           }
         } catch (error) {
           lastError = error as Error;
-          console.warn(`Diagnosis attempt ${attempt} failed:`, error);
+          logger.warn(`[Duo] Diagnosis attempt ${attempt} failed:`, error);
           
           // Wait before retry with exponential backoff
           if (attempt < RETRY_CONFIG.maxRetries) {
@@ -79,7 +96,7 @@ export default function DuoPage() {
       }
       
       // All attempts failed
-      console.error('Diagnosis failed after retries:', lastError);
+      logger.error('[Duo] Diagnosis failed after retries:', lastError);
       toast.error('診断の生成に失敗しました', {
         description: 'もう一度お試しください。問題が続く場合は、時間をおいて再度お試しください。',
         duration: 5000,

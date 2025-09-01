@@ -37,7 +37,7 @@ describe('QRCodeModal', () => {
     
     await waitFor(() => {
       expect(QRCode.toDataURL).toHaveBeenCalledWith(
-        'https://cdn2.cloudnativedays.jp/result/test-123',
+        expect.stringContaining('/duo/results?id=test-123'),
         expect.objectContaining({
           width: 300,
           margin: 2,
@@ -54,7 +54,9 @@ describe('QRCodeModal', () => {
     render(<QRCodeModal {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('https://cdn2.cloudnativedays.jp/result/test-123')).toBeInTheDocument();
+      expect(screen.getByText((content, element) => {
+        return content.includes('/duo/results?id=test-123');
+      })).toBeInTheDocument();
     });
   });
 

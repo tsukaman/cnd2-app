@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import { DiagnosisResult } from '@/types';
 import ShareButton from '@/components/share/ShareButton';
+import { logger } from '@/lib/logger';
 import dynamic from 'next/dynamic';
 
 const Confetti = dynamic(() => import('react-confetti').then(mod => mod.default), { ssr: false });
@@ -26,20 +27,50 @@ export default function ResultsPage() {
       return;
     }
 
-    // LocalStorageから結果を取得
-    const storedData = localStorage.getItem(`diagnosis-result-${resultId}`);
-    if (storedData) {
-      const parsedResult = JSON.parse(storedData);
-      setResult(parsedResult);
-      // 高スコアの場合は紙吹雪を表示
-      if (parsedResult.compatibility && parsedResult.compatibility >= 80) {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 5000);
+    const loadResult = async () => {
+      // まずLocalStorageから結果を取得
+      const storedData = localStorage.getItem(`diagnosis-result-${resultId}`);
+      if (storedData) {
+        const parsedResult = JSON.parse(storedData);
+        setResult(parsedResult);
+        // 高スコアの場合は紙吹雪を表示
+        if (parsedResult.compatibility && parsedResult.compatibility >= 80) {
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 5000);
+        }
+        setLoading(false);
+        return;
       }
-    } else {
-      router.push('/duo');
-    }
-    setLoading(false);
+
+      // LocalStorageになければKVストレージから取得
+      try {
+        // Cloudflare Functionsのエンドポイントを使用
+        const apiUrl = `/api/results/${resultId}`;
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const responseData = await response.json();
+          // Cloudflare Functionsのレスポンス形式に対応
+          const data = responseData.result || responseData;
+          setResult(data);
+          // LocalStorageにも保存
+          localStorage.setItem(`diagnosis-result-${resultId}`, JSON.stringify(data));
+          // 高スコアの場合は紙吹雪を表示
+          if (data.compatibility && data.compatibility >= 80) {
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 5000);
+          }
+        } else {
+          // 結果が見つからない場合はトップページへ
+          router.push('/duo');
+        }
+      } catch (error) {
+        logger.error('[Results] Failed to load result from KV:', error);
+        router.push('/duo');
+      }
+      setLoading(false);
+    };
+
+    loadResult();
   }, [searchParams, router]);
 
   if (loading) {
