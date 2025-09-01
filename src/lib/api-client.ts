@@ -125,7 +125,8 @@ export const apiClient = {
   // Results API
   results: {
     async get(id: string) {
-      const response = await fetch(getApiUrl(`api/results/${id}`), {
+      // クエリパラメータ形式に変更（PR #142の修正に対応）
+      const response = await fetch(getApiUrl(`api/results?id=${id}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +157,8 @@ export const apiClient = {
     },
     
     async delete(id: string) {
-      const response = await fetch(getApiUrl(`api/results/${id}`), {
+      // DELETEメソッドもクエリパラメータ形式に統一
+      const response = await fetch(getApiUrl(`api/results?id=${id}`), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
