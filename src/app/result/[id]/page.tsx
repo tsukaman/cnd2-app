@@ -9,13 +9,14 @@ import SharedResultClient from './SharedResultClient';
 export async function generateMetadata({ 
   params 
 }: { 
-  params: { id: string } 
+  params: Promise<{ id: string }> 
 }): Promise<Metadata> {
   try {
     // 結果を取得
+    const { id } = await params;
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2.cloudnativedays.jp';
     const response = await fetch(
-      `${baseUrl}/api/results/${params.id}`,
+      `${baseUrl}/api/results/${id}`,
       { 
         next: { revalidate: 3600 } // 1時間キャッシュ
       }
@@ -42,7 +43,7 @@ export async function generateMetadata({
         title,
         description,
         type: 'website',
-        url: `${baseUrl}/result/${params.id}`,
+        url: `${baseUrl}/result/${id}`,
         siteName: 'CND² 相性診断',
         images: [
           {
@@ -114,11 +115,12 @@ function getDefaultMetadata(): Metadata {
  * 共有用診断結果表示ページ（サーバーコンポーネント）
  * /result/[id] でアクセスされる
  */
-export default function SharedResultPage({ 
+export default async function SharedResultPage({ 
   params 
 }: { 
-  params: { id: string } 
+  params: Promise<{ id: string }> 
 }) {
   // クライアントコンポーネントに結果IDを渡す
-  return <SharedResultClient resultId={params.id} />;
+  const { id } = await params;
+  return <SharedResultClient resultId={id} />;
 }
