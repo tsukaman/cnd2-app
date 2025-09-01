@@ -103,7 +103,7 @@ export default function DuoPage() {
         const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
         if (result) {
           // LocalStorageに保存
-          localStorage.setItem(`diagnosis-${result.id}`, JSON.stringify(result));
+          localStorage.setItem(`diagnosis-result-${result.id}`, JSON.stringify(result));
           
           // KVにも保存（非同期、リトライ付き）
           const saveToKV = async () => {
