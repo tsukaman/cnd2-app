@@ -4,7 +4,7 @@ import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } fr
 import { createLogger, logRequest } from '../utils/logger.js';
 import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
-import { generateAstrologicalDiagnosis } from './diagnosis-v4.js';
+import { generateAstrologicalDiagnosis } from './diagnosis-v4-openai.js';
 
 /**
  * Handle POST requests to generate diagnosis
@@ -98,4 +98,4 @@ export async function onRequestOptions({ request }) {
   });
 }
 
-// 古いgenerateDiagnosis関数は削除され、diagnosis-v4.jsのgenerateAstrologicalDiagnosisに置き換えられました
+// OpenAI APIを使用したAI診断エンジン（diagnosis-v4-openai.js）を使用

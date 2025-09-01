@@ -50,7 +50,7 @@
 - **Dual API Implementation**: 
   - Next.js API Routes (src/app/api/*) for development（一部未実装）
   - Cloudflare Pages Functions (functions/*) for production
-  - **diagnosis-multi**: 本番環境対応済み（v1.3.2で修正）
+  - **AI診断エンジン**: OpenAI GPT-4o-mini統合（v1.5.0）
   - **結果共有**: クエリパラメータ形式 `/duo/results?id=[id]`（静的エクスポート対応）
 - **Runtime**: Edge Runtime compatible
 - **AI Integration**: OpenAI API (GPT-4o-mini) with 10s timeout

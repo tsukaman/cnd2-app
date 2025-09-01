@@ -14,6 +14,9 @@ updates:
       # node-fetch v3+ is ESM-only and breaks our CommonJS test setup
       - dependency-name: "node-fetch"
         versions: [">=3.0.0"]
+      # Zod v4 is incompatible with OpenAI SDK v5.16.0 which requires Zod v3 as peer dependency
+      - dependency-name: "zod"
+        versions: [">=4.0.0"]
     groups:
       dependencies:
         patterns:

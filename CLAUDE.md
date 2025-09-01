@@ -111,7 +111,10 @@ cnd2-app/
 │   └── types/                  # TypeScript型定義（AnalysisMetadata追加）
 ├── functions/                  # Cloudflare Pages Functions
 │   └── api/
-│       └── diagnosis/          # 本番用診断API（KV統合）
+│       ├── diagnosis.js        # 本番用診断API（OpenAI統合）
+│       ├── diagnosis-v4-openai.js # AI診断エンジン
+│       ├── prairie.js          # Prairie Card解析
+│       └── results.js          # 結果取得API
 └── public/                     # 静的ファイル
 ```
 
@@ -391,6 +394,26 @@ try {
 
 ### 2025-09-02の変更（最新）
 
+#### PR #130 - AI診断エンジン有効化と大規模コードクリーンアップ 🎉
+1. **Cloudflare FunctionsでAI診断エンジンを有効化**
+   - ルールベースのV4エンジンからOpenAI版に切り替え
+   - 0-100%の動的スコア分布を実現
+   - conversationStarters（会話トピック）機能を追加
+   - 207個のCNCFプロジェクトから「ラッキープロジェクト」を選択
+   
+2. **古いコードの大規模削除（2,530行、76KB）**
+   - `diagnosis-v3.js`: 古いバージョン（未使用）
+   - `diagnosis-v4.js`: ルールベースエンジン（OpenAI版に置き換え）
+   - `diagnosis-multi.js`: マルチスタイル診断（PR #115で廃止）
+   - `/api/diagnosis-multi/`: 未使用のAPIルート
+   - `/duo/multi-results/`: 未使用の結果表示ページ
+   - MultiStyle関連コンポーネント: 未使用
+   
+3. **改善効果**
+   - PDFサンプルと同等の高品質な診断結果を提供
+   - プロフィール情報を活用した個別化された診断
+   - コードベースの大幅なクリーンアップによる保守性向上
+
 #### PR #122 - 診断結果共有URLの404エラー修正 ✅
 1. **静的エクスポート環境での動的ルート問題を解決**
    - **URL形式変更**: `/result/[id]` → `/duo/results?id=[id]`（クエリパラメータ形式）
@@ -483,8 +506,8 @@ try {
    - APIリトライ機構（最大3回、指数バックオフ）
 
 3. **テストカバレッジ向上** ✅
-   - 複数スタイル診断APIテスト: 10テストケース追加
-   - MultiStyleSelectorコンポーネントテスト: 14テストケース追加
+   - ~~複数スタイル診断APIテスト: 10テストケース追加~~ （削除済み）
+   - ~~MultiStyleSelectorコンポーネントテスト: 14テストケース追加~~ （削除済み）
    - 総テスト数: 460テスト（419パス、41スキップ）
    - v1.2.0の76テストから大幅増加
 
@@ -519,6 +542,20 @@ try {
      - メモリリーク対策（AbortController追加）
      - OGP対応（metadata export）
      - レースコンディション考慮事項追加
+
+### 2025-09-01の変更（その3）
+1. **Dependabot PRの対応** 🔧
+   - **PR #124（本番依存関係）**: クローズ
+     - Zod v4へのアップデートがOpenAI SDK v5.16.0と非互換
+     - OpenAI SDKはpeer dependencyとしてZod v3を要求
+     - npm installがERESOLVEエラーで失敗
+     - OpenAI SDKがZod v4対応するまで保留
+   - **PR #126（開発依存関係）**: マージ済み
+     - @types/node: 22.5.4 → 22.5.5
+     - @types/react: 18.3.5 → 18.3.11
+     - eslint-config-next: 14.2.8 → 14.2.13
+     - typescript: 5.5.4 → 5.6.2
+     - 本番環境への影響なし、安全な更新
 
 ### 2025-09-01の変更（その2）
 1. **診断システムの多様性向上** ✅（PR #123）
