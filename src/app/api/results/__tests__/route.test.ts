@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 
 // KVストレージのモック
 const mockKVGet = jest.fn();
-global.DIAGNOSIS_KV = {
+(globalThis as any).DIAGNOSIS_KV = {
   get: mockKVGet,
   put: jest.fn(),
   delete: jest.fn(),
@@ -15,10 +15,14 @@ describe('Results API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // デフォルトは開発環境
-    process.env.NODE_ENV = 'development';
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: 'development',
+      writable: true,
+      configurable: true
+    });
     // KVモックをリセット
     mockKVGet.mockReset();
-    global.DIAGNOSIS_KV = {
+    (globalThis as any).DIAGNOSIS_KV = {
       get: mockKVGet,
       put: jest.fn(),
       delete: jest.fn(),
@@ -57,7 +61,11 @@ describe('Results API', () => {
 
     describe('本番環境', () => {
       beforeEach(() => {
-        process.env.NODE_ENV = 'production';
+        Object.defineProperty(process.env, 'NODE_ENV', {
+          value: 'production',
+          writable: true,
+          configurable: true
+        });
       });
 
       it('KVから結果を取得して返す（レート制限内）', async () => {
@@ -142,13 +150,17 @@ describe('Results API', () => {
 
     describe('KVが利用できない本番環境', () => {
       beforeEach(() => {
-        process.env.NODE_ENV = 'production';
-        delete (global as any).DIAGNOSIS_KV;
+        Object.defineProperty(process.env, 'NODE_ENV', {
+          value: 'production',
+          writable: true,
+          configurable: true
+        });
+        delete (globalThis as any).DIAGNOSIS_KV;
       });
 
       afterEach(() => {
         // テスト後にKVモックを復元
-        global.DIAGNOSIS_KV = {
+        (globalThis as any).DIAGNOSIS_KV = {
           get: mockKVGet,
           put: jest.fn(),
           delete: jest.fn(),
