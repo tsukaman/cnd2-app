@@ -5,22 +5,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Sparkles, ArrowLeft, Check, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
-import { MULTI_STYLE_RETRY_CONFIG, ANIMATION_DURATIONS, DIAGNOSIS_STYLES } from '@/lib/constants/diagnosis';
+import { ANIMATION_DURATIONS } from '@/lib/constants/diagnosis';
 import type { PrairieProfile } from '@/types';
-import type { DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
 
 export default function DuoPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<'first' | 'second' | 'ready'>('first');
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  // 常に全スタイルで診断を実行
-  const allStyles = [...DIAGNOSIS_STYLES] as DiagnosisStyle[];
   const { loading: parsingLoading, error: parseError } = usePrairieCard();
   const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
 
@@ -54,52 +52,38 @@ export default function DuoPage() {
 
   const handleStartDiagnosis = async () => {
     if (profiles[0] && profiles[1]) {
-      // 常に全4スタイルで診断を実行 with retry mechanism
-        let lastError: Error | null = null;
-        
-        for (let attempt = 1; attempt <= MULTI_STYLE_RETRY_CONFIG.MAX_ATTEMPTS; attempt++) {
-          try {
-            const response = await fetch('/api/diagnosis-multi', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                profiles: [profiles[0], profiles[1]],
-                mode: 'duo',
-                styles: allStyles
-              })
-            });
-
-            if (!response.ok) {
-              throw new Error(`Failed to generate multi-style diagnosis: ${response.status}`);
-            }
-
-            const responseData = await response.json();
-            
-            // Cloudflare Functionsのレスポンスラッパーを考慮
-            const data = responseData.data || responseData;
-            
+      // 単一の統合診断を実行 with retry mechanism
+      let lastError: Error | null = null;
+      
+      for (let attempt = 1; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+        try {
+          const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
+          
+          if (result) {
             // 結果をLocalStorageに保存
-            const resultId = `multi-${Date.now()}`;
-            localStorage.setItem(`diagnosis-multi-${resultId}`, JSON.stringify(data));
+            localStorage.setItem(`diagnosis-result-${result.id}`, JSON.stringify(result));
             
-            // 複数スタイル結果ページへ遷移
-            router.push(`/duo/multi-results?id=${resultId}`);
+            // 診断結果ページへ遷移
+            router.push(`/duo/results?id=${result.id}`);
             return; // Success - exit the function
-          } catch (error) {
-            lastError = error as Error;
-            console.warn(`Multi-style diagnosis attempt ${attempt} failed:`, error);
-            
-            // Wait before retry with exponential backoff
-            if (attempt < MULTI_STYLE_RETRY_CONFIG.MAX_ATTEMPTS) {
-              await new Promise(resolve => setTimeout(resolve, MULTI_STYLE_RETRY_CONFIG.getDelay(attempt)));
-            }
+          }
+        } catch (error) {
+          lastError = error as Error;
+          console.warn(`Diagnosis attempt ${attempt} failed:`, error);
+          
+          // Wait before retry with exponential backoff
+          if (attempt < RETRY_CONFIG.maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, calculateBackoffDelay(attempt)));
           }
         }
-        
+      }
+      
       // All attempts failed
-      console.error('Multi-style diagnosis failed after 3 attempts:', lastError);
-      // TODO: Toast通知やエラーコンポーネントへの置き換えを検討
-      alert('診断の生成に失敗しました。もう一度お試しください。');
+      console.error('Diagnosis failed after retries:', lastError);
+      toast.error('診断の生成に失敗しました', {
+        description: 'もう一度お試しください。問題が続く場合は、時間をおいて再度お試しください。',
+        duration: 5000,
+      });
     }
   };
 
@@ -339,31 +323,9 @@ export default function DuoPage() {
                     </div>
                   </div>
                   
-                  <p className="text-gray-400 mb-6">
-                    2人の相性を4つのスタイルで診断します
+                  <p className="text-gray-400 mb-8">
+                    2人の相性を詳しく診断します
                   </p>
-                  
-                  {/* 診断スタイル一覧 */}
-                  <div className="mb-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div className="bg-purple-600/20 rounded-lg p-3 border border-purple-500/30">
-                        <span className="text-2xl mb-1 block">🎨</span>
-                        <span className="text-xs text-purple-400">クリエイティブ</span>
-                      </div>
-                      <div className="bg-blue-600/20 rounded-lg p-3 border border-blue-500/30">
-                        <span className="text-2xl mb-1 block">⭐</span>
-                        <span className="text-xs text-blue-400">占星術</span>
-                      </div>
-                      <div className="bg-pink-600/20 rounded-lg p-3 border border-pink-500/30">
-                        <span className="text-2xl mb-1 block">🔮</span>
-                        <span className="text-xs text-pink-400">点取り占い</span>
-                      </div>
-                      <div className="bg-green-600/20 rounded-lg p-3 border border-green-500/30">
-                        <span className="text-2xl mb-1 block">📊</span>
-                        <span className="text-xs text-green-400">技術分析</span>
-                      </div>
-                    </div>
-                  </div>
                   
                   <div className="flex justify-center space-x-4">
                     <button
@@ -380,12 +342,12 @@ export default function DuoPage() {
                       {diagnosisLoading ? (
                         <>
                           <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          4つのスタイルで診断中...
+                          診断中...
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-5 h-5 mr-2" />
-                          4つのスタイルで診断開始
+                          診断開始
                         </>
                       )}
                     </button>
