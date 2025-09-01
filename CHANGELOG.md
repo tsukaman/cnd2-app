@@ -15,6 +15,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - 大きなコンポーネントのリファクタリング予定
 
+## [1.4.0] - 2025-09-01
+
+### Added
+- 🎛️ **フォールバック診断の環境別制御機能** (#116)
+  - `ENABLE_FALLBACK`環境変数による制御（デフォルト: false）
+  - 開発環境と本番環境で異なるスコア範囲を設定
+  - イベント運用時のエラー検知を改善
+
+### Improved
+- **コード品質の大幅改善** (#116)
+  - 重複コード排除: Cloudflare Functions用の共通設定を作成
+  - 型安全性向上: `ExtractedProfileInfo`型を定義
+  - 環境判定ヘルパー: `/lib/utils/environment.ts`で一元化
+  - 環境変数バリデーション: 型安全な取得関数を実装
+
+### Added
+- **包括的なドキュメント整備**
+  - 環境変数設定ガイド: `/docs/ENVIRONMENT_VARIABLES.md`
+  - イベント運用ガイド: `/docs/EVENT_OPERATION_GUIDE.md`
+  - CloudNative Days Winter 2025向けの運用手順を明文化
+
+### Fixed
+- 診断エンジンのインポートエラーを修正（PR #115対応）
+
 ## [1.3.3] - 2025-09-01
 
 ### Fixed
