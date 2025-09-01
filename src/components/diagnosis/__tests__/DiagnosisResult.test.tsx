@@ -206,6 +206,45 @@ describe('DiagnosisResult', () => {
     });
   });
 
+  describe('会話トピック表示', () => {
+    it('会話トピックを正しく表示する', () => {
+      const resultWithTopics = {
+        ...mockDuoDiagnosis,
+        conversationStarters: [
+          '最近のIoTデバイスについてどう思う？',
+          'UI/UXのトレンドで気になるものは？',
+          '最もワクワクする新技術は何？'
+        ]
+      };
+      render(<DiagnosisResult result={resultWithTopics} />);
+      
+      expect(screen.getByText('💬 おすすめの会話トピック')).toBeInTheDocument();
+      expect(screen.getByText('最近のIoTデバイスについてどう思う？')).toBeInTheDocument();
+      expect(screen.getByText('UI/UXのトレンドで気になるものは？')).toBeInTheDocument();
+      expect(screen.getByText('最もワクワクする新技術は何？')).toBeInTheDocument();
+    });
+
+    it('会話トピックがない場合はセクションを表示しない', () => {
+      const resultWithoutTopics = {
+        ...mockDuoDiagnosis,
+        conversationStarters: undefined
+      };
+      render(<DiagnosisResult result={resultWithoutTopics} />);
+      
+      expect(screen.queryByText('💬 おすすめの会話トピック')).not.toBeInTheDocument();
+    });
+
+    it('空の会話トピック配列の場合もセクションを表示しない', () => {
+      const resultWithEmptyTopics = {
+        ...mockDuoDiagnosis,
+        conversationStarters: []
+      };
+      render(<DiagnosisResult result={resultWithEmptyTopics} />);
+      
+      expect(screen.queryByText('💬 おすすめの会話トピック')).not.toBeInTheDocument();
+    });
+  });
+
   describe('シェア機能', () => {
     it('シェアボタンが表示される', () => {
       render(<DiagnosisResult result={mockDuoDiagnosis} />);
