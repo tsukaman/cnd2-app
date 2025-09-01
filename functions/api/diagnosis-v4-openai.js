@@ -6,6 +6,35 @@
 import { generateId } from '../utils/id.js';
 import { CNCF_PROJECTS } from '../utils/cncf-projects.js';
 
+/**
+ * OpenAI APIキーの妥当性を検証
+ * @param {string} key - 検証するAPIキー
+ * @returns {boolean} キーが有効な場合はtrue
+ */
+function isValidOpenAIKey(key) {
+  if (!key || typeof key !== 'string') return false;
+  
+  const trimmedKey = key.trim();
+  
+  // 空白文字のみ、プレースホルダー、短すぎるキーを拒否
+  if (trimmedKey.length === 0 || 
+      trimmedKey === 'your-openai-api-key-here' ||
+      trimmedKey === 'your-api-key-here' ||
+      trimmedKey === 'sk-...' ||
+      trimmedKey.length < 20) {
+    return false;
+  }
+  
+  // OpenAI APIキーの形式チェック（sk-で始まるか、または組織固有のキー）
+  // 注: 将来的にOpenAIがキー形式を変更する可能性があるため、厳格すぎない検証にする
+  if (!trimmedKey.startsWith('sk-') && !trimmedKey.includes('org-')) {
+    console.warn('[V4-OpenAI Engine] API key does not match expected format');
+    // 警告は出すが、拒否はしない（将来の形式変更に対応）
+  }
+  
+  return true;
+}
+
 // Fallback configuration
 import { 
   FALLBACK_CONFIG, 
@@ -156,8 +185,8 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   const debugMode = env?.DEBUG_MODE === 'true';
   const openaiApiKey = env?.OPENAI_API_KEY;
   
-  // OpenAI未設定時はフォールバック
-  if (!openaiApiKey || openaiApiKey === 'your-openai-api-key-here') {
+  // APIキーの妥当性を検証
+  if (!isValidOpenAIKey(openaiApiKey)) {
     const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
     
     // 開発環境でフォールバックが無効の場合はエラーを投げる
@@ -220,19 +249,79 @@ ${cncfProjectsList}
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      console.error('[V4-OpenAI Engine] OpenAI API error:', error);
       const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+      
+      // 詳細なエラー情報をログ出力
+      const errorDetails = {
+        status: response.status,
+        statusText: response.statusText,
+        headers: {
+          'x-ratelimit-limit': response.headers.get('x-ratelimit-limit'),
+          'x-ratelimit-remaining': response.headers.get('x-ratelimit-remaining'),
+          'x-ratelimit-reset': response.headers.get('x-ratelimit-reset'),
+          'retry-after': response.headers.get('retry-after')
+        },
+        error: error.error || error,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.error('[V4-OpenAI Engine] OpenAI API error:', errorDetails);
+      
+      // エラー種別の識別と適切なメッセージ
+      let errorMessage = 'OpenAI API error';
+      if (response.status === 429) {
+        errorMessage = 'Rate limit exceeded. Please try again later.';
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid API key. Please check your OpenAI API key configuration.';
+      } else if (response.status === 503) {
+        errorMessage = 'OpenAI service is temporarily unavailable. Please try again later.';
+      } else if (error.error?.message) {
+        errorMessage = error.error.message;
+      }
       
       // 開発環境でフォールバックが無効の場合はエラーを投げる
       if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
-        throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
+        throw new Error(`${errorMessage} (Status: ${response.status})`);
       }
       
+      console.log('[V4-OpenAI Engine] Falling back to mock diagnosis due to API error');
       return generateFallbackDiagnosis(profile1, profile2, env);
     }
     
     const data = await response.json();
-    const result = JSON.parse(data.choices[0].message.content);
+    
+    // JSON解析エラーハンドリング
+    let result;
+    try {
+      result = JSON.parse(data.choices[0].message.content);
+    } catch (parseError) {
+      console.error('[V4-OpenAI Engine] Failed to parse OpenAI response:', {
+        error: parseError.message,
+        content: data.choices[0]?.message?.content?.substring(0, 500)
+      });
+      
+      // JSON解析失敗時はフォールバック
+      const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+      if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
+        throw new Error('Failed to parse OpenAI response as JSON');
+      }
+      
+      console.log('[V4-OpenAI Engine] Falling back to mock diagnosis due to JSON parse error');
+      return generateFallbackDiagnosis(profile1, profile2, env);
+    }
+    
+    // 必須フィールドの存在チェック
+    if (!result.diagnosis || typeof result.diagnosis !== 'object') {
+      console.error('[V4-OpenAI Engine] Invalid response structure: missing diagnosis field');
+      
+      const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
+      if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
+        throw new Error('Invalid OpenAI response structure: missing required fields');
+      }
+      
+      console.log('[V4-OpenAI Engine] Falling back to mock diagnosis due to invalid response structure');
+      return generateFallbackDiagnosis(profile1, profile2, env);
+    }
     
     // デバッグ情報
     if (debugMode) {
