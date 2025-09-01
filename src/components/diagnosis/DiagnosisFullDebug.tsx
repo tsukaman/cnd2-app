@@ -2,6 +2,12 @@
 
 import { motion } from "framer-motion";
 import { DiagnosisResult } from "@/types";
+import { 
+  DiagnosisMetadata, 
+  estimateTokens, 
+  FIELD_TOKEN_ESTIMATES,
+  calculateTotalSavings 
+} from "@/types/diagnosis-metadata";
 import { Info, Database, Brain, Users, Hash, Zap, Target, Gift, Activity, Box } from "lucide-react";
 
 interface DiagnosisFullDebugProps {
@@ -13,8 +19,8 @@ interface DiagnosisFullDebugProps {
  * トークン消費量の最適化を判断するため一時的に使用
  */
 export function DiagnosisFullDebug({ result }: DiagnosisFullDebugProps) {
-  // メタデータを安全に取得
-  const metadata = result.metadata as any || {};
+  // メタデータを型安全に取得
+  const metadata = (result.metadata as DiagnosisMetadata) || {};
   const calculatedScore = metadata.calculatedScore || {};
   
   return (
@@ -75,7 +81,7 @@ export function DiagnosisFullDebug({ result }: DiagnosisFullDebugProps) {
             </h3>
             <p className="text-white/70 text-sm whitespace-pre-wrap">{result.astrologicalAnalysis}</p>
             <div className="mt-2 text-xs text-orange-300">
-              💡 推定トークン数: ~{Math.ceil((result.astrologicalAnalysis?.length || 0) / 4)}
+              💡 推定トークン数: ~{estimateTokens(result.astrologicalAnalysis, true)}
             </div>
           </div>
         )}
@@ -89,7 +95,7 @@ export function DiagnosisFullDebug({ result }: DiagnosisFullDebugProps) {
             </h3>
             <p className="text-white/70 text-sm whitespace-pre-wrap">{result.techStackCompatibility}</p>
             <div className="mt-2 text-xs text-orange-300">
-              💡 推定トークン数: ~{Math.ceil((result.techStackCompatibility?.length || 0) / 4)}
+              💡 推定トークン数: ~{estimateTokens(result.techStackCompatibility, true)}
             </div>
           </div>
         )}
@@ -173,30 +179,20 @@ export function DiagnosisFullDebug({ result }: DiagnosisFullDebugProps) {
           💰 トークン削減の推定効果
         </h2>
         <div className="space-y-3">
-          <div className="flex justify-between text-white/80">
-            <span>astrologicalAnalysis削除:</span>
-            <span className="font-mono text-green-400">-100~150 tokens</span>
-          </div>
-          <div className="flex justify-between text-white/80">
-            <span>techStackCompatibility削除:</span>
-            <span className="font-mono text-green-400">-100~150 tokens</span>
-          </div>
-          <div className="flex justify-between text-white/80">
-            <span>extracted_profiles削除:</span>
-            <span className="font-mono text-green-400">-200~300 tokens</span>
-          </div>
-          <div className="flex justify-between text-white/80">
-            <span>calculatedScore削除:</span>
-            <span className="font-mono text-green-400">-50 tokens</span>
-          </div>
-          <div className="flex justify-between text-white/80">
-            <span>shareTag削除:</span>
-            <span className="font-mono text-green-400">-10 tokens</span>
-          </div>
+          {Object.entries(FIELD_TOKEN_ESTIMATES).map(([field, estimate]) => (
+            <div key={field} className="flex justify-between text-white/80">
+              <span>{estimate.description}削除:</span>
+              <span className="font-mono text-green-400">
+                -{estimate.min}{estimate.min !== estimate.max ? `~${estimate.max}` : ''} tokens
+              </span>
+            </div>
+          ))}
           <div className="border-t border-white/20 pt-3 mt-3">
             <div className="flex justify-between text-lg font-bold">
               <span className="text-white">合計削減量:</span>
-              <span className="text-green-400">約460~660 tokens/診断</span>
+              <span className="text-green-400">
+                約{calculateTotalSavings().min}~{calculateTotalSavings().max} tokens/診断
+              </span>
             </div>
             <div className="text-sm text-purple-300 mt-2">
               💡 1診断あたり約30-40%のトークン削減が可能
