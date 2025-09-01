@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 
 // KVストレージのモック
 const mockKVGet = jest.fn();
-global.DIAGNOSIS_KV = {
+(globalThis as any).DIAGNOSIS_KV = {
   get: mockKVGet,
   put: jest.fn(),
   delete: jest.fn(),
@@ -15,10 +15,14 @@ describe('Results API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // デフォルトは開発環境
-    process.env.NODE_ENV = 'development';
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: 'development',
+      writable: true,
+      configurable: true
+    });
     // KVモックをリセット
     mockKVGet.mockReset();
-    global.DIAGNOSIS_KV = {
+    (globalThis as any).DIAGNOSIS_KV = {
       get: mockKVGet,
       put: jest.fn(),
       delete: jest.fn(),
@@ -30,7 +34,7 @@ describe('Results API', () => {
   describe('GET /api/results/[id]', () => {
     it('開発環境でモック結果を返す', async () => {
       const request = new NextRequest('http://localhost:3000/api/results/test-id');
-      const params = { id: 'test-id' };
+      const params = Promise.resolve({ id: 'test-id' });
 
       const response = await GET(request, { params });
       const data = await response.json();
@@ -45,7 +49,7 @@ describe('Results API', () => {
 
     it('IDが指定されていない場合エラーを返す', async () => {
       const request = new NextRequest('http://localhost:3000/api/results/');
-      const params = { id: '' };
+      const params = Promise.resolve({ id: '' });
 
       const response = await GET(request, { params });
       const data = await response.json();
@@ -57,7 +61,11 @@ describe('Results API', () => {
 
     describe('本番環境', () => {
       beforeEach(() => {
-        process.env.NODE_ENV = 'production';
+        Object.defineProperty(process.env, 'NODE_ENV', {
+          value: 'production',
+          writable: true,
+          configurable: true
+        });
       });
 
       it('KVから結果を取得して返す（レート制限内）', async () => {
@@ -80,7 +88,7 @@ describe('Results API', () => {
           .mockResolvedValueOnce(mockResult); // 実際の結果
 
         const request = new NextRequest('http://localhost:3000/api/results/prod-test-id');
-        const params = { id: 'prod-test-id' };
+        const params = Promise.resolve({ id: 'prod-test-id' });
 
         const response = await GET(request, { params });
         const data = await response.json();
@@ -97,7 +105,7 @@ describe('Results API', () => {
         mockKVGet.mockResolvedValueOnce('30'); // 制限値に達している
 
         const request = new NextRequest('http://localhost:3000/api/results/rate-limit-test');
-        const params = { id: 'rate-limit-test' };
+        const params = Promise.resolve({ id: 'rate-limit-test' });
 
         const response = await GET(request, { params });
         const data = await response.json();
@@ -113,7 +121,7 @@ describe('Results API', () => {
           .mockResolvedValueOnce(null); // 結果が存在しない
 
         const request = new NextRequest('http://localhost:3000/api/results/not-found');
-        const params = { id: 'not-found' };
+        const params = Promise.resolve({ id: 'not-found' });
 
         const response = await GET(request, { params });
         const data = await response.json();
@@ -129,7 +137,7 @@ describe('Results API', () => {
           .mockRejectedValueOnce(new Error('KV storage error')); // 結果取得でエラー
 
         const request = new NextRequest('http://localhost:3000/api/results/error-id');
-        const params = { id: 'error-id' };
+        const params = Promise.resolve({ id: 'error-id' });
 
         const response = await GET(request, { params });
         const data = await response.json();
@@ -142,13 +150,17 @@ describe('Results API', () => {
 
     describe('KVが利用できない本番環境', () => {
       beforeEach(() => {
-        process.env.NODE_ENV = 'production';
-        delete (global as any).DIAGNOSIS_KV;
+        Object.defineProperty(process.env, 'NODE_ENV', {
+          value: 'production',
+          writable: true,
+          configurable: true
+        });
+        delete (globalThis as any).DIAGNOSIS_KV;
       });
 
       afterEach(() => {
         // テスト後にKVモックを復元
-        global.DIAGNOSIS_KV = {
+        (globalThis as any).DIAGNOSIS_KV = {
           get: mockKVGet,
           put: jest.fn(),
           delete: jest.fn(),
@@ -159,7 +171,7 @@ describe('Results API', () => {
 
       it('503エラーを返す', async () => {
         const request = new NextRequest('http://localhost:3000/api/results/test-id');
-        const params = { id: 'test-id' };
+        const params = Promise.resolve({ id: 'test-id' });
 
         const response = await GET(request, { params });
         const data = await response.json();

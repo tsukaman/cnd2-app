@@ -5,6 +5,7 @@
  */
 
 import { PrairieProfile, DiagnosisResult, FortuneTelling } from '@/types';
+import { UnifiedAIResponse } from '@/types/ai-response';
 import { logger } from '@/lib/logger';
 import { 
   isFallbackAllowed, 
@@ -13,6 +14,12 @@ import {
   getFallbackWarning,
   FALLBACK_CONFIG 
 } from '@/lib/constants/fallback';
+import { 
+  getRandomCNCFProject, 
+  getRandomLuckyItem, 
+  getRandomLuckyAction 
+} from '@/lib/constants/cncf-projects';
+import { parseLuckyProject } from '@/lib/utils/lucky-project-parser';
 
 /**
  * 診断スタイル
@@ -81,22 +88,24 @@ Container Orchestration、分散システム、マイクロサービスなどの
  * 診断結果フォーマット
  */
 const RESULT_FORMAT = `{
-  "type": "診断タイプ名（創造的で楽しい名前）",
-  "compatibility": 相性スコア（50-100の整数）,
+  "type": "診断タイプ名（2人の特徴から自由に創造的な名前を生成。固定リストから選ばず、ユニークな組み合わせを考える）",
+  "compatibility": 相性スコア（0-100の整数、全範囲を使って分布させる）,
   "summary": "診断結果のサマリー（150-200文字、スタイルに応じた表現）",
   "astrologicalAnalysis": "詳細分析（250-300文字、スタイルに応じた深い洞察）",
   "techStackCompatibility": "技術的相性（200文字、具体的な技術の相性）",
-  "conversationTopics": ["会話トピック1", "会話トピック2", "...最大7個"],
-  "strengths": ["強み1", "強み2", "強み3"],
-  "opportunities": ["機会1", "機会2", "機会3"],
+  "conversationTopics": ["2人の具体的なプロフィールから導き出される独自の会話トピックを7個生成。固定的な質問ではなく、共通点や違いから生まれる具体的な話題"],
+  "conversationStarters": ["初対面でも盛り上がれる具体的な質問を5個。2人の背景を考慮した独自のもの"],
+  "strengths": ["2人の組み合わせから生まれる独自の強みを3-5個。固定文言は使わず、具体的に"],
+  "opportunities": ["2人だからこそ実現できる具体的な機会を3-5個。一般的な表現は避ける"],
   "advice": "アドバイス（150文字、実践的で前向きな内容）",
-  "luckyItem": "ラッキーアイテム（エンジニアに関連、絵文字付き）",
-  "luckyAction": "ラッキーアクション（技術活動、絵文字付き）",
+  "luckyItem": "2人の相性や特徴から導き出される独自のラッキーアイテム（エンジニアに限定せず、日用品、食べ物、本、音楽など自由に。絵文字は不要）",
+  "luckyAction": "2人にとって運を開く独自のアクション（技術活動に限定せず、日常の行動、趣味、運動など自由に。絵文字は不要）",
+  "luckyProject": "CNCFプロジェクトから1つ選んで、なぜそれが2人にラッキーなのか理由付き（例：'Kubernetes - 2人のコンテナ技術への情熱が融合'）",
   "fortuneTelling": {
-    "overall": 総合運（50-100）,
-    "tech": 技術運（50-100）,
-    "collaboration": コラボ運（50-100）,
-    "growth": 成長運（50-100）,
+    "overall": 総合運（0-100、全範囲を使う）,
+    "tech": 技術運（0-100、全範囲を使う）,
+    "collaboration": コラボ運（0-100、全範囲を使う）,
+    "growth": 成長運（0-100、全範囲を使う）,
     "message": "運勢メッセージ（100文字程度）"
   }
 }`;
@@ -199,7 +208,7 @@ export class UnifiedDiagnosisEngine {
       }
       
       // JSON.parseのエラーハンドリング
-      let result;
+      let result: UnifiedAIResponse;
       try {
         result = JSON.parse(data.choices[0].message.content);
       } catch (parseError) {
@@ -207,15 +216,22 @@ export class UnifiedDiagnosisEngine {
         return this.generateDynamicFallback(profile1, profile2, style, enableFortuneTelling);
       }
 
+      // luckyProjectがある場合は分解（共通関数を使用）
+      let processedResult: any = { ...result };
+      if (result.luckyProject) {
+        const { name, description } = parseLuckyProject(result.luckyProject);
+        processedResult.luckyProject = name;
+        processedResult.luckyProjectDescription = description;
+      }
+
       return {
         id: this.generateId(),
         mode: 'duo',
-        ...result,
+        ...processedResult,
         participants: [profile1, profile2],
         createdAt: new Date().toISOString(),
         aiPowered: true,
-        modelUsed: model,
-        style
+        modelUsed: model
       };
 
     } catch (error) {
@@ -277,7 +293,7 @@ export class UnifiedDiagnosisEngine {
       }
       
       // JSON.parseのエラーハンドリング
-      let result;
+      let result: UnifiedAIResponse;
       try {
         result = JSON.parse(data.choices[0].message.content);
       } catch (parseError) {
@@ -285,15 +301,22 @@ export class UnifiedDiagnosisEngine {
         return this.generateGroupFallback(profiles, style, enableFortuneTelling);
       }
 
+      // luckyProjectがある場合は分解（共通関数を使用）
+      let processedResult: any = { ...result };
+      if (result.luckyProject) {
+        const { name, description } = parseLuckyProject(result.luckyProject);
+        processedResult.luckyProject = name;
+        processedResult.luckyProjectDescription = description;
+      }
+
       return {
         id: this.generateId(),
         mode: 'group',
-        ...result,
+        ...processedResult,
         participants: profiles,
         createdAt: new Date().toISOString(),
         aiPowered: true,
-        modelUsed: model,
-        style
+        modelUsed: model
       };
 
     } catch (error) {
@@ -312,11 +335,15 @@ export class UnifiedDiagnosisEngine {
 ${RESULT_FORMAT}
 
 重要な指示：
-- 相性スコアは必ず85以上にして、ポジティブな体験にする
-- 各参加者のプロフィール情報を深く分析し、表面的でない洞察を提供
-- conversationTopicsは実際の会話のきっかけになるような具体的で興味深い内容
-- ラッキーアイテムとアクションは実際のエンジニアが共感できるもの
-- 同じパターンの繰り返しを避け、創造的で多様な表現を使用
+- 相性スコアは0-100の全範囲を使って現実的に評価（低スコアでも必ずポジティブに）
+- 0-20点: 「奇跡のレアケース！」「話題作りに最高！」
+- 20-40点: 「チャレンジングでワクワク！」「成長の余地が無限大！」
+- 40-60点: 「これからが本番！」「可能性に満ちている！」
+- 60-80点: 「バランスの良い関係！」「相性良好！」
+- 80-100点: 「最高の相性！」「運命的な出会い！」
+- 各項目は2人のプロフィールから具体的に導き出す（固定リストから選ばない）
+- ラッキーアイテム/アクションは自由に創造的に生成（技術に限定しない）
+- CNCFプロジェクトは実在のものから選び、2人との関連性を説明
 ${enableFortuneTelling ? '- fortuneTellingセクションを必ず含める' : '- fortuneTellingセクションは省略'}`;
 
     return `${basePrompt}\n\n${formatInstruction}`;
@@ -437,10 +464,24 @@ ${members}
     const luckyItems = this.generateLuckyItems(profile1, profile2);
     const luckyActions = this.generateLuckyActions(commonSkills, commonInterests);
     
-    // 会話トピックを動的生成
+    // 会話トピックを動的生成（改善版）
     const conversationTopics = this.generateConversationTopics(
       profile1, profile2, commonSkills, commonInterests
     );
+    
+    // CNCFプロジェクトをランダムに選択
+    const luckyProject = getRandomCNCFProject();
+    
+    // 30%の確率で多様なアイテム/アクションに置き換え
+    let selectedLuckyItem = luckyItems[Math.floor(Math.random() * luckyItems.length)];
+    let selectedLuckyAction = luckyActions[Math.floor(Math.random() * luckyActions.length)];
+    
+    if (Math.random() < 0.3) {
+      selectedLuckyItem = getRandomLuckyItem();
+    }
+    if (Math.random() < 0.3) {
+      selectedLuckyAction = getRandomLuckyAction();
+    }
     
     const isDevelopment = process.env.NODE_ENV === 'development';
     const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
@@ -454,11 +495,20 @@ ${members}
       astrologicalAnalysis: this.generateDynamicAnalysis(profile1, profile2, style),
       techStackCompatibility: this.generateTechCompatibility(profile1, profile2),
       conversationTopics,
+      conversationStarters: [
+        '最近気になる技術トレンドは？',
+        'エンジニアになったきっかけは？',
+        '休日はどんな風に過ごしていますか？',
+        '好きなコーヒーやお茶はありますか？',
+        '参加したカンファレンスで印象的だったセッションは？'
+      ],
       strengths: this.generateStrengths(profile1, profile2),
       opportunities: this.generateOpportunities(profile1, profile2),
       advice: this.generateAdvice(profile1, profile2, style),
-      luckyItem: luckyItems[Math.floor(Math.random() * luckyItems.length)],
-      luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
+      luckyItem: selectedLuckyItem,
+      luckyAction: selectedLuckyAction,
+      luckyProject: `${luckyProject.name} ${luckyProject.emoji}`,
+      luckyProjectDescription: luckyProject.description,
       participants: [profile1, profile2],
       createdAt: new Date().toISOString(),
       aiPowered: false,
@@ -506,6 +556,13 @@ ${members}
     const isDevelopment = process.env.NODE_ENV === 'development';
     const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
     
+    // CNCFプロジェクトをランダムに選択
+    const luckyProject = getRandomCNCFProject();
+    
+    // 多様なアイテム/アクションをランダムに選択
+    const luckyItem = Math.random() < 0.5 ? getRandomLuckyItem() : '🎯 チームビルディングボードゲーム';
+    const luckyAction = Math.random() < 0.5 ? getRandomLuckyAction() : '🚀 全員でのモブプログラミングセッション';
+    
     const result: DiagnosisResult = {
       id: isDevelopment ? `${FALLBACK_CONFIG.ID_PREFIX}${this.generateId()}` : this.generateId(),
       mode: 'group',
@@ -515,11 +572,20 @@ ${members}
       astrologicalAnalysis: `グループ全体のエナジーが調和し、各メンバーの強みが相乗効果を生み出しています。`,
       techStackCompatibility: `多様なスキルセットが完璧に補完し合い、あらゆる技術課題に対応可能です。`,
       conversationTopics: this.generateGroupTopics(profiles),
+      conversationStarters: [
+        '各自の得意分野で教え合えることは？',
+        'チームで挑戦したいプロジェクトのアイデア',
+        '理想的なチーム開発環境とは？',
+        'これまでで最高のチーム体験',
+        'お互いから学びたいスキル'
+      ],
       strengths: [`${profiles.length}人の多様性`, '相補的なスキルセット', 'チームワークの可能性'],
       opportunities: ['大規模プロジェクトへの挑戦', 'ハッカソンでの優勝', '新サービスの立ち上げ'],
       advice: `各メンバーの得意分野を活かした役割分担で、大きな成果を生み出せるでしょう。`,
-      luckyItem: '🎯 チームビルディングボードゲーム',
-      luckyAction: '🚀 全員でのモブプログラミングセッション',
+      luckyItem,
+      luckyAction,
+      luckyProject: `${luckyProject.name} ${luckyProject.emoji}`,
+      luckyProjectDescription: luckyProject.description,
       participants: profiles,
       createdAt: new Date().toISOString(),
       aiPowered: false,
@@ -616,26 +682,45 @@ ${members}
   ): string[] {
     const topics = [];
     
+    // 技術系トピック
     if (commonSkills.length > 0) {
       topics.push(`${commonSkills[0]}の最新トレンドについて`);
+      topics.push(`${commonSkills[0]}で困った経験とその解決方法`);
+    } else {
+      topics.push('最近学んでいる新しい技術について');
     }
+    
+    // 興味・趣味系トピック  
     if (commonInterests.length > 0) {
       topics.push(`${commonInterests[0]}への情熱について`);
     }
+    
+    // キャリア系トピック
     if (profile1.basic.company && profile2.basic.company) {
       topics.push('それぞれの会社の技術文化について');
     }
+    topics.push('エンジニアとして成長できた瞬間');
+    
+    // 哲学・価値観系トピック
     if (profile1.details?.motto || profile2.details?.motto) {
       topics.push('エンジニアとしてのモットーや哲学');
     }
     
+    // より多様なトピックを追加
     topics.push(
       '最近取り組んでいる技術チャレンジ',
       '印象に残っているプロジェクト経験',
-      'キャリアの転機となった出来事'
+      'キャリアの転機となった出来事',
+      'お気に入りの開発環境やツール',
+      'リモートワークでの生産性向上のコツ',
+      '技術書以外で最近読んだ面白い本',
+      '週末のリフレッシュ方法',
+      '好きなカフェやコワーキングスペース',
+      '参加したイベントで印象的だったセッション'
     );
     
-    return topics.slice(0, 7);
+    // ランダムに並び替えて最大10個返す
+    return topics.sort(() => Math.random() - 0.5).slice(0, 10);
   }
 
   /**
