@@ -10,6 +10,7 @@ import { DiagnosisResult } from '@/types';
 import ShareButton from '@/components/share/ShareButton';
 import { logger } from '@/lib/logger';
 import dynamic from 'next/dynamic';
+import { DiagnosisFullDebug } from '@/components/diagnosis/DiagnosisFullDebug';
 
 const Confetti = dynamic(() => import('react-confetti').then(mod => mod.default), { ssr: false });
 
@@ -19,6 +20,11 @@ export default function ResultsPage() {
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // デバッグモードの判定（開発環境のみ、または本番で明示的に有効化された場合）
+  const isDebugEnabled = process.env.NODE_ENV === 'development' || 
+    process.env.NEXT_PUBLIC_ENABLE_PRODUCTION_DEBUG === 'true';
+  const debugMode = searchParams.get('debug') === 'true' && isDebugEnabled;
 
   useEffect(() => {
     const resultId = searchParams.get('id');
@@ -189,8 +195,8 @@ export default function ResultsPage() {
 
           {/* 詳細分析セクション */}
           <div className="grid gap-6 mb-8">
-            {/* 占星術的分析 */}
-            {result.metadata?.analysis?.astrologicalAnalysis && (
+            {/* 占星術的分析 - 修正: result.astrologicalAnalysisに直接アクセス */}
+            {(result.astrologicalAnalysis || result.metadata?.analysis?.astrologicalAnalysis) && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -202,13 +208,13 @@ export default function ResultsPage() {
                   <h3 className="text-lg font-bold text-blue-400">占星術的分析</h3>
                 </div>
                 <p className="text-gray-300">
-                  {result.metadata.analysis.astrologicalAnalysis}
+                  {result.astrologicalAnalysis || result.metadata?.analysis?.astrologicalAnalysis}
                 </p>
               </motion.div>
             )}
 
-            {/* 技術スタック相性 */}
-            {result.metadata?.analysis?.techStackCompatibility && (
+            {/* 技術スタック相性 - 修正: result.techStackCompatibilityに直接アクセス */}
+            {(result.techStackCompatibility || result.metadata?.analysis?.techStackCompatibility) && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -220,7 +226,7 @@ export default function ResultsPage() {
                   <h3 className="text-lg font-bold text-green-400">技術スタック相性</h3>
                 </div>
                 <p className="text-gray-300">
-                  {result.metadata.analysis.techStackCompatibility}
+                  {result.techStackCompatibility || result.metadata?.analysis?.techStackCompatibility}
                 </p>
               </motion.div>
             )}
@@ -357,6 +363,9 @@ export default function ResultsPage() {
           
           <ShareButton resultId={result.id} score={result.compatibility || result.score || 0} />
         </motion.div>
+
+        {/* DEBUG: 全LLMフィールド表示（?debug=trueの時のみ） */}
+        {debugMode && <DiagnosisFullDebug result={result} />}
       </div>
     </div>
   );
