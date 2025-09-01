@@ -15,6 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - 大きなコンポーネントのリファクタリング予定
 
+## [1.3.1] - 2025-09-01
+
+### Changed
+- 🎯 **複数スタイル診断の簡素化** (#107)
+  - 複数スタイル選択UIを削除
+  - 常に4つのスタイル（クリエイティブ、占星術、点取り占い、技術分析）すべてで診断を実行
+  - ボタンテキストを「4つのスタイルで診断開始」に変更
+  - ユーザー体験の向上：選択の手間を省き、常に全スタイルで診断
+
+### Fixed
+- 複数スタイル選択時のエラーを解決
+- Prairie Card APIに開発環境用モックデータを追加
+
+### Improved
+- DIAGNOSIS_STYLES定数を共通化（`lib/constants/diagnosis.ts`）
+- エラーハンドリングにTODOコメント追加（将来的なToast通知への置き換え）
+- 関連テストを更新
+
 ## [1.3.0] - 2025-08-31
 
 ### Added

@@ -371,9 +371,16 @@ try {
 - [OpenAI API Documentation](https://platform.openai.com/docs)
 - [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
 
-## 🔄 最近の重要な変更（2025-08-31）
+## 🔄 最近の重要な変更
 
-### 2025-08-31の変更（最新）
+### 2025-09-01の変更（最新）
+1. **複数スタイル診断の簡素化** (#107) ✅
+   - 複数スタイル選択UIを削除し、常に4つのスタイル全てで診断
+   - DIAGNOSIS_STYLES定数を共通化（lib/constants/diagnosis.ts）
+   - ユーザーフィードバック対応：「全部盛り込んでください」
+   - 開発環境用モックデータ追加でテスト効率向上
+
+### 2025-08-31の変更
 1. **複数スタイル同時診断機能の実装** ✅
    - 4つの診断スタイル（Creative、占星術、点取り占い、技術分析）を並列実行
    - Promise.allによる並列処理で2-3秒の高速診断（従来の8秒から75%削減）
