@@ -49,24 +49,54 @@ export const DIAGNOSIS_PROMPTS = {
 
 必ず以下のJSON形式で出力してください：
 {
-  "type": "診断タイプ名（クラウドネイティブ型、エンジニア型など）",
-  "compatibility": スコア（0-100の数値）,
-  "summary": "総合的な診断結果（ポジティブで楽しい内容、特に低スコアの場合は必ず前向きに）",
-  "strengths": ["強み1", "強み2", "強み3"],
-  "opportunities": ["成長の機会1", "成長の機会2"],
-  "conversationStarters": ["おすすめの会話トピック1", "トピック2", "トピック3"],
-  "advice": "アドバイス（前向きで実践的な内容）",
-  "luckyItem": "ラッキーアイテム",
-  "luckyAction": "ラッキーアクション",
-  "metadata": {
-    "participant1": "1人目の名前",
-    "participant2": "2人目の名前",
-    "calculatedScore": {
-      "technical": 技術的相性スコア,
-      "communication": コミュニケーションスコア,
-      "values": 価値観スコア,
-      "growth": 成長可能性スコア
+  "diagnosis": {
+    "type": "診断タイプ名（クラウドネイティブ型、エンジニア型など）",
+    "score": スコア（0-100の数値、必ず分布させる）,
+    "message": "総合的な診断結果（ポジティブで楽しい内容、特に低スコアの場合は必ず前向きに）",
+    "conversationStarters": [
+      "技術系の話題（例：最近気になるツールは？）",
+      "キャリアの話題（例：エンジニアになったきっかけは？）",
+      "趣味の話題（例：休日の過ごし方は？）",
+      "食事の話題（例：好きなカフェ飲料は？）",
+      "イベントの話題（例：参加したカンファレンスで印象的だったセッションは？）"
+    ],
+    "hiddenGems": "意外な共通点や発見（前向きで実践的な内容）",
+    "shareTag": "#CND2診断",
+    "luckyItem": "ラッキーアイテム（エンジニアに限定しない多様なもの）",
+    "luckyAction": "ラッキーアクション（日常的な行動も含む）",
+    "luckyProject": "ラッキーCNCFプロジェクト（Kubernetes, Prometheus, Envoy, Helm, etcd, Fluentd, Harbor, Vitess, Jaeger, CoreDNS, containerd, CNI, Notary, TUF, NATS, Linkerd, Rook, OPA, CloudEvents, Falco, Argo, Dragonfly, SPIFFE, SPIRE, Contour, Operator Framework, ChubaoFS, Thanos, Flux, in-toto, Strimzi, KubeEdge, Brigade, Network Service Mesh, OpenTelemetry, OpenEBS, Keylime, SchemaHero, Cloud Custodian, Dex, LitmusChaos, Artifacthub, Kuma, PARSEC, BFE, Crossplane, Longhorn, CHUBAOFS, Buildpacks, Keptn, Volcano, Keda, SMI, v6d, metal3-io, Porter, OpenServiceMesh, DAPR, Chaos Mesh, Serverless Workflow, K8up, CURIEFENSE, Athenz, Kubeovn, Tremor, MetalLB, Karmada, Inclavare, Fluid, Submariner, Antrea, Pixie, Meshery, Service Mesh Performance, Kuberhealthy, K8gb, Teller, Sealedから1つランダムに選択）",
+    "metadata": {
+      "participant1": "1人目の名前",
+      "participant2": "2人目の名前",
+      "calculatedScore": {
+        "technical": 技術的相性スコア,
+        "communication": コミュニケーションスコア,
+        "values": 価値観スコア,
+        "growth": 成長可能性スコア
+      }
     }
+  },
+  "extracted_profiles": {
+    "person1": {
+      "name": "1人目の名前",
+      "title": "肩書き",
+      "company": "会社名",
+      "skills": ["スキル1", "スキル2"],
+      "interests": ["興味1", "興味2"],
+      "summary": "プロフィール要約"
+    },
+    "person2": {
+      "name": "2人目の名前",
+      "title": "肩書き",
+      "company": "会社名",
+      "skills": ["スキル1", "スキル2"],
+      "interests": ["興味1", "興味2"],
+      "summary": "プロフィール要約"
+    }
+  },
+  "analysis": {
+    "astrologicalAnalysis": "運勢的な観点からの分析",
+    "techStackCompatibility": "技術スタックの互換性分析"
   }
 }`
 };

@@ -10,6 +10,7 @@ import { DiagnosisCache } from './diagnosis-cache';
 import { PrairieProfileExtractor } from './prairie-profile-extractor';
 import { DIAGNOSIS_PROMPTS } from './prompts/diagnosis-prompts';
 import { HTML_SIZE_LIMIT, SCORE_DISTRIBUTION, TIMEOUTS } from './constants/scoring';
+import { getRandomCNCFProject, getRandomLuckyItem, getRandomLuckyAction } from './constants/cncf-projects';
 
 // 定数定義
 const REGEX_MAX_LENGTH = 500;
@@ -246,6 +247,21 @@ export class SimplifiedDiagnosisEngine {
 
       const aiResult = JSON.parse(content);
       
+      // ラッキープロジェクトを選択
+      const luckyProject = getRandomCNCFProject();
+      
+      // AIのラッキーアイテム/アクションがエンジニア寄りすぎる場合はランダムに置き換え
+      let luckyItem = aiResult.diagnosis.luckyItem;
+      let luckyAction = aiResult.diagnosis.luckyAction;
+      
+      // 30%の確率でランダムなアイテム/アクションに置き換え
+      if (Math.random() < 0.3 || !luckyItem) {
+        luckyItem = getRandomLuckyItem();
+      }
+      if (Math.random() < 0.3 || !luckyAction) {
+        luckyAction = getRandomLuckyAction();
+      }
+      
       // AIの結果を既存のDiagnosisResult形式に変換
       const diagnosisResult: DiagnosisResult = {
         id: nanoid(10),
@@ -254,17 +270,19 @@ export class SimplifiedDiagnosisEngine {
         // 新しい必須フィールド
         compatibility: aiResult.diagnosis.score || 0,
         summary: aiResult.diagnosis.message || '',
-        strengths: aiResult.diagnosis.conversationStarters || [],
-        opportunities: aiResult.diagnosis.conversationStarters || [],
+        strengths: this.extractStrengths(aiResult),
+        opportunities: this.extractOpportunities(aiResult),
         advice: aiResult.diagnosis.hiddenGems || '',
         // レガシーフィールド（後方互換性）
         score: aiResult.diagnosis.score,
         message: aiResult.diagnosis.message,
-        conversationStarters: aiResult.diagnosis.conversationStarters,
+        conversationStarters: aiResult.diagnosis.conversationStarters || [],
         hiddenGems: aiResult.diagnosis.hiddenGems,
         shareTag: aiResult.diagnosis.shareTag,
-        luckyItem: aiResult.diagnosis.luckyItem,
-        luckyAction: aiResult.diagnosis.luckyAction,
+        luckyItem,
+        luckyAction,
+        luckyProject: `${luckyProject.name} ${luckyProject.emoji}`,
+        luckyProjectDescription: luckyProject.description,
         // 簡易的なPrairieProfileを生成（表示用）
         participants: [
           {
@@ -350,6 +368,113 @@ export class SimplifiedDiagnosisEngine {
   }
 
   /**
+   * AIの結果から強みを抽出
+   */
+  private extractStrengths(aiResult: any): string[] {
+    // まず診断結果に直接strengths配列があるか確認
+    if (aiResult.diagnosis?.strengths && Array.isArray(aiResult.diagnosis.strengths)) {
+      return aiResult.diagnosis.strengths;
+    }
+    
+    // metadata内のcalculatedScoreから強みを推定
+    const strengths = [];
+    const scores = aiResult.diagnosis?.metadata?.calculatedScore;
+    
+    if (scores) {
+      if (scores.technical >= 20) {
+        strengths.push('高い技術的親和性');
+      }
+      if (scores.communication >= 15) {
+        strengths.push('良好なコミュニケーション');
+      }
+      if (scores.values >= 15) {
+        strengths.push('共通の価値観');
+      }
+      if (scores.growth >= 15) {
+        strengths.push('相互成長の可能性');
+      }
+    }
+    
+    // プロフィールから共通スキルを探す
+    const person1Skills = aiResult.extracted_profiles?.person1?.skills || [];
+    const person2Skills = aiResult.extracted_profiles?.person2?.skills || [];
+    const commonSkills = person1Skills.filter((skill: string) => 
+      person2Skills.some((s: string) => s.toLowerCase() === skill.toLowerCase())
+    );
+    
+    if (commonSkills.length > 0) {
+      strengths.push(`共通スキル: ${commonSkills.slice(0, 3).join(', ')}`);
+    }
+    
+    // デフォルトの強み
+    if (strengths.length === 0) {
+      strengths.push('技術への情熱', '学習意欲の高さ', 'チームワーク');
+    }
+    
+    return strengths.slice(0, 5); // 最大5個まで
+  }
+
+  /**
+   * AIの結果から改善機会を抽出
+   */
+  private extractOpportunities(aiResult: any): string[] {
+    // まず診断結果に直接opportunities配列があるか確認
+    if (aiResult.diagnosis?.opportunities && Array.isArray(aiResult.diagnosis.opportunities)) {
+      return aiResult.diagnosis.opportunities;
+    }
+    
+    const opportunities = [];
+    const scores = aiResult.diagnosis?.metadata?.calculatedScore;
+    
+    // スコアが低い領域を改善機会として提案
+    if (scores) {
+      if (scores.technical < 20) {
+        opportunities.push('技術スキルの共有と学習');
+      }
+      if (scores.communication < 15) {
+        opportunities.push('コミュニケーション機会の増加');
+      }
+      if (scores.values < 15) {
+        opportunities.push('新しい共通の興味を発見');
+      }
+      if (scores.growth < 15) {
+        opportunities.push('相互メンタリングの実施');
+      }
+    }
+    
+    // プロフィールから補完的なスキルを探す
+    const person1Skills = aiResult.extracted_profiles?.person1?.skills || [];
+    const person2Skills = aiResult.extracted_profiles?.person2?.skills || [];
+    
+    const unique1 = person1Skills.filter((skill: string) => 
+      !person2Skills.some((s: string) => s.toLowerCase() === skill.toLowerCase())
+    );
+    const unique2 = person2Skills.filter((skill: string) => 
+      !person1Skills.some((s: string) => s.toLowerCase() === skill.toLowerCase())
+    );
+    
+    if (unique1.length > 0 || unique2.length > 0) {
+      opportunities.push('お互いのユニークなスキルから学ぶ');
+    }
+    
+    // conversationStartersから機会を抽出
+    if (aiResult.diagnosis?.conversationStarters && aiResult.diagnosis.conversationStarters.length > 0) {
+      opportunities.push('会話を深める機会が豊富');
+    }
+    
+    // デフォルトの機会
+    if (opportunities.length === 0) {
+      opportunities.push(
+        'コラボレーションプロジェクトの可能性',
+        '知識共有の機会',
+        '新しい技術へのチャレンジ'
+      );
+    }
+    
+    return opportunities.slice(0, 5); // 最大5個まで
+  }
+
+  /**
    * フォールバック診断結果を生成
    */
   private generateFallbackDiagnosis(participants: any[]): DiagnosisResult {
@@ -380,21 +505,24 @@ export class SimplifiedDiagnosisEngine {
     const types = ['クラウドネイティブ型', 'アジャイル型', 'イノベーティブ型', 'コラボレーティブ型'];
     const randomType = types[Math.floor(Math.random() * types.length)];
     
-    const luckyItems = [
-      'Kubernetesのマスコット',
-      'Dockerのクジラ',
-      'Goのゴーファー',
-      'TypeScriptのハンドブック',
-      'Reactのロゴステッカー'
-    ];
-    
-    const luckyActions = [
-      'ペアプログラミング',
-      'モブプログラミング',
-      'コードレビュー',
-      'ハッカソン参加',
-      'OSS貢献'
-    ];
+    // ランダムにラッキーアイテムとアクションを選択
+    const luckyProject = getRandomCNCFProject();
+    const luckyItem = getRandomLuckyItem();
+    const luckyAction = getRandomLuckyAction();
+
+    // スコアに応じたメッセージを生成
+    let message = '';
+    if (randomScore < 20) {
+      message = `奇跡のレアケース！相性${randomScore}%は話題作りに最高です！こんな組み合わせは滅多にありません。`;
+    } else if (randomScore < 40) {
+      message = `チャレンジングでワクワクする相性${randomScore}%！成長の余地が無限大です。`;
+    } else if (randomScore < 60) {
+      message = `これからが本番の相性${randomScore}%！可能性に満ちています。`;
+    } else if (randomScore < 80) {
+      message = `バランスの良い相性${randomScore}%！お互いの良さを引き出せます。`;
+    } else {
+      message = `最高の相性${randomScore}%！運命的な出会いかもしれません。`;
+    }
 
     return {
       id: `fallback-${Date.now()}`,
@@ -402,8 +530,15 @@ export class SimplifiedDiagnosisEngine {
       type: randomType,
       participants: participants,
       compatibility: randomScore,
-      summary: `素晴らしい組み合わせです！相性度は${randomScore}%です。`,
-      message: `お二人の相性は${randomType}として素晴らしいものです。技術への情熱が共鳴し合い、互いを高め合う関係性が見えます。`,
+      summary: message,
+      message: message,
+      conversationStarters: [
+        '最近気になる技術トレンドは？',
+        'エンジニアになったきっかけは？',
+        '休日はどんな風に過ごしていますか？',
+        '好きなコーヒーやお茶はありますか？',
+        '参加したカンファレンスで印象的だったセッションは？'
+      ],
       strengths: [
         '技術への情熱が一致',
         '学習意欲の高さ',
@@ -415,8 +550,12 @@ export class SimplifiedDiagnosisEngine {
         '新しい技術へのチャレンジ'
       ],
       advice: 'お互いの強みを活かして、素晴らしいプロダクトを生み出してください！',
-      luckyItem: luckyItems[Math.floor(Math.random() * luckyItems.length)],
-      luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
+      hiddenGems: 'お二人の出会いは、新しい可能性の扉を開くきっかけになるでしょう。',
+      shareTag: '#CND2診断',
+      luckyItem,
+      luckyAction,
+      luckyProject: `${luckyProject.name} ${luckyProject.emoji}`,
+      luckyProjectDescription: luckyProject.description,
       createdAt: new Date().toISOString(),
       metadata: {
         engine: 'v3-simplified',
