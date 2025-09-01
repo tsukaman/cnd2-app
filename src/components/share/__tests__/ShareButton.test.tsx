@@ -105,7 +105,7 @@ describe('ShareButton', () => {
       fireEvent.click(copyButton);
       
       expect(mockWriteText).toHaveBeenCalledWith(
-        expect.stringContaining('/result/test-123')
+        expect.stringContaining('/duo/results?id=test-123')
       );
       
       await waitFor(() => {
