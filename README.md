@@ -22,10 +22,7 @@
 
 - **2人診断モード**: 2人のエンジニアの相性を詳細に分析
 - **グループ診断モード**: 3-6人のチームの相性と協働可能性を評価（6人なら6²=36通りの相性）
-- **複数スタイル同時診断**: 4つの診断スタイル（Creative、占星術、点取り占い、技術分析）を並列実行
-  - 2-3秒で全スタイルの診断完了（従来の8秒から75%高速化）
-  - タブ/グリッド切り替え可能な比較UI
-  - コスト効率的（約0.6円/診断）
+- **動的スコアリング**: 0-100%の全範囲で相性を評価（低スコアでもポジティブな体験）
 - **Prairie Card連携**: Edge Runtime対応の高速パーサーで自動プロフィール取得
 - **AI診断**: OpenAI GPT-4o-miniを使用した高度な相性分析（フォールバック機構付き）
 - **結果共有**: QRコードやNFC、URLでの診断結果シェア機能
@@ -131,6 +128,7 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 
 # 環境設定
 NODE_ENV=development  # development | production
+ENABLE_FALLBACK=false  # フォールバック診断制御（デフォルト: false）
 
 # Sentry設定（オプション）
 SENTRY_DSN=your-sentry-dsn
@@ -262,10 +260,11 @@ DEBUG_MODE=true
 
 ## 📚 ドキュメント
 
-- [開発ガイドライン](./CLAUDE.md) - 開発ワークフロー、コード規約
+- [開発ガイドライン](./CLAUDE.md) - 開発ワークフロー、コード規約、今後のToDo
 - [変更履歴](./CHANGELOG.md) - バージョン履歴と変更内容
 - [環境変数設定ガイド](./docs/ENVIRONMENT_VARIABLES.md) - すべての環境変数の詳細説明
 - [イベント運用ガイド](./docs/EVENT_OPERATION_GUIDE.md) - CloudNative Days Winter 2025運用手順
+- [フォールバック削除計画](./docs/FALLBACK_REMOVAL_PLAN.md) - v1.6.0に向けた段階的削除計画
 
 ## 🏗️ アーキテクチャ
 
