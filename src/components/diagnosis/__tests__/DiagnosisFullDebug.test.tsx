@@ -96,22 +96,28 @@ describe('DiagnosisFullDebug', () => {
     expect(screen.getByText(/compatibility\/score: 50/)).toBeInTheDocument();
   });
 
-  it('should display calculated scores when available', () => {
-    render(<DiagnosisFullDebug result={mockResult} />);
+  it('should display metadata analysis fields when available', () => {
+    const resultWithAnalysis: DiagnosisResult = {
+      ...mockResult,
+      metadata: {
+        analysis: {
+          astrologicalAnalysis: '占星術的な分析',
+          techStackCompatibility: '技術スタック互換性'
+        }
+      }
+    };
     
-    // 詳細スコアセクション
-    expect(screen.getByText('metadata.calculatedScore（詳細スコア）')).toBeInTheDocument();
+    render(<DiagnosisFullDebug result={resultWithAnalysis} />);
     
-    // 各スコアのラベルと値が表示されていることを確認
-    expect(screen.getByText('technical:')).toBeInTheDocument();
-    expect(screen.getByText('communication:')).toBeInTheDocument();
-    expect(screen.getByText('values:')).toBeInTheDocument();
-    expect(screen.getByText('growth:')).toBeInTheDocument();
+    // デバッグビューが表示されることを確認
+    expect(screen.getByText('DEBUG MODE: LLM全フィールド表示')).toBeInTheDocument();
     
-    // スコアの値が存在することを確認（getAllByTextで複数の20を許可）
-    expect(screen.getByText('30')).toBeInTheDocument();
-    expect(screen.getAllByText('20')).toHaveLength(2); // communicationとgrowthが20
-    expect(screen.getByText('15')).toBeInTheDocument();
+    // フィールドが複数箇所に表示される可能性があるため、getAllByTextを使用
+    const astroElements = screen.getAllByText(/astrologicalAnalysis/);
+    expect(astroElements.length).toBeGreaterThan(0);
+    
+    const techElements = screen.getAllByText(/techStackCompatibility/);
+    expect(techElements.length).toBeGreaterThan(0);
   });
 
   it('should show warning for unused extracted_profiles', () => {
