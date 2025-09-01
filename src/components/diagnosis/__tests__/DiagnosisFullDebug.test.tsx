@@ -24,13 +24,9 @@ const mockResult: DiagnosisResult = {
   createdAt: '2025-09-01T12:00:00Z',
   aiPowered: true,
   metadata: {
-    participant1: 'User1',
-    participant2: 'User2',
-    calculatedScore: {
-      technical: 30,
-      communication: 20,
-      values: 15,
-      growth: 20
+    analysis: {
+      astrologicalAnalysis: '占星術的な分析内容（metadata内）',
+      techStackCompatibility: '技術スタック互換性分析（metadata内）'
     }
   }
 };
