@@ -13,6 +13,11 @@ import {
   getFallbackWarning,
   FALLBACK_CONFIG 
 } from '@/lib/constants/fallback';
+import { 
+  getRandomCNCFProject, 
+  getRandomLuckyItem, 
+  getRandomLuckyAction 
+} from '@/lib/constants/cncf-projects';
 
 /**
  * 診断スタイル
@@ -437,10 +442,24 @@ ${members}
     const luckyItems = this.generateLuckyItems(profile1, profile2);
     const luckyActions = this.generateLuckyActions(commonSkills, commonInterests);
     
-    // 会話トピックを動的生成
+    // 会話トピックを動的生成（改善版）
     const conversationTopics = this.generateConversationTopics(
       profile1, profile2, commonSkills, commonInterests
     );
+    
+    // CNCFプロジェクトをランダムに選択
+    const luckyProject = getRandomCNCFProject();
+    
+    // 30%の確率で多様なアイテム/アクションに置き換え
+    let selectedLuckyItem = luckyItems[Math.floor(Math.random() * luckyItems.length)];
+    let selectedLuckyAction = luckyActions[Math.floor(Math.random() * luckyActions.length)];
+    
+    if (Math.random() < 0.3) {
+      selectedLuckyItem = getRandomLuckyItem();
+    }
+    if (Math.random() < 0.3) {
+      selectedLuckyAction = getRandomLuckyAction();
+    }
     
     const isDevelopment = process.env.NODE_ENV === 'development';
     const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
@@ -454,11 +473,20 @@ ${members}
       astrologicalAnalysis: this.generateDynamicAnalysis(profile1, profile2, style),
       techStackCompatibility: this.generateTechCompatibility(profile1, profile2),
       conversationTopics,
+      conversationStarters: [
+        '最近気になる技術トレンドは？',
+        'エンジニアになったきっかけは？',
+        '休日はどんな風に過ごしていますか？',
+        '好きなコーヒーやお茶はありますか？',
+        '参加したカンファレンスで印象的だったセッションは？'
+      ],
       strengths: this.generateStrengths(profile1, profile2),
       opportunities: this.generateOpportunities(profile1, profile2),
       advice: this.generateAdvice(profile1, profile2, style),
-      luckyItem: luckyItems[Math.floor(Math.random() * luckyItems.length)],
-      luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
+      luckyItem: selectedLuckyItem,
+      luckyAction: selectedLuckyAction,
+      luckyProject: `${luckyProject.name} ${luckyProject.emoji}`,
+      luckyProjectDescription: luckyProject.description,
       participants: [profile1, profile2],
       createdAt: new Date().toISOString(),
       aiPowered: false,
@@ -506,6 +534,13 @@ ${members}
     const isDevelopment = process.env.NODE_ENV === 'development';
     const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
     
+    // CNCFプロジェクトをランダムに選択
+    const luckyProject = getRandomCNCFProject();
+    
+    // 多様なアイテム/アクションをランダムに選択
+    const luckyItem = Math.random() < 0.5 ? getRandomLuckyItem() : '🎯 チームビルディングボードゲーム';
+    const luckyAction = Math.random() < 0.5 ? getRandomLuckyAction() : '🚀 全員でのモブプログラミングセッション';
+    
     const result: DiagnosisResult = {
       id: isDevelopment ? `${FALLBACK_CONFIG.ID_PREFIX}${this.generateId()}` : this.generateId(),
       mode: 'group',
@@ -515,11 +550,20 @@ ${members}
       astrologicalAnalysis: `グループ全体のエナジーが調和し、各メンバーの強みが相乗効果を生み出しています。`,
       techStackCompatibility: `多様なスキルセットが完璧に補完し合い、あらゆる技術課題に対応可能です。`,
       conversationTopics: this.generateGroupTopics(profiles),
+      conversationStarters: [
+        '各自の得意分野で教え合えることは？',
+        'チームで挑戦したいプロジェクトのアイデア',
+        '理想的なチーム開発環境とは？',
+        'これまでで最高のチーム体験',
+        'お互いから学びたいスキル'
+      ],
       strengths: [`${profiles.length}人の多様性`, '相補的なスキルセット', 'チームワークの可能性'],
       opportunities: ['大規模プロジェクトへの挑戦', 'ハッカソンでの優勝', '新サービスの立ち上げ'],
       advice: `各メンバーの得意分野を活かした役割分担で、大きな成果を生み出せるでしょう。`,
-      luckyItem: '🎯 チームビルディングボードゲーム',
-      luckyAction: '🚀 全員でのモブプログラミングセッション',
+      luckyItem,
+      luckyAction,
+      luckyProject: `${luckyProject.name} ${luckyProject.emoji}`,
+      luckyProjectDescription: luckyProject.description,
       participants: profiles,
       createdAt: new Date().toISOString(),
       aiPowered: false,
@@ -616,26 +660,45 @@ ${members}
   ): string[] {
     const topics = [];
     
+    // 技術系トピック
     if (commonSkills.length > 0) {
       topics.push(`${commonSkills[0]}の最新トレンドについて`);
+      topics.push(`${commonSkills[0]}で困った経験とその解決方法`);
+    } else {
+      topics.push('最近学んでいる新しい技術について');
     }
+    
+    // 興味・趣味系トピック  
     if (commonInterests.length > 0) {
       topics.push(`${commonInterests[0]}への情熱について`);
     }
+    
+    // キャリア系トピック
     if (profile1.basic.company && profile2.basic.company) {
       topics.push('それぞれの会社の技術文化について');
     }
+    topics.push('エンジニアとして成長できた瞬間');
+    
+    // 哲学・価値観系トピック
     if (profile1.details?.motto || profile2.details?.motto) {
       topics.push('エンジニアとしてのモットーや哲学');
     }
     
+    // より多様なトピックを追加
     topics.push(
       '最近取り組んでいる技術チャレンジ',
       '印象に残っているプロジェクト経験',
-      'キャリアの転機となった出来事'
+      'キャリアの転機となった出来事',
+      'お気に入りの開発環境やツール',
+      'リモートワークでの生産性向上のコツ',
+      '技術書以外で最近読んだ面白い本',
+      '週末のリフレッシュ方法',
+      '好きなカフェやコワーキングスペース',
+      '参加したイベントで印象的だったセッション'
     );
     
-    return topics.slice(0, 7);
+    // ランダムに並び替えて最大10個返す
+    return topics.sort(() => Math.random() - 0.5).slice(0, 10);
   }
 
   /**
