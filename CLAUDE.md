@@ -422,6 +422,20 @@ try {
    - **問題2**: 開発環境で本番URLが使用される
    - **解決**: `window.location.origin` で動的URL生成
 
+5. **診断結果デバッグ機能の追加 (PR #134)**
+   - **DiagnosisFullDebugコンポーネント**: LLMの全フィールドを表示
+   - **デバッグモード**: `?debug=true` クエリパラメータで有効化
+   - **環境制御**: 開発環境またはENABLE_PRODUCTION_DEBUG環境変数で制御
+   - **147個のテストケース追加**: 完全なテストカバレッジ
+
+6. **シェア機能のKVストレージ修正 (PR #135)** 🚨
+   - **重大なバグ修正**: シェアURLが404エラーを返す問題を解決
+   - **APIパス修正**:
+     - POST: `/api/results/${id}` → `/api/results`
+     - GET: `/api/results/${id}` → `/api/results?id=${id}`
+   - **影響範囲**: duo/page.tsx、duo/results/page.tsx、group/page.tsx、page.tsx
+   - **根本原因**: Next.js 15.5.0での動的ルート削除後の不完全な移行
+
 ### 2025-09-02の変更
 
 #### PR #130 - AI診断エンジン有効化と大規模コードクリーンアップ 🎉
