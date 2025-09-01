@@ -15,7 +15,7 @@ interface QRCodeModalProps {
 
 export function QRCodeModal({ isOpen, onClose, resultId, score }: QRCodeModalProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
-  const resultUrl = `https://cdn2.cloudnativedays.jp/result/${resultId}`;
+  const resultUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2-app.pages.dev'}/duo/results?id=${resultId}`;
 
   useEffect(() => {
     if (isOpen) {
