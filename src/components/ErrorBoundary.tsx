@@ -5,21 +5,7 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import Link from 'next/link';
 import { ErrorHandler, CND2Error } from '@/lib/errors';
-
-// Sentry type declaration
-declare global {
-  interface Window {
-    Sentry?: {
-      captureException: (error: Error, context?: {
-        contexts?: {
-          react?: {
-            componentStack?: string;
-          };
-        };
-      }) => void;
-    };
-  }
-}
+// Global type declarations are now in src/types/globals.d.ts
 
 interface Props {
   children: ReactNode;
