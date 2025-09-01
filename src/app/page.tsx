@@ -173,7 +173,7 @@ export default function Home() {
       // LocalStorageにない場合はAPIから取得
       try {
         console.log("Fetching result from API:", resultId);
-        const response = await fetch(`/api/results/${resultId}`);
+        const response = await fetch(`/api/results?id=${resultId}`);
         
         if (!response.ok) {
           throw new Error(`Result not found: ${response.status}`);

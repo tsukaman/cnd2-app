@@ -61,7 +61,7 @@ export default function GroupPage() {
         const saveToKV = async () => {
           for (let i = 0; i < RETRY_CONFIG.maxRetries; i++) {
             try {
-              const response = await fetch(`/api/results/${result.id}`, {
+              const response = await fetch('/api/results', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(result),
