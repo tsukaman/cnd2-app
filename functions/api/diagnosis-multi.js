@@ -7,9 +7,18 @@ import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } fr
 import { createLogger, logRequest } from '../utils/logger.js';
 import { generateId } from '../utils/id.js';
 import { generateAstrologicalDiagnosis } from './diagnosis-v4-openai.js';
+import { sanitizer } from '../utils/sanitizer.js';
 
 // Diagnosis style configurations
 const DIAGNOSIS_STYLES = ['creative', 'astrological', 'fortune', 'technical'];
+const DIAGNOSIS_STYLES_SET = new Set(DIAGNOSIS_STYLES);
+
+// Fallback compatibility configuration
+const FALLBACK_COMPATIBILITY = {
+  MIN: 85,
+  MAX: 100,
+  RANGE: 15
+};
 
 /**
  * Handle POST requests to generate multi-style diagnosis
@@ -26,7 +35,12 @@ export async function onRequestPost({ request, env }) {
   return await logRequest(request, env, null, async () => {
     try {
       const body = await request.json();
-      const { profiles, mode = 'duo', styles = DIAGNOSIS_STYLES } = body;
+      let { profiles, mode = 'duo', styles = DIAGNOSIS_STYLES } = body;
+      
+      // Sanitize profiles to prevent XSS
+      if (profiles && Array.isArray(profiles)) {
+        profiles = sanitizer.sanitizeObject(profiles);
+      }
       
       // Validation
       if (!profiles || !Array.isArray(profiles)) {
@@ -60,8 +74,8 @@ export async function onRequestPost({ request, env }) {
         );
       }
       
-      // Validate styles
-      const validStyles = styles.filter(s => DIAGNOSIS_STYLES.includes(s));
+      // Validate styles using Set for better performance
+      const validStyles = styles.filter(s => DIAGNOSIS_STYLES_SET.has(s));
       
       if (validStyles.length === 0) {
         logger.warn('Invalid request: at least one valid style is required');
@@ -133,8 +147,17 @@ export async function onRequestPost({ request, env }) {
         corsHeaders
       );
     } catch (error) {
-      logger.error('Multi-style diagnosis generation failed', error);
-      return errorResponse(error, 500, corsHeaders);
+      // Enhanced error handling with specific error types
+      if (error.name === 'ValidationError' || error.message.includes('validation')) {
+        logger.warn('Validation error in multi-style diagnosis', error);
+        return errorResponse(error, 400, corsHeaders);
+      } else if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+        logger.error('Timeout error in multi-style diagnosis', error);
+        return errorResponse(new Error('Request timeout'), 408, corsHeaders);
+      } else {
+        logger.error('Multi-style diagnosis generation failed', error);
+        return errorResponse(new Error('Internal server error'), 500, corsHeaders);
+      }
     }
   });
 }
@@ -143,7 +166,7 @@ export async function onRequestPost({ request, env }) {
  * Generate a fallback result when diagnosis fails
  */
 function generateFallbackResult(profiles, mode, style) {
-  const compatibility = Math.floor(Math.random() * 15) + 85; // 85-100
+  const compatibility = Math.floor(Math.random() * FALLBACK_COMPATIBILITY.RANGE) + FALLBACK_COMPATIBILITY.MIN;
   const id = generateId();
   
   const styleMessages = {
