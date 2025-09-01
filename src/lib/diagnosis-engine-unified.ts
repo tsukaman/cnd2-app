@@ -86,22 +86,24 @@ Container Orchestration、分散システム、マイクロサービスなどの
  * 診断結果フォーマット
  */
 const RESULT_FORMAT = `{
-  "type": "診断タイプ名（創造的で楽しい名前）",
-  "compatibility": 相性スコア（50-100の整数）,
+  "type": "診断タイプ名（2人の特徴から自由に創造的な名前を生成。固定リストから選ばず、ユニークな組み合わせを考える）",
+  "compatibility": 相性スコア（0-100の整数、全範囲を使って分布させる）,
   "summary": "診断結果のサマリー（150-200文字、スタイルに応じた表現）",
   "astrologicalAnalysis": "詳細分析（250-300文字、スタイルに応じた深い洞察）",
   "techStackCompatibility": "技術的相性（200文字、具体的な技術の相性）",
-  "conversationTopics": ["会話トピック1", "会話トピック2", "...最大7個"],
-  "strengths": ["強み1", "強み2", "強み3"],
-  "opportunities": ["機会1", "機会2", "機会3"],
+  "conversationTopics": ["2人の具体的なプロフィールから導き出される独自の会話トピックを7個生成。固定的な質問ではなく、共通点や違いから生まれる具体的な話題"],
+  "conversationStarters": ["初対面でも盛り上がれる具体的な質問を5個。2人の背景を考慮した独自のもの"],
+  "strengths": ["2人の組み合わせから生まれる独自の強みを3-5個。固定文言は使わず、具体的に"],
+  "opportunities": ["2人だからこそ実現できる具体的な機会を3-5個。一般的な表現は避ける"],
   "advice": "アドバイス（150文字、実践的で前向きな内容）",
-  "luckyItem": "ラッキーアイテム（エンジニアに関連、絵文字付き）",
-  "luckyAction": "ラッキーアクション（技術活動、絵文字付き）",
+  "luckyItem": "2人の相性や特徴から導き出される独自のラッキーアイテム（エンジニアに限定せず、日用品、食べ物、本、音楽など自由に。絵文字は不要）",
+  "luckyAction": "2人にとって運を開く独自のアクション（技術活動に限定せず、日常の行動、趣味、運動など自由に。絵文字は不要）",
+  "luckyProject": "CNCFプロジェクトから1つ選んで、なぜそれが2人にラッキーなのか理由付き（例：'Kubernetes - 2人のコンテナ技術への情熱が融合'）",
   "fortuneTelling": {
-    "overall": 総合運（50-100）,
-    "tech": 技術運（50-100）,
-    "collaboration": コラボ運（50-100）,
-    "growth": 成長運（50-100）,
+    "overall": 総合運（0-100、全範囲を使う）,
+    "tech": 技術運（0-100、全範囲を使う）,
+    "collaboration": コラボ運（0-100、全範囲を使う）,
+    "growth": 成長運（0-100、全範囲を使う）,
     "message": "運勢メッセージ（100文字程度）"
   }
 }`;
@@ -212,10 +214,18 @@ export class UnifiedDiagnosisEngine {
         return this.generateDynamicFallback(profile1, profile2, style, enableFortuneTelling);
       }
 
+      // luckyProjectがある場合は分解
+      let processedResult = { ...result };
+      if (result.luckyProject && result.luckyProject.includes(' - ')) {
+        const [projectName, description] = result.luckyProject.split(' - ');
+        processedResult.luckyProject = projectName.trim();
+        processedResult.luckyProjectDescription = description?.trim();
+      }
+
       return {
         id: this.generateId(),
         mode: 'duo',
-        ...result,
+        ...processedResult,
         participants: [profile1, profile2],
         createdAt: new Date().toISOString(),
         aiPowered: true,
@@ -290,10 +300,18 @@ export class UnifiedDiagnosisEngine {
         return this.generateGroupFallback(profiles, style, enableFortuneTelling);
       }
 
+      // luckyProjectがある場合は分解
+      let processedResult = { ...result };
+      if (result.luckyProject && result.luckyProject.includes(' - ')) {
+        const [projectName, description] = result.luckyProject.split(' - ');
+        processedResult.luckyProject = projectName.trim();
+        processedResult.luckyProjectDescription = description?.trim();
+      }
+
       return {
         id: this.generateId(),
         mode: 'group',
-        ...result,
+        ...processedResult,
         participants: profiles,
         createdAt: new Date().toISOString(),
         aiPowered: true,
@@ -317,11 +335,15 @@ export class UnifiedDiagnosisEngine {
 ${RESULT_FORMAT}
 
 重要な指示：
-- 相性スコアは必ず85以上にして、ポジティブな体験にする
-- 各参加者のプロフィール情報を深く分析し、表面的でない洞察を提供
-- conversationTopicsは実際の会話のきっかけになるような具体的で興味深い内容
-- ラッキーアイテムとアクションは実際のエンジニアが共感できるもの
-- 同じパターンの繰り返しを避け、創造的で多様な表現を使用
+- 相性スコアは0-100の全範囲を使って現実的に評価（低スコアでも必ずポジティブに）
+- 0-20点: 「奇跡のレアケース！」「話題作りに最高！」
+- 20-40点: 「チャレンジングでワクワク！」「成長の余地が無限大！」
+- 40-60点: 「これからが本番！」「可能性に満ちている！」
+- 60-80点: 「バランスの良い関係！」「相性良好！」
+- 80-100点: 「最高の相性！」「運命的な出会い！」
+- 各項目は2人のプロフィールから具体的に導き出す（固定リストから選ばない）
+- ラッキーアイテム/アクションは自由に創造的に生成（技術に限定しない）
+- CNCFプロジェクトは実在のものから選び、2人との関連性を説明
 ${enableFortuneTelling ? '- fortuneTellingセクションを必ず含める' : '- fortuneTellingセクションは省略'}`;
 
     return `${basePrompt}\n\n${formatInstruction}`;

@@ -247,19 +247,28 @@ export class SimplifiedDiagnosisEngine {
 
       const aiResult = JSON.parse(content);
       
-      // ラッキープロジェクトを選択
-      const luckyProject = getRandomCNCFProject();
+      // AIが生成したラッキーアイテム/アクション/プロジェクトをそのまま使用
+      // （LLMが自由に生成するため、多様性が保証される）
+      const luckyItem = aiResult.diagnosis.luckyItem || getRandomLuckyItem();
+      const luckyAction = aiResult.diagnosis.luckyAction || getRandomLuckyAction();
+      const luckyProjectInfo = aiResult.diagnosis.luckyProject;
       
-      // AIのラッキーアイテム/アクションがエンジニア寄りすぎる場合はランダムに置き換え
-      let luckyItem = aiResult.diagnosis.luckyItem;
-      let luckyAction = aiResult.diagnosis.luckyAction;
-      
-      // 30%の確率でランダムなアイテム/アクションに置き換え
-      if (Math.random() < 0.3 || !luckyItem) {
-        luckyItem = getRandomLuckyItem();
-      }
-      if (Math.random() < 0.3 || !luckyAction) {
-        luckyAction = getRandomLuckyAction();
+      // luckyProjectの処理
+      let luckyProject = '';
+      let luckyProjectDescription = '';
+      if (luckyProjectInfo) {
+        if (luckyProjectInfo.includes(' - ')) {
+          const [projectName, ...descParts] = luckyProjectInfo.split(' - ');
+          luckyProject = projectName.trim();
+          luckyProjectDescription = descParts.join(' - ').trim();
+        } else {
+          luckyProject = luckyProjectInfo;
+        }
+      } else {
+        // フォールバック：CNCFプロジェクトをランダムに選択
+        const randomProject = getRandomCNCFProject();
+        luckyProject = `${randomProject.name} ${randomProject.emoji}`;
+        luckyProjectDescription = randomProject.description;
       }
       
       // AIの結果を既存のDiagnosisResult形式に変換
@@ -281,8 +290,8 @@ export class SimplifiedDiagnosisEngine {
         shareTag: aiResult.diagnosis.shareTag,
         luckyItem,
         luckyAction,
-        luckyProject: `${luckyProject.name} ${luckyProject.emoji}`,
-        luckyProjectDescription: luckyProject.description,
+        luckyProject,
+        luckyProjectDescription,
         // 簡易的なPrairieProfileを生成（表示用）
         participants: [
           {

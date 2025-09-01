@@ -54,17 +54,17 @@ export const DIAGNOSIS_PROMPTS = {
     "score": スコア（0-100の数値、必ず分布させる）,
     "message": "総合的な診断結果（ポジティブで楽しい内容、特に低スコアの場合は必ず前向きに）",
     "conversationStarters": [
-      "技術系の話題（例：最近気になるツールは？）",
-      "キャリアの話題（例：エンジニアになったきっかけは？）",
-      "趣味の話題（例：休日の過ごし方は？）",
-      "食事の話題（例：好きなカフェ飲料は？）",
-      "イベントの話題（例：参加したカンファレンスで印象的だったセッションは？）"
+      "2人のプロフィールから導き出される、最も盛り上がりそうな具体的な話題を5つ",
+      "技術系、キャリア系、趣味系、日常系、イベント系など幅広いカテゴリーから",
+      "固定的な質問ではなく、2人の共通点や違いから生まれる独自の話題を生成",
+      "例：もし2人ともPythonが得意なら「Pythonの型ヒントについてどう思う？」",
+      "例：片方がフロントエンド、もう片方がバックエンドなら「APIデザインで重視することは？」"
     ],
     "hiddenGems": "意外な共通点や発見（前向きで実践的な内容）",
     "shareTag": "#CND2診断",
-    "luckyItem": "ラッキーアイテム（エンジニアに限定しない多様なもの）",
-    "luckyAction": "ラッキーアクション（日常的な行動も含む）",
-    "luckyProject": "ラッキーCNCFプロジェクト（Kubernetes, Prometheus, Envoy, Helm, etcd, Fluentd, Harbor, Vitess, Jaeger, CoreDNS, containerd, CNI, Notary, TUF, NATS, Linkerd, Rook, OPA, CloudEvents, Falco, Argo, Dragonfly, SPIFFE, SPIRE, Contour, Operator Framework, ChubaoFS, Thanos, Flux, in-toto, Strimzi, KubeEdge, Brigade, Network Service Mesh, OpenTelemetry, OpenEBS, Keylime, SchemaHero, Cloud Custodian, Dex, LitmusChaos, Artifacthub, Kuma, PARSEC, BFE, Crossplane, Longhorn, CHUBAOFS, Buildpacks, Keptn, Volcano, Keda, SMI, v6d, metal3-io, Porter, OpenServiceMesh, DAPR, Chaos Mesh, Serverless Workflow, K8up, CURIEFENSE, Athenz, Kubeovn, Tremor, MetalLB, Karmada, Inclavare, Fluid, Submariner, Antrea, Pixie, Meshery, Service Mesh Performance, Kuberhealthy, K8gb, Teller, Sealedから1つランダムに選択）",
+    "luckyItem": "2人のプロフィールや相性から導き出される独自のラッキーアイテムを自由に生成（エンジニアに限定せず、日用品、食べ物、趣味のもの、文房具、本、音楽など何でもOK。創造的で面白いものを）",
+    "luckyAction": "2人の相性や特徴から導き出される独自のラッキーアクションを自由に生成（技術活動に限定せず、日常の行動、趣味、運動、食事、コミュニケーション、学習など何でもOK。実践しやすく楽しいものを）",
+    "luckyProject": "CNCFプロジェクトから1つ選択して、なぜそれが2人にとってラッキーなのか短い説明付きで（プロジェクト名は正確に）",
     "metadata": {
       "participant1": "1人目の名前",
       "participant2": "2人目の名前",
