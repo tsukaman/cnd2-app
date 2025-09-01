@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Sparkles, ArrowLeft, Check, AlertCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
@@ -79,8 +80,10 @@ export default function DuoPage() {
       
       // All attempts failed
       console.error('Diagnosis failed after retries:', lastError);
-      // TODO: Toast通知やエラーコンポーネントへの置き換えを検討
-      alert('診断の生成に失敗しました。もう一度お試しください。');
+      toast.error('診断の生成に失敗しました', {
+        description: 'もう一度お試しください。問題が続く場合は、時間をおいて再度お試しください。',
+        duration: 5000,
+      });
     }
   };
 
