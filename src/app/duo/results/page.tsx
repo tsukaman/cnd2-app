@@ -44,9 +44,7 @@ export default function ResultsPage() {
       // LocalStorageになければKVストレージから取得
       try {
         // Cloudflare Functionsのエンドポイントを使用
-        const apiUrl = process.env.NODE_ENV === 'development' 
-          ? `/api/results/${resultId}`
-          : `/api/results/${resultId}`;
+        const apiUrl = `/api/results/${resultId}`;
         const response = await fetch(apiUrl);
         if (response.ok) {
           const responseData = await response.json();
