@@ -68,12 +68,16 @@ export default function DuoPage() {
             // KVストレージにも保存（本番環境のみ、エラーがあっても続行）
             if (isProduction() || process.env.NEXT_PUBLIC_APP_URL) {
               try {
-                await fetch(`/api/results/${result.id}`, {
+                const response = await fetch('/api/results', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(result),
                 });
-                logger.info('[Duo] Result saved to KV storage');
+                if (response.ok) {
+                  logger.info('[Duo] Result saved to KV storage');
+                } else {
+                  logger.warn('[Duo] KV storage response not ok:', response.status);
+                }
               } catch (kvError) {
                 logger.warn('[Duo] Failed to save to KV storage:', kvError);
                 // KV保存に失敗してもユーザー体験を妨げない
