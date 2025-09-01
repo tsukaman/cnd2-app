@@ -1,14 +1,23 @@
 import OpenAI from 'openai';
 import { PrairieProfile, DiagnosisResult } from '@/types';
 import { CND2_CONFIG } from '@/config/cnd2.config';
-import { 
-  CND2_SYSTEM_PROMPT, 
-  buildDuoDiagnosisPrompt, 
-  buildGroupDiagnosisPrompt 
-} from './prompts/diagnosis-prompts';
+import { DIAGNOSIS_PROMPTS } from './prompts/diagnosis-prompts';
 import { nanoid } from 'nanoid';
 
 import { DiagnosisCache } from './diagnosis-cache';
+
+// Adapter functions for old prompt structure
+const CND2_SYSTEM_PROMPT = DIAGNOSIS_PROMPTS.SYSTEM;
+const buildDuoDiagnosisPrompt = (profiles: PrairieProfile[]) => {
+  const profile1 = JSON.stringify(profiles[0], null, 2);
+  const profile2 = JSON.stringify(profiles[1], null, 2);
+  return DIAGNOSIS_PROMPTS.USER_TEMPLATE
+    .replace('{profile1}', profile1)
+    .replace('{profile2}', profile2);
+};
+const buildGroupDiagnosisPrompt = (profiles: PrairieProfile[]) => {
+  return `以下のグループメンバーのプロフィールから相性を診断してください：\n\n${profiles.map((p, i) => `＜メンバー${i+1}＞\n${JSON.stringify(p, null, 2)}`).join('\n\n')}`;
+};
 
 export class DiagnosisEngine {
   private openai: OpenAI | null = null;
