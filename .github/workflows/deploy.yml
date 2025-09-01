@@ -33,9 +33,8 @@ jobs:
         env:
           CI: true
           
-      # Temporarily disabled for emergency deployment
-      # - name: Run linting checks
-      #   run: npm run lint
+      - name: Run linting checks
+        run: npm run lint
         
       - name: Run TypeScript type checking
         run: npm run type-check
@@ -57,4 +56,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # --commit-dirty=true: ビルドプロセスで生成されたファイル（.env.production等）を含めてデプロイ
+          # --commit-message: UTF-8エンコーディング問題を回避するためASCII文字のみ使用
+          # --commit-hash: Cloudflare側でデプロイを追跡するため明示的に指定
           command: pages deploy out --project-name=cnd2-app --commit-dirty=true --commit-message="Deploy from GitHub Actions - SHA ${{ github.sha }}" --commit-hash="${{ github.sha }}"
