@@ -53,13 +53,19 @@
 - **Dual API Implementation**: 
   - Next.js API Routes (src/app/api/*) for development
   - Cloudflare Pages Functions (functions/*) for production
+  - **diagnosis-multi**: 本番環境対応済み（v1.3.2で修正）
 - **Runtime**: Edge Runtime compatible
 - **AI Integration**: OpenAI API (GPT-4o-mini) with 10s timeout
 - **Data Storage**: Cloudflare Workers KV (7日間自動削除)
 - **Data Parsing**: Edge Runtime compatible Prairie Card parser
 - **Rate Limiting**: 10 requests/minute per IP (in-memory store for Edge compatibility)
-- **Security**: HTML sanitization with DOMPurify, XSS protection
-- **Error Handling**: 構造化エラーハンドリング + 環境別ログレベル制御
+- **Security**: 
+  - HTML sanitization (カスタムサニタイザー実装)
+  - XSS protection
+  - 再帰的オブジェクトサニタイゼーション
+- **Error Handling**: 
+  - 構造化エラーハンドリング + 環境別ログレベル制御
+  - エラータイプ別レスポンス（400, 408, 500）
 - **CORS**: 複数オリジンサポート（環境変数設定可能）
 
 ### テスティング
