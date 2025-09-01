@@ -73,7 +73,10 @@ export default function DuoPage() {
               throw new Error(`Failed to generate multi-style diagnosis: ${response.status}`);
             }
 
-            const data = await response.json();
+            const responseData = await response.json();
+            
+            // Cloudflare Functionsのレスポンスラッパーを考慮
+            const data = responseData.data || responseData;
             
             // 結果をLocalStorageに保存
             const resultId = `multi-${Date.now()}`;
