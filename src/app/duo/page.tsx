@@ -63,6 +63,21 @@ export default function DuoPage() {
             // 結果をLocalStorageに保存
             localStorage.setItem(`diagnosis-result-${result.id}`, JSON.stringify(result));
             
+            // KVストレージにも保存（本番環境のみ、エラーがあっても続行）
+            if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_APP_URL) {
+              try {
+                await fetch(`/api/results/${result.id}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(result),
+                });
+                console.log('Result saved to KV storage');
+              } catch (kvError) {
+                console.warn('Failed to save to KV storage:', kvError);
+                // KV保存に失敗してもユーザー体験を妨げない
+              }
+            }
+            
             // 診断結果ページへ遷移
             router.push(`/duo/results?id=${result.id}`);
             return; // Success - exit the function

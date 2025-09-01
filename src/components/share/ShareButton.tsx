@@ -17,7 +17,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [nfcWriting, setNfcWriting] = useState(false);
   
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2.cloudnativedays.jp'}/result/${resultId}`;
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://cnd2-app.pages.dev'}/duo/results?id=${resultId}`;
   const shareText = `CND²相性診断結果: ${score}% #CNDxCnD`;
   
   const handleShare = async () => {
