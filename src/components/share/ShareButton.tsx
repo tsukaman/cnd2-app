@@ -154,8 +154,8 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
                     </>
                   ) : (
                     <>
-                      <Copy className="w-5 h-5 text-gray-700" />
-                      <span className="text-gray-700">リンクをコピー</span>
+                      <Copy className="w-5 h-5 text-gray-900" />
+                      <span className="text-gray-900 font-semibold">リンクをコピー</span>
                     </>
                   )}
                 </motion.button>
