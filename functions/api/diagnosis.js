@@ -70,7 +70,7 @@ export async function onRequestPost({ request, env }) {
       return successResponse(
         {
           result,
-          aiPowered: false, // Simplified version doesn't use AI
+          aiPowered: result.aiPowered || false, // Use the actual aiPowered flag from result
           cached: false,
         },
         corsHeaders
