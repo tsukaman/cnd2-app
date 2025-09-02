@@ -45,7 +45,7 @@ export default function Home() {
   // Result ID検証関数
   const validateResultId = useCallback((id: string): boolean => {
     return /^[a-zA-Z0-9-_]+$/.test(id) && id.length <= RESULT_ID_MAX_LENGTH;
-  };
+  }, []);
 
   // イベントハンドラの最適化
   const handleRetry = useCallback(() => {
