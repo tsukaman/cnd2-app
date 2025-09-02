@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { DiagnosisResult, FortuneTelling } from "@/types";
+import { DiagnosisResult } from "@/types";
 import { CND2_CONFIG } from "@/config/cnd2.config";
 import { Download, RefreshCw, Trophy, MessageCircle, Sparkles, QrCode } from "lucide-react";
 import ShareButton from '@/components/share/ShareButton';

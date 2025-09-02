@@ -40,12 +40,12 @@ export default function Home() {
   const [loadingResultId, setLoadingResultId] = useState<string | null>(null); // 重複リクエスト防止用
   const searchParams = useSearchParams();
   const resultId = searchParams.get("result");
-  const mode = searchParams.get("mode");
+  // const mode = searchParams.get("mode");
 
   // Result ID検証関数
-  const validateResultId = (id: string): boolean => {
+  const validateResultId = useCallback((id: string): boolean => {
     return /^[a-zA-Z0-9-_]+$/.test(id) && id.length <= RESULT_ID_MAX_LENGTH;
-  };
+  }, []);
 
   // イベントハンドラの最適化
   const handleRetry = useCallback(() => {

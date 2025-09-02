@@ -37,7 +37,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       
       // 開発環境用のモックデータ
       if (process.env.NODE_ENV === 'development') {
-        const mockProfiles: Record<string, any> = {
+        const mockProfiles: Record<string, Partial<PrairieProfile>> = {
           'taro': {
             basic: {
               name: '田中太郎',
@@ -96,7 +96,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
         }
 
         htmlContent = await response.text();
-      } catch (error) {
+      } catch (_error) {
         clearTimeout(timeoutId);
         
         if (error instanceof Error && error.name === 'AbortError') {
@@ -122,7 +122,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     }
 
     return NextResponse.json({ data: profile });
-  } catch (error) {
+  } catch (_error) {
     if (error instanceof ApiError) {
       throw error;
     }

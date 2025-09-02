@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  PRAIRIE_CARD_URL_PATTERN,
   isPrairieCardUrl as isPrairieCardUrlHelper,
   extractPrairieCardUrl
 } from '@/constants/scanner';

@@ -34,7 +34,7 @@ export default function MetricsPage() {
       // Handle both direct response and wrapped response
       const metricsData = data.data || data;
       setMetrics(metricsData);
-    } catch (err) {
+    } catch (_err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);

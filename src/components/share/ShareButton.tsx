@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, QrCode, Copy, Check, X, Smartphone } from 'lucide-react';
+import { Share2, Copy, Check, X, Smartphone } from 'lucide-react';
 import QRCode from 'qrcode';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
@@ -57,7 +57,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
           text: shareText,
           url: shareUrl,
         });
-      } catch (err) {
+      } catch (_err) {
         logger.info('[ShareButton] Share cancelled or failed');
       }
     }
@@ -71,7 +71,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
         // Write URL directly as a string
         await ndef.write(shareUrl);
         toast.success('NFCタグに書き込みました');
-      } catch (error) {
+      } catch (_error) {
         logger.error('[ShareButton] NFC write failed:', error);
         toast.error('NFCの書き込みに失敗しました');
       } finally {
@@ -125,7 +125,10 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
               <div className="flex flex-col items-center mb-6">
                 <div className="bg-white p-4 rounded-xl shadow-inner">
                   {qrCodeUrl ? (
-                    <img src={qrCodeUrl} alt="QR Code" className="w-48 h-48" />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={qrCodeUrl} alt="QR Code" className="w-48 h-48" />
+                    </>
                   ) : (
                     <div className="w-48 h-48 bg-gray-100 animate-pulse rounded-lg" />
                   )}

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   NFC_ERROR_MESSAGES,
-  PRAIRIE_CARD_URL_PATTERN,
   isPrairieCardUrl,
   extractPrairieCardUrl
 } from '@/constants/scanner';

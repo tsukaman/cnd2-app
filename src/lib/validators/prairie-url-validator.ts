@@ -103,7 +103,7 @@ export function validatePrairieCardUrl(url: string): PrairieUrlValidationResult 
       normalizedUrl
     };
     
-  } catch (error) {
+  } catch (_error) {
     // URL解析エラー
     return {
       isValid: false,

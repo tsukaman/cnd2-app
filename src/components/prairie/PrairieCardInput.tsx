@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { usePrairieCard } from "@/hooks/usePrairieCard";
 import { useNFC } from "@/hooks/useNFC";
 import { useQRScanner } from "@/hooks/useQRScanner";
 import { useClipboardPaste } from "@/hooks/useClipboardPaste";
 import { PrairieProfile } from "@/types";
-import { detectPlatform, getRecommendedInputMethod } from "@/lib/platform";
+import { detectPlatform } from "@/lib/platform";
 import { Loader2, Check, AlertCircle, User, Smartphone, X, QrCode, Clipboard, Camera } from "lucide-react";
 
 interface PrairieCardInputProps {
@@ -87,7 +87,7 @@ export default function PrairieCardInput({
       }
       clearPastedUrl();
     }
-  }, [pastedUrl]);
+  }, [pastedUrl, handleFetchProfile]);
 
   const handleFetchProfile = async (profileUrl: string) => {
     if (!profileUrl.trim()) {
@@ -365,11 +365,14 @@ export default function PrairieCardInput({
           >
             <div className="flex items-center gap-3">
               {profile.basic.avatar && (
-                <img 
-                  src={profile.basic.avatar} 
-                  alt={profile.basic.name}
-                  className="w-12 h-12 rounded-full"
-                />
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src={profile.basic.avatar} 
+                    alt={profile.basic.name}
+                    className="w-12 h-12 rounded-full"
+                  />
+                </>
               )}
               <div>
                 <p className="text-gray-900 font-semibold">{profile.basic.name}</p>

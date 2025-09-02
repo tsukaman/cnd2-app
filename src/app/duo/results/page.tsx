@@ -69,7 +69,7 @@ export default function ResultsPage() {
           // 結果が見つからない場合はトップページへ
           router.push('/duo');
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error('[Results] Failed to load result from KV:', error);
         router.push('/duo');
       }

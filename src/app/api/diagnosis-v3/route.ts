@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 正規化されたURLを使用（オプション）
-    const normalizedUrls = validationResult.results
+    // const normalizedUrls = validationResult.results
       .map(r => r.normalizedUrl)
       .filter((url): url is string => url !== undefined);
     
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       }
     });
     
-  } catch (error) {
+  } catch (_error) {
     console.error('[API] Diagnosis v3 error:', error);
     
     const handledError = ErrorHandler.mapError(error);
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 }
 
 // OPTIONS リクエストへの対応（CORS）
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

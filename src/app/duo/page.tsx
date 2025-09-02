@@ -33,6 +33,7 @@ export default function DuoPage() {
         setIsTransitioning(false);
       }, ANIMATION_DURATIONS.TRANSITION_MS);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles[0], currentStep, isTransitioning]);
 
   // 2人目のプロフィール読み込み完了時に診断準備完了へ
@@ -44,6 +45,7 @@ export default function DuoPage() {
         setIsTransitioning(false);
       }, ANIMATION_DURATIONS.TRANSITION_MS);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles[1], currentStep, isTransitioning]);
 
   const handleProfileParsed = (profile: PrairieProfile, index: 0 | 1) => {
