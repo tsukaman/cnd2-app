@@ -4,6 +4,8 @@
  */
 
 import { PrairieProfile, DiagnosisResult } from '@/types';
+// Logger currently unused but may be needed for future debugging
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { logger } from '@/lib/logger';
 
 /**

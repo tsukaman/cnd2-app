@@ -60,25 +60,27 @@ export default function Home() {
   }, []);
   
   // データ検証関数
-  const validateDiagnosisResult = (data: any): DiagnosisResult | null => {
+  const validateDiagnosisResult = (data: unknown): DiagnosisResult | null => {
     if (!data || typeof data !== 'object') return null;
     
+    const obj = data as Record<string, unknown>;
+    
     // 必須フィールドの存在確認
-    if (!data.id || !data.createdAt || !data.participants || !Array.isArray(data.participants)) {
+    if (!obj.id || !obj.createdAt || !obj.participants || !Array.isArray(obj.participants)) {
       console.warn('[CND²] Invalid diagnosis result structure:', data);
       return null;
     }
     
     // XSS対策: 文字列フィールドをサニタイズ
     const sanitized = {
-      ...data,
-      type: data.type ? sanitizer.sanitizeText(data.type) : '',
-      summary: data.summary ? sanitizer.sanitizeText(data.summary) : '',
-      message: data.message ? sanitizer.sanitizeText(data.message) : '',
-      advice: data.advice ? sanitizer.sanitizeText(data.advice) : undefined,
-      strengths: data.strengths ? data.strengths.map((s: string) => sanitizer.sanitizeText(s)) : [],
-      opportunities: data.opportunities ? data.opportunities.map((o: string) => sanitizer.sanitizeText(o)) : [],
-      conversationStarters: data.conversationStarters ? data.conversationStarters.map((c: string) => sanitizer.sanitizeText(c)) : [],
+      ...obj,
+      type: obj.type ? sanitizer.sanitizeText(obj.type as string) : '',
+      summary: obj.summary ? sanitizer.sanitizeText(obj.summary as string) : '',
+      message: obj.message ? sanitizer.sanitizeText(obj.message as string) : '',
+      advice: obj.advice ? sanitizer.sanitizeText(obj.advice as string) : undefined,
+      strengths: obj.strengths ? (obj.strengths as string[]).map((s: string) => sanitizer.sanitizeText(s)) : [],
+      opportunities: obj.opportunities ? (obj.opportunities as string[]).map((o: string) => sanitizer.sanitizeText(o)) : [],
+      conversationStarters: obj.conversationStarters ? (obj.conversationStarters as string[]).map((c: string) => sanitizer.sanitizeText(c)) : [],
     };
     
     return sanitized as DiagnosisResult;

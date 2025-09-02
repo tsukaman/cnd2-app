@@ -18,16 +18,34 @@ jest.mock('next/image', () => ({
     onError,
     loading,
     priority,
-    quality,
-    placeholder,
-    blurDataURL,
+    quality: _quality,
+    placeholder: _placeholder,
+    blurDataURL: _blurDataURL,
     fill,
     sizes,
     srcSet,
     ...props 
-  }: any) => {
+  }: {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+    className?: string;
+    onLoadingComplete?: () => void;
+    onLoad?: (e: Event) => void;
+    onError?: (e: Event) => void;
+    loading?: 'lazy' | 'eager';
+    priority?: boolean;
+    quality?: number;
+    placeholder?: 'blur' | 'empty';
+    blurDataURL?: string;
+    fill?: boolean;
+    sizes?: string;
+    srcSet?: string;
+    [key: string]: unknown;
+  }) => {
     // Next.js固有のプロップは除外してDOMに渡す
-    const imgProps: any = {
+    const imgProps: Record<string, unknown> = {
       src,
       alt,
       className,
@@ -67,8 +85,10 @@ jest.mock('next/image', () => ({
     if (onLoadingComplete) {
       // onLoadingCompleteはonLoadの後に呼ばれる
       const originalOnLoad = imgProps.onLoad;
-      imgProps.onLoad = (e: any) => {
-        originalOnLoad?.(e);
+      imgProps.onLoad = (e: Event) => {
+        if (typeof originalOnLoad === 'function') {
+          originalOnLoad(e);
+        }
         onLoadingComplete();
       };
     }
@@ -79,7 +99,10 @@ jest.mock('next/image', () => ({
 }));
 
 // Mock framer-motion
-jest.mock('framer-motion', () => require('../../../test-utils/framer-motion-mock').framerMotionMock);
+jest.mock('framer-motion', () => {
+  const { framerMotionMock } = require('../../../test-utils/framer-motion-mock');
+  return framerMotionMock;
+});
 
 // Mock utils
 jest.mock('@/lib/utils/edge-compat', () => ({
@@ -193,7 +216,7 @@ describe('OptimizedImage', () => {
 
   describe('読み込み状態', () => {
     it('読み込み中にローディングクラスが適用される', () => {
-      const { container } = render(<OptimizedImage {...defaultProps} />);
+      render(<OptimizedImage {...defaultProps} />);
       
       const image = screen.getByAltText('Test image');
       expect(image).toHaveClass('opacity-0');

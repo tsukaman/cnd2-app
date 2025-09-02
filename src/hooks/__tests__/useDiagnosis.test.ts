@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useDiagnosis } from '../useDiagnosis';
-import { PrairieProfile } from '@/types';
+import { PrairieProfile, DiagnosisResult } from '@/types';
 import { apiClient } from '@/lib/api-client';
 
 // Mock apiClient and localStorage
@@ -106,7 +106,7 @@ describe('useDiagnosis', () => {
 
     const { result } = renderHook(() => useDiagnosis());
 
-    let diagnosis: any;
+    let diagnosis: DiagnosisResult | null;
     await act(async () => {
       diagnosis = await result.current.generateDiagnosis(mockProfiles, 'duo');
     });
@@ -135,7 +135,7 @@ describe('useDiagnosis', () => {
 
     const { result } = renderHook(() => useDiagnosis());
 
-    let diagnosis: any;
+    let diagnosis: DiagnosisResult | null;
     await act(async () => {
       diagnosis = await result.current.generateDiagnosis(mockProfiles, 'duo');
     });

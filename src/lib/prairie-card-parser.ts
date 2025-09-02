@@ -2,10 +2,13 @@
  * Simplified Prairie Card Parser for Cloudflare Workers
  */
 
-// 定数定義
-const COMPANY_NAME_MAX_LENGTH = 50;
-const REGEX_ATTR_MAX_LENGTH = 200;
-const CONTENT_MAX_LENGTH = 500;
+// 定数定義（一時的に未使用）
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _COMPANY_NAME_MAX_LENGTH = 50;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars  
+const _REGEX_ATTR_MAX_LENGTH = 200;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _CONTENT_MAX_LENGTH = 500;
 
 export class PrairieCardParser {
   async parseFromHTML(html: string): Promise<PrairieData> {

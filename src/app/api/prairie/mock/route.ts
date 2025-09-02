@@ -78,7 +78,7 @@ export async function POST(_request: Request) {
     }
     
     return NextResponse.json({ success: true, data: profile });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Invalid request' },
       { status: 400 }

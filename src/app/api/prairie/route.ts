@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
 import { PrairieProfileExtractor } from '@/lib/prairie-profile-extractor';
+import { PrairieProfile } from '@/types';
 
 /**
  * Prairie Card API endpoint
@@ -37,30 +38,52 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       
       // 開発環境用のモックデータ
       if (process.env.NODE_ENV === 'development') {
-        const mockProfiles: Record<string, any> = {
+        const mockProfiles: Record<string, PrairieProfile> = {
           'taro': {
             basic: {
               name: '田中太郎',
-              bio: 'クラウドネイティブエンジニア',
+              title: 'クラウドネイティブエンジニア',
               company: 'CloudTech Inc.',
-              location: '東京',
-              twitter: 'taro_cloud'
+              bio: '東京在住のエンジニア'
             },
-            interests: ['Kubernetes', 'Docker', 'CI/CD', 'TypeScript', 'React'],
-            hashtags: ['#CloudNative', '#DevOps'],
-            links: [{ name: 'GitHub', url: 'https://github.com/taro' }]
+            details: {
+              tags: ['#CloudNative', '#DevOps'],
+              skills: ['Kubernetes', 'Docker', 'CI/CD'],
+              interests: ['TypeScript', 'React'],
+              certifications: [],
+              communities: []
+            },
+            social: {
+              twitter: 'taro_cloud',
+              github: 'taro'
+            },
+            custom: {},
+            meta: {
+              isPartialData: false
+            }
           },
           'hanako': {
             basic: {
               name: '山田花子',
-              bio: 'SREエンジニア',
+              title: 'SREエンジニア',
               company: 'DevOps Solutions',
-              location: '大阪',
-              twitter: 'hanako_sre'
+              bio: '大阪在住のSREエンジニア'
             },
-            interests: ['Prometheus', 'Grafana', 'Terraform', 'Go', 'Python'],
-            hashtags: ['#SRE', '#Monitoring'],
-            links: [{ name: 'Blog', url: 'https://blog.hanako.dev' }]
+            details: {
+              tags: ['#SRE', '#Monitoring'],
+              skills: ['Prometheus', 'Grafana', 'Terraform'],
+              interests: ['Go', 'Python'],
+              certifications: [],
+              communities: []
+            },
+            social: {
+              twitter: 'hanako_sre',
+              website: 'https://blog.hanako.dev'
+            },
+            custom: {},
+            meta: {
+              isPartialData: false
+            }
           }
         };
         
@@ -111,15 +134,38 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     }
 
     // Parse the HTML content
-    const profile = PrairieProfileExtractor.extractMinimal(htmlContent);
+    const minimalProfile = PrairieProfileExtractor.extractMinimal(htmlContent);
 
-    if (!profile) {
+    if (!minimalProfile) {
       throw new ApiError(
         'Failed to parse Prairie Card',
         ApiErrorCode.PARSE_ERROR,
         422
       );
     }
+
+    // Convert MinimalProfile to PrairieProfile
+    const profile: PrairieProfile = {
+      basic: {
+        name: minimalProfile.name,
+        title: minimalProfile.title || '',
+        company: minimalProfile.company || '',
+        bio: minimalProfile.bio || ''
+      },
+      details: {
+        tags: [],
+        skills: minimalProfile.skills,
+        interests: minimalProfile.interests,
+        certifications: [],
+        communities: [],
+        motto: minimalProfile.motto
+      },
+      social: {},
+      custom: {},
+      meta: {
+        isPartialData: true
+      }
+    };
 
     return NextResponse.json({ data: profile });
   } catch (_error) {

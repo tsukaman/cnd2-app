@@ -23,13 +23,19 @@ export interface ApiResponse<T> {
 
 export interface DiagnosisApiResponse extends ApiResponse<{
   result: DiagnosisResult;
-}> {}
+}> {
+  // Extends ApiResponse with specific result structure
+}
 
-export interface PrairieApiResponse extends ApiResponse<PrairieProfile> {}
+export interface PrairieApiResponse extends ApiResponse<PrairieProfile> {
+  // Extends ApiResponse for Prairie profile data
+}
 
 export interface ResultApiResponse extends ApiResponse<{
   result: DiagnosisResult;
-}> {}
+}> {
+  // Extends ApiResponse for result retrieval
+}
 
 export interface PrairieProfile {
   basic: {

@@ -49,7 +49,7 @@ jest.mock('@/components/prairie/PrairieCardInput', () => ({
       try {
         // Always use the mock profile for tests
         onProfileLoaded(createMockPrairieProfile('Test User'));
-      } catch (_err) {
+      } catch {
         // Show error message like the real component
         setError('Prairie Cardの読み込みに失敗しました');
       }
