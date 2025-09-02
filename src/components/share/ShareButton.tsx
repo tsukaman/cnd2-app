@@ -72,7 +72,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
         await ndef.write(shareUrl);
         toast.success('NFCタグに書き込みました');
       } catch (_error) {
-        logger.error('[ShareButton] NFC write failed:', error);
+        logger.error('[ShareButton] NFC write failed:', _error);
         toast.error('NFCの書き込みに失敗しました');
       } finally {
         setNfcWriting(false);

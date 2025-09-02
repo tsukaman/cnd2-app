@@ -35,7 +35,7 @@ export default function MetricsPage() {
       const metricsData = data.data || data;
       setMetrics(metricsData);
     } catch (_err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(_err instanceof Error ? _err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }

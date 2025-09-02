@@ -63,7 +63,7 @@ const mockProfiles: Record<string, PrairieProfile> = {
 
 export async function POST(_request: Request) {
   try {
-    const { url } = await request.json();
+    const { url } = await _request.json();
     
     // URLからIDを抽出（例: https://prairie.cards/test1 -> test1）
     const id = url.split('/').pop();

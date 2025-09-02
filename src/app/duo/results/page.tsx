@@ -70,7 +70,7 @@ export default function ResultsPage() {
           router.push('/duo');
         }
       } catch (_error) {
-        logger.error('[Results] Failed to load result from KV:', error);
+        logger.error('[Results] Failed to load result from KV:', _error);
         router.push('/duo');
       }
       setLoading(false);

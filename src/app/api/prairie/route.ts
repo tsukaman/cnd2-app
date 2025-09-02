@@ -37,7 +37,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       
       // 開発環境用のモックデータ
       if (process.env.NODE_ENV === 'development') {
-        const mockProfiles: Record<string, Partial<PrairieProfile>> = {
+        const mockProfiles: Record<string, any> = {
           'taro': {
             basic: {
               name: '田中太郎',
@@ -99,14 +99,14 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       } catch (_error) {
         clearTimeout(timeoutId);
         
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (_error instanceof Error && _error.name === 'AbortError') {
           throw new ApiError(
             'Prairie Card fetch timeout',
             ApiErrorCode.EXTERNAL_SERVICE_ERROR,
             504
           );
         }
-        throw error;
+        throw _error;
       }
     }
 
@@ -123,11 +123,11 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
 
     return NextResponse.json({ data: profile });
   } catch (_error) {
-    if (error instanceof ApiError) {
-      throw error;
+    if (_error instanceof ApiError) {
+      throw _error;
     }
     
-    console.error('[Prairie API] Error:', error);
+    console.error('[Prairie API] Error:', _error);
     throw new ApiError(
       'Failed to process Prairie Card',
       ApiErrorCode.INTERNAL_ERROR,
