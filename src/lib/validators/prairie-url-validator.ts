@@ -107,7 +107,7 @@ export function validatePrairieCardUrl(url: string): PrairieUrlValidationResult 
     // URL解析エラー
     return {
       isValid: false,
-      error: `無効なURL形式です: ${error instanceof Error ? error.message : '不明なエラー'}`
+      error: `無効なURL形式です: ${_error instanceof Error ? _error.message : '不明なエラー'}`
     };
   }
 }

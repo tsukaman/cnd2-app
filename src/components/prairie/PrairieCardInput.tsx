@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { usePrairieCard } from "@/hooks/usePrairieCard";
 import { useNFC } from "@/hooks/useNFC";
@@ -77,19 +77,7 @@ export default function PrairieCardInput({
   }, [qrUrl]);
   
   // Handle pasted URL
-  useEffect(() => {
-    if (pastedUrl && !url) {
-      setUrl(pastedUrl);
-      // Show confirmation before auto-loading
-      const shouldLoad = window.confirm(`Prairie Card URLを検出しました:\n${pastedUrl}\n\n読み込みますか？`);
-      if (shouldLoad) {
-        handleFetchProfile(pastedUrl);
-      }
-      clearPastedUrl();
-    }
-  }, [pastedUrl, handleFetchProfile]);
-
-  const handleFetchProfile = async (profileUrl: string) => {
+  const handleFetchProfile = useCallback(async (profileUrl: string) => {
     if (!profileUrl.trim()) {
       setIsValid(false);
       return;
@@ -107,7 +95,19 @@ export default function PrairieCardInput({
     } else {
       setIsValid(false);
     }
-  };
+  }, [fetchProfile, onProfileLoaded]);
+
+  useEffect(() => {
+    if (pastedUrl && !url) {
+      setUrl(pastedUrl);
+      // Show confirmation before auto-loading
+      const shouldLoad = window.confirm(`Prairie Card URLを検出しました:\n${pastedUrl}\n\n読み込みますか？`);
+      if (shouldLoad) {
+        handleFetchProfile(pastedUrl);
+      }
+      clearPastedUrl();
+    }
+  }, [pastedUrl, handleFetchProfile, clearPastedUrl, url]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
