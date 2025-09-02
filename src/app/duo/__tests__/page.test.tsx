@@ -20,7 +20,7 @@ jest.mock('next/navigation', () => ({
 
 // localStorageのモック
 const localStorageMock = createLocalStorageMock();
-global.localStorage = localStorageMock as Storage;
+global.localStorage = localStorageMock as unknown as Storage;
 
 // API clientモック
 jest.mock('@/lib/api-client', () => ({
