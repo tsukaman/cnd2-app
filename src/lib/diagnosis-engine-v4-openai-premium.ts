@@ -67,7 +67,16 @@ export class AstrologicalDiagnosisEngineV4Premium {
   /**
    * プロフィールを要約（品質重視で情報を保持）
    */
-  private summarizeProfile(profile: PrairieProfile): any {
+  private summarizeProfile(profile: PrairieProfile): {
+    name: string;
+    title: string;
+    company: string;
+    bio: string;
+    skills: string[];
+    interests: string[];
+    motto: string;
+    tags: string[];
+  } {
     return {
       name: profile.basic.name,
       title: profile.basic.title || '',
@@ -179,7 +188,7 @@ ${usePremium ? '特に、表面的でない深い洞察と、二人だからこ�
   /**
    * コスト計算
    */
-  private calculateCost(usage: any, model: string): string {
+  private calculateCost(usage: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }, model: string): string {
     if (!usage) return 'N/A';
     
     const rates = {
@@ -190,7 +199,9 @@ ${usePremium ? '特に、表面的でない深い洞察と、二人だからこ�
     const rate = rates[model as keyof typeof rates];
     if (!rate) return 'N/A';
     
-    const cost = (usage.prompt_tokens * rate.input + usage.completion_tokens * rate.output) / 1000;
+    const promptTokens = usage.prompt_tokens || 0;
+    const completionTokens = usage.completion_tokens || 0;
+    const cost = (promptTokens * rate.input + completionTokens * rate.output) / 1000;
     return `$${cost.toFixed(4)} (¥${(cost * 150).toFixed(2)})`;
   }
 

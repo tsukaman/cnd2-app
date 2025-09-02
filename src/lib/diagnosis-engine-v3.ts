@@ -198,10 +198,21 @@ export class SimplifiedDiagnosisEngine {
       // OpenAI APIが設定されていない場合はフォールバックを使用
       if (!this.isConfigured()) {
         console.log('[CND²] OpenAI API未設定、フォールバック診断を使用');
-        const participants = [
+        const participants: PrairieProfile[] = [
           {
-            basic: { name: fallbackNames[0] },
-            details: {},
+            basic: { 
+              name: fallbackNames[0],
+              title: '',
+              company: '',
+              bio: ''
+            },
+            details: {
+              tags: [],
+              skills: [],
+              interests: [],
+              certifications: [],
+              communities: []
+            },
             social: {},
             custom: {},
             meta: {
@@ -210,8 +221,19 @@ export class SimplifiedDiagnosisEngine {
             }
           },
           {
-            basic: { name: fallbackNames[1] },
-            details: {},
+            basic: { 
+              name: fallbackNames[1],
+              title: '',
+              company: '',
+              bio: ''
+            },
+            details: {
+              tags: [],
+              skills: [],
+              interests: [],
+              certifications: [],
+              communities: []
+            },
             social: {},
             custom: {},
             meta: {
@@ -484,7 +506,7 @@ export class SimplifiedDiagnosisEngine {
   /**
    * フォールバック診断結果を生成
    */
-  private generateFallbackDiagnosis(participants: any[]): DiagnosisResult {
+  private generateFallbackDiagnosis(participants: PrairieProfile[]): DiagnosisResult {
     // フォールバック用のスコア分布をリアルに
     const rand = Math.random();
     let randomScore;

@@ -30,13 +30,13 @@ export enum ApiErrorCode {
 export class ApiError extends Error {
   public readonly code: ApiErrorCode;
   public readonly statusCode: number;
-  public readonly details?: any;
+  public readonly details?: unknown;
 
   constructor(
     message: string,
     code: ApiErrorCode,
     statusCode?: number,
-    details?: any
+    details?: unknown
   ) {
     super(message);
     this.name = 'ApiError';
@@ -272,7 +272,7 @@ export function handleApiError(error: unknown): NextResponse {
 export function createErrorResponse(
   code: ApiErrorCode,
   message: string,
-  details?: any
+  details?: unknown
 ): NextResponse {
   const error = new ApiError(message, code, undefined, details);
   return NextResponse.json(

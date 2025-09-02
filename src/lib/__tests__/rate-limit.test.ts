@@ -41,7 +41,7 @@ describe('Rate Limiting', () => {
         get: (key: string) => mockHeaders.get(key.toLowerCase()) || null,
       },
       ip: ip,
-    } as any as NextRequest;
+    } as unknown as NextRequest;
   }
 
   describe('checkRateLimit', () => {
@@ -144,7 +144,7 @@ describe('Rate Limiting', () => {
           get: () => null,
         },
         ip: undefined,
-      } as any as NextRequest;
+      } as unknown as NextRequest;
       
       // Should track as 'unknown'
       for (let i = 0; i < 10; i++) {
