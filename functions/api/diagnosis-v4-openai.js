@@ -184,7 +184,6 @@ export async function generateAstrologicalDiagnosis(profiles, mode, env) {
       model: isOpenAIUsed ? CONFIG.MODEL : 'none'
     }
   };
-  }
 }
 
 /**
