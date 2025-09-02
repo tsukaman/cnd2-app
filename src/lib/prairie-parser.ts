@@ -77,7 +77,7 @@ export class PrairieCardParser {
       await this.cacheManager.save(normalizedUrl, sanitizedProfile);
       
       return sanitizedProfile;
-    } catch (_error) {
+    } catch (error) {
       // エラーリカバリーを試みる
       const recoveredProfile = this.analyzeAndRecoverFromError(html);
       if (recoveredProfile) {
@@ -157,7 +157,7 @@ export class PrairieCardParser {
       }
 
       return html;
-    } catch (_error) {
+    } catch (error) {
       // タイムアウトエラー
       const errorAsAny = error as { name?: string; message?: string };
       if (errorAsAny.name === 'AbortError' || errorAsAny.message === 'AbortError') {

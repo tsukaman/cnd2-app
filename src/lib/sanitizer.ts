@@ -73,7 +73,7 @@ export class Sanitizer {
     try {
       const clean = this.purify.sanitize(dirty);
       return clean;
-    } catch (_error) {
+    } catch (error) {
       console.error('[CND²] Sanitization error:', error);
       return this.stripHTMLTags(dirty);
     }
@@ -92,7 +92,7 @@ export class Sanitizer {
       // HTMLタグを完全に削除
       const clean = this.purify.sanitize(dirty, { ALLOWED_TAGS: [] });
       return clean;
-    } catch (_error) {
+    } catch (error) {
       console.error('[CND²] Text sanitization error:', error);
       return this.stripHTMLTags(dirty);
     }

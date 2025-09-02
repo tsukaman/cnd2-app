@@ -40,7 +40,7 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
           setLastPastedUrl(url);
         }
       }
-    } catch (_err) {
+    } catch (err) {
       // Permission denied or other error
       logger.debug('Clipboard access denied or error', err);
     }

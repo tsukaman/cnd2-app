@@ -165,7 +165,7 @@ export default function Home() {
               return;
             }
           }
-        } catch (_error) {
+        } catch (error) {
           console.error(`Failed to parse stored diagnosis result for ID ${resultId}:`, error);
         }
       }
@@ -208,7 +208,7 @@ export default function Home() {
           setIsLoadingResult(false);
           setLoadingResultId(null); // ローディング完了
         }
-      } catch (_error) {
+      } catch (error) {
         console.error(`Failed to fetch diagnosis result for ID ${resultId}:`, error);
         
         // セッションストレージからも確認（フォールバック）

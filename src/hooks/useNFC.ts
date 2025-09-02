@@ -111,7 +111,7 @@ export function useNFC(): UseNFCReturn {
         setIsScanning(false);
       };
 
-    } catch (_err) {
+    } catch (err) {
       logger.error('NFC Scan error', err);
       
       if (err instanceof Error) {

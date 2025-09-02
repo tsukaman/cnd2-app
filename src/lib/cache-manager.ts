@@ -62,7 +62,7 @@ export class CacheManager {
       this.memoryCache.set(key, entry);
       
       return entry.data;
-    } catch (_error) {
+    } catch (error) {
       console.error('[CND²] ブラウザキャッシュ読み込みエラー:', error);
       return null;
     }
@@ -103,7 +103,7 @@ export class CacheManager {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(`cnd2_cache_${key}`, JSON.stringify(entry));
-      } catch (_error) {
+      } catch (error) {
         console.error('[CND²] ブラウザキャッシュ保存エラー:', error);
       }
     }

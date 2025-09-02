@@ -170,7 +170,7 @@ ${usePremium ? '特に、表面的でない深い洞察と、二人だからこ�
         modelUsed: model
       };
 
-    } catch (_error) {
+    } catch (error) {
       logger.error('[V4 Premium Engine] Failed to generate diagnosis', error);
       return this.generateFallbackDiagnosis(profile1, profile2);
     }

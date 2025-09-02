@@ -55,7 +55,7 @@ export class PrairieCardParserV2 {
       if (!isValid) {
         throw new Error('Invalid Prairie Card domain');
       }
-    } catch (_error) {
+    } catch (error) {
       console.error('[Prairie Parser v2] URL validation failed:', error);
       throw error;
     }
@@ -80,7 +80,7 @@ export class PrairieCardParserV2 {
       profile.meta.sourceUrl = url;
       
       return profile;
-    } catch (_error) {
+    } catch (error) {
       console.error('[Prairie Parser v2] Fetch failed:', error);
       throw error;
     }

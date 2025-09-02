@@ -28,7 +28,7 @@ const envSchema = z.object({
 const parseEnv = () => {
   try {
     return envSchema.parse(process.env);
-  } catch (_error) {
+  } catch (error) {
     // In test environment, use defaults
     if (process.env.NODE_ENV === 'test') {
       return envSchema.parse({});
