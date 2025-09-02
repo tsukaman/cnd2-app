@@ -111,7 +111,7 @@ type ElementTypeMap = {
 export function createMotionComponent<K extends keyof ElementTypeMap>(element: K) {
   return React.forwardRef<ElementTypeMap[K], MockComponentProps>(({ children, ...props }, ref) => {
     const filteredProps = filterFramerMotionProps(props);
-    return React.createElement(element, { ...filteredProps, ref }, children);
+    return React.createElement(element, { ...filteredProps, ref }, children as React.ReactNode);
   });
 }
 
