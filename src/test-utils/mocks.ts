@@ -2,6 +2,8 @@
  * Common test utilities and mocks
  */
 
+import React from 'react';
+
 /**
  * Create a mock localStorage implementation
  */
@@ -66,20 +68,17 @@ export const setupIntersectionObserverMock = () => {
  */
 export const createFramerMotionMock = () => ({
   motion: {
-    div: ({ children, ...props }: any) => {
-      const React = require('react');
+    div: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
       return React.createElement('div', props, children);
     },
-    button: ({ children, ...props }: any) => {
-      const React = require('react');
+    button: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
       return React.createElement('button', props, children);
     },
-    img: ({ children, ...props }: any) => {
-      const React = require('react');
+    img: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
       return React.createElement('img', props, children);
     },
   },
-  AnimatePresence: ({ children }: any) => children,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => children,
 });
 
 /**

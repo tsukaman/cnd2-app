@@ -87,11 +87,11 @@ export default function OptimizedImage({
         aria-hidden={decorative ? true : undefined}
         {...(srcSet && { srcSet })}
         onLoadingComplete={() => setIsLoading(false)}
-        onLoad={(event: any) => {
+        onLoad={(event: React.SyntheticEvent<HTMLImageElement>) => {
           setIsLoading(false);
           onLoad?.(event);
         }}
-        onError={(event: any) => {
+        onError={(event: React.SyntheticEvent<HTMLImageElement>) => {
           setIsLoading(false);
           if (fallback && !error) {
             setCurrentSrc(fallback);

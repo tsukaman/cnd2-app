@@ -115,7 +115,7 @@ describe('QRCodeModal', () => {
   it('does not show share button when navigator.share is not available', async () => {
     const originalShare = navigator.share;
     // Delete the share property entirely
-    delete (navigator as any).share;
+    delete (navigator as Partial<Navigator>).share;
     
     render(<QRCodeModal {...defaultProps} />);
     
@@ -159,6 +159,6 @@ describe('QRCodeModal', () => {
       });
     }
     
-    delete (navigator as any).share;
+    delete (navigator as Partial<Navigator>).share;
   });
 });

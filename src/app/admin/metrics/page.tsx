@@ -145,10 +145,10 @@ export default function MetricsPage() {
       {metrics && (
         <>
           {/* Warning message if partial data */}
-          {(metrics as any).warning && (
+          {'warning' in metrics && (metrics as { warning?: string }).warning && (
             <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-yellow-800 text-sm">
-                ⚠️ {(metrics as any).warning}
+                ⚠️ {(metrics as { warning?: string }).warning}
               </p>
             </div>
           )}

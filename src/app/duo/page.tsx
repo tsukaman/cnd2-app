@@ -21,7 +21,7 @@ export default function DuoPage() {
   const [currentStep, setCurrentStep] = useState<'first' | 'second' | 'ready'>('first');
   const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const { loading: parsingLoading, error: parseError } = usePrairieCard();
+  const { error: parseError } = usePrairieCard();
   const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
 
   // 1人目のプロフィール読み込み完了時に自動で2人目へ

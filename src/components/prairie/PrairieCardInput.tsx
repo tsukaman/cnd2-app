@@ -59,23 +59,6 @@ export default function PrairieCardInput({
     clearPastedUrl
   } = useClipboardPaste();
   
-  // Handle NFC URL when read
-  useEffect(() => {
-    if (nfcUrl) {
-      setUrl(nfcUrl);
-      handleFetchProfile(nfcUrl);
-    }
-  }, [nfcUrl]);
-  
-  // Handle QR URL when scanned
-  useEffect(() => {
-    if (qrUrl) {
-      setUrl(qrUrl);
-      handleFetchProfile(qrUrl);
-      setInputMethod('manual');
-    }
-  }, [qrUrl]);
-  
   // Handle pasted URL
   const handleFetchProfile = useCallback(async (profileUrl: string) => {
     if (!profileUrl.trim()) {
@@ -96,6 +79,23 @@ export default function PrairieCardInput({
       setIsValid(false);
     }
   }, [fetchProfile, onProfileLoaded]);
+  
+  // Handle NFC URL when read
+  useEffect(() => {
+    if (nfcUrl) {
+      setUrl(nfcUrl);
+      handleFetchProfile(nfcUrl);
+    }
+  }, [nfcUrl, handleFetchProfile]);
+  
+  // Handle QR URL when scanned
+  useEffect(() => {
+    if (qrUrl) {
+      setUrl(qrUrl);
+      handleFetchProfile(qrUrl);
+      setInputMethod('manual');
+    }
+  }, [qrUrl, handleFetchProfile]);
 
   useEffect(() => {
     if (pastedUrl && !url) {

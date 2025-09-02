@@ -8,14 +8,14 @@ import { setupGlobalMocks, createMockPrairieProfile } from '@/test-utils/mocks';
 // Mock ShareButton component
 jest.mock('@/components/share/ShareButton', () => ({
   __esModule: true,
-  default: ({ result }: { result?: DiagnosisResultType }) => {
+  default: ({ result: _result }: { result?: DiagnosisResultType }) => {
     return React.createElement('button', null, 'シェア');
   },
 }));
 
 // Mock QRCodeModal component  
 jest.mock('@/components/share/QRCodeModal', () => ({
-  QRCodeModal: ({ isOpen, onClose, url }: any) => {
+  QRCodeModal: ({ isOpen, onClose: _onClose, url }: { isOpen: boolean; onClose: () => void; url: string }) => {
     return isOpen ? React.createElement('div', { 'data-testid': 'qr-modal' }, url) : null;
   },
 }));

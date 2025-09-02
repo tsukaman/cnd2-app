@@ -57,7 +57,7 @@ export default function ShareButton({ resultId, score }: ShareButtonProps) {
           text: shareText,
           url: shareUrl,
         });
-      } catch (_err) {
+      } catch {
         logger.info('[ShareButton] Share cancelled or failed');
       }
     }

@@ -109,10 +109,14 @@ type ElementTypeMap = {
  * Creates a mock motion component that filters out Framer Motion props
  */
 export function createMotionComponent<K extends keyof ElementTypeMap>(element: K) {
-  return React.forwardRef<ElementTypeMap[K], MockComponentProps>(({ children, ...props }, ref) => {
+  const MotionComponent = React.forwardRef<ElementTypeMap[K], MockComponentProps>(({ children, ...props }, ref) => {
     const filteredProps = filterFramerMotionProps(props);
     return React.createElement(element, { ...filteredProps, ref }, children as React.ReactNode);
   });
+  
+  MotionComponent.displayName = `Motion${element.charAt(0).toUpperCase() + element.slice(1)}`;
+  
+  return MotionComponent;
 }
 
 /**
