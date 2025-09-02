@@ -76,7 +76,16 @@ export class AstrologicalDiagnosisEngineV4 {
   /**
    * プロフィールを要約（品質重視で情報を保持）
    */
-  private summarizeProfile(profile: PrairieProfile): any {
+  private summarizeProfile(profile: PrairieProfile): {
+    name: string;
+    title: string;
+    company: string;
+    bio: string;
+    skills: string[];
+    interests: string[];
+    motto: string;
+    tags: string[];
+  } {
     return {
       name: profile.basic.name,
       title: profile.basic.title?.substring(0, 100) || '', // 肩書きは重要なので100文字まで

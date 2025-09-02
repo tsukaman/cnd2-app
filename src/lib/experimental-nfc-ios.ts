@@ -7,7 +7,8 @@
 // 1. 将来的にWebKitがサポートする可能性のあるAPI
 export function checkFutureIOSNFCSupport(): boolean {
   // WebKit独自のNFC API（現在は存在しない）
-  if ('webkit' in window && 'nfc' in (window as any).webkit) {
+  const webkitWindow = window as { webkit?: { nfc?: unknown } };
+  if ('webkit' in window && webkitWindow.webkit && 'nfc' in webkitWindow.webkit) {
     console.log('WebKit NFC API detected (future)');
     return true;
   }
@@ -50,7 +51,7 @@ export function checkInAppBrowserNFC(): boolean {
 export function checkPWANFCSupport(): boolean {
   // スタンドアロンモードでの実行確認
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                       (window.navigator as any).standalone === true;
+                       (window.navigator as { standalone?: boolean }).standalone === true;
   
   if (isStandalone) {
     console.log('PWA mode detected');

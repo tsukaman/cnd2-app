@@ -2,6 +2,7 @@
 // 環境に応じてエンドポイントを切り替え
 
 import { logger } from './logger';
+import { PrairieProfile, DiagnosisResult } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
@@ -105,7 +106,7 @@ export const apiClient = {
   
   // Diagnosis API
   diagnosis: {
-    async generate(profiles: any[], mode: 'duo' | 'group' = 'duo') {
+    async generate(profiles: PrairieProfile[], mode: 'duo' | 'group' = 'duo') {
       const response = await fetch(getApiUrl('api/diagnosis'), {
         method: 'POST',
         headers: {
@@ -140,7 +141,7 @@ export const apiClient = {
       return handleApiResponse(response);
     },
     
-    async save(result: any) {
+    async save(result: DiagnosisResult) {
       const response = await fetch(getApiUrl('api/results'), {
         method: 'POST',
         headers: {
@@ -175,7 +176,7 @@ export const apiClient = {
 };
 
 // デバッグ用のヘルパー
-export function logApiCall(endpoint: string, method: string, data?: any) {
+export function logApiCall(endpoint: string, method: string, data?: unknown) {
   if (process.env.NODE_ENV === 'development') {
     console.log(`[API] ${method} ${endpoint}`, data);
   }

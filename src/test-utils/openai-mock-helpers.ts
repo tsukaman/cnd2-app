@@ -5,7 +5,7 @@
 /**
  * Create a mock OpenAI API response
  */
-export function createMockOpenAIResponse(content: any, usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }) {
+export function createMockOpenAIResponse(content: unknown, usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }) {
   return {
     ok: true,
     json: async () => ({
@@ -42,7 +42,7 @@ export function createMockOpenAIError(message: string = 'API Error', status: num
 /**
  * Mock fetch for OpenAI API calls
  */
-export function mockOpenAIFetch(response: any, usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }) {
+export function mockOpenAIFetch(response: unknown, usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }) {
   global.fetch = jest.fn().mockResolvedValue(createMockOpenAIResponse(response, usage));
   return global.fetch as jest.Mock;
 }
@@ -107,7 +107,7 @@ export class OpenAIMockSetup {
   /**
    * Mock a successful response
    */
-  mockSuccess(response: any, usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }) {
+  mockSuccess(response: unknown, usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }) {
     mockOpenAIFetch(response, usage);
     return this;
   }

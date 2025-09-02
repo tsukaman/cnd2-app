@@ -30,7 +30,7 @@ describe('SimplifiedDiagnosisEngine', () => {
       set: jest.fn(),
       clear: jest.fn(),
       getStats: jest.fn(),
-    } as any;
+    } as unknown as ReturnType<typeof DiagnosisCache.getInstance>;
     (DiagnosisCache.getInstance as jest.Mock).mockReturnValue(mockCache);
     
     // Setup OpenAI mock with proper typing
@@ -41,7 +41,7 @@ describe('SimplifiedDiagnosisEngine', () => {
           create: mockCreate,
         },
       },
-    } as any;
+    } as unknown as ReturnType<typeof DiagnosisCache.getInstance>;
     (OpenAI as jest.MockedClass<typeof OpenAI>).mockImplementation(() => mockOpenAI);
     
     // Set environment
@@ -49,23 +49,23 @@ describe('SimplifiedDiagnosisEngine', () => {
     
     // Mock window as undefined to simulate server-side environment
     originalWindow = global.window;
-    delete (global as any).window;
+    delete (global as unknown as { window?: Window }).window;
     
     // Reset singleton instance to pick up the new environment variable
-    (SimplifiedDiagnosisEngine as any).instance = undefined;
+    (SimplifiedDiagnosisEngine as unknown as { instance?: SimplifiedDiagnosisEngine }).instance = undefined;
     
     // Get instance
     engine = SimplifiedDiagnosisEngine.getInstance();
     
     // Force set the openai instance for testing
-    (engine as any).openai = mockOpenAI;
+    (engine as unknown as { openai: typeof mockOpenAI }).openai = mockOpenAI;
   });
 
   afterEach(() => {
     delete process.env.OPENAI_API_KEY;
     // Restore window
     if (originalWindow) {
-      (global as any).window = originalWindow;
+      (global as unknown as { window?: Window }).window = originalWindow;
     }
     // Reset singleton instance
     SimplifiedDiagnosisEngine.resetInstance();
@@ -86,7 +86,7 @@ describe('SimplifiedDiagnosisEngine', () => {
 
     it('OpenAI APIキーが設定されていない場合はfalseを返す', () => {
       delete process.env.OPENAI_API_KEY;
-      (SimplifiedDiagnosisEngine as any).instance = undefined;
+      (SimplifiedDiagnosisEngine as unknown as { instance?: SimplifiedDiagnosisEngine }).instance = undefined;
       
       const newEngine = SimplifiedDiagnosisEngine.getInstance();
       
@@ -120,7 +120,7 @@ describe('SimplifiedDiagnosisEngine', () => {
           interests: ['UX', 'UI'],
         },
       },
-    ] as any;
+    ] as PrairieProfile[];
 
     const mockHtml1 = '<html><body><h1>Test User 1</h1></body></html>';
     const mockHtml2 = '<html><body><h1>Test User 2</h1></body></html>';
@@ -245,7 +245,7 @@ describe('SimplifiedDiagnosisEngine', () => {
 
     it('AI APIが利用できない場合はフォールバック診断を返す', async () => {
       delete process.env.OPENAI_API_KEY;
-      (SimplifiedDiagnosisEngine as any).instance = undefined;
+      (SimplifiedDiagnosisEngine as unknown as { instance?: SimplifiedDiagnosisEngine }).instance = undefined;
       const fallbackEngine = SimplifiedDiagnosisEngine.getInstance();
       
       mockCache.get.mockReturnValue(null);

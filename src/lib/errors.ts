@@ -128,8 +128,8 @@ export class ErrorHandler {
     return (
       typeof error === 'object' &&
       error !== null &&
-      typeof (error as any).code === 'string' &&
-      typeof (error as any).message === 'string'
+      typeof (error as { code?: unknown }).code === 'string' &&
+      typeof (error as { message?: unknown }).message === 'string'
     );
   }
 
