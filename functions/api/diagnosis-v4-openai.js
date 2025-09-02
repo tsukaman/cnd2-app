@@ -151,14 +151,29 @@ export async function generateAstrologicalDiagnosis(profiles, mode, env) {
     logger.log('[DEBUG] V4-OpenAI Engine - Starting diagnosis with profiles:', JSON.stringify(profiles.map(p => p.basic?.name)));
   }
   
-  if (mode === 'duo' && profiles.length === 2) {
-    return generateDuoDiagnosis(profiles[0], profiles[1], env);
-  } else {
-    // グループモードの場合、簡易的に最初の2人で診断
-    const result = await generateDuoDiagnosis(profiles[0], profiles[1], env);
-    result.mode = 'group';
-    result.participants = profiles;
-    return result;
+  // OpenAI APIキーの存在を確認してaiPoweredフラグを返す
+  const result = mode === 'duo' && profiles.length === 2
+    ? await generateDuoDiagnosis(profiles[0], profiles[1], env)
+    : await (async () => {
+        // グループモードの場合、簡易的に最初の2人で診断
+        const baseResult = await generateDuoDiagnosis(profiles[0], profiles[1], env);
+        baseResult.mode = 'group';
+        baseResult.participants = profiles;
+        return baseResult;
+      })();
+  
+  // OpenAI APIが実際に使用されたかどうかを明確にする
+  const isOpenAIUsed = isValidOpenAIKey(env?.OPENAI_API_KEY) && result.aiPowered !== false;
+  
+  return {
+    ...result,
+    aiPowered: isOpenAIUsed,
+    metadata: {
+      ...result.metadata,
+      engine: isOpenAIUsed ? 'openai-v4' : 'fallback-v4',
+      model: isOpenAIUsed ? CONFIG.MODEL : 'none'
+    }
+  };
   }
 }
 
