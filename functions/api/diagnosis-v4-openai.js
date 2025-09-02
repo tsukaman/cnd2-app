@@ -142,6 +142,11 @@ const ASTROLOGY_SYSTEM_PROMPT = `あなたは「クラウドネイティブの�
 
 /**
  * 占星術的な診断結果の生成（OpenAI使用）
+ * OpenAI API使用状態を判定し、診断結果にメタデータを追加
+ * @param {Array} profiles - プロフィール配列
+ * @param {string} mode - 診断モード（'duo' or 'group'）
+ * @param {Object} env - 環境変数（OPENAI_API_KEY, logger等を含む）
+ * @returns {Object} aiPoweredフラグとメタデータが更新された診断結果
  */
 export async function generateAstrologicalDiagnosis(profiles, mode, env) {
   const logger = env?.logger || console;
@@ -163,7 +168,12 @@ export async function generateAstrologicalDiagnosis(profiles, mode, env) {
       })();
   
   // OpenAI APIが実際に使用されたかどうかを明確にする
-  const isOpenAIUsed = isValidOpenAIKey(env?.OPENAI_API_KEY) && result.aiPowered !== false;
+  const isOpenAIUsed = isValidOpenAIKey(env?.OPENAI_API_KEY) && result.aiPowered === true;
+  
+  // デバッグモードでaiPowered状態の変化をログ出力
+  if (debugMode && result.aiPowered !== isOpenAIUsed) {
+    logger.log('[DEBUG] aiPowered flag changed from', result.aiPowered, 'to', isOpenAIUsed);
+  }
   
   return {
     ...result,
