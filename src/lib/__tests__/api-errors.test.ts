@@ -218,6 +218,6 @@ describe('Error Chaining', () => {
       }
     );
 
-    expect(error.details?.errors).toHaveLength(2);
+    expect((error.details as { errors?: unknown[] })?.errors).toHaveLength(2);
   });
 });

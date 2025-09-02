@@ -1,6 +1,7 @@
 import { SimplifiedDiagnosisEngine } from '../diagnosis-engine-v3';
 import OpenAI from 'openai';
 import { DiagnosisCache } from '../diagnosis-cache';
+import { PrairieProfile } from '@/types';
 
 // Mock dependencies
 jest.mock('openai');
@@ -14,8 +15,8 @@ global.fetch = jest.fn();
 
 describe('SimplifiedDiagnosisEngine', () => {
   let engine: SimplifiedDiagnosisEngine;
-  let mockOpenAI: jest.Mocked<OpenAI>;
-  let mockCache: jest.Mocked<DiagnosisCache>;
+  let mockOpenAI: any;
+  let mockCache: any;
   let originalWindow: any;
 
   beforeEach(() => {
