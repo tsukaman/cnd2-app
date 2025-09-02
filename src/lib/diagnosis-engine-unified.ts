@@ -234,7 +234,7 @@ export class UnifiedDiagnosisEngine {
         modelUsed: model
       };
 
-    } catch (error) {
+    } catch (_error) {
       logger.error('[Unified Engine] Failed to generate diagnosis', error);
       return this.generateDynamicFallback(profile1, profile2, style, enableFortuneTelling);
     }
@@ -319,7 +319,7 @@ export class UnifiedDiagnosisEngine {
         modelUsed: model
       };
 
-    } catch (error) {
+    } catch (_error) {
       logger.error('[Unified Engine] Failed to generate group diagnosis', error);
       return this.generateGroupFallback(profiles, style, enableFortuneTelling);
     }

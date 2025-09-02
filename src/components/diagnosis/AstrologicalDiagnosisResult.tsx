@@ -42,8 +42,8 @@ export function AstrologicalDiagnosisResult({ result, onReset }: AstrologicalDia
   };
 
   const participants = result.participants || [];
-  const name1 = participants[0]?.basic?.name || "エンジニア1";
-  const name2 = participants[1]?.basic?.name || "エンジニア2";
+  // const name1 = participants[0]?.basic?.name || "エンジニア1";
+  // const name2 = participants[1]?.basic?.name || "エンジニア2";
 
   return (
     <>

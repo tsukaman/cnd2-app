@@ -135,7 +135,7 @@ export class PrairieCardParser {
       if (!validHosts.includes(parsed.hostname) && !parsed.hostname.endsWith('.prairie.cards')) {
         throw new Error('Invalid Prairie Card domain');
       }
-    } catch (error) {
+    } catch (_error) {
       if (error instanceof Error) {
         throw error;
       }

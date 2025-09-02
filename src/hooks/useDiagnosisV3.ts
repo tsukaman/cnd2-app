@@ -54,7 +54,7 @@ export function useDiagnosisV3(): UseDiagnosisV3Result {
         console.warn('[useDiagnosisV3] Failed to save to localStorage:', storageError);
       }
       
-    } catch (err) {
+    } catch (_err) {
       const errorMessage = err instanceof Error ? err.message : '診断中にエラーが発生しました';
       if (process.env.NODE_ENV !== 'test') {
         console.error('[useDiagnosisV3] Diagnosis error:', err);

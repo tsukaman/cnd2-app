@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import OptimizedImage from '../OptimizedImage';
 import { setupIntersectionObserverMock, MockIntersectionObserver } from '@/test-utils/mocks';
@@ -73,6 +73,7 @@ jest.mock('next/image', () => ({
       };
     }
     
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
     return <img {...imgProps} />;
   },
 }));

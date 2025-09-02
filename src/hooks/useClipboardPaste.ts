@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  PRAIRIE_CARD_URL_PATTERN,
   isPrairieCardUrl as isPrairieCardUrlHelper,
   extractPrairieCardUrl
 } from '@/constants/scanner';
@@ -41,7 +40,7 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
           setLastPastedUrl(url);
         }
       }
-    } catch (err) {
+    } catch (_err) {
       // Permission denied or other error
       logger.debug('Clipboard access denied or error', err);
     }

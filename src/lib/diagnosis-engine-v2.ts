@@ -124,7 +124,7 @@ export class DiagnosisEngine {
       }
       
       return JSON.parse(content);
-    } catch (error) {
+    } catch (_error) {
       clearTimeout(timeoutId);
       
       // タイムアウトエラーの判別

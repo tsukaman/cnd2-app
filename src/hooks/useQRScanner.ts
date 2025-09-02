@@ -79,7 +79,7 @@ export function useQRScanner(): UseQRScannerReturn {
             }
           }
         }
-      } catch (err) {
+      } catch (_err) {
         logger.debug('QR detection error', err);
       }
     }
@@ -117,7 +117,7 @@ export function useQRScanner(): UseQRScannerReturn {
         // Start QR detection
         detectQRCode();
       }
-    } catch (err) {
+    } catch (_err) {
       logger.error('Camera access error', err);
       
       if (err instanceof Error) {

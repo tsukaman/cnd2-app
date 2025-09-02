@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useDiagnosisV3 } from '../useDiagnosisV3';
 import { apiClientV3 } from '@/lib/api-client-v3';
 

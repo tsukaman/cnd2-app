@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   NFC_ERROR_MESSAGES,
-  PRAIRIE_CARD_URL_PATTERN,
   isPrairieCardUrl,
   extractPrairieCardUrl
 } from '@/constants/scanner';
@@ -112,7 +111,7 @@ export function useNFC(): UseNFCReturn {
         setIsScanning(false);
       };
 
-    } catch (err) {
+    } catch (_err) {
       logger.error('NFC Scan error', err);
       
       if (err instanceof Error) {

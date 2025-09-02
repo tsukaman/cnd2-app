@@ -2,6 +2,8 @@
  * Unified type definitions for test mocks
  */
 
+import type { PrairieProfile, DiagnosisResult } from '@/types';
+
 // Mock Storage type for localStorage and sessionStorage
 export type MockStorage = jest.Mocked<Storage>;
 
@@ -13,13 +15,13 @@ export interface MockMenuCardProps {
 
 // Mock for Prairie Card component props
 export interface MockPrairieCardInputProps {
-  onProfileLoaded: (profile: any) => void;
+  onProfileLoaded: (profile: PrairieProfile) => void;
   disabled?: boolean;
 }
 
 // Mock for share button props
 export interface MockShareButtonProps {
-  result: any;
+  result: DiagnosisResult;
 }
 
 // Mock for QR code modal props
@@ -30,7 +32,7 @@ export interface MockQRCodeModalProps {
 }
 
 // Common mock response types
-export interface MockApiResponse<T = any> {
+export interface MockApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

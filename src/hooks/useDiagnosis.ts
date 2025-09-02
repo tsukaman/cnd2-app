@@ -51,7 +51,7 @@ export function useDiagnosis(): UseDiagnosisReturn {
       }
       
       return result;
-    } catch (err) {
+    } catch (_err) {
       const errorMessage = err instanceof Error 
         ? err.message 
         : '診断中にエラーが発生しました';

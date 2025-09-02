@@ -47,7 +47,7 @@ export function QRCodeModal({ isOpen, onClose, resultId, score }: QRCodeModalPro
           text: `相性スコア: ${score}/100\n診断結果はこちら: ${resultUrl}`,
           files: [file],
         });
-      } catch (error) {
+      } catch (_error) {
         logger.error("[QRCodeModal] Share failed:", error);
       }
     }
@@ -90,6 +90,7 @@ export function QRCodeModal({ isOpen, onClose, resultId, score }: QRCodeModalPro
               {/* QR Code */}
               {qrCodeUrl && (
                 <div className="bg-white rounded-xl p-4 mb-6">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={qrCodeUrl}
                     alt="QR Code"

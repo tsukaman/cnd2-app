@@ -115,7 +115,7 @@ export class DiagnosisEngine {
       this.cache.set(profiles, 'duo', diagnosisResult);
       
       return diagnosisResult;
-    } catch (error) {
+    } catch (_error) {
       console.error('[CND²] AI診断生成エラー:', error);
       
       // 開発環境ではエラーを投げる
@@ -187,7 +187,7 @@ export class DiagnosisEngine {
       this.cache.set(profiles, 'group', diagnosisResult);
       
       return diagnosisResult;
-    } catch (error) {
+    } catch (_error) {
       console.error('[CND²] グループAI診断生成エラー:', error);
       
       // エラー時はモック診断を返す

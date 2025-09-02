@@ -61,7 +61,7 @@ const mockProfiles: Record<string, PrairieProfile> = {
   }
 };
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   try {
     const { url } = await request.json();
     
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     }
     
     return NextResponse.json({ success: true, data: profile });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { success: false, error: 'Invalid request' },
       { status: 400 }

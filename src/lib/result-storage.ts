@@ -35,7 +35,7 @@ export class ResultStorage {
         // 保存時にクリーンアップを実行（Edge Runtime対応）
         // setIntervalの代わりにリクエストベースでクリーンアップ
         this.cleanupOldResults();
-      } catch (error) {
+      } catch (_error) {
         console.error('[CND²] 結果の保存エラー:', error);
       }
     }
@@ -65,7 +65,7 @@ export class ResultStorage {
             return result;
           }
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('[CND²] 結果の取得エラー:', error);
       }
     }
@@ -98,7 +98,7 @@ export class ResultStorage {
             }
           });
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('[CND²] 全結果取得エラー:', error);
       }
     }
@@ -140,7 +140,7 @@ export class ResultStorage {
             localStorage.setItem('cnd2_results', JSON.stringify(results));
           }
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('[CND²] クリーンアップエラー:', error);
       }
     }

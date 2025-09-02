@@ -46,7 +46,7 @@ export function withApiMiddleware<T = unknown>(
       });
 
       return response;
-    } catch (error) {
+    } catch (_error) {
       // Log error with structured format
       console.error('[API Error]', {
         requestId,
@@ -138,7 +138,7 @@ export async function validateRequestBody<T>(
   try {
     const body = await request.json();
     return schema.parse(body);
-  } catch (error) {
+  } catch (_error) {
     if (error instanceof Error) {
       throw new ApiError(
         `Invalid request body: ${error.message}`,

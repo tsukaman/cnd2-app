@@ -33,7 +33,7 @@ export function usePrairieCard(): UsePrairieCardReturn {
 
       setProfile(prairieProfile);
       return prairieProfile;
-    } catch (err) {
+    } catch (_err) {
       const errorMessage = err instanceof Error 
         ? err.message 
         : 'Prairie Cardの取得中にエラーが発生しました';

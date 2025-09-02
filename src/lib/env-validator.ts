@@ -159,7 +159,7 @@ export class EnvValidator {
 if (typeof window === 'undefined') {
   try {
     EnvValidator.validate();
-  } catch (error) {
+  } catch (_error) {
     console.error('[CND²] Environment validation failed:', error);
     // 開発環境では警告のみ、本番環境では例外をスロー
     if (process.env.NODE_ENV === 'production') {

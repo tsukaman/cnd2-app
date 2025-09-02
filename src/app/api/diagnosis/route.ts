@@ -92,7 +92,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     }
 
     return NextResponse.json(result);
-  } catch (error) {
+  } catch (_error) {
     if (error instanceof ApiError) {
       throw error;
     }

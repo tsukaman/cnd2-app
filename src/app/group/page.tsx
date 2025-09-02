@@ -9,7 +9,7 @@ import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
-import { isProduction } from '@/lib/utils/environment';
+// import { isProduction } from '@/lib/utils/environment';
 import { logger } from '@/lib/logger';
 import type { PrairieProfile } from '@/types';
 
@@ -71,7 +71,7 @@ export default function GroupPage() {
                 return;
               }
               logger.warn(`[Group] KV save attempt ${i + 1} failed:`, response.status);
-            } catch (err) {
+            } catch (_err) {
               logger.warn(`[Group] KV save attempt ${i + 1} error:`, err);
             }
             // Wait before retry (exponential backoff)

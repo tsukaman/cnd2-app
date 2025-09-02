@@ -37,7 +37,7 @@ jest.mock('@/components/ui/MenuCard', () => ({
 }));
 
 jest.mock('@/components/ui/ConsentDialog', () => ({
-  ConsentDialog: ({ onConsent }: any) => (
+  ConsentDialog: ({ onConsent }: { onConsent: () => void }) => (
     <div data-testid="consent-dialog">
       <button onClick={onConsent}>同意する</button>
     </div>
@@ -49,7 +49,7 @@ jest.mock('@/components/ui/LoadingScreen', () => ({
 }));
 
 jest.mock('@/components/diagnosis/DiagnosisResult', () => ({
-  DiagnosisResultComponent: ({ result }: any) => <div data-testid="diagnosis-result">{result?.id}</div>,
+  DiagnosisResultComponent: ({ result }: { result?: { id: string } }) => <div data-testid="diagnosis-result">{result?.id}</div>,
 }));
 
 // TODO: These integration tests need to be refactored or moved to E2E tests

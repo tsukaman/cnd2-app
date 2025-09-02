@@ -168,7 +168,7 @@ ${JSON.stringify(summary2, null, 2)}
         aiPowered: true
       };
 
-    } catch (error) {
+    } catch (_error) {
       logger.error('[V4 Engine] Failed to generate diagnosis', error);
       return this.generateFallbackDiagnosis(profile1, profile2);
     }

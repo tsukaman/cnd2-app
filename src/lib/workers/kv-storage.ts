@@ -87,7 +87,7 @@ export class KVStorage {
 
     try {
       return JSON.parse(value);
-    } catch (error) {
+    } catch (_error) {
       console.error('[KV] Failed to parse diagnosis:', error);
       return null;
     }
@@ -182,7 +182,7 @@ export class KVStorage {
       }
       
       return parsed;
-    } catch (error) {
+    } catch (_error) {
       console.error('[KV] Failed to parse Prairie profile:', error);
       return null;
     }
@@ -210,7 +210,7 @@ export class KVStorage {
       });
 
       return count;
-    } catch (error) {
+    } catch (_error) {
       console.error('[KV] Failed to increment rate limit:', error);
       // Return a high number to trigger rate limiting on error
       return Number.MAX_SAFE_INTEGER;
@@ -224,7 +224,7 @@ export class KVStorage {
     try {
       const count = await this.incrementRateLimit(identifier, windowMinutes);
       return count <= limit;
-    } catch (error) {
+    } catch (_error) {
       console.error('[KV] Rate limit check failed:', error);
       // Fail-safe: restrict access on error to prevent abuse
       return false;

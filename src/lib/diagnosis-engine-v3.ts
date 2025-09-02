@@ -74,7 +74,7 @@ export class SimplifiedDiagnosisEngine {
       }
       
       return await response.text();
-    } catch (error) {
+    } catch (_error) {
       console.error(`[CND²] Prairie Card fetch error for ${url}:`, error);
       throw error;
     }
@@ -355,7 +355,7 @@ export class SimplifiedDiagnosisEngine {
 
       return diagnosisResult;
       
-    } catch (error) {
+    } catch (_error) {
       console.error('[CND²] 診断エラー:', error);
       
       // OpenAI API特有のエラーハンドリング
