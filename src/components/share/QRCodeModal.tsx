@@ -48,7 +48,7 @@ export function QRCodeModal({ isOpen, onClose, resultId, score }: QRCodeModalPro
           files: [file],
         });
       } catch (_error) {
-        logger.error("[QRCodeModal] Share failed:", error);
+        logger.error("[QRCodeModal] Share failed:", _error);
       }
     }
   };

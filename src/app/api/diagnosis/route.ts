@@ -93,11 +93,11 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
 
     return NextResponse.json(result);
   } catch (_error) {
-    if (error instanceof ApiError) {
-      throw error;
+    if (_error instanceof ApiError) {
+      throw _error;
     }
     
-    console.error('[Diagnosis API] Error:', error);
+    console.error('[Diagnosis API] Error:', _error);
     throw new ApiError(
       'Failed to generate diagnosis',
       ApiErrorCode.INTERNAL_ERROR,

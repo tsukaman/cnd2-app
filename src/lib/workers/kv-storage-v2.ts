@@ -37,7 +37,7 @@ export class KVStorage {
         logger.warn('KV Storage not available in current environment');
       }
     } catch (_error) {
-      logger.error('Failed to initialize KV storage', error);
+      logger.error('Failed to initialize KV storage', _error);
       this.isAvailable = false;
     }
   }
@@ -86,7 +86,7 @@ export class KVStorage {
     try {
       return JSON.parse(data);
     } catch (_error) {
-      logger.error('Failed to parse KV data', error);
+      logger.error('Failed to parse KV data', _error);
       return null;
     }
   }
@@ -132,7 +132,7 @@ export class KVStorage {
           expiresAt: entry.expiresAt,
         }));
     } catch (_error) {
-      logger.error('Failed to parse KV index', error);
+      logger.error('Failed to parse KV index', _error);
       return [];
     }
   }
@@ -216,7 +216,7 @@ export class KVStorage {
         expirationTtl: 30 * 24 * 60 * 60,
       });
     } catch (_error) {
-      logger.error('Failed to update KV index', error);
+      logger.error('Failed to update KV index', _error);
     }
   }
 
@@ -248,7 +248,7 @@ export class KVStorage {
       try {
         localStorage.setItem(`cnd2_result_${id}`, JSON.stringify(data));
       } catch (_error) {
-        logger.error('Fallback save failed', error);
+        logger.error('Fallback save failed', _error);
       }
     }
   }
@@ -259,7 +259,7 @@ export class KVStorage {
         const data = localStorage.getItem(`cnd2_result_${id}`);
         return data ? JSON.parse(data) : null;
       } catch (_error) {
-        logger.error('Fallback get failed', error);
+        logger.error('Fallback get failed', _error);
         return null;
       }
     }
@@ -271,7 +271,7 @@ export class KVStorage {
       try {
         localStorage.removeItem(`cnd2_result_${id}`);
       } catch (_error) {
-        logger.error('Fallback delete failed', error);
+        logger.error('Fallback delete failed', _error);
       }
     }
   }

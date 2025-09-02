@@ -8,7 +8,7 @@ import { setupGlobalMocks, createMockPrairieProfile } from '@/test-utils/mocks';
 // Mock ShareButton component
 jest.mock('@/components/share/ShareButton', () => ({
   __esModule: true,
-  default: ({ result }: { result?: DiagnosisResult }) => {
+  default: ({ result }: { result?: DiagnosisResultType }) => {
     return React.createElement('button', null, 'シェア');
   },
 }));

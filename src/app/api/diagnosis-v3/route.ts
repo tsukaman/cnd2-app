@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     
     // 正規化されたURLを使用（オプション）
     // const normalizedUrls = validationResult.results
-      .map(r => r.normalizedUrl)
-      .filter((url): url is string => url !== undefined);
+    //   .map(r => r.normalizedUrl)
+    //   .filter((url): url is string => url !== undefined);
     
     // 診断エンジンのインスタンスを取得
     const engine = SimplifiedDiagnosisEngine.getInstance();
@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (_error) {
-    console.error('[API] Diagnosis v3 error:', error);
+    console.error('[API] Diagnosis v3 error:', _error);
     
-    const handledError = ErrorHandler.mapError(error);
+    const handledError = ErrorHandler.mapError(_error);
     ErrorHandler.logError(handledError);
     
     return NextResponse.json(

@@ -72,7 +72,7 @@ export default function GroupPage() {
               }
               logger.warn(`[Group] KV save attempt ${i + 1} failed:`, response.status);
             } catch (_err) {
-              logger.warn(`[Group] KV save attempt ${i + 1} error:`, err);
+              logger.warn(`[Group] KV save attempt ${i + 1} error:`, _err);
             }
             // Wait before retry (exponential backoff)
             if (i < RETRY_CONFIG.maxRetries - 1) {
