@@ -39,7 +39,6 @@ jest.mock('@/components/prairie/PrairieCardInput', () => ({
   __esModule: true,
   default: function MockPrairieCardInput({ onProfileLoaded, disabled }: { onProfileLoaded: (profile: PrairieProfile) => void; disabled?: boolean }) {
     const React = jest.requireActual('react') as typeof import('react');
-    // const { apiClient } = jest.requireActual('@/lib/api-client') as { apiClient: { fetchPrairieCard: (url: string) => Promise<PrairieProfile> } };
     const [error, setError] = React.useState<string | null>(null);
     
     const handleClick = async () => {
