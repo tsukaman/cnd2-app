@@ -21,7 +21,7 @@ export function usePrairieCard(): UsePrairieCardReturn {
     setError(null);
     
     try {
-      const response = await apiClient.prairie.fetch(url);
+      const response = await apiClient.prairie.fetch(url) as PrairieProfile;
       
       // Check if response has the expected structure
       if (!response || !response.basic || !response.basic.name) {

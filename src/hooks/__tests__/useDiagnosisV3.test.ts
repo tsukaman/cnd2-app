@@ -68,7 +68,7 @@ describe('useDiagnosisV3', () => {
       expect(result.current.error).toBeNull();
 
       await act(async () => {
-        resolvePromise({
+        resolvePromise?.({
           success: true,
           data: { result: { id: 'test' } },
         });
