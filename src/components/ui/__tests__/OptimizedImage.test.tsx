@@ -100,6 +100,7 @@ jest.mock('next/image', () => ({
 
 // Mock framer-motion
 jest.mock('framer-motion', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { framerMotionMock } = require('../../../test-utils/framer-motion-mock');
   return framerMotionMock;
 });

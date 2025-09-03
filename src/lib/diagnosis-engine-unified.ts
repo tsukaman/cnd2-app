@@ -217,7 +217,7 @@ export class UnifiedDiagnosisEngine {
       }
 
       // luckyProjectがある場合は分解（共通関数を使用）
-      let processedResult: Partial<DiagnosisResult> = { ...result };
+      const processedResult: Partial<DiagnosisResult> = { ...result };
       if (result.luckyProject) {
         const { name, description } = parseLuckyProject(result.luckyProject);
         processedResult.luckyProject = name;
@@ -308,7 +308,7 @@ export class UnifiedDiagnosisEngine {
       }
 
       // luckyProjectがある場合は分解（共通関数を使用）
-      let processedResult: Partial<DiagnosisResult> = { ...result };
+      const processedResult: Partial<DiagnosisResult> = { ...result };
       if (result.luckyProject) {
         const { name, description } = parseLuckyProject(result.luckyProject);
         processedResult.luckyProject = name;
