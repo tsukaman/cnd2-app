@@ -171,7 +171,7 @@ describe('SimplifiedDiagnosisEngine', () => {
             content: JSON.stringify(mockAIResponse),
           },
         }],
-      } as any);
+      } as unknown as ReturnType<typeof mockOpenAI.chat.completions.create>;
     });
 
     it('キャッシュされた結果がある場合はそれを返す', async () => {
@@ -239,7 +239,7 @@ describe('SimplifiedDiagnosisEngine', () => {
             content: JSON.stringify(mockAIResponse),
           },
         }],
-      } as any);
+      } as unknown as ReturnType<typeof mockOpenAI.chat.completions.create>;
 
       const result = await engine.generateDiagnosis(mockProfiles, 'duo');
       
@@ -295,7 +295,7 @@ describe('SimplifiedDiagnosisEngine', () => {
             content: 'Invalid JSON',
           },
         }],
-      } as any);
+      } as unknown as ReturnType<typeof mockOpenAI.chat.completions.create>;
 
       await expect(engine.generateDiagnosis(mockProfiles, 'duo')).rejects.toThrow();
     });
@@ -314,7 +314,7 @@ describe('SimplifiedDiagnosisEngine', () => {
           skills: ['Management'],
           interests: ['Leadership'],
         },
-      }] as any;
+      }] as PrairieProfile[];
 
       // Mock fetch for HTML (for group mode, it will fetch 3 times)
       (global.fetch as jest.Mock).mockResolvedValue({

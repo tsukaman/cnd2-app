@@ -89,7 +89,7 @@ describe('Prairie Card URL Validator', () => {
       });
 
       it('nullを拒否する', () => {
-        const result = validatePrairieCardUrl(null as any);
+        const result = validatePrairieCardUrl(null as unknown as string);
         expect(result.isValid).toBe(false);
         expect(result.error).toContain('URLが指定されていません');
       });
@@ -144,8 +144,8 @@ describe('Prairie Card URL Validator', () => {
     });
 
     it('例外が発生してもクラッシュしない', () => {
-      expect(isPrairieCardUrl(null as any)).toBe(false);
-      expect(isPrairieCardUrl(undefined as any)).toBe(false);
+      expect(isPrairieCardUrl(null as unknown as string)).toBe(false);
+      expect(isPrairieCardUrl(undefined as unknown as string)).toBe(false);
     });
   });
 });

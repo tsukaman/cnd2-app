@@ -263,7 +263,7 @@ describe('API Client', () => {
 
     it('API_BASE_URLが未設定の場合相対パスを使用する', async () => {
       // windowオブジェクトをモック（モジュールロード前に設定が必要）
-      global.window = {} as any;
+      (global as typeof globalThis & { window?: unknown }).window = {};
       
       delete process.env.NEXT_PUBLIC_API_BASE_URL;
       
@@ -285,7 +285,7 @@ describe('API Client', () => {
       );
       
       // クリーンアップ
-      delete (global as any).window;
+      delete (global as typeof globalThis & { window?: unknown }).window;
       jest.resetModules();
     });
   });
