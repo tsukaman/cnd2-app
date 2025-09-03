@@ -182,6 +182,7 @@ describe('Rate Limiting', () => {
   describe('Edge Runtime互換性', () => {
     it('setIntervalを使用しない', () => {
       // Read the actual implementation to verify
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const rateLimit = require('../rate-limit');
       const sourceCode = rateLimit.toString();
       

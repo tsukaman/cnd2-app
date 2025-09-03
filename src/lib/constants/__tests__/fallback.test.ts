@@ -5,10 +5,11 @@ jest.mock('@/lib/utils/environment', () => ({
 }));
 
 import { isFallbackAllowed, getFallbackScoreRange } from '../fallback';
+import { isDevelopment, getEnvBoolean } from '@/lib/utils/environment';
 
 describe('フォールバック診断制御', () => {
-  const mockIsDevelopment = require('@/lib/utils/environment').isDevelopment;
-  const mockGetEnvBoolean = require('@/lib/utils/environment').getEnvBoolean;
+  const mockIsDevelopment = isDevelopment as jest.MockedFunction<typeof isDevelopment>;
+  const mockGetEnvBoolean = getEnvBoolean as jest.MockedFunction<typeof getEnvBoolean>;
 
   beforeEach(() => {
     jest.clearAllMocks();

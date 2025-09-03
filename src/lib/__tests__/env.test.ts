@@ -9,6 +9,7 @@ describe('Environment validation', () => {
     });
 
     it('returns default API configuration', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { getApiConfig } = require('@/lib/env');
       const config = getApiConfig();
 
@@ -28,6 +29,7 @@ describe('Environment validation', () => {
       // Mock window to simulate client environment
       (global as unknown as { window?: unknown }).window = {};
       
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { getServerConfig } = require('@/lib/env');
       expect(() => getServerConfig()).toThrow('getServerConfig() cannot be called on the client side');
       
@@ -38,6 +40,7 @@ describe('Environment validation', () => {
       // Ensure window is undefined (server environment)
       delete (global as unknown as { window?: unknown }).window;
       
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { getServerConfig } = require('@/lib/env');
       const config = getServerConfig();
 

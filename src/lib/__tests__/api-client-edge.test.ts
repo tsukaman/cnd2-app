@@ -15,6 +15,7 @@ describe('API Client Edge Cases', () => {
   describe('パス正規化の境界値テスト', () => {
     it('二重スラッシュを正しく処理する', async () => {
       process.env.NEXT_PUBLIC_API_BASE_URL = 'https://test.com';
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -36,6 +37,7 @@ describe('API Client Edge Cases', () => {
       // windowオブジェクトをモック
       (global as unknown as { window?: unknown }).window = {};
       
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -57,6 +59,7 @@ describe('API Client Edge Cases', () => {
 
     it('末尾スラッシュがあるAPI_BASE_URLを正しく処理する', async () => {
       process.env.NEXT_PUBLIC_API_BASE_URL = 'https://test.com/';
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -80,6 +83,7 @@ describe('API Client Edge Cases', () => {
       // windowが存在しない環境をシミュレート
       delete (global as unknown as { window?: unknown }).window;
       
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       
       // SSR環境でのエラー
@@ -100,7 +104,8 @@ describe('API Client Edge Cases', () => {
         jest.resetModules();
         
         process.env.NEXT_PUBLIC_API_BASE_URL = baseUrl;
-        const { apiClient } = require('../api-client');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { apiClient } = require('../api-client');
         
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
@@ -126,6 +131,7 @@ describe('API Client Edge Cases', () => {
         } 
       };
       
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -153,6 +159,7 @@ describe('API Client Edge Cases', () => {
         } 
       };
       
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
