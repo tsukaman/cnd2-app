@@ -1,7 +1,7 @@
 import { CacheManager } from '../cache-manager-generic';
 
 describe('CacheManager', () => {
-  let cacheManager: CacheManager<any>;
+  let cacheManager: CacheManager<string | unknown[]>;
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -158,7 +158,7 @@ describe('CacheManager', () => {
     });
 
     it('配列を保存できる', () => {
-      const arrayCache = new CacheManager<any[]>({
+      const arrayCache = new CacheManager<unknown[]>({
         maxSize: 10,
         ttl: 60000,
       });
@@ -170,7 +170,7 @@ describe('CacheManager', () => {
     });
 
     it('nullとundefinedを区別する', () => {
-      const cache = new CacheManager<any>({
+      const cache = new CacheManager<unknown>({
         maxSize: 10,
         ttl: 60000,
       });

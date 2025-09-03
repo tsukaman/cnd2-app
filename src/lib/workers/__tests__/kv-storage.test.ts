@@ -9,13 +9,32 @@ jest.mock('@/lib/utils/edge-compat', () => ({
   toBase64: (str: string) => Buffer.from(str).toString('base64'),
 }));
 
+// KV型定義をインポート
+interface KVPutOptions {
+  expirationTtl?: number;
+  expiration?: number;
+  metadata?: Record<string, unknown>;
+}
+
+interface KVListOptions {
+  prefix?: string;
+  limit?: number;
+  cursor?: string;
+}
+
+interface KVListResult {
+  keys: Array<{ name: string; metadata?: Record<string, unknown> }>;
+  list_complete: boolean;
+  cursor?: string;
+}
+
 // Cloudflare KV名前空間のモック
 class MockKVNamespace {
   private store: Map<string, string> = new Map();
-  private metadata: Map<string, any> = new Map();
+  private metadata: Map<string, Record<string, unknown>> = new Map();
   private expirations: Map<string, number> = new Map();
 
-  async put(key: string, value: string, options?: any): Promise<void> {
+  async put(key: string, value: string, options?: KVPutOptions): Promise<void> {
     this.store.set(key, value);
     if (options?.metadata) {
       this.metadata.set(key, options.metadata);
@@ -44,7 +63,7 @@ class MockKVNamespace {
     this.expirations.delete(key);
   }
 
-  async list(options?: any): Promise<any> {
+  async list(options?: KVListOptions): Promise<KVListResult> {
     const prefix = options?.prefix || '';
     const limit = options?.limit || 100;
     const keys = Array.from(this.store.keys())
@@ -148,7 +167,7 @@ describe('KVStorage', () => {
       
       // Verify the key format
       const list = await mockNamespace.list();
-      const profileKey = list.keys.find((k: any) => k.name.includes('prairie'));
+      const profileKey = list.keys.find((k) => k.name.includes('prairie'));
       expect(profileKey).toBeDefined();
       expect(profileKey?.name).toContain(toBase64(profileUrl));
     });
@@ -243,11 +262,11 @@ describe('KVStorage', () => {
       await kv.storeDiagnosis('meta-test', diagnosis);
       
       const list = await mockNamespace.list();
-      const item = list.keys.find((k: any) => k.name.includes('meta-test'));
+      const item = list.keys.find((k) => k.name.includes('meta-test'));
       
       expect(item?.metadata).toBeDefined();
-      expect((item?.metadata as any)?.type).toBe('diagnosis');
-      expect((item?.metadata as any)?.createdAt).toBe('2024-01-01T00:00:00Z');
+      expect((item?.metadata as Record<string, unknown>)?.type).toBe('diagnosis');
+      expect((item?.metadata as Record<string, unknown>)?.createdAt).toBe('2024-01-01T00:00:00Z');
     });
 
     it('should store metadata with Prairie profiles', async () => {
@@ -255,11 +274,11 @@ describe('KVStorage', () => {
       await kv.storePrairieProfile(url, { name: 'User' });
       
       const list = await mockNamespace.list();
-      const item = list.keys.find((k: any) => k.name.includes('prairie'));
+      const item = list.keys.find((k) => k.name.includes('prairie'));
       
       expect(item?.metadata).toBeDefined();
-      expect((item?.metadata as any)?.type).toBe('prairie_profile');
-      expect((item?.metadata as any)?.url).toBe(url);
+      expect((item?.metadata as Record<string, unknown>)?.type).toBe('prairie_profile');
+      expect((item?.metadata as Record<string, unknown>)?.url).toBe(url);
     });
   });
 });

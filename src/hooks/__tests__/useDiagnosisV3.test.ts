@@ -51,7 +51,7 @@ describe('useDiagnosisV3', () => {
           });
 
     it('診断中はローディング状態になる', async () => {
-      let resolvePromise: any;
+      let resolvePromise: ((value: unknown) => void) | undefined;
       const promise = new Promise((resolve) => {
         resolvePromise = resolve;
       });

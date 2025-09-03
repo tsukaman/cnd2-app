@@ -73,9 +73,9 @@ describe('Rate Limiting', () => {
       
       try {
         await checkRateLimit(request);
-      } catch (error: any) {
-        expect(error.code).toBe(ApiErrorCode.RATE_LIMIT_ERROR);
-        expect(error.statusCode).toBe(429);
+      } catch (error) {
+        expect((error as ApiError).code).toBe(ApiErrorCode.RATE_LIMIT_ERROR);
+        expect((error as ApiError).statusCode).toBe(429);
       }
     });
 
