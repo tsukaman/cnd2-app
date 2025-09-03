@@ -97,7 +97,7 @@ describe('KVStorage', () => {
   beforeEach(() => {
     mockNamespace = new MockKVNamespace();
     mockNamespace.clear(); // Clear any previous test data
-    kv = new KVStorage(mockNamespace as any, 'test');
+    kv = new KVStorage(mockNamespace as unknown as KVNamespace, 'test');
   });
 
   describe('Diagnosis Storage', () => {
@@ -224,7 +224,7 @@ describe('KVStorage', () => {
         put: async () => { throw new Error('KV Error'); },
         delete: async () => {},
         list: async () => ({ keys: [], list_complete: true }),
-      } as any);
+      } as unknown as KVNamespace);
 
       // Should return false (fail-safe behavior)
       const result = await errorKV.checkRateLimit('test', 5, 10);
@@ -243,7 +243,7 @@ describe('KVStorage', () => {
     });
 
     it('should handle missing KV namespace gracefully', () => {
-      const emptyKV = new KVStorage(null as any);
+      const emptyKV = new KVStorage(null as unknown as KVNamespace);
       
       // These should not throw errors
       expect(async () => {

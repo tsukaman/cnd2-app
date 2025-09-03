@@ -26,17 +26,17 @@ describe('Environment validation', () => {
 
     it('throws error when called on client', () => {
       // Mock window to simulate client environment
-      global.window = {} as any;
+      (global as typeof globalThis & { window?: unknown }).window = {};
       
       const { getServerConfig } = require('@/lib/env');
       expect(() => getServerConfig()).toThrow('getServerConfig() cannot be called on the client side');
       
-      delete (global as any).window;
+      delete (global as typeof globalThis & { window?: unknown }).window;
     });
 
     it('returns server configuration when called on server', () => {
       // Ensure window is undefined (server environment)
-      delete (global as any).window;
+      delete (global as typeof globalThis & { window?: unknown }).window;
       
       const { getServerConfig } = require('@/lib/env');
       const config = getServerConfig();

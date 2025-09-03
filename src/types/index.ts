@@ -21,21 +21,15 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-export interface DiagnosisApiResponse extends ApiResponse<{
+export type DiagnosisApiResponse = ApiResponse<{
   result: DiagnosisResult;
-}> {
-  // Extends ApiResponse with specific result structure
-}
+}>;
 
-export interface PrairieApiResponse extends ApiResponse<PrairieProfile> {
-  // Extends ApiResponse for Prairie profile data
-}
+export type PrairieApiResponse = ApiResponse<PrairieProfile>;
 
-export interface ResultApiResponse extends ApiResponse<{
+export type ResultApiResponse = ApiResponse<{
   result: DiagnosisResult;
-}> {
-  // Extends ApiResponse for result retrieval
-}
+}>;
 
 export interface PrairieProfile {
   basic: {

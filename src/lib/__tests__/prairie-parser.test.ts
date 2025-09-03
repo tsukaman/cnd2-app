@@ -39,7 +39,16 @@ describe('PrairieCardParser', () => {
     parser = PrairieCardParser.getInstance();
     
     // Manually replace cacheManager with mock
-    (parser as any).cacheManager = {
+    (parser as unknown as {
+      cacheManager: {
+        getFromMemory: jest.Mock;
+        getFromBrowser: jest.Mock;
+        save: jest.Mock;
+        clear: jest.Mock;
+        getWithSquaredCache: jest.Mock;
+        findRelatedCache: jest.Mock;
+      };
+    }).cacheManager = {
       getFromMemory: jest.fn().mockReturnValue(null),
       getFromBrowser: jest.fn().mockResolvedValue(null),
       save: jest.fn().mockResolvedValue(undefined),
@@ -49,7 +58,11 @@ describe('PrairieCardParser', () => {
     };
     
     // Manually replace rateLimiter with mock
-    (parser as any).rateLimiter = {
+    (parser as unknown as {
+      rateLimiter: {
+        wait: jest.Mock;
+      };
+    }).rateLimiter = {
       wait: jest.fn().mockResolvedValue(undefined),
     };
   });
