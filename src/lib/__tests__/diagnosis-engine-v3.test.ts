@@ -171,7 +171,7 @@ describe('SimplifiedDiagnosisEngine', () => {
             content: JSON.stringify(mockAIResponse),
           },
         }],
-      } as unknown as ReturnType<typeof mockOpenAI.chat.completions.create>;
+      });
     });
 
     it('キャッシュされた結果がある場合はそれを返す', async () => {
@@ -239,7 +239,7 @@ describe('SimplifiedDiagnosisEngine', () => {
             content: JSON.stringify(mockAIResponse),
           },
         }],
-      } as unknown as ReturnType<typeof mockOpenAI.chat.completions.create>;
+      });
 
       const result = await engine.generateDiagnosis(mockProfiles, 'duo');
       
@@ -295,7 +295,7 @@ describe('SimplifiedDiagnosisEngine', () => {
             content: 'Invalid JSON',
           },
         }],
-      } as unknown as ReturnType<typeof mockOpenAI.chat.completions.create>;
+      });
 
       await expect(engine.generateDiagnosis(mockProfiles, 'duo')).rejects.toThrow();
     });
