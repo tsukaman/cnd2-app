@@ -259,21 +259,21 @@ describe('CacheManager', () => {
         },
       };
       
-      cacheManager.set('large', largeObj);
+      cacheManager.set('large', largeObj as unknown as string | unknown[]);
       expect(cacheManager.get('large')).toEqual(largeObj);
     });
 
     it('同じ参照のオブジェクトを保存できる', () => {
       const sharedObj = { value: 1 };
-      cacheManager.set('ref1', sharedObj);
-      cacheManager.set('ref2', sharedObj);
+      cacheManager.set('ref1', sharedObj as unknown as string | unknown[]);
+      cacheManager.set('ref2', sharedObj as unknown as string | unknown[]);
       
       // Modify the object
       sharedObj.value = 2;
       
       // Both cache entries should reflect the change
-      expect(cacheManager.get('ref1')?.value).toBe(2);
-      expect(cacheManager.get('ref2')?.value).toBe(2);
+      expect((cacheManager.get('ref1') as unknown as { value: number })?.value).toBe(2);
+      expect((cacheManager.get('ref2') as unknown as { value: number })?.value).toBe(2);
     });
   });
 });

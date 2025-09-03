@@ -48,8 +48,8 @@ describe('SimplifiedDiagnosisEngine', () => {
           create: mockCreate,
         },
       },
-    } as unknown as ReturnType<typeof DiagnosisCache.getInstance>;
-    (OpenAI as jest.MockedClass<typeof OpenAI>).mockImplementation(() => mockOpenAI);
+    };
+    (OpenAI as jest.MockedClass<typeof OpenAI>).mockImplementation(() => mockOpenAI as unknown as OpenAI);
     
     // Set environment
     process.env.OPENAI_API_KEY = 'test-api-key';
@@ -193,7 +193,7 @@ describe('SimplifiedDiagnosisEngine', () => {
           model: 'gpt-4o-mini'
         }
       };
-      mockCache.get.mockReturnValue(cachedResult);
+      (mockCache.get as jest.Mock).mockReturnValue(cachedResult);
       
       // Mock fetch for the HTML fetching
       (global.fetch as jest.Mock).mockResolvedValue({
@@ -209,7 +209,7 @@ describe('SimplifiedDiagnosisEngine', () => {
     });
 
     it('新規診断を生成する', async () => {
-      mockCache.get.mockReturnValue(null);
+      (mockCache.get as jest.Mock).mockReturnValue(null);
       
       // Mock fetch to return HTML
       (global.fetch as jest.Mock).mockResolvedValue({
@@ -255,7 +255,7 @@ describe('SimplifiedDiagnosisEngine', () => {
       (SimplifiedDiagnosisEngine as unknown as { instance?: SimplifiedDiagnosisEngine }).instance = undefined;
       const fallbackEngine = SimplifiedDiagnosisEngine.getInstance();
       
-      mockCache.get.mockReturnValue(null);
+      (mockCache.get as jest.Mock).mockReturnValue(null);
       
       // Mock fetch for HTML fetching
       (global.fetch as jest.Mock).mockResolvedValue({
@@ -272,7 +272,7 @@ describe('SimplifiedDiagnosisEngine', () => {
     });
 
     it('HTMLフェッチエラーをハンドリングする', async () => {
-      mockCache.get.mockReturnValue(null);
+      (mockCache.get as jest.Mock).mockReturnValue(null);
       
       (global.fetch as jest.Mock).mockReset();
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
@@ -281,7 +281,7 @@ describe('SimplifiedDiagnosisEngine', () => {
     });
 
     it('AI応答のパースエラーをハンドリングする', async () => {
-      mockCache.get.mockReturnValue(null);
+      (mockCache.get as jest.Mock).mockReturnValue(null);
       
       // Mock fetch for HTML
       (global.fetch as jest.Mock).mockResolvedValue({
@@ -301,7 +301,7 @@ describe('SimplifiedDiagnosisEngine', () => {
     });
 
     it('グループ診断モードで動作する', async () => {
-      mockCache.get.mockReturnValue(null);
+      (mockCache.get as jest.Mock).mockReturnValue(null);
       
       const groupProfiles = [...mockProfiles, {
         basic: {
@@ -327,7 +327,7 @@ describe('SimplifiedDiagnosisEngine', () => {
     });
 
     it('HTMLサイズ制限を適用する', async () => {
-      mockCache.get.mockReturnValue(null);
+      (mockCache.get as jest.Mock).mockReturnValue(null);
       
       const largeHtml = '<html><body>' + 'x'.repeat(60000) + '</body></html>';
       

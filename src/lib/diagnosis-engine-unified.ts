@@ -227,12 +227,18 @@ export class UnifiedDiagnosisEngine {
       return {
         id: this.generateId(),
         mode: 'duo',
+        type: processedResult.type || 'AI診断',
+        compatibility: processedResult.compatibility || 85,
+        summary: processedResult.summary || '',
+        strengths: processedResult.strengths || [],
+        opportunities: processedResult.opportunities || [],
+        advice: processedResult.advice || '',
         ...processedResult,
         participants: [profile1, profile2],
         createdAt: new Date().toISOString(),
         aiPowered: true,
         modelUsed: model
-      };
+      } as DiagnosisResult;
 
     } catch (error) {
       logger.error('[Unified Engine] Failed to generate diagnosis', error);
@@ -312,12 +318,18 @@ export class UnifiedDiagnosisEngine {
       return {
         id: this.generateId(),
         mode: 'group',
+        type: processedResult.type || 'AI診断',
+        compatibility: processedResult.compatibility || 85,
+        summary: processedResult.summary || '',
+        strengths: processedResult.strengths || [],
+        opportunities: processedResult.opportunities || [],
+        advice: processedResult.advice || '',
         ...processedResult,
         participants: profiles,
         createdAt: new Date().toISOString(),
         aiPowered: true,
         modelUsed: model
-      };
+      } as DiagnosisResult;
 
     } catch (error) {
       logger.error('[Unified Engine] Failed to generate group diagnosis', error);

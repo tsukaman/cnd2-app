@@ -34,7 +34,7 @@ describe('API Client Edge Cases', () => {
     it('空のAPI_BASE_URLで相対パスを使用する', async () => {
       process.env.NEXT_PUBLIC_API_BASE_URL = '';
       // windowオブジェクトをモック
-      (global as typeof globalThis & { window?: unknown }).window = {};
+      (global as unknown as { window?: unknown }).window = {};
       
       const { apiClient } = require('../api-client');
       
@@ -52,7 +52,7 @@ describe('API Client Edge Cases', () => {
       );
       
       // クリーンアップ
-      delete (global as typeof globalThis & { window?: unknown }).window;
+      delete (global as unknown as { window?: unknown }).window;
     });
 
     it('末尾スラッシュがあるAPI_BASE_URLを正しく処理する', async () => {
@@ -78,7 +78,7 @@ describe('API Client Edge Cases', () => {
     it('サーバーサイドでエラーをスローする', async () => {
       delete process.env.NEXT_PUBLIC_API_BASE_URL;
       // windowが存在しない環境をシミュレート
-      delete (global as typeof globalThis & { window?: unknown }).window;
+      delete (global as unknown as { window?: unknown }).window;
       
       const { apiClient } = require('../api-client');
       
@@ -120,11 +120,11 @@ describe('API Client Edge Cases', () => {
   describe('異なるドメインでの動作', () => {
     it('プレビュー環境で相対パスが動作する', async () => {
       delete process.env.NEXT_PUBLIC_API_BASE_URL;
-      global.window = { 
+      (global as unknown as { window: unknown }).window = { 
         location: { 
           origin: 'https://preview-123.cnd2-app.pages.dev' 
         } 
-      } as unknown as Response;
+      };
       
       const { apiClient } = require('../api-client');
       
@@ -142,16 +142,16 @@ describe('API Client Edge Cases', () => {
       );
       
       // クリーンアップ
-      delete (global as typeof globalThis & { window?: unknown }).window;
+      delete (global as unknown as { window?: unknown }).window;
     });
 
     it('本番ドメインで相対パスが動作する', async () => {
       delete process.env.NEXT_PUBLIC_API_BASE_URL;
-      global.window = { 
+      (global as unknown as { window: unknown }).window = { 
         location: { 
           origin: 'https://cnd2.cloudnativedays.jp' 
         } 
-      } as unknown as Response;
+      };
       
       const { apiClient } = require('../api-client');
       
@@ -169,7 +169,7 @@ describe('API Client Edge Cases', () => {
       );
       
       // クリーンアップ  
-      delete (global as typeof globalThis & { window?: unknown }).window;
+      delete (global as unknown as { window?: unknown }).window;
     });
   });
 });
