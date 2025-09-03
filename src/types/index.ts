@@ -77,13 +77,26 @@ export interface FortuneTelling {
 
 // Analysis metadata for detailed diagnosis results
 export interface AnalysisMetadata {
+  // 新しい占術的分析フィールド
+  fiveElementsAnalysis?: string;
   astrologicalAnalysis?: string;
+  numerologyAnalysis?: string;
+  energyFieldAnalysis?: string;
+  technicalSynergy?: string;
+  // 既存フィールド（下位互換性）
   techStackCompatibility?: string;
   participant1?: string;
   participant2?: string;
   profiles?: string;
   timestamp?: string;
   calculatedScore?: {
+    // 新しい占術的スコアフィールド
+    fiveElements?: number;
+    astrology?: number;
+    numerology?: number;
+    energy?: number;
+    finalScore?: number;
+    // 既存フィールド（下位互換性）
     technical?: number;
     communication?: number;
     values?: number;
