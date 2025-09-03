@@ -31,7 +31,7 @@ describe('フォールバック診断制御', () => {
     });
 
     it('環境変数が未設定の場合デフォルトでfalseを返す', () => {
-      mockGetEnvBoolean.mockImplementation((key: string, defaultValue: boolean) => defaultValue);
+      mockGetEnvBoolean.mockImplementation((key: string, defaultValue: boolean = false) => defaultValue);
       
       expect(isFallbackAllowed()).toBe(false);
     });
