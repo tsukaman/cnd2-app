@@ -222,7 +222,14 @@ describe('AstrologicalDiagnosisEngineV4', () => {
       };
       
       engine = AstrologicalDiagnosisEngineV4.getInstance();
-      const summary = (engine as any).summarizeProfile(profile);
+      // プライベートメソッドのテスト
+      const summary = (engine as unknown as {
+        summarizeProfile: (profile: PrairieProfile) => {
+          bio: string;
+          skills: string[];
+          interests: string[];
+        };
+      }).summarizeProfile(profile);
       
       expect(summary.bio.length).toBeLessThanOrEqual(200);
       expect(summary.skills.length).toBeLessThanOrEqual(10);

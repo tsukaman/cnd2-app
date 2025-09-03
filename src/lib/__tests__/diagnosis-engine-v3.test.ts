@@ -15,9 +15,15 @@ global.fetch = jest.fn();
 
 describe('SimplifiedDiagnosisEngine', () => {
   let engine: SimplifiedDiagnosisEngine;
-  let mockOpenAI: any;
-  let mockCache: any;
-  let originalWindow: any;
+  let mockOpenAI: {
+    chat: {
+      completions: {
+        create: jest.Mock;
+      };
+    };
+  };
+  let mockCache: ReturnType<typeof DiagnosisCache.getInstance>;
+  let originalWindow: typeof window | undefined;
 
   beforeEach(() => {
     jest.clearAllMocks();

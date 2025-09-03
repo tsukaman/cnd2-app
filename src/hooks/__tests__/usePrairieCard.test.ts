@@ -1,6 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { usePrairieCard } from '../usePrairieCard';
 import { apiClient } from '@/lib/api-client';
+import { PrairieProfile } from '@/types';
 
 // Mock apiClient
 jest.mock('@/lib/api-client', () => ({
@@ -88,7 +89,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile: any;
+    let fetchedProfile: PrairieProfile | null;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://example.com/profile');
     });
@@ -111,7 +112,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile: any;
+    let fetchedProfile: PrairieProfile | null;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://example.com/profile');
     });
@@ -129,7 +130,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile: any;
+    let fetchedProfile: PrairieProfile | null;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://example.com/profile');
     });
@@ -169,7 +170,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile: any;
+    let fetchedProfile: PrairieProfile | null;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://example.com/profile');
     });
@@ -194,7 +195,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile: any;
+    let fetchedProfile: PrairieProfile | null;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://example.com/profile');
     });
@@ -244,7 +245,7 @@ describe('usePrairieCard', () => {
 
     const { result } = renderHook(() => usePrairieCard());
 
-    let fetchedProfile: any;
+    let fetchedProfile: PrairieProfile | null;
     await act(async () => {
       fetchedProfile = await result.current.fetchProfile('https://my.prairie.cards/u/tsukaman');
     });

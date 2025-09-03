@@ -68,7 +68,7 @@ async function handleApiError(response: Response, defaultMessage: string = 'Netw
 }
 
 // 共通のレスポンス処理関数
-async function handleApiResponse<T = any>(response: Response): Promise<T> {
+async function handleApiResponse<T = unknown>(response: Response): Promise<T> {
   const result = await response.json();
   
   // Debug logging in development
