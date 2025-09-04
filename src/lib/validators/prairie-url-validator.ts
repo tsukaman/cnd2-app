@@ -4,14 +4,15 @@
  * 承認されたドメインのみを受け入れる
  */
 
-// Prairie Cardの公式ドメイン
+// Prairie Cardの公式ドメイン（my.prairie.cardsのみ許可してサーバー負荷を避ける）
 const ALLOWED_PRAIRIE_HOSTS = new Set([
-  'prairie.cards',
   'my.prairie.cards'
 ]);
 
-// Prairie Cardのサブドメインパターン
-const PRAIRIE_SUBDOMAIN_PATTERN = /^[a-z0-9-]+\.prairie\.cards$/;
+// Prairie CardのURL パターン
+// - /u/{username} 形式
+// - /cards/{uuid} 形式
+const PRAIRIE_PATH_PATTERN = /^\/(?:u\/[a-zA-Z0-9_-]+|cards\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/;
 
 export interface PrairieUrlValidationResult {
   isValid: boolean;
@@ -56,23 +57,24 @@ export function validatePrairieCardUrl(url: string): PrairieUrlValidationResult 
     // 3. ホスト名の検証
     const hostname = parsed.hostname.toLowerCase();
     
-    // 承認されたドメインリストに含まれるか確認
-    const isAllowedHost = ALLOWED_PRAIRIE_HOSTS.has(hostname);
-    
-    // サブドメインパターンに一致するか確認
-    const isValidSubdomain = PRAIRIE_SUBDOMAIN_PATTERN.test(hostname);
-    
-    // ドメインが .prairie.cards で終わるか確認（追加の安全性）
-    const isValidDomainSuffix = hostname.endsWith('.prairie.cards');
-    
-    if (!isAllowedHost && !isValidSubdomain && !isValidDomainSuffix) {
+    // 承認されたドメインリストに含まれるか確認（my.prairie.cardsのみ）
+    if (!ALLOWED_PRAIRIE_HOSTS.has(hostname)) {
       return {
         isValid: false,
-        error: `Prairie Cardの公式ドメインではありません: ${hostname}`
+        error: `Prairie Cardは my.prairie.cards ドメインのみ対応しています。現在のドメイン: ${hostname}`
       };
     }
     
-    // 4. パスの基本検証
+    // 4. パスの検証
+    // /u/{username} または /cards/{uuid} 形式のみ許可
+    if (!PRAIRIE_PATH_PATTERN.test(parsed.pathname)) {
+      return {
+        isValid: false,
+        error: `Prairie Card URLの形式が正しくありません。/u/{username} または /cards/{uuid} の形式である必要があります。`
+      };
+    }
+    
+    // 5. パスの基本検証
     // 危険な文字列が含まれていないか確認
     // 元のURL文字列でチェック（URLパーサーは自動的に正規化するため）
     if (url.includes('../') || url.includes('..\\') || parsed.pathname.includes('//')) {
@@ -82,7 +84,7 @@ export function validatePrairieCardUrl(url: string): PrairieUrlValidationResult 
       };
     }
     
-    // 5. クエリパラメータの検証（オプション）
+    // 6. クエリパラメータの検証（オプション）
     // 潜在的に危険なパラメータがないか確認
     const dangerousParams = ['javascript:', 'data:', 'vbscript:'];
     const searchParams = parsed.search.toLowerCase();

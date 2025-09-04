@@ -572,6 +572,9 @@ function parseFromHTML(html, env) {
 
 /**
  * Validate Prairie Card URL
+ * Accepted formats:
+ * - https://my.prairie.cards/u/{username}
+ * - https://my.prairie.cards/cards/{uuid}
  * @param {string} url - URL to validate
  * @returns {boolean} - True if valid Prairie Card URL
  */
@@ -584,10 +587,14 @@ function validatePrairieCardUrl(url) {
       return false;
     }
     
-    // Only allow prairie.cards domains
-    const validHosts = ['prairie.cards', 'my.prairie.cards'];
-    return validHosts.includes(parsed.hostname) || 
-           parsed.hostname.endsWith('.prairie.cards');
+    // Only allow my.prairie.cards domain to avoid server load
+    if (parsed.hostname !== 'my.prairie.cards') {
+      return false;
+    }
+    
+    // Check for valid path patterns
+    const pathPattern = /^\/(?:u\/[a-zA-Z0-9_-]+|cards\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/;
+    return pathPattern.test(parsed.pathname);
   } catch {
     return false;
   }

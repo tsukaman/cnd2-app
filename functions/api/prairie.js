@@ -6,7 +6,8 @@ import { safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { parseFromHTML, validatePrairieCardUrl } from '../utils/prairie-parser.js';
 
 /**
- * Handle POST requests to fetch and parse Prairie Card data
+ * Handle POST requests to scrape and parse Prairie Card data
+ * Note: This is not an API but a web scraper for Prairie Card HTML pages
  * @param {Object} context - Cloudflare Workers context
  * @param {Request} context.request - The incoming request
  * @param {Object} context.env - Environment bindings
@@ -52,13 +53,30 @@ export async function onRequestPost({ request, env }) {
         logger.info('Fetching Prairie Card', { url });
         const startFetch = Date.now();
         
-        // Fetch and parse from URL
-        const response = await fetch(url, {
-          headers: {
-            'User-Agent': 'CND2/1.0',
-            'Accept': 'text/html',
-          },
-        });
+        let response;
+        try {
+          // Fetch and parse from URL with timeout
+          response = await Promise.race([
+            fetch(url, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; CND2/1.0; +https://cnd2-app.pages.dev)',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'ja,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+              },
+            }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Fetch timeout after 10s')), 10000)
+            )
+          ]);
+        } catch (fetchError) {
+          logger.error('Failed to fetch Prairie Card - Network error', fetchError, {
+            url,
+            error: fetchError.message,
+            type: 'NETWORK_ERROR',
+          });
+          throw new Error(`Prairie Card scraping failed: ${fetchError.message}. Please check if the URL is correct and accessible.`);
+        }
         
         logger.metric('prairie_fetch_duration', Date.now() - startFetch, 'ms', {
           url,
@@ -66,11 +84,25 @@ export async function onRequestPost({ request, env }) {
         });
         
         if (!response.ok) {
-          logger.error('Failed to fetch Prairie Card', null, {
+          const errorBody = await response.text().catch(() => 'No error body');
+          logger.error('Failed to fetch Prairie Card - HTTP error', null, {
             url,
             status: response.status,
+            statusText: response.statusText,
+            errorPreview: errorBody.substring(0, 200),
           });
-          throw new Error(`Failed to fetch Prairie Card: ${response.status}`);
+          
+          // Provide specific error messages based on status
+          let errorMessage = `Prairie Card scraping failed (HTTP ${response.status})`;
+          if (response.status === 404) {
+            errorMessage = `Prairie Card not found. Please verify the URL: ${url}`;
+          } else if (response.status === 403) {
+            errorMessage = `Access denied to Prairie Card. The page may be private or blocked.`;
+          } else if (response.status >= 500) {
+            errorMessage = `Prairie Card server error (${response.status}). Please try again later.`;
+          }
+          
+          throw new Error(errorMessage);
         }
         
         const html = await response.text();
@@ -118,7 +150,11 @@ export async function onRequestPost({ request, env }) {
         corsHeaders
       );
     } catch (error) {
-      logger.error('Prairie API error', error);
+      logger.error('Prairie scraper error', error, {
+        url: url || 'No URL',
+        errorType: error.name,
+        errorStack: error.stack,
+      });
       
       // Track error metrics
       if (env.DIAGNOSIS_KV) {
@@ -134,7 +170,14 @@ export async function onRequestPost({ request, env }) {
       
       // Determine appropriate status code
       let statusCode = 500;
-      if (error.message.includes('Failed to fetch')) {
+      
+      if (error.message.includes('timeout')) {
+        statusCode = 504; // Gateway Timeout
+      } else if (error.message.includes('not found')) {
+        statusCode = 404; // Not Found
+      } else if (error.message.includes('Access denied')) {
+        statusCode = 403; // Forbidden  
+      } else if (error.message.includes('scraping failed')) {
         statusCode = 502; // Bad Gateway
       } else if (error.message.includes('Invalid')) {
         statusCode = 400; // Bad Request
