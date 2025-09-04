@@ -135,7 +135,7 @@ OPENAI_API_KEY=sk-xxxxx-prod
 NODE_ENV=production
 
 # 動作制御
-ENABLE_FALLBACK=false    # フォールバック無効（デフォルト）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=false         # 本番ではOFF
 LOG_LEVEL=info          # 適度な詳細度
 
@@ -265,5 +265,5 @@ if (!isFallbackAllowed(env)) {
 
 ---
 
-*最終更新: 2025-09-01*
+*最終更新: 2025-09-04*
 *CloudNative Days Winter 2025 対応版*

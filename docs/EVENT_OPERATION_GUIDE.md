@@ -145,5 +145,5 @@ ALLOW_IN_PRODUCTION: true  // 一時的に変更
 
 ---
 
-*最終更新: 2025-09-01*
+*最終更新: 2025-09-04*
 *CloudNative Days Winter 2025 用*
