@@ -4,7 +4,7 @@ import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } fr
 import { createLogger, logRequest } from '../utils/logger.js';
 import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
-import { generateAstrologicalDiagnosis } from './diagnosis-v4-openai.js';
+import { generateFortuneDiagnosis } from './diagnosis-v4-openai.js';
 import { isDebugMode, getFilteredEnvKeys } from '../utils/debug-helpers.js';
 
 /**
@@ -53,7 +53,7 @@ export async function onRequestPost({ request, env }) {
       });
       
       // Generate diagnosis result using V4 engine
-      const result = await generateAstrologicalDiagnosis(profiles, mode, env);
+      const result = await generateFortuneDiagnosis(profiles, mode, env);
       
       // Store in KV if available
       if (env.DIAGNOSIS_KV) {

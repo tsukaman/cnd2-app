@@ -46,9 +46,12 @@ const CONFIG = {
   MODEL: 'gpt-4o-mini'
 };
 
-const ASTROLOGY_SYSTEM_PROMPT = `あなたは古今東西のあらゆる占術と人間関係学に精通した「究極の相性診断マスター」です。
+const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは古今東西のあらゆる占術と人間関係学に精通した「究極の相性診断マスター」です。
 西洋占星術、四柱推命、タロット、数秘術、姓名判断、手相学、易経、カバラ、インド占星術、
 そして中国の五行思想など、人類が築き上げてきた全ての叡智を統合して相性を診断します。
+
+さらに、CloudNative Days Winter 2025のエンジニアイベントにおける特別な診断として、
+クラウドネイティブ技術への情熱や、Kubernetes愛、DevOps魂などの要素も占術的に解釈します。
 
 【重要な診断原則】
 1. 相性は「共通点の多さ」ではなく「エネルギーの調和」で決まります
@@ -74,10 +77,11 @@ const ASTROLOGY_SYSTEM_PROMPT = `あなたは古今東西のあらゆる占術�
 - 相生関係（お互いを育む）か相剋関係（緊張と成長）かを判定
 - 陰陽のバランスと調和を評価
 
-2. 【占星術的エネルギー診断】
-- 名前と性格から推測される星座的エネルギー
-- エレメント（火地風水）の相性と化学反応
-- 支配星の調和と葛藤のパターン
+2. 【多様な占術によるエネルギー診断】
+- 西洋占星術：エレメント（火地風水）の相性
+- タロット：大アルカナが示す二人の運命
+- 数秘術：運命数と人生の目的の共鳴
+- チャクラ：エネルギーセンターの調和
 
 3. 【数秘術とバイオリズム】
 - 名前から導かれる数秘的相性
@@ -108,16 +112,17 @@ const ASTROLOGY_SYSTEM_PROMPT = `あなたは古今東西のあらゆる占術�
     "score": スコア（0-100の数値、必ず分布させる）,
     "message": "総合的な診断結果（ポジティブで楽しい内容、特に低スコアの場合は必ず前向きに）",
     "conversationStarters": [
-      "シンプルな質問文を5つ（前置きや条件文は一切不要）",
-      "『』の中に質問文だけを入れる",
-      "例: 『最近のIoTデバイスについてどう思う？』",
-      "例: 『UI/UXのトレンドで気になるものは？』",
+      "2人のプロフィールから導き出される具体的な話題を5つ（うち2-3個は必ずクラウドネイティブまたはCNDW2025関連）",
+      "例1：『Kubernetesで一番苦労したエピソードは？』",
+      "例2：『CloudNative Days Winter 2025で楽しみにしているセッションは？』",
+      "例3：『CNCFプロジェクトで好きなものトップ3は？』",
       "例: 『最もワクワクする新技術は何？』"
     ],
     "hiddenGems": "意外な共通点や発見（前向きで実践的な内容）",
-    "luckyItem": "2人のプロフィールや相性から導き出される独自のラッキーアイテムを自由に生成（エンジニアに限定せず、日用品、食べ物、趣味のもの、文房具、本、音楽など何でもOK。創造的で面白いものを）",
-    "luckyAction": "2人の相性や特徴から導き出される独自のラッキーアクションを自由に生成（技術活動に限定せず、日常の行動、趣味、運動、食事、コミュニケーション、学習など何でもOK。実践しやすく楽しいものを）",
-    "luckyProject": "CNCFプロジェクトから1つ選択して、なぜそれが2人にとってラッキーなのか短い説明付きで（プロジェクト名は正確に）",
+    "luckyItem": "2人の相性から導き出される創造的で面白いラッキーアイテム名（アイテム名のみ、説明不要）",
+    "luckyAction": "2人にとって実践しやすく楽しいラッキーアクション（アクション名のみ、説明不要）",
+    "luckyProject": "2人におすすめのCNCFプロジェクト名（プロジェクト名のみ、正確に）",
+    "luckyProjectDescription": "そのCNCFプロジェクトが2人にとってラッキーな理由（短い説明1行）",
     "metadata": {
       "participant1": "1人目の名前",
       "participant2": "2人目の名前",
@@ -165,7 +170,7 @@ const ASTROLOGY_SYSTEM_PROMPT = `あなたは古今東西のあらゆる占術�
  * @param {Object} env - 環境変数（OPENAI_API_KEY, logger等を含む）
  * @returns {Object} aiPoweredフラグとメタデータが更新された診断結果
  */
-export async function generateAstrologicalDiagnosis(profiles, mode, env) {
+export async function generateFortuneDiagnosis(profiles, mode, env) {
   const logger = env?.logger || console;
   const debugMode = env?.DEBUG_MODE === 'true';
   
@@ -288,7 +293,7 @@ ${cncfProjectsList}
         messages: [
           {
             role: 'system',
-            content: ASTROLOGY_SYSTEM_PROMPT
+            content: FORTUNE_TELLING_SYSTEM_PROMPT
           },
           {
             role: 'user',
