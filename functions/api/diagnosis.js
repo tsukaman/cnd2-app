@@ -5,6 +5,7 @@ import { createLogger, logRequest } from '../utils/logger.js';
 import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { generateAstrologicalDiagnosis } from './diagnosis-v4-openai.js';
+import { isDebugMode, getFilteredEnvKeys } from '../utils/debug-helpers.js';
 
 /**
  * Handle POST requests to generate diagnosis
@@ -19,13 +20,15 @@ export async function onRequestPost({ request, env }) {
   const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
   // デバッグ: 環境変数の初期状態を確認（DEBUG_MODEまたは開発環境でのみ出力）
-  const debugMode = env?.DEBUG_MODE === 'true' || env?.NODE_ENV === 'development';
+  const debugMode = isDebugMode(env);
   if (debugMode) {
-    console.log('[Diagnosis API] Environment Debug:');
-    console.log('[Diagnosis API] - env exists:', !!env);
-    console.log('[Diagnosis API] - env type:', typeof env);
-    console.log('[Diagnosis API] - env.OPENAI_API_KEY exists:', !!env?.OPENAI_API_KEY);
-    console.log('[Diagnosis API] - Available env keys:', env ? Object.keys(env).filter(k => !k.includes('SECRET') && !k.includes('PASSWORD')).slice(0, 10).join(', ') : 'N/A');
+    const filteredKeys = getFilteredEnvKeys(env);
+    logger.debug('[Diagnosis API] Environment Debug:', {
+      envExists: !!env,
+      envType: typeof env,
+      openaiKeyExists: !!env?.OPENAI_API_KEY,
+      availableKeys: filteredKeys.join(', ')
+    });
   }
   
   return await logRequest(request, env, null, async () => {
