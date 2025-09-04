@@ -117,8 +117,9 @@ export interface DiagnosisResult {
   createdAt: string;
   aiPowered?: boolean;
   fortuneTelling?: FortuneTelling;
-  // V4 Astological style fields
-  astrologicalAnalysis?: string;
+  // V4 Fortune telling style fields
+  fortuneAnalysis?: string;  // 多様な占術を統合した分析
+  astrologicalAnalysis?: string;  // @deprecated Use fortuneAnalysis instead
   techStackCompatibility?: string;
   conversationTopics?: string[];
   // Legacy fields for backward compatibility
