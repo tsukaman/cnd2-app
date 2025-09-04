@@ -379,4 +379,49 @@ describe('DiagnosisResult', () => {
       // ShareButtonコンポーネントが表示されていることを確認
     });
   });
+
+  describe('CNCFラッキープロジェクト表示', () => {
+    it('luckyProjectが存在する場合に表示される', () => {
+      const resultWithLuckyProject = {
+        ...mockDuoDiagnosis,
+        luckyProject: 'Kubernetes - コンテナオーケストレーションの定番！'
+      };
+      render(<DiagnosisResult result={resultWithLuckyProject} />);
+      
+      expect(screen.getByText('CNCFラッキープロジェクト')).toBeInTheDocument();
+      expect(screen.getByText('Kubernetes - コンテナオーケストレーションの定番！')).toBeInTheDocument();
+    });
+
+    it('luckyProjectDescriptionが存在する場合に表示される', () => {
+      const resultWithDescription = {
+        ...mockDuoDiagnosis,
+        luckyProject: 'Prometheus',
+        luckyProjectDescription: 'モニタリングとアラートのためのツール'
+      };
+      render(<DiagnosisResult result={resultWithDescription} />);
+      
+      expect(screen.getByText('Prometheus')).toBeInTheDocument();
+      expect(screen.getByText('モニタリングとアラートのためのツール')).toBeInTheDocument();
+    });
+
+    it('luckyProjectが未定義の場合はセクションが表示されない', () => {
+      const resultWithoutLuckyProject = {
+        ...mockDuoDiagnosis,
+        luckyProject: undefined
+      };
+      render(<DiagnosisResult result={resultWithoutLuckyProject} />);
+      
+      expect(screen.queryByText('CNCFラッキープロジェクト')).not.toBeInTheDocument();
+    });
+
+    it('luckyProjectが空文字列の場合はセクションが表示されない', () => {
+      const resultWithEmptyLuckyProject = {
+        ...mockDuoDiagnosis,
+        luckyProject: ''
+      };
+      render(<DiagnosisResult result={resultWithEmptyLuckyProject} />);
+      
+      expect(screen.queryByText('CNCFラッキープロジェクト')).not.toBeInTheDocument();
+    });
+  });
 });

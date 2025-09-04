@@ -15,6 +15,9 @@ import Image from 'next/image';
 
 const Confetti = dynamic(() => import('react-confetti').then(mod => mod.default), { ssr: false });
 
+// スタイル定数
+const LUCKY_PROJECT_STYLES = "bg-purple-900/20 rounded-xl p-4 border border-purple-500/30 text-center";
+
 export default function ResultsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -354,6 +357,24 @@ export default function ResultsPage() {
               </div>
             )}
           </motion.div>
+          
+          {/* CNCFラッキープロジェクト */}
+          {result.luckyProject && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.35 }}
+              className="mt-4"
+            >
+              <div className={LUCKY_PROJECT_STYLES}>
+                <div className="flex items-center justify-center mb-2">
+                  <span className="text-2xl mr-2">🚀</span>
+                  <span className="text-sm text-gray-400">CNCFラッキープロジェクト</span>
+                </div>
+                <p className="text-purple-300 font-bold text-lg">{result.luckyProject}</p>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* アクションボタン */}
