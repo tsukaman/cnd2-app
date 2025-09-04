@@ -108,6 +108,10 @@ cnd2-app/
 │       └── index.ts
 ├── public/                     # 静的ファイル
 │   └── images/
+├── scripts/                    # ユーティリティスクリプト
+│   ├── fix-lint-errors.sh      # リントエラー修正
+│   ├── fix-test-any-types.sh   # テストのany型修正
+│   └── ...                     # その他の修正スクリプト
 ├── docs/                       # ドキュメント
 ├── __tests__/                  # テスト
 └── package.json
