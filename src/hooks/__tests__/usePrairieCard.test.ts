@@ -143,7 +143,7 @@ describe('usePrairieCard', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBe('Network error');
+      expect(result.current.error).toBe('ネットワーク接続エラー');
       expect(result.current.profile).toBeNull();
       expect(fetchedProfile).toBeNull();
     });
