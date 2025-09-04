@@ -1,6 +1,6 @@
 /**
- * 診断エンジン V4 - OpenAI占星術スタイル for Cloudflare Functions
- * Cloud Nativeと占星術を融合した、AI駆動の創造的な診断エンジン
+ * 診断エンジン V4 - OpenAI占術スタイル for Cloudflare Functions
+ * Cloud Nativeと多様な占術を融合した、AI駆動の創造的な診断エンジン
  */
 
 import { generateId } from '../utils/id.js';
@@ -163,7 +163,8 @@ const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは古今東西のあらゆる�
 }`;
 
 /**
- * 占星術的な診断結果の生成（OpenAI使用）
+ * 占術的な診断結果の生成（OpenAI使用）
+ * 多様な占術（五行思想、占星術、タロット、数秘術等）を統合した総合的な相性診断
  * OpenAI API使用状態を判定し、診断結果にメタデータを追加
  * @param {Array} profiles - プロフィール配列
  * @param {string} mode - 診断モード（'duo' or 'group'）
