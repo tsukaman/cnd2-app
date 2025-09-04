@@ -1,11 +1,21 @@
 /**
  * Performance benchmark tests for Prairie Card Parser
+ * 
+ * Note: These tests are skipped in CI environments due to timing variability
+ * in containerized runners. Run locally for performance validation.
  */
 
 const { parseFromHTML } = require('../prairie-parser');
 
 // Skip performance tests in CI environment where timing is unreliable
 const describeSkipInCI = process.env.CI ? describe.skip : describe;
+
+// Display test execution context
+if (process.env.CI) {
+  console.log('⚠️  Skipping performance tests in CI environment');
+} else {
+  console.log('🏃 Running performance tests locally');
+}
 
 describeSkipInCI('Prairie Parser Performance Benchmarks', () => {
   // Helper to generate large HTML content
