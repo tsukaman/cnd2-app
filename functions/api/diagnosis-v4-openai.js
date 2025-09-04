@@ -35,14 +35,8 @@ function isValidOpenAIKey(key) {
   return true;
 }
 
-// Fallback configuration
-import { 
-  FALLBACK_CONFIG, 
-  isFallbackAllowed, 
-  getFallbackScoreRange, 
-  generateFallbackScore, 
-  getFallbackWarning 
-} from '../utils/fallback-config.js';
+// Fallback configurationは完全に無効化済み
+// フォールバック診断は使用しない
 
 // Configuration constants
 const CONFIG = {
@@ -233,19 +227,11 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   
   // APIキーの妥当性を検証
   if (!isValidOpenAIKey(openaiApiKey)) {
-    const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
-    
-    // 開発環境でフォールバックが無効の場合はエラーを投げる
-    if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
-      const error = new Error('OpenAI API key is not configured. Fallback is disabled in development.');
-      console.error('[V4-OpenAI Engine] ' + error.message);
-      throw error;
-    }
-    
-    if (debugMode || isDevelopment) {
-      console.warn('[V4-OpenAI Engine] WARNING: Using fallback diagnosis. OpenAI API key not configured.');
-    }
-    return generateFallbackDiagnosis(profile1, profile2, env);
+    // フォールバック診断を完全に無効化 - 常にエラーを投げる
+    const error = new Error('OpenAI API key is not configured or invalid. Please check OPENAI_API_KEY environment variable in Cloudflare Pages settings.');
+    console.error('[V4-OpenAI Engine] ' + error.message);
+    console.error('[V4-OpenAI Engine] Key validation failed. Key length:', openaiApiKey ? openaiApiKey.length : 0);
+    throw error;
   }
   
   try {
@@ -325,13 +311,8 @@ ${cncfProjectsList}
         errorMessage = error.error.message;
       }
       
-      // 開発環境でフォールバックが無効の場合はエラーを投げる
-      if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
-        throw new Error(`${errorMessage} (Status: ${response.status})`);
-      }
-      
-      console.log('[V4-OpenAI Engine] Falling back to mock diagnosis due to API error');
-      return generateFallbackDiagnosis(profile1, profile2, env);
+      // フォールバック診断を完全に無効化 - 常にエラーを投げる
+      throw new Error(`${errorMessage} (Status: ${response.status})`);
     }
     
     const data = await response.json();
@@ -346,27 +327,16 @@ ${cncfProjectsList}
         content: data.choices[0]?.message?.content?.substring(0, 500)
       });
       
-      // JSON解析失敗時はフォールバック
-      const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
-      if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
-        throw new Error('Failed to parse OpenAI response as JSON');
-      }
-      
-      console.log('[V4-OpenAI Engine] Falling back to mock diagnosis due to JSON parse error');
-      return generateFallbackDiagnosis(profile1, profile2, env);
+      // フォールバック診断を完全に無効化 - 常にエラーを投げる
+      throw new Error('Failed to parse OpenAI response as JSON');
     }
     
     // 必須フィールドの存在チェック
     if (!result.diagnosis || typeof result.diagnosis !== 'object') {
       console.error('[V4-OpenAI Engine] Invalid response structure: missing diagnosis field');
       
-      const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
-      if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
-        throw new Error('Invalid OpenAI response structure: missing required fields');
-      }
-      
-      console.log('[V4-OpenAI Engine] Falling back to mock diagnosis due to invalid response structure');
-      return generateFallbackDiagnosis(profile1, profile2, env);
+      // フォールバック診断を完全に無効化 - 常にエラーを投げる
+      throw new Error('Invalid OpenAI response structure: missing required fields');
     }
     
     // デバッグ情報
@@ -404,28 +374,23 @@ ${cncfProjectsList}
     };
     
   } catch (error) {
+    // フォールバック診断を完全に無効化 - 常にエラーを投げる
     console.error('[V4-OpenAI Engine] Failed to generate diagnosis:', error);
-    const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
-    
-    // 開発環境でフォールバックが無効の場合はエラーを投げる
-    if (isDevelopment && !FALLBACK_CONFIG.ALLOW_IN_DEVELOPMENT) {
-      throw error;
-    }
-    
-    return generateFallbackDiagnosis(profile1, profile2, env);
+    throw error;
   }
 }
 
 /**
- * フォールバック診断（OpenAI利用不可時）
+ * フォールバック診断（廃止済み - 使用禁止）
+ * この関数は互換性のために残されていますが、呼び出されることはありません
+ * @deprecated フォールバック診断は完全に無効化されました
  */
-function generateFallbackDiagnosis(profile1, profile2, env) {
-  const isDevelopment = env?.NODE_ENV === 'development' || env?.ENVIRONMENT === 'development';
-  const scoreRange = isDevelopment 
-    ? FALLBACK_CONFIG.DEVELOPMENT_SCORE 
-    : FALLBACK_CONFIG.PRODUCTION_SCORE;
+// eslint-disable-next-line no-unused-vars
+function generateFallbackDiagnosis_DEPRECATED(profile1, profile2, env) {
+  // この関数は呼び出されることはありませんが、互換性のために保持
+  throw new Error('Fallback diagnosis has been completely disabled. Please configure OPENAI_API_KEY.');
   
-  const compatibility = Math.floor(Math.random() * scoreRange.RANGE) + scoreRange.MIN;
+  /* 以下のコードは実行されません（デッドコード）
   
   // 開発環境で警告をログ出力
   if (isDevelopment) {
@@ -500,4 +465,5 @@ function generateFallbackDiagnosis(profile1, profile2, env) {
     },
     ...(isDevelopment ? { warning: FALLBACK_CONFIG.WARNING_MESSAGE.DEVELOPMENT } : {})
   };
+  */
 }
