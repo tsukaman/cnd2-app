@@ -6,6 +6,7 @@ import { Users, Sparkles, ArrowLeft, Check, AlertCircle, Loader2 } from 'lucide-
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { saveDiagnosisResult } from '@/lib/utils/kv-storage';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
 import { DiagnosisLoadingAnimation } from '@/components/diagnosis/DiagnosisLoadingAnimation';
@@ -65,26 +66,15 @@ export default function DuoPage() {
           const result = await generateDiagnosis([profiles[0], profiles[1]], 'duo');
           
           if (result) {
-            // 結果をLocalStorageに保存
-            localStorage.setItem(`diagnosis-result-${result.id}`, JSON.stringify(result));
+            // 結果を保存（LocalStorage + KV）
+            const saveResult = await saveDiagnosisResult(result, {
+              saveToKV: isProduction() || !!process.env.NEXT_PUBLIC_APP_URL,
+              retryCount: RETRY_CONFIG.maxRetries,
+              retryDelay: RETRY_CONFIG.baseDelay
+            });
             
-            // KVストレージにも保存（本番環境のみ、エラーがあっても続行）
-            if (isProduction() || process.env.NEXT_PUBLIC_APP_URL) {
-              try {
-                const response = await fetch('/api/results', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(result),
-                });
-                if (response.ok) {
-                  logger.info('[Duo] Result saved to KV storage');
-                } else {
-                  logger.warn('[Duo] KV storage response not ok:', response.status);
-                }
-              } catch (kvError) {
-                logger.warn('[Duo] Failed to save to KV storage:', kvError);
-                // KV保存に失敗してもユーザー体験を妨げない
-              }
+            if (!saveResult.kvSaved && (isProduction() || process.env.NEXT_PUBLIC_APP_URL)) {
+              logger.warn('[Duo] Failed to save to KV storage:', saveResult.error);
             }
             
             // 診断結果ページへ遷移
