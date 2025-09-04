@@ -68,23 +68,23 @@ describe('Prairie Card URL Validator', () => {
       it('prairie.cardsに似た偽ドメインを拒否する', () => {
         const result = validatePrairieCardUrl('https://prairie-cards.com/user');
         expect(result.isValid).toBe(false);
-        expect(result.error).toContain('Prairie Cardの公式ドメインではありません');
+        expect(result.error).toContain('my.prairie.cards ドメインのみ対応');
       });
 
       it('ディレクトリトラバーサルを含むパスを拒否する', () => {
-        const result = validatePrairieCardUrl('https://prairie.cards/../admin');
+        const result = validatePrairieCardUrl('https://my.prairie.cards/../admin');
         expect(result.isValid).toBe(false);
         expect(result.error).toContain('不正なパス');
       });
 
       it('ダブルスラッシュを含むパスを拒否する', () => {
-        const result = validatePrairieCardUrl('https://prairie.cards//user');
+        const result = validatePrairieCardUrl('https://my.prairie.cards//user');
         expect(result.isValid).toBe(false);
         expect(result.error).toContain('不正なパス');
       });
 
       it('JavaScriptスキームを含むクエリを拒否する', () => {
-        const result = validatePrairieCardUrl('https://prairie.cards/user?redirect=javascript:alert(1)');
+        const result = validatePrairieCardUrl('https://my.prairie.cards/u/test?redirect=javascript:alert(1)');
         expect(result.isValid).toBe(false);
         expect(result.error).toContain('不正なクエリパラメータ');
       });
@@ -112,9 +112,9 @@ describe('Prairie Card URL Validator', () => {
   describe('validateMultiplePrairieUrls', () => {
     it('全て有効なURLの場合trueを返す', () => {
       const urls = [
-        'https://prairie.cards/user1',
+        'https://my.prairie.cards/u/user1',
         'https://my.prairie.cards/u/user2',
-        'https://test.prairie.cards/profile'
+        'https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043'
       ];
       
       const result = validateMultiplePrairieUrls(urls);
@@ -125,8 +125,8 @@ describe('Prairie Card URL Validator', () => {
 
     it('一部無効なURLがある場合falseを返す', () => {
       const urls = [
-        'https://prairie.cards/user1',
-        'http://prairie.cards/user2',  // HTTPは無効
+        'https://my.prairie.cards/u/user1',
+        'http://my.prairie.cards/u/user2',  // HTTPは無効
         'https://example.com/user3'     // 無関係なドメイン
       ];
       
@@ -134,18 +134,18 @@ describe('Prairie Card URL Validator', () => {
       expect(result.allValid).toBe(false);
       expect(result.errors).toHaveLength(2);
       expect(result.errors[0]).toContain('HTTPSプロトコルのみ');
-      expect(result.errors[1]).toContain('Prairie Cardの公式ドメインではありません');
+      expect(result.errors[1]).toContain('my.prairie.cards ドメインのみ対応');
     });
   });
 
   describe('isPrairieCardUrl', () => {
     it('有効なPrairie Card URLに対してtrueを返す', () => {
-      expect(isPrairieCardUrl('https://prairie.cards/user')).toBe(true);
-      expect(isPrairieCardUrl('https://my.prairie.cards/profile')).toBe(true);
+      expect(isPrairieCardUrl('https://my.prairie.cards/u/user')).toBe(true);
+      expect(isPrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043')).toBe(true);
     });
 
     it('無効なURLに対してfalseを返す', () => {
-      expect(isPrairieCardUrl('http://prairie.cards/user')).toBe(false);
+      expect(isPrairieCardUrl('http://my.prairie.cards/u/user')).toBe(false);
       expect(isPrairieCardUrl('https://example.com/user')).toBe(false);
       expect(isPrairieCardUrl('not-a-url')).toBe(false);
     });
