@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, Sparkles, Heart, MessageCircle, Target, TrendingUp, Gift, Star } from 'lucide-react';
+import { ArrowLeft, Users, Sparkles, Handshake, MessageCircle, Target, TrendingUp, Gift, Star } from 'lucide-react';
 import Link from 'next/link';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import { DiagnosisResult } from '@/types';
@@ -11,6 +11,7 @@ import ShareButton from '@/components/share/ShareButton';
 import { logger } from '@/lib/logger';
 import dynamic from 'next/dynamic';
 import { DiagnosisFullDebug } from '@/components/diagnosis/DiagnosisFullDebug';
+import Image from 'next/image';
 
 const Confetti = dynamic(() => import('react-confetti').then(mod => mod.default), { ssr: false });
 
@@ -136,16 +137,23 @@ export default function ResultsPage() {
                 repeatType: "reverse"
               }}
             >
-              <Heart className="w-16 h-16 text-pink-400" />
+              <Handshake className="w-16 h-16 text-cyan-400" />
             </motion.div>
             <h1 className="text-4xl md:text-5xl font-black mb-3 gradient-text-orange-soft">
               診断結果
             </h1>
+            <p className="text-lg md:text-xl text-gray-300 font-semibold mb-2">
+              CloudNative Days × Connect &apos;n&apos; Discover
+            </p>
             {result.participants && (
-              <p className="text-gray-300 text-lg">
+              <p className="text-gray-300 mb-2">
                 {result.participants[0]?.basic?.name || '1人目'} × {result.participants[1]?.basic?.name || '2人目'}
               </p>
             )}
+            <p className="text-sm">
+              <span className="text-purple-400">Powered by </span>
+              <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent font-semibold">Prairie Card</span>
+            </p>
           </div>
         </motion.div>
 
@@ -368,6 +376,28 @@ export default function ResultsPage() {
 
         {/* DEBUG: 全LLMフィールド表示（?debug=trueの時のみ） */}
         {debugMode && <DiagnosisFullDebug result={result} />}
+
+        {/* フッター */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="flex flex-col items-center gap-4 mt-16 pt-8 border-t border-gray-700/50"
+        >
+          <Image
+            src="/images/trademark@4x.png"
+            alt="CloudNative Days Winter 2025"
+            width={80}
+            height={20}
+            className="opacity-90"
+          />
+          <p className="text-sm md:text-base text-purple-400 font-medium">
+            #CNDxCnD
+          </p>
+          <p className="text-gray-500 text-xs font-medium">
+            © 2025 CloudNative Days Committee
+          </p>
+        </motion.div>
       </div>
     </div>
   );
