@@ -4,7 +4,10 @@
 
 const { parseFromHTML } = require('../prairie-parser');
 
-describe('Prairie Parser Performance Benchmarks', () => {
+// Skip performance tests in CI environment where timing is unreliable
+const describeSkipInCI = process.env.CI ? describe.skip : describe;
+
+describeSkipInCI('Prairie Parser Performance Benchmarks', () => {
   // Helper to generate large HTML content
   function generateLargeHTML(sizeKB) {
     const baseHTML = `
