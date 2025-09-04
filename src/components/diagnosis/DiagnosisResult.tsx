@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 
 // 定数定義
 const DEFAULT_COMPATIBILITY_SCORE = 85; // デフォルトの相性スコア（ポジティブな体験を保証）
+const LUCKY_PROJECT_STYLES = "mb-8 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl p-5 border border-indigo-400/30";
 
 interface DiagnosisResultProps {
   result: DiagnosisResult;
@@ -295,7 +296,7 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.65 }}
-              className="mb-8 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl p-5 border border-indigo-400/30"
+              className={LUCKY_PROJECT_STYLES}
             >
               <div className="text-center">
                 <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text mb-4 flex items-center justify-center">
