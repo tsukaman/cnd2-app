@@ -289,6 +289,31 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             </motion.div>
           )}
 
+          {/* CNCFラッキープロジェクト */}
+          {result.luckyProject && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.65 }}
+              className="mb-8 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl p-5 border border-indigo-400/30"
+            >
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text mb-4 flex items-center justify-center">
+                  <span className="mr-2">🚀</span>
+                  CNCFラッキープロジェクト
+                </h3>
+                <div className="text-white/90 font-semibold">
+                  {result.luckyProject}
+                </div>
+                {result.luckyProjectDescription && (
+                  <p className="text-white/70 text-sm mt-2">
+                    {result.luckyProjectDescription}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {/* アクションボタン */}
           <motion.div
             initial={{ opacity: 0 }}
