@@ -65,22 +65,22 @@ export function validatePrairieCardUrl(url: string): PrairieUrlValidationResult 
       };
     }
     
-    // 4. パスの検証
-    // /u/{username} または /cards/{uuid} 形式のみ許可
-    if (!PRAIRIE_PATH_PATTERN.test(parsed.pathname)) {
-      return {
-        isValid: false,
-        error: `Prairie Card URLの形式が正しくありません。/u/{username} または /cards/{uuid} の形式である必要があります。`
-      };
-    }
-    
-    // 5. パスの基本検証
+    // 4. パスの基本検証
     // 危険な文字列が含まれていないか確認
     // 元のURL文字列でチェック（URLパーサーは自動的に正規化するため）
     if (url.includes('../') || url.includes('..\\') || parsed.pathname.includes('//')) {
       return {
         isValid: false,
         error: '不正なパスが含まれています'
+      };
+    }
+    
+    // 5. パスの形式検証
+    // /u/{username} または /cards/{uuid} 形式のみ許可
+    if (!PRAIRIE_PATH_PATTERN.test(parsed.pathname)) {
+      return {
+        isValid: false,
+        error: `Prairie Card URLの形式が正しくありません。/u/{username} または /cards/{uuid} の形式である必要があります。`
       };
     }
     
