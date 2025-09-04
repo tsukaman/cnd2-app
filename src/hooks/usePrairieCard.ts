@@ -29,14 +29,16 @@ export function usePrairieCard(): UsePrairieCardReturn {
     setRetryAttempt(0);
     
     try {
-      // Check for sample/demo URLs first
-      const sampleProfile = getSampleProfile(url);
-      if (sampleProfile) {
-        toast.success('サンプルデータを使用します', {
-          description: 'テスト用のPrairie Cardデータを読み込みました'
-        });
-        setProfile(sampleProfile);
-        return sampleProfile;
+      // Check for sample/demo URLs first (development only)
+      if (process.env.NODE_ENV === 'development') {
+        const sampleProfile = getSampleProfile(url);
+        if (sampleProfile) {
+          toast.success('サンプルデータを使用します', {
+            description: 'テスト用のPrairie Cardデータを読み込みました'
+          });
+          setProfile(sampleProfile);
+          return sampleProfile;
+        }
       }
       
       // Fetch with retry logic
@@ -75,7 +77,9 @@ export function usePrairieCard(): UsePrairieCardReturn {
         // Provide specific error messages
         if (message.includes('502') || message.includes('503')) {
           errorMessage = 'Prairie Card APIが一時的に利用できません';
-          errorDescription = 'サーバーが応答していません。サンプルデータで試すか、しばらくしてからお試しください。';
+          errorDescription = process.env.NODE_ENV === 'development' 
+            ? 'サーバーが応答していません。サンプルデータで試すか、しばらくしてからお試しください。'
+            : 'サーバーが応答していません。しばらくしてから再度お試しください。';
         } else if (message.includes('network')) {
           errorMessage = 'ネットワーク接続エラー';
           errorDescription = 'インターネット接続を確認してください。';
@@ -93,13 +97,19 @@ export function usePrairieCard(): UsePrairieCardReturn {
       setError(errorMessage);
       
       // Show error toast with actionable guidance
-      toast.error(errorMessage, {
-        description: errorDescription,
-        action: {
+      const toastOptions: any = {
+        description: errorDescription
+      };
+      
+      // Only show sample data action in development
+      if (process.env.NODE_ENV === 'development') {
+        toastOptions.action = {
           label: 'サンプルデータを使用',
           onClick: () => useSampleData()
-        }
-      });
+        };
+      }
+      
+      toast.error(errorMessage, toastOptions);
       
       logger.error('[usePrairieCard] エラー', err);
       return null;
