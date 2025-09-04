@@ -13,8 +13,8 @@
 
 | 変数名 | 説明 | 設定値 | デフォルト | 影響 |
 |--------|------|--------|------------|------|
-| `ENABLE_FALLBACK` | フォールバック診断の有効化 | `true` / `false` | 未設定（false扱い） | `true`の時のみフォールバック有効（PR115後は削除予定） |
-| `DEBUG_MODE` | デバッグログの出力 | `true` / `false` | `false` | 詳細なログを出力 |
+| ~~`ENABLE_FALLBACK`~~ | ~~フォールバック診断の有効化~~ | - | - | **削除済み**（PR #169でフォールバック完全無効化） |
+| `DEBUG_MODE` | デバッグログの条件付き出力 | `true` / `false` | `false` | `true`時または開発環境時に詳細ログ出力（PR #171で追加） |
 | `ENVIRONMENT` | 環境識別（NODE_ENVの代替） | `development` / `production` | `production` | フォールバック動作に影響 |
 | `NEXT_PUBLIC_ENABLE_PRODUCTION_DEBUG` | 本番環境でのデバッグビュー有効化 | `true` / `false` | `false` | トークン分析デバッグビューの本番表示を許可 |
 
@@ -59,8 +59,8 @@
 5. **Add variable** で変数を追加
 
 ```
-変数名: ENABLE_FALLBACK
-値: false（デフォルト）または true（フォールバック有効時）
+変数名: DEBUG_MODE
+値: false（デフォルト）または true（デバッグログ有効時）
 ```
 
 ### ローカル開発環境での設定
@@ -69,9 +69,8 @@
 
 ```bash
 # .env.local（Gitには含めない）
-OPENAI_API_KEY=sk-xxxxx
-ENABLE_FALLBACK=false  # フォールバック無効（デフォルト）
-DEBUG_MODE=true
+OPENAI_API_KEY=sk-xxxxx  # 必須（フォールバック無効化済み）
+DEBUG_MODE=true  # 開発時は詳細ログを出力
 NODE_ENV=development
 ```
 
@@ -83,7 +82,7 @@ NODE_ENV=development
 # .env.local
 OPENAI_API_KEY=sk-xxxxx-dev
 NODE_ENV=development
-ENABLE_FALLBACK=false    # フォールバック無効（エラー即座検知）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=true          # デバッグ情報出力
 LOG_LEVEL=debug          # 詳細ログ
 ```
@@ -94,7 +93,7 @@ LOG_LEVEL=debug          # 詳細ログ
 # Cloudflare Dashboard (Preview)
 OPENAI_API_KEY=sk-xxxxx-staging
 NODE_ENV=production
-ENABLE_FALLBACK=true     # フォールバック許可（ステージングのみ）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=true          # デバッグ情報出力
 LOG_LEVEL=info
 ```
@@ -103,9 +102,9 @@ LOG_LEVEL=info
 
 ```bash
 # Cloudflare Dashboard (Production)
-OPENAI_API_KEY=sk-xxxxx-prod
+OPENAI_API_KEY=sk-xxxxx-prod  # 必須（フォールバック無効化済み）
 NODE_ENV=production
-ENABLE_FALLBACK=false    # フォールバック無効（イベント時推奨）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=false         # デバッグ情報OFF
 LOG_LEVEL=warn           # 警告以上のみ
 ```
@@ -134,7 +133,7 @@ OPENAI_API_KEY=sk-xxxxx-prod
 NODE_ENV=production
 
 # 動作制御
-ENABLE_FALLBACK=false    # フォールバック無効（デフォルト）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=false         # 本番ではOFF
 LOG_LEVEL=info          # 適度な詳細度
 
@@ -264,5 +263,5 @@ if (!isFallbackAllowed(env)) {
 
 ---
 
-*最終更新: 2025-09-01*
+*最終更新: 2025-09-04*
 *CloudNative Days Winter 2025 対応版*

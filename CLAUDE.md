@@ -42,7 +42,37 @@ npm run type-check
 npm run build
 ```
 
-### 3. コミット
+### 3. ドキュメントの更新
+
+**重要**: コードの追加や更新を行った後は、必ず関連するドキュメントを更新してください。
+
+```bash
+# 更新が必要なドキュメント
+- README.md: 新機能や重要な変更がある場合
+- CLAUDE.md: 開発ガイドラインに影響がある場合
+- /docs配下のファイル: 
+  - ENVIRONMENT_VARIABLES.md: 環境変数を追加・変更した場合
+  - DEVELOPMENT.md: 開発手順に変更がある場合
+  - EVENT_OPERATION_GUIDE.md: 運用方法に変更がある場合
+  - その他関連ドキュメント
+
+# ドキュメント更新時の注意点
+1. 最新の実装と一致していることを確認
+2. 既存の記述と矛盾がないかチェック
+3. 最終更新日を更新（下記ルールに従う）
+
+# 最終更新日の記載ルール
+- 位置: ドキュメントの末尾（最後から2-3行目）
+- 形式: *最終更新: YYYY-MM-DD*
+- 注意: ファイルの先頭には記載しない（重複を防ぐため）
+- 例:
+  ---
+  
+  *最終更新: 2025-09-04*
+  *CloudNative Days Winter 2025 対応版*（必要に応じて）
+```
+
+### 4. コミット
 
 ```bash
 # 変更をステージング
@@ -56,7 +86,7 @@ git commit -m "fix: バグの修正"
 git commit -m "docs: ドキュメント更新"
 ```
 
-### 4. Pull Request の作成
+### 5. Pull Request の作成
 
 ```bash
 # ブランチをプッシュ
@@ -66,7 +96,7 @@ git push origin feature/機能名
 gh pr create --title "feat: 新機能の追加" --body "変更内容の説明"
 ```
 
-### 5. レビューとマージ
+### 6. レビューとマージ
 
 - Claude Code Review が自動的に実行されます
 - すべてのCIチェック（Build, Test, Lint, Type Check）が通過することを確認

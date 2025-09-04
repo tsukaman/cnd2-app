@@ -4,7 +4,8 @@
 
 **イベント中は不具合を即座に検知して対応することを最優先とする**
 
-フォールバック診断で誤魔化すより、エラーで止まって即座に気づく方が確実な対応が可能。
+⚠️ **重要**: PR #169以降、フォールバック診断機能は完全に無効化されています。  
+OpenAI APIが必須となり、APIキー未設定時はエラーが発生します。
 
 ## 📚 関連ドキュメント
 
@@ -21,19 +22,17 @@ OPENAI_API_KEY=sk-xxxxx      # 本物のAPIキー
 NODE_ENV=production           # 本番環境フラグ
 
 # イベント時の推奨設定
-ENABLE_FALLBACK=false         # フォールバック無効（デフォルト）
-# ※PR115マージ後はフォールバック機能自体が削除予定
+DEBUG_MODE=false              # 本番環境ではデバッグログ無効
+# ※フォールバック診断はPR #169で完全無効化済み
 ```
 
-### 2. フォールバック設定の確認
+### 2. OpenAI APIキーの確認
 
-```typescript
-// src/lib/constants/fallback.ts
-export const FALLBACK_CONFIG = {
-  ALLOW_IN_DEVELOPMENT: false,  // 開発環境：無効
-  ALLOW_IN_PRODUCTION: false,   // 本番環境：無効（イベント時）
-  ...
-}
+```bash
+# Cloudflare Dashboardで確認
+OPENAI_API_KEYが正しく設定されているか確認
+
+# フォールバック診断は利用不可（PR #169で無効化）
 ```
 
 ## 🚨 エラー発生時の対応
@@ -72,11 +71,11 @@ export const FALLBACK_CONFIG = {
 2. OpenAI APIのステータス確認
 3. ネットワーク状態の確認
 
-## 🔄 緊急時のフォールバック有効化
+## 🔄 緊急時の対応
 
-**どうしてもサービスを止められない場合のみ**
+**フォールバック診断は利用できません**
 
-### 方法1：環境変数で即座に切り替え
+### OpenAI API障害時の対応
 ```bash
 # Cloudflare Dashboard
 ENABLE_FALLBACK=true  # フォールバック有効化
@@ -144,5 +143,5 @@ ALLOW_IN_PRODUCTION: true  // 一時的に変更
 
 ---
 
-*最終更新: 2025-09-01*
+*最終更新: 2025-09-04*
 *CloudNative Days Winter 2025 用*
