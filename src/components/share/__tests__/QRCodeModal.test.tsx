@@ -54,7 +54,7 @@ describe('QRCodeModal', () => {
     render(<QRCodeModal {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText((content, element) => {
+      expect(screen.getByText((content) => {
         return content.includes('/duo/results?id=test-123');
       })).toBeInTheDocument();
     });

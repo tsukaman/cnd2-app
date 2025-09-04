@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { DiagnosisResult } from "@/types";
-import { Star, Sparkles, Users, MessageCircle, Zap, Handshake, Trophy, Gift, Target } from "lucide-react";
+import { Star, Sparkles, Users, MessageCircle, Zap, Trophy, Gift, Target } from "lucide-react";
 import { useState, useEffect } from "react";
 import Confetti from "react-confetti";
 import Image from "next/image";

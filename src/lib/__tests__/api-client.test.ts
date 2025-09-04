@@ -26,8 +26,7 @@ describe('API Client', () => {
   describe('Prairie API', () => {
     describe('fetch', () => {
       it('正しいURLでPOSTリクエストを送信する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         const mockResponse = { success: true, data: { name: 'Test User' } };
         (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -50,8 +49,7 @@ describe('API Client', () => {
       });
 
       it('HTTPエラーの場合、エラーをスローする', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         (global.fetch as jest.Mock).mockResolvedValue({
           ok: false,
@@ -64,8 +62,7 @@ describe('API Client', () => {
       });
 
       it('ネットワークエラーの場合、デフォルトエラーメッセージを使用する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         (global.fetch as jest.Mock).mockResolvedValue({
           ok: false,
@@ -87,8 +84,7 @@ describe('API Client', () => {
       ];
 
       it('2人診断のリクエストを正しく送信する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         const mockResponse = { 
           success: true, 
@@ -119,8 +115,7 @@ describe('API Client', () => {
       });
 
       it('グループ診断のリクエストを正しく送信する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         const groupProfiles = [...mockProfiles, { basic: { name: 'User3' } }];
         const mockResponse = { success: true, data: { result: { id: 'group-123' } } };
@@ -143,8 +138,7 @@ describe('API Client', () => {
       });
 
       it('デフォルトでduoモードを使用する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         const mockResponse = { success: true };
         (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -167,8 +161,7 @@ describe('API Client', () => {
   describe('Results API', () => {
     describe('get', () => {
       it('結果を取得する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         const mockResult = { 
           success: true, 
@@ -195,8 +188,7 @@ describe('API Client', () => {
       });
 
       it('404エラーを処理する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: false,
@@ -211,8 +203,7 @@ describe('API Client', () => {
 
     describe('save', () => {
       it('結果を保存する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         const mockResult = { id: 'test-123', compatibility: 85 };
         const mockResponse = { success: true, data: { id: 'test-123' } };
@@ -239,8 +230,7 @@ describe('API Client', () => {
 
     describe('delete', () => {
       it('結果を削除する', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
         const mockResponse = { success: true, message: 'Deleted' };
         
@@ -267,6 +257,7 @@ describe('API Client', () => {
   describe('URL処理', () => {
     it('先頭のスラッシュを削除する', async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
@@ -290,6 +281,7 @@ describe('API Client', () => {
       
       // windowが定義されている状態でモジュールを再読み込み
       jest.resetModules();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       
@@ -315,6 +307,7 @@ describe('API Client', () => {
   describe('エラーハンドリング', () => {
     it('ネットワークエラーを適切に処理する', async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       (global.fetch as jest.Mock).mockRejectedValue(
         new Error('Network error')
@@ -325,6 +318,7 @@ describe('API Client', () => {
     });
 
     it('JSONパースエラーを処理する', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       (global.fetch as jest.Mock).mockResolvedValue({
@@ -337,6 +331,7 @@ describe('API Client', () => {
     });
 
     it('タイムアウトエラーを処理する', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
       (global.fetch as jest.Mock).mockRejectedValue(

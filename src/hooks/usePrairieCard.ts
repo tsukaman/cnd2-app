@@ -23,6 +23,20 @@ export function usePrairieCard(): UsePrairieCardReturn {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
 
+  const useSampleData = useCallback(() => {
+    const sampleNames = ['alice', 'bob', 'charlie'];
+    const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+    const sampleProfile = getSampleProfile(randomName);
+    
+    if (sampleProfile) {
+      setProfile(sampleProfile);
+      setError(null);
+      toast.success('サンプルデータを読み込みました', {
+        description: `${sampleProfile.basic.name}のプロフィールを使用します`
+      });
+    }
+  }, []);
+
   const fetchProfile = useCallback(async (url: string): Promise<PrairieProfile | null> => {
     setLoading(true);
     setError(null);
@@ -106,6 +120,7 @@ export function usePrairieCard(): UsePrairieCardReturn {
         toastOptions.action = {
           label: 'サンプルデータを使用',
           onClick: () => {
+            // eslint-disable-next-line react-hooks/rules-of-hooks
             useSampleData();
           }
         };
@@ -118,27 +133,12 @@ export function usePrairieCard(): UsePrairieCardReturn {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [useSampleData]);
 
   const clearError = useCallback(() => {
     setError(null);
     setRetryAttempt(0);
     setIsRetrying(false);
-  }, []);
-
-  const useSampleData = useCallback(() => {
-    const sampleNames = ['alice', 'bob', 'charlie'];
-    const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)];
-    const sampleProfile = getSampleProfile(randomName);
-    
-    if (sampleProfile) {
-      setProfile(sampleProfile);
-      setError(null);
-      toast.success('サンプルデータを読み込みました', {
-        description: `${sampleProfile.basic.name}のプロフィールを使用します`
-      });
-    }
   }, []);
 
   return {
