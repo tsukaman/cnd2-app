@@ -261,7 +261,30 @@ if (!isFallbackAllowed(env)) {
 - [環境判定ユーティリティ](../src/lib/utils/environment.ts)
 - [Cloudflare Pages Documentation](https://developers.cloudflare.com/pages/)
 
+## 🔍 トラブルシューティング
+
+### Cloudflare環境での診断エラー
+
+#### 症状
+- "Failed to generate diagnosis" エラー
+- Error 1101 (Worker threw exception)
+
+#### 確認事項
+1. **環境変数の設定確認**
+   - `OPENAI_API_KEY` が Cloudflare Dashboard で設定されているか
+   - `DIAGNOSIS_KV` がバインドされているか
+
+2. **ファイル構造の確認**
+   - `/functions/api/` 配下に重複するディレクトリがないか
+   - Cloudflare Pages はディレクトリを単一ファイルより優先する
+
+3. **デバッグ方法**
+   - Real-time logs でエラー詳細を確認
+   - 必要に応じて一時的なデバッグエンドポイントを追加
+
+詳細は [診断エラー調査ログ](./2025-09-05-diagnosis-error-investigation.md) を参照してください。
+
 ---
 
-*最終更新: 2025-09-04*
+*最終更新: 2025-09-05*
 *CloudNative Days Winter 2025 対応版*

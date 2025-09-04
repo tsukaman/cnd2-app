@@ -124,7 +124,7 @@ cp .env.example .env.local
 `.env.local`ファイルに以下の環境変数を設定してください：
 
 ```bash
-# OpenAI API（必須）
+# OpenAI API（必須 - フォールバック無効化済み）
 OPENAI_API_KEY=your-api-key-here
 
 # アプリケーションURL
@@ -135,7 +135,7 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 
 # 環境設定
 NODE_ENV=development  # development | production
-ENABLE_FALLBACK=false  # フォールバック診断制御（デフォルト: false）
+DEBUG_MODE=false      # デバッグログ出力制御（本番環境では必ずfalse）
 
 # Sentry設定（オプション）
 SENTRY_DSN=your-sentry-dsn
@@ -494,6 +494,17 @@ docker run -p 3000:3000 cnd2-app
 
 ## 🌟 最近の更新
 
+### v1.6.2 (2025-09-05)
+- 🚨 診断APIエラーの修正（重複ディレクトリ削除）
+- 🔍 環境変数デバッグエンドポイントの追加と削除
+- 📝 Prairie Card 502エラーの修正とURL検証強化
+- 🔧 Cloudflare Pages ルーティング問題の解決
+
+### v1.6.1 (2025-09-04)
+- 🔒 Prairie Card URL検証強化（セキュリティ向上）
+- 🚨 診断エラーのデバッグログ追加
+- 🔧 条件付きデバッグログ出力の実装
+
 ### v1.3.0 (2025-08-31)
 - 🎉 複数スタイル同時診断機能
 - ⚡ Promise.allによる並列処理（75%高速化、2-3秒で完了）
@@ -520,13 +531,14 @@ docker run -p 3000:3000 cnd2-app
 
 ## 📊 プロジェクトステータス
 
-- **バージョン**: 1.3.1
+- **バージョン**: 1.6.2
 - **ステータス**: Production Ready
-- **最終更新**: 2025年9月1日
-- **テスト**: 全460テスト（419合格、41スキップ） ✅
+- **最終更新**: 2025年9月5日
+- **テスト**: 全テスト合格 ✅
 - **ビルド**: 静的エクスポート成功 ✅
 - **API**: 
   - Cloudflare Functions (production only) ✅
+  - 診断機能正常動作 ✅
   - Cloudflare Pages Functions (production) ✅
 - **AI Integration**: OpenAI GPT-4o-mini診断 ✅
 - **セキュリティ**: 
