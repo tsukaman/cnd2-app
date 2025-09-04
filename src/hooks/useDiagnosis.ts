@@ -52,12 +52,23 @@ export function useDiagnosis(): UseDiagnosisReturn {
       
       return result;
     } catch (err) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : '診断中にエラーが発生しました';
+      // エラーメッセージをより詳細に取得
+      let errorMessage = '診断中にエラーが発生しました';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        
+        // エラーメッセージのログを詳細化
+        logger.error('[useDiagnosis] エラー詳細:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name
+        });
+      } else {
+        logger.error('[useDiagnosis] 不明なエラー:', err);
+      }
       
       setError(errorMessage);
-      logger.error('[useDiagnosis] エラー', err);
       return null;
     } finally {
       setLoading(false);

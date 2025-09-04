@@ -54,6 +54,7 @@ describe('API Client', () => {
         (global.fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 404,
+          text: async () => JSON.stringify({ error: { message: 'Not found' } }),
           json: async () => ({ error: { message: 'Not found' } }),
         });
 
@@ -67,6 +68,7 @@ describe('API Client', () => {
         (global.fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 500,
+          text: async () => { throw new Error('Parse error'); },
           json: async () => { throw new Error('Parse error'); },
         });
 
@@ -193,6 +195,7 @@ describe('API Client', () => {
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: false,
           status: 404,
+          text: async () => JSON.stringify({ error: { message: 'Result not found' } }),
           json: async () => ({ error: { message: 'Result not found' } }),
         });
 

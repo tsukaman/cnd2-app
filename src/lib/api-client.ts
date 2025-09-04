@@ -47,9 +47,21 @@ function getApiUrl(path: string): string {
 
 // 共通のエラーハンドリング関数
 async function handleApiError(response: Response, defaultMessage: string = 'Network error'): Promise<void> {
-  const errorData: ApiErrorResponse = await response.json().catch(() => ({ 
-    error: { message: defaultMessage } 
-  }));
+  let errorData: ApiErrorResponse;
+  let rawResponse: string = '';
+  
+  try {
+    // レスポンスのテキストを取得して詳細を確認
+    rawResponse = await response.text();
+    errorData = JSON.parse(rawResponse);
+  } catch (parseError) {
+    logger.error('[API Client] Failed to parse error response:', {
+      status: response.status,
+      rawResponse: rawResponse.substring(0, 500), // 最初の500文字のみログ出力
+      parseError: parseError
+    });
+    errorData = { error: { message: defaultMessage } };
+  }
   
   // Handle both old format (error.error) and new format (error.error.message)
   const errorMessage = typeof errorData.error === 'object' 
@@ -58,11 +70,12 @@ async function handleApiError(response: Response, defaultMessage: string = 'Netw
   
   const finalMessage = errorMessage || defaultMessage;
   
-  // Log the error for debugging
+  // Log the error for debugging with more details
   logger.error('[API Client] Request failed:', {
     status: response.status,
     message: finalMessage,
-    url: response.url
+    url: response.url,
+    errorData: errorData // 全体のエラーデータをログ出力
   });
     
   throw new Error(finalMessage);

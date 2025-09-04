@@ -5,7 +5,7 @@ import { createLogger, logRequest } from '../utils/logger.js';
 import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { generateFortuneDiagnosis } from './diagnosis-v4-openai.js';
-import { isDebugMode, getFilteredEnvKeys } from '../utils/debug-helpers.js';
+import { isDebugMode, getFilteredEnvKeys, getSafeKeyInfo } from '../utils/debug-helpers.js';
 
 /**
  * Handle POST requests to generate diagnosis
@@ -19,16 +19,41 @@ export async function onRequestPost({ request, env }) {
   const origin = request.headers.get('origin');
   const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
-  // デバッグ: 環境変数の初期状態を確認（DEBUG_MODEまたは開発環境でのみ出力）
+  // デバッグモードの判定
   const debugMode = isDebugMode(env);
-  if (debugMode) {
-    const filteredKeys = getFilteredEnvKeys(env);
-    logger.debug('[Diagnosis API] Environment Debug:', {
-      envExists: !!env,
-      envType: typeof env,
-      openaiKeyExists: !!env?.OPENAI_API_KEY,
-      availableKeys: filteredKeys.join(', ')
+  
+  // APIキー未設定時のエラーと詳細デバッグ
+  if (!env?.OPENAI_API_KEY) {
+    console.error('[Diagnosis API] OpenAI API key is not configured');
+    
+    // APIキー未設定時でもデバッグモードなら環境情報を出力
+    if (debugMode) {
+      const filteredKeys = getFilteredEnvKeys(env);
+      console.error('[Diagnosis API] === DEBUG MODE (No API Key) ===');
+      console.error('[Diagnosis API] Environment debug:', {
+        keyStatus: 'missing',
+        envCount: Object.keys(env || {}).length,
+        availableEnvKeys: filteredKeys.slice(0, 5).join(', '),
+        hasKVNamespace: !!env?.DIAGNOSIS_KV
+      });
+    }
+  } else if (debugMode) {
+    // APIキーが設定されている場合のデバッグ情報（セキュリティを考慮）
+    console.error('[Diagnosis API] === DEBUG MODE ===');
+    console.error('[Diagnosis API] Environment status:', {
+      keyStatus: 'configured',
+      envCount: Object.keys(env || {}).length,
+      hasRequiredVars: ['OPENAI_API_KEY', 'DIAGNOSIS_KV'].every(k => !!env?.[k])
     });
+    
+    // 詳細な検証は開発環境のloggerでのみ（本番では出力されない）
+    if (logger.debug) {
+      const keyInfo = getSafeKeyInfo(env.OPENAI_API_KEY);
+      logger.debug('[Diagnosis API] Key validation:', {
+        format: keyInfo.format,
+        hasWhitespace: keyInfo.hasWhitespace
+      });
+    }
   }
   
   return await logRequest(request, env, null, async () => {

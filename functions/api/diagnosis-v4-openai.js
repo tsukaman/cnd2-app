@@ -173,10 +173,27 @@ const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは古今東西のあらゆる�
  */
 export async function generateFortuneDiagnosis(profiles, mode, env) {
   const logger = env?.logger || console;
-  const debugMode = env?.DEBUG_MODE === 'true';
+  const debugMode = isDebugMode(env);
   
+  // APIキー未設定時は最小限の情報のみ
+  if (!env?.OPENAI_API_KEY) {
+    console.error('[V4-OpenAI Engine] OpenAI API key is not configured');
+  }
+  
+  // デバッグモード時のみ詳細情報を出力
   if (debugMode) {
-    logger.log('[DEBUG] V4-OpenAI Engine - Starting diagnosis with profiles:', JSON.stringify(profiles.map(p => p.basic?.name)));
+    if (env?.OPENAI_API_KEY) {
+      console.log('[V4-OpenAI Engine] === DEBUG MODE ===');
+      console.log('[V4-OpenAI Engine] Environment check: API key configured');
+      
+      // プロファイル情報のみ出力（APIキー情報は出力しない）
+      logger.log('[DEBUG] Starting diagnosis with profiles:', profiles.map(p => p.basic?.name || p.name));
+    } else {
+      // APIキー未設定時も状況を出力
+      console.log('[V4-OpenAI Engine] === DEBUG MODE (No API Key) ===');
+      const filteredKeys = getFilteredEnvKeys(env);
+      console.log('[V4-OpenAI Engine] Available env keys count:', filteredKeys.length);
+    }
   }
   
   // OpenAI APIキーの存在を確認してaiPoweredフラグを返す
@@ -232,30 +249,29 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   const debugMode = isDebugMode(env);
   const openaiApiKey = env?.OPENAI_API_KEY;
   
-  // デバッグ: 環境変数の状態を詳細にログ出力（DEBUG_MODEまたは開発環境でのみ）
+  // デバッグモード時のみ詳細ログ（既に上位関数でログ出力済みなので最小限に）
   if (debugMode) {
-    const keyInfo = getSafeKeyInfo(openaiApiKey);
-    const filteredKeys = getFilteredEnvKeys(env);
-    
-    console.log('[V4-OpenAI Engine] ========== DETAILED ENVIRONMENT DEBUG ==========');
-    console.log('[V4-OpenAI Engine] Environment check:', {
-      envExists: !!env,
-      envType: typeof env,
-      availableKeys: filteredKeys.join(', '),
-      keyInfo: keyInfo
+    console.log('[V4-OpenAI Engine] Starting duo diagnosis for:', {
+      person1: profile1.basic?.name || profile1.name,
+      person2: profile2.basic?.name || profile2.name
     });
-    console.log('[V4-OpenAI Engine] ==============================================');
   }
   
   // APIキーの妥当性を検証
   if (!isValidOpenAIKey(openaiApiKey)) {
     // フォールバック診断を完全に無効化 - 常にエラーを投げる
-    const keyInfo = getSafeKeyInfo(openaiApiKey);
     let errorMessage = 'OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable in Cloudflare Pages settings.';
     
     if (openaiApiKey && openaiApiKey.length > 0) {
       // キーは存在するが無効な形式
-      errorMessage = `OpenAI API key appears to be invalid (${keyInfo.prefix}...). Please check OPENAI_API_KEY environment variable in Cloudflare Pages settings.`;
+      const keyInfo = getSafeKeyInfo(openaiApiKey);
+      if (keyInfo.startsWithSk) {
+        errorMessage = 'OpenAI API key format appears valid but may be expired or incorrect. Please verify the OPENAI_API_KEY in Cloudflare Pages settings.';
+      } else if (keyInfo.hasWhitespace) {
+        errorMessage = 'OpenAI API key contains whitespace. Please check for extra spaces in OPENAI_API_KEY environment variable.';
+      } else {
+        errorMessage = 'OpenAI API key format is invalid. It should start with "sk-". Please check OPENAI_API_KEY in Cloudflare Pages settings.';
+      }
     }
     
     const error = new Error(errorMessage);
