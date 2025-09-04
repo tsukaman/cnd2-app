@@ -1,6 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 
+/**
+ * Get CORS headers based on environment and request origin
+ */
+function getCorsHeaders(request: NextRequest): HeadersInit {
+  const origin = request.headers.get('origin') || '';
+  
+  // In development, allow common development origins
+  if (process.env.NODE_ENV === 'development') {
+    const devOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+    ];
+    
+    if (devOrigins.includes(origin) || !origin) {
+      return {
+        'Access-Control-Allow-Origin': origin || 'http://localhost:3000',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400',
+      };
+    }
+  }
+  
+  // In production, only allow specific origins
+  const prodOrigins = [
+    'https://cnd2.cloudnativedays.jp',
+    'https://cnd2-app.pages.dev',
+  ];
+  
+  if (prodOrigins.includes(origin)) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400',
+    };
+  }
+  
+  // Default: no CORS headers (will block cross-origin requests)
+  return {};
+}
+
 // Mock KV storage for development
 const mockStorage = new Map<string, unknown>();
 
@@ -19,7 +62,10 @@ export async function GET(request: NextRequest) {
           success: false, 
           error: 'Missing result ID' 
         },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: getCorsHeaders(request)
+        }
       );
     }
 
@@ -37,6 +83,8 @@ export async function GET(request: NextRequest) {
             hit: true,
             source: 'memory'
           }
+        }, {
+          headers: getCorsHeaders(request)
         });
       }
 
@@ -52,6 +100,8 @@ export async function GET(request: NextRequest) {
             hit: true,
             source: 'localStorage-compat'
           }
+        }, {
+          headers: getCorsHeaders(request)
         });
       }
 
@@ -74,6 +124,8 @@ export async function GET(request: NextRequest) {
             hit: false,
             source: 'demo'
           }
+        }, {
+          headers: getCorsHeaders(request)
         });
       }
     }
@@ -89,7 +141,10 @@ export async function GET(request: NextRequest) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const errorData = await response.json().catch((parseError) => {
+          logger.warn('[Results API] Failed to parse error response:', parseError);
+          return { error: 'Unknown error' };
+        });
         return NextResponse.json(
           { 
             success: false, 
@@ -99,8 +154,25 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const data = await response.json();
-      return NextResponse.json(data);
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        logger.error('[Results API] Failed to parse response:', parseError);
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Invalid response from upstream server' 
+          },
+          { 
+            status: 502,
+            headers: getCorsHeaders(request)
+          }
+        );
+      }
+      return NextResponse.json(data, {
+        headers: getCorsHeaders(request)
+      });
     }
 
     // データが見つからない場合
@@ -109,7 +181,10 @@ export async function GET(request: NextRequest) {
         success: false, 
         error: 'Result not found' 
       },
-      { status: 404 }
+      { 
+        status: 404,
+        headers: getCorsHeaders(request)
+      }
     );
     
   } catch (error) {
@@ -119,7 +194,10 @@ export async function GET(request: NextRequest) {
         success: false, 
         error: 'Internal server error' 
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: getCorsHeaders(request)
+      }
     );
   }
 }
@@ -130,7 +208,22 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      logger.error('[Results API] JSON parse error:', parseError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Invalid JSON in request body' 
+        },
+        { 
+          status: 400,
+          headers: getCorsHeaders(request)
+        }
+      );
+    }
     
     if (!body.id || !body.result) {
       return NextResponse.json(
@@ -138,8 +231,30 @@ export async function POST(request: NextRequest) {
           success: false, 
           error: 'Missing required fields: id and result' 
         },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: getCorsHeaders(request)
+        }
       );
+    }
+    
+    // Validate result structure
+    if (typeof body.result !== 'object' || !body.result) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Invalid result format: must be an object' 
+        },
+        { 
+          status: 400,
+          headers: getCorsHeaders(request)
+        }
+      );
+    }
+    
+    // Basic validation of result fields if it's a diagnosis result
+    if (body.result.id && body.result.id !== body.id) {
+      logger.warn('[Results API] Mismatched IDs:', { bodyId: body.id, resultId: body.result.id });
     }
 
     // 開発環境ではメモリに保存
@@ -157,6 +272,8 @@ export async function POST(request: NextRequest) {
         success: true,
         id: body.id,
         message: 'Result saved successfully'
+      }, {
+        headers: getCorsHeaders(request)
       });
     }
 
@@ -173,7 +290,10 @@ export async function POST(request: NextRequest) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const errorData = await response.json().catch((parseError) => {
+          logger.warn('[Results API] Failed to parse error response:', parseError);
+          return { error: 'Unknown error' };
+        });
         return NextResponse.json(
           { 
             success: false, 
@@ -183,14 +303,33 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const data = await response.json();
-      return NextResponse.json(data);
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        logger.error('[Results API] Failed to parse response:', parseError);
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Invalid response from upstream server' 
+          },
+          { 
+            status: 502,
+            headers: getCorsHeaders(request)
+          }
+        );
+      }
+      return NextResponse.json(data, {
+        headers: getCorsHeaders(request)
+      });
     }
 
     return NextResponse.json({
       success: true,
       id: body.id,
       message: 'Result saved successfully'
+    }, {
+      headers: getCorsHeaders(request)
     });
 
   } catch (error) {
@@ -200,7 +339,10 @@ export async function POST(request: NextRequest) {
         success: false, 
         error: 'Internal server error' 
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: getCorsHeaders(request)
+      }
     );
   }
 }
@@ -209,14 +351,18 @@ export async function POST(request: NextRequest) {
  * OPTIONS /api/results
  * CORS プリフライトリクエスト対応
  */
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
+  const headers = getCorsHeaders(request);
+  
+  // If no CORS headers (unauthorized origin), return 403
+  if (Object.keys(headers).length === 0) {
+    return new Response('Forbidden', {
+      status: 403,
+    });
+  }
+  
   return new Response(null, {
     status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Max-Age': '86400',
-    },
+    headers,
   });
 }
