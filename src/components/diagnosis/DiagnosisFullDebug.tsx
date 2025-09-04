@@ -8,7 +8,7 @@ import {
   FIELD_TOKEN_ESTIMATES,
   calculateTotalSavings 
 } from "@/types/diagnosis-metadata";
-import { Info, Database, Brain, Users, Hash, Zap, Target, Gift, Activity, Box } from "lucide-react";
+import { Info, Database, Brain, Users, Zap, Target, Gift, Activity, Box } from "lucide-react";
 
 interface DiagnosisFullDebugProps {
   result: DiagnosisResult;
