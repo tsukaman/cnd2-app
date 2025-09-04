@@ -2,9 +2,10 @@
 
 import { motion } from "framer-motion";
 import { DiagnosisResult } from "@/types";
-import { Star, Sparkles, Users, MessageCircle, Zap, Heart, Trophy, Gift, Target } from "lucide-react";
+import { Star, Sparkles, Users, MessageCircle, Zap, Handshake, Trophy, Gift, Target } from "lucide-react";
 import { useState, useEffect } from "react";
 import Confetti from "react-confetti";
+import Image from "next/image";
 
 interface AstrologicalDiagnosisResultProps {
   result: DiagnosisResult;
@@ -71,8 +72,15 @@ export function AstrologicalDiagnosisResult({ result, onReset }: AstrologicalDia
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
             🔮 Cloud Native Days 相性占い 🐳
           </h1>
-          <p className="text-gray-400">
+          <p className="text-lg md:text-xl text-gray-300 font-semibold mb-2">
+            CloudNative Days × Connect &apos;n&apos; Discover
+          </p>
+          <p className="text-gray-400 mb-2">
             占星術 × Cloud Native エンジニアリングで紡ぐ、技術者同士の絆
+          </p>
+          <p className="text-sm">
+            <span className="text-purple-400">Powered by </span>
+            <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent font-semibold">Prairie Card</span>
           </p>
         </motion.div>
 
@@ -198,7 +206,7 @@ export function AstrologicalDiagnosisResult({ result, onReset }: AstrologicalDia
               className="glass-effect rounded-2xl p-6"
             >
               <div className="flex items-center mb-4">
-                <Heart className="w-6 h-6 text-pink-400 mr-2" />
+                <Target className="w-6 h-6 text-pink-400 mr-2" />
                 <h3 className="text-lg font-bold text-white">機会</h3>
               </div>
               <ul className="space-y-2">
@@ -297,7 +305,7 @@ export function AstrologicalDiagnosisResult({ result, onReset }: AstrologicalDia
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="flex justify-center gap-4"
+          className="flex justify-center gap-4 mb-12"
         >
           <button
             onClick={onReset}
@@ -315,6 +323,28 @@ export function AstrologicalDiagnosisResult({ result, onReset }: AstrologicalDia
           >
             結果を共有
           </button>
+        </motion.div>
+
+        {/* フッター */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.1 }}
+          className="flex flex-col items-center gap-4 pt-8 border-t border-gray-700"
+        >
+          <Image
+            src="/images/trademark@4x.png"
+            alt="CloudNative Days Winter 2025"
+            width={80}
+            height={20}
+            className="opacity-90"
+          />
+          <p className="text-sm md:text-base text-purple-400 font-medium">
+            #CNDxCnD
+          </p>
+          <p className="text-gray-500 text-xs font-medium">
+            © 2025 CloudNative Days Committee
+          </p>
         </motion.div>
       </motion.div>
     </>
