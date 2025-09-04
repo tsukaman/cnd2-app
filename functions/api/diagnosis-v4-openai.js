@@ -359,7 +359,7 @@ ${cncfProjectsList}
       summary: diagnosis?.message || '',
       conversationStarters: diagnosis?.conversationStarters || [],
       hiddenGems: diagnosis?.hiddenGems || '',
-      luckyItem: diagnosis?.luckyItem || ''
+      luckyItem: diagnosis?.luckyItem || '',
       luckyAction: diagnosis?.luckyAction || '',
       luckyProject: diagnosis?.luckyProject || '',
       astrologicalAnalysis: analysis?.astrologicalAnalysis || '',
