@@ -45,7 +45,7 @@
 
 1. **Prairie Scraperへの名称変更検討**
    - 「Prairie API」→「Prairie Scraper」
-   - 実態がWeb ScrapingであることをAPIを明確に
+   - 実態がWeb Scrapingであることを明確に
 
 2. **フォールバック機能の削除**
    - エラー時のフォールバックは問題を隠蔽するため削除
@@ -67,7 +67,7 @@
 - `functions/api/prairie.js` - メインのスクレイピングロジック
 - `functions/utils/prairie-parser.js` - URL検証とHTMLパース
 - `src/lib/validators/prairie-url-validator.ts` - フロントエンドURL検証
-- `src/lib/prairie-card-parser.ts` - Pr airie Cardパーサー
+- `src/lib/prairie-card-parser.ts` - Prairie Cardパーサー
 - 関連テストファイル
 
 ### 本番環境への影響
