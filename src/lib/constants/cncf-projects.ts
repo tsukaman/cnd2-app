@@ -203,3 +203,94 @@ export const CNCF_PROJECT_COUNT = {
   sandbox: CNCF_SANDBOX_PROJECTS.length,
   total: ALL_CNCF_PROJECTS.length
 };
+
+/**
+ * ランダムにCNCFプロジェクトを選択
+ * diagnosis-engine-v3.tsで使用されるため、emoji プロパティを追加
+ */
+export function getRandomCNCFProject(): CNCFProject & { emoji: string } {
+  const randomIndex = Math.floor(Math.random() * ALL_CNCF_PROJECTS.length);
+  const project = ALL_CNCF_PROJECTS[randomIndex];
+  // デフォルトの絵文字を追加（プロジェクトの種類に応じて）
+  const emoji = '🚀'; // CNCFプロジェクトの共通絵文字
+  return {
+    ...project,
+    emoji
+  };
+}
+
+/**
+ * 多様なラッキーアイテムのリスト
+ */
+export const LUCKY_ITEMS = [
+  // 技術系
+  'メカニカルキーボード', 'ワイヤレスマウス', 'USB-Cハブ', 'ノイズキャンセリングヘッドフォン',
+  'スタンディングデスク', 'モニターアーム', '4Kディスプレイ', 'エルゴノミクスチェア',
+  
+  // 飲み物・食べ物
+  'コーヒー豆', '緑茶', 'エナジードリンク', 'プロテインバー', 'ナッツ',
+  'チョコレート', 'グミ', '炭酸水', 'スムージー', 'ヨーグルト',
+  
+  // 文房具
+  'モレスキンノート', '万年筆', 'ポストイット', 'ホワイトボードマーカー',
+  '消せるボールペン', 'マインドマップ用紙', '付箋', 'クリップボード',
+  
+  // 趣味・リラックス
+  '観葉植物', 'アロマディフューザー', 'ストレスボール', 'Rubiks Cube',
+  'フィジェットスピナー', 'ミニチュア模型', 'パズル', 'ボードゲーム',
+  
+  // 本・学習
+  'オライリーの新刊', '技術書', 'ビジネス書', 'マンガ',
+  'Kindle', 'オーディオブック', 'オンライン講座', 'Udemy割引クーポン',
+  
+  // その他
+  'ステッカー', 'Tシャツ', 'パーカー', 'トートバッグ',
+  'マグカップ', 'タンブラー', 'スマートウォッチ', 'フィットネストラッカー'
+];
+
+/**
+ * ランダムにラッキーアイテムを選択
+ */
+export function getRandomLuckyItem(): string {
+  const randomIndex = Math.floor(Math.random() * LUCKY_ITEMS.length);
+  return LUCKY_ITEMS[randomIndex];
+}
+
+/**
+ * 多様なラッキーアクションのリスト
+ */
+export const LUCKY_ACTIONS = [
+  // 技術系
+  'git commit --amend を試してみる', 'READMEを更新する', 'テストを1つ書く',
+  '新しいVSCode拡張を試す', 'コードレビューをする', 'リファクタリングを楽しむ',
+  'ドキュメントを改善する', 'issueを1つクローズする', 'デバッグを楽しむ',
+  
+  // 学習系
+  '新しいプログラミング言語を15分触る', 'YouTubeで技術動画を観る', 'Qiitaに記事を書く',
+  'オンライン勉強会に参加する', 'OSSにコントリビュートする', 'ブログを書く',
+  
+  // 休憩系
+  '15分の散歩をする', 'ストレッチをする', '深呼吸を3回する',
+  '好きな音楽を1曲聴く', 'コーヒーブレイクを取る', '窓の外を眺める',
+  '瞑想を5分する', '目を閉じて休憩する', '水分補給をする',
+  
+  // コミュニケーション系
+  'チームメンバーに感謝を伝える', 'Slackで雑談する', 'ペアプロを提案する',
+  'モブプログラミングを楽しむ', '1on1を設定する', 'フィードバックを求める',
+  
+  // 整理整頓系
+  'デスクを片付ける', 'ブラウザのタブを整理する', 'メールの受信箱を空にする',
+  'Slackの通知を整理する', 'カレンダーを見直す', 'ToDoリストを更新する',
+  
+  // 健康系
+  '姿勢を正す', '目薬をさす', '肩を回す', '首をストレッチする',
+  '手首を休める', 'ブルーライトカットメガネをかける', '画面から離れる'
+];
+
+/**
+ * ランダムにラッキーアクションを選択
+ */
+export function getRandomLuckyAction(): string {
+  const randomIndex = Math.floor(Math.random() * LUCKY_ACTIONS.length);
+  return LUCKY_ACTIONS[randomIndex];
+}
