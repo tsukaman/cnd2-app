@@ -143,7 +143,7 @@ export const apiClient = {
       });
       
       if (!response.ok) {
-        await handleApiError(response, 'Network error');
+        await handleApiError(response, 'Failed to generate diagnosis');
       }
       
       return handleApiResponse(response);

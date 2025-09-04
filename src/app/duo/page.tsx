@@ -387,10 +387,18 @@ export default function DuoPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-6 p-4 bg-red-500/10 rounded-xl border border-red-500/30"
           >
-            <div className="flex items-center text-red-400">
-              <AlertCircle className="w-5 h-5 mr-2" />
-              <span>エラー: {parseError || diagnosisError}</span>
+            <div className="flex items-center text-red-400 mb-2">
+              <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+              <span className="font-semibold">エラーが発生しました</span>
             </div>
+            <p className="text-red-300 text-sm">
+              {parseError || diagnosisError}
+            </p>
+            {diagnosisError && diagnosisError.includes('OpenAI API key') && (
+              <p className="text-gray-400 text-xs mt-2">
+                ※ 管理者にお問い合わせください。Cloudflare Pagesの環境変数設定が必要です。
+              </p>
+            )}
           </motion.div>
         )}
         </div>

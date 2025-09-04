@@ -196,7 +196,13 @@ export default function GroupPage() {
                     animate={{ opacity: 1 }}
                     className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200"
                   >
-                    <p className="text-red-600">{error}</p>
+                    <p className="text-red-600 font-semibold mb-1">エラーが発生しました</p>
+                    <p className="text-red-500 text-sm">{error}</p>
+                    {error.includes('OpenAI API key') && (
+                      <p className="text-gray-600 text-xs mt-2">
+                        ※ 管理者にお問い合わせください。Cloudflare Pagesの環境変数設定が必要です。
+                      </p>
+                    )}
                   </motion.div>
                 )}
               </div>

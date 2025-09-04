@@ -90,7 +90,11 @@ export async function onRequestPost({ request, env }) {
       );
     } catch (error) {
       logger.error('Diagnosis generation failed', error);
-      return errorResponse(error, 500, corsHeaders);
+      // より詳細なエラーメッセージを返す
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to generate diagnosis';
+      return errorResponse(new Error(errorMessage), 500, corsHeaders);
     }
   });
 }
