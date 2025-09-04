@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import PrairieCardInput from '@/components/prairie/PrairieCardInput';
+import { DiagnosisLoadingAnimation } from '@/components/diagnosis/DiagnosisLoadingAnimation';
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
@@ -126,9 +127,17 @@ export default function DuoPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden stars-bg flex items-center justify-center">
-      {/* 背景エフェクト */}
-      <BackgroundEffects />
+    <>
+      {/* 診断中のローディングアニメーション */}
+      <AnimatePresence>
+        {diagnosisLoading && (
+          <DiagnosisLoadingAnimation isLoading={diagnosisLoading} />
+        )}
+      </AnimatePresence>
+
+      <div className="min-h-screen relative overflow-hidden stars-bg flex items-center justify-center">
+        {/* 背景エフェクト */}
+        <BackgroundEffects />
       
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
         {/* ヘッダー */}
@@ -394,7 +403,8 @@ export default function DuoPage() {
             </div>
           </motion.div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
