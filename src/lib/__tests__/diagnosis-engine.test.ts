@@ -107,7 +107,6 @@ describe('diagnosis-engine', () => {
       expect(result).toHaveProperty('message');
       expect(result).toHaveProperty('conversationStarters');
       expect(result).toHaveProperty('hiddenGems');
-      expect(result).toHaveProperty('shareTag');
     });
 
     it('generates unique IDs for each diagnosis', async () => {
@@ -159,12 +158,5 @@ describe('diagnosis-engine', () => {
       expect(result.opportunities).toContainEqual(expect.stringContaining('オープンソース'));
     });
 
-    it('generates unique shareTag for groups', async () => {
-      const profiles = [mockProfile1, mockProfile2, mockProfile1];
-      const result = await engine.generateGroupDiagnosis(profiles);
-      
-      expect(result.shareTag).toContain('3人');
-      expect(result.shareTag).toContain('#CNDxCnD');
-    });
   });
 });

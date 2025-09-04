@@ -246,7 +246,6 @@ export class DiagnosisEngine {
         '最近取り組んでいるプロジェクトについて情報交換してみましょう'
       ],
       hiddenGems: 'お二人とも技術への情熱が素晴らしく、学習意欲が高いところが共通しています！',
-      shareTag: `相性${randomScore}%！ ${randomType}の二人が #CNDxCnD で出会いを二乗でスケール中！`,
     };
   }
 
@@ -290,7 +289,6 @@ export class DiagnosisEngine {
         'オープンソースプロジェクトを始めてみるのはどうでしょう'
       ],
       hiddenGems: 'グループ全員が学習意欲が高く、お互いを高め合える関係です！',
-      shareTag: `${profiles.length}人で相性${randomScore}%！ ${randomType}として #CNDxCnD で二乗の出会い！`,
     };
   }
 }

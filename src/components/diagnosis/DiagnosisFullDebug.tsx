@@ -100,17 +100,6 @@ export function DiagnosisFullDebug({ result }: DiagnosisFullDebugProps) {
           </div>
         )}
 
-        {/* shareTag */}
-        <div className="bg-orange-500/10 rounded-lg p-4 mb-4">
-          <h3 className="font-semibold text-orange-400 mb-2 flex items-center gap-2">
-            <Hash className="w-4 h-4" />
-            shareTag（共有タグ）
-          </h3>
-          <p className="text-white/70 text-sm">{result.shareTag || '#CND2診断'}</p>
-          <div className="mt-2 text-xs text-orange-300">
-            💡 常に固定値 (#CND2診断) なので不要
-          </div>
-        </div>
 
         {/* metadata.calculatedScore */}
         {calculatedScore && Object.keys(calculatedScore).length > 0 && (

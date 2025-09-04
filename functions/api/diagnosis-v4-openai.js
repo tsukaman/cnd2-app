@@ -101,7 +101,6 @@ const ASTROLOGY_SYSTEM_PROMPT = `あなたは「クラウドネイティブの�
       "例: 『最もワクワクする新技術は何？』"
     ],
     "hiddenGems": "意外な共通点や発見（前向きで実践的な内容）",
-    "shareTag": "#CND2診断",
     "luckyItem": "2人のプロフィールや相性から導き出される独自のラッキーアイテムを自由に生成（エンジニアに限定せず、日用品、食べ物、趣味のもの、文房具、本、音楽など何でもOK。創造的で面白いものを）",
     "luckyAction": "2人の相性や特徴から導き出される独自のラッキーアクションを自由に生成（技術活動に限定せず、日常の行動、趣味、運動、食事、コミュニケーション、学習など何でもOK。実践しやすく楽しいものを）",
     "luckyProject": "CNCFプロジェクトから1つ選択して、なぜそれが2人にとってラッキーなのか短い説明付きで（プロジェクト名は正確に）",
@@ -367,8 +366,7 @@ ${cncfProjectsList}
       summary: diagnosis?.message || '',
       conversationStarters: diagnosis?.conversationStarters || [],
       hiddenGems: diagnosis?.hiddenGems || '',
-      shareTag: diagnosis?.shareTag || '#CND2診断',
-      luckyItem: diagnosis?.luckyItem || '',
+      luckyItem: diagnosis?.luckyItem || ''
       luckyAction: diagnosis?.luckyAction || '',
       luckyProject: diagnosis?.luckyProject || '',
       astrologicalAnalysis: analysis?.astrologicalAnalysis || '',
@@ -453,7 +451,6 @@ function generateFallbackDiagnosis(profile1, profile2, env) {
       'プログラミングを始めたきっかけは？'
     ],
     hiddenGems: 'お互いの技術的な視点が補完的で、一緒にプロジェクトを進めると素晴らしい成果が期待できます。',
-    shareTag: '#CND2診断',
     luckyItem: luckyItems[Math.floor(Math.random() * luckyItems.length)],
     luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
     luckyProject: luckyProject,
