@@ -234,6 +234,14 @@ export function DiagnosisLoadingAnimation({ isLoading }: DiagnosisLoadingAnimati
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [randomSteps, setRandomSteps] = useState<typeof allDiagnosticSteps>([]);
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
+
+  // クライアントサイドで画面サイズを取得（SSR対応）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    }
+  }, []);
 
   useEffect(() => {
     if (!isLoading) {
@@ -242,24 +250,31 @@ export function DiagnosisLoadingAnimation({ isLoading }: DiagnosisLoadingAnimati
       return;
     }
 
+    let isMounted = true; // コンポーネントのマウント状態を追跡
+
     // ランダムな順序でステップを選択（重複なし）
     const shuffled = [...allDiagnosticSteps].sort(() => Math.random() - 0.5);
     setRandomSteps(shuffled);
 
     // ステップを2.5秒ごとに切り替え
     const stepInterval = setInterval(() => {
-      setCurrentStepIndex((prev) => (prev + 1) % shuffled.length);
+      if (isMounted) {
+        setCurrentStepIndex((prev) => (prev + 1) % shuffled.length);
+      }
     }, 2500);
 
-    // プログレスバーを更新
+    // プログレスバーを更新（パフォーマンス最適化: 500ms間隔）
     const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) return 95; // 95%で止める（完了は実際の診断終了時）
-        return prev + Math.random() * 2;
-      });
-    }, 200);
+      if (isMounted) {
+        setProgress((prev) => {
+          if (prev >= 95) return 95; // 95%で止める（完了は実際の診断終了時）
+          return prev + Math.random() * 3; // より大きなステップで更新
+        });
+      }
+    }, 500); // レンダリング頻度を削減してパフォーマンス向上
 
     return () => {
+      isMounted = false; // クリーンアップ時にフラグを更新
       clearInterval(stepInterval);
       clearInterval(progressInterval);
     };
@@ -276,6 +291,9 @@ export function DiagnosisLoadingAnimation({ isLoading }: DiagnosisLoadingAnimati
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-gray-900/95 backdrop-blur-lg flex items-center justify-center"
+      role="dialog"
+      aria-label="診断処理中"
+      aria-describedby="loading-message"
     >
       {/* 背景の浮遊アイコン */}
       <div className="absolute inset-0 overflow-hidden">
@@ -284,12 +302,12 @@ export function DiagnosisLoadingAnimation({ isLoading }: DiagnosisLoadingAnimati
             key={index}
             className="absolute"
             initial={{ 
-              x: typeof window !== 'undefined' ? Math.random() * window.innerWidth : 0,
-              y: typeof window !== 'undefined' ? window.innerHeight + 100 : 800
+              x: Math.random() * dimensions.width,
+              y: dimensions.height + 100
             }}
             animate={{
               y: -100,
-              x: typeof window !== 'undefined' ? Math.random() * window.innerWidth : 0
+              x: Math.random() * dimensions.width
             }}
             transition={{
               duration: duration,
@@ -303,6 +321,11 @@ export function DiagnosisLoadingAnimation({ isLoading }: DiagnosisLoadingAnimati
           </motion.div>
         ))}
       </div>
+
+      {/* スクリーンリーダー向けの説明 */}
+      <p id="loading-message" className="sr-only">
+        現在診断処理を実行中です。しばらくお待ちください。進捗は{Math.round(progress)}%です。
+      </p>
 
       {/* メインコンテンツ */}
       <div className="relative z-10 max-w-2xl w-full px-8">
