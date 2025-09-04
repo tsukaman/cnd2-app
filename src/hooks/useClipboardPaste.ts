@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { 
   isPrairieCardUrl as isPrairieCardUrlHelper,
   extractPrairieCardUrl
@@ -15,13 +16,19 @@ interface UseClipboardPasteReturn {
 export function useClipboardPaste(): UseClipboardPasteReturn {
   const [isSupported, setIsSupported] = useState(false);
   const [lastPastedUrl, setLastPastedUrl] = useState<string | null>(null);
+  const pathname = usePathname();
+  
+  // Disable auto-detection on results pages
+  const isResultsPage = pathname?.includes('/results') || false;
 
   useEffect(() => {
-    // Check if Clipboard API is supported
-    if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+    // Check if Clipboard API is supported (but disabled on results pages)
+    if (navigator.clipboard && typeof navigator.clipboard.readText === 'function' && !isResultsPage) {
       setIsSupported(true);
+    } else {
+      setIsSupported(false);
     }
-  }, []);
+  }, [isResultsPage]);
 
   const isPrairieCardUrl = (text: string): boolean => {
     return isPrairieCardUrlHelper(text);
@@ -50,8 +57,10 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
     setLastPastedUrl(null);
   }, []);
 
-  // Listen for paste events
+  // Listen for paste events (disabled on results pages)
   useEffect(() => {
+    if (isResultsPage) return;
+    
     const handlePaste = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData('text');
       
@@ -67,7 +76,7 @@ export function useClipboardPaste(): UseClipboardPasteReturn {
     return () => {
       document.removeEventListener('paste', handlePaste);
     };
-  }, []);
+  }, [isResultsPage]);
 
   return {
     isSupported,

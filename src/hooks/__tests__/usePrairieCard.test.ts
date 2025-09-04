@@ -102,11 +102,17 @@ describe('usePrairieCard', () => {
     });
 
     expect(apiClient.prairie.fetch).toHaveBeenCalled();
-    expect(apiClient.prairie.fetch).toHaveBeenCalledWith('https://example.com/profile');
+    expect(apiClient.prairie.fetch).toHaveBeenCalledWith(
+      'https://example.com/profile',
+      expect.objectContaining({
+        enableRetry: true,
+        onRetry: expect.any(Function)
+      })
+    );
   });
 
   it('handles fetch errors correctly', async () => {
-    const errorMessage = 'Prairie Cardの取得に失敗しました';
+    const errorMessage = 'Prairie Cardのデータ形式エラー';
     
     (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce(null);
 
@@ -137,7 +143,7 @@ describe('usePrairieCard', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBe('Network error');
+      expect(result.current.error).toBe('ネットワーク接続エラー');
       expect(result.current.profile).toBeNull();
       expect(fetchedProfile).toBeNull();
     });
@@ -177,7 +183,7 @@ describe('usePrairieCard', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBe('Prairie Cardの取得に失敗しました');
+      expect(result.current.error).toBe('Prairie Cardのデータ形式エラー');
       expect(result.current.profile).toBeNull();
       expect(fetchedProfile).toBeNull();
     });
@@ -202,7 +208,7 @@ describe('usePrairieCard', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBe('Prairie Cardの取得に失敗しました');
+      expect(result.current.error).toBe('Prairie Cardのデータ形式エラー');
       expect(result.current.profile).toBeNull();
       expect(fetchedProfile).toBeNull();
     });

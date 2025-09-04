@@ -53,7 +53,7 @@ describe('API Client', () => {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (global.fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 404,
           json: async () => ({ error: { message: 'Not found' } }),
@@ -67,14 +67,14 @@ describe('API Client', () => {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (global.fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 500,
           json: async () => { throw new Error('Parse error'); },
         });
 
         await expect(apiClient.prairie.fetch('https://prairie.cards/test'))
-          .rejects.toThrow('Network error');
+          .rejects.toThrow('Prairie Card の取得に失敗しました');
       });
     });
   });
@@ -274,7 +274,7 @@ describe('API Client', () => {
       });
 
       // スラッシュ付きのパスでも正しいURLになる
-      await apiClient.prairie.fetch('test');
+      await apiClient.prairie.fetch('test', { enableRetry: false });
 
       expect(global.fetch).toHaveBeenCalledWith(
         'https://test-api.example.com/api/prairie',
@@ -298,7 +298,7 @@ describe('API Client', () => {
         json: async () => ({ success: true }),
       });
 
-      await apiClient.prairie.fetch('test');
+      await apiClient.prairie.fetch('test', { enableRetry: false });
       
       // 相対パスでfetchが呼ばれることを確認
       expect(global.fetch).toHaveBeenCalledWith(
@@ -316,34 +316,34 @@ describe('API Client', () => {
     it('ネットワークエラーを適切に処理する', async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-      (global.fetch as jest.Mock).mockRejectedValueOnce(
+      (global.fetch as jest.Mock).mockRejectedValue(
         new Error('Network error')
       );
 
-      await expect(apiClient.prairie.fetch('test'))
+      await expect(apiClient.prairie.fetch('test', { enableRetry: true }))
         .rejects.toThrow('Network error');
     });
 
     it('JSONパースエラーを処理する', async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      (global.fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => { throw new Error('Invalid JSON'); },
       });
 
-      await expect(apiClient.prairie.fetch('test'))
+      await expect(apiClient.prairie.fetch('test', { enableRetry: true }))
         .rejects.toThrow('Invalid JSON');
     });
 
     it('タイムアウトエラーを処理する', async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-      (global.fetch as jest.Mock).mockRejectedValueOnce(
+      (global.fetch as jest.Mock).mockRejectedValue(
         new Error('Request timeout')
       );
 
-      await expect(apiClient.prairie.fetch('test'))
+      await expect(apiClient.prairie.fetch('test', { enableRetry: true }))
         .rejects.toThrow('Request timeout');
     });
   });

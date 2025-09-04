@@ -26,7 +26,16 @@ export default function PrairieCardInput({
   const [platform] = useState(() => detectPlatform());
   const [inputMethod, setInputMethod] = useState<'manual' | 'nfc' | 'qr' | 'clipboard'>('manual');
   
-  const { loading, error, profile, fetchProfile, clearError } = usePrairieCard();
+  const { 
+    loading, 
+    error, 
+    profile, 
+    retryAttempt, 
+    isRetrying, 
+    fetchProfile, 
+    clearError, 
+    useSampleData 
+  } = usePrairieCard();
   
   // NFC Hook (Android only)
   const { 
@@ -100,14 +109,26 @@ export default function PrairieCardInput({
   useEffect(() => {
     if (pastedUrl && !url) {
       setUrl(pastedUrl);
-      // Show confirmation before auto-loading
-      const shouldLoad = window.confirm(`Prairie Card URLを検出しました:\n${pastedUrl}\n\n読み込みますか？`);
+      // Show confirmation before auto-loading with URL sanitization
+      const sanitizedUrl = pastedUrl.length > 100 
+        ? pastedUrl.substring(0, 100) + '...' 
+        : pastedUrl;
+      const shouldLoad = window.confirm(`Prairie Card URLを検出しました:\n${sanitizedUrl}\n\n読み込みますか？`);
       if (shouldLoad) {
         handleFetchProfile(pastedUrl);
       }
       clearPastedUrl();
     }
   }, [pastedUrl, handleFetchProfile, clearPastedUrl, url]);
+
+  // Cleanup on unmount - ensure QR scanner is stopped
+  useEffect(() => {
+    return () => {
+      if (qrScanning) {
+        stopQR();
+      }
+    };
+  }, [qrScanning, stopQR]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,8 +191,8 @@ export default function PrairieCardInput({
                   type="button"
                   onClick={handleNFCScan}
                   className={`
-                    flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
-                    transition-all duration-300
+                    flex items-center gap-1.5 px-3 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm font-medium
+                    transition-all duration-300 min-h-[44px] sm:min-h-0
                     ${nfcScanning 
                       ? 'bg-blue-600 text-white' 
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -182,7 +203,8 @@ export default function PrairieCardInput({
                   title="NFCタグを読み取る"
                 >
                   <Smartphone className={`w-4 h-4 ${nfcScanning ? 'animate-pulse' : ''}`} />
-                  NFC
+                  <span className="hidden sm:inline">NFC</span>
+                  <span className="sm:hidden">NFC</span>
                 </motion.button>
               )}
               
@@ -192,8 +214,8 @@ export default function PrairieCardInput({
                   type="button"
                   onClick={handleQRScan}
                   className={`
-                    flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
-                    transition-all duration-300
+                    flex items-center gap-1.5 px-3 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm font-medium
+                    transition-all duration-300 min-h-[44px] sm:min-h-0
                     ${qrScanning || inputMethod === 'qr'
                       ? 'bg-purple-600 text-white' 
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -204,7 +226,8 @@ export default function PrairieCardInput({
                   title="QRコードを読み取る"
                 >
                   <QrCode className={`w-4 h-4 ${qrScanning ? 'animate-pulse' : ''}`} />
-                  QR
+                  <span className="hidden sm:inline">QR</span>
+                  <span className="sm:hidden">QR</span>
                 </motion.button>
               )}
               
@@ -213,14 +236,16 @@ export default function PrairieCardInput({
                 <motion.button
                   type="button"
                   onClick={handleClipboardPaste}
-                  className="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
-                    bg-gray-700 text-gray-300 hover:bg-gray-600 transition-all duration-300"
+                  className="flex items-center gap-1.5 px-3 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm font-medium
+                    bg-gray-700 text-gray-300 hover:bg-gray-600 transition-all duration-300
+                    min-h-[44px] sm:min-h-0"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   title="クリップボードから貼り付け"
                 >
                   <Clipboard className="w-4 h-4" />
-                  貼付
+                  <span className="hidden sm:inline">貼付</span>
+                  <span className="sm:hidden">貼付</span>
                 </motion.button>
               )}
             </div>
@@ -233,11 +258,14 @@ export default function PrairieCardInput({
               onChange={handleInputChange}
               placeholder={placeholder}
               disabled={loading}
+              aria-label={label}
+              aria-invalid={isValid === false}
+              aria-describedby={error ? "prairie-error" : isValid === false ? "prairie-invalid" : undefined}
               className={`
-                w-full px-4 py-3 pr-12 
+                w-full px-4 py-3.5 pr-12 min-h-[48px]
                 bg-gray-800/50 backdrop-blur-sm
                 border rounded-xl
-                text-gray-200 placeholder-gray-500
+                text-base sm:text-sm text-gray-200 placeholder-gray-500
                 focus:outline-none focus:ring-2 
                 transition-all duration-300
                 ${isValid === true 
@@ -251,7 +279,7 @@ export default function PrairieCardInput({
             />
             
             {/* ステータスアイコン */}
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2" aria-hidden="true">
               {loading && (
                 <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
               )}
@@ -309,9 +337,10 @@ export default function PrairieCardInput({
               <button
                 type="button"
                 onClick={stopQR}
+                aria-label="QRスキャナーを閉じる"
                 className="p-2 bg-black/70 backdrop-blur-sm rounded-full hover:bg-black/80 transition-colors"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5 text-white" aria-hidden="true" />
               </button>
             </div>
           </motion.div>
@@ -336,23 +365,92 @@ export default function PrairieCardInput({
               <button
                 type="button"
                 onClick={stopNFC}
+                aria-label="NFCスキャンを中止"
                 className="p-2 rounded-full hover:bg-gray-700 transition-colors"
               >
-                <X className="w-4 h-4 text-gray-400" />
+                <X className="w-4 h-4 text-gray-400" aria-hidden="true" />
               </button>
             </div>
           </motion.div>
         )}
 
-        {/* エラーメッセージ */}
-        {(error || nfcError || qrError) && (
+        {/* リトライ中の表示 */}
+        {isRetrying && retryAttempt > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 text-red-400 text-sm"
+            role="status"
+            aria-live="polite"
+            className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/30 backdrop-blur-sm"
           >
-            <AlertCircle className="w-4 h-4" />
-            <span>{error || nfcError || qrError}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-yellow-400 animate-spin" aria-hidden="true" />
+                <div>
+                  <p className="text-yellow-400 font-semibold">接続を再試行中... ({retryAttempt}/3)</p>
+                  <p className="text-gray-400 text-sm">Prairie Card APIに接続しています</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* エラーメッセージ */}
+        {(error || nfcError || qrError) && !isRetrying && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            role="alert"
+            id="prairie-error"
+            aria-live="polite"
+            className="p-4 bg-red-500/10 rounded-xl border border-red-500/30 backdrop-blur-sm"
+          >
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="flex-1">
+                  <p className="text-red-400 font-semibold">{error || nfcError || qrError}</p>
+                  {error && error.includes('APIが一時的に利用できません') && (
+                    <p className="text-gray-400 text-sm mt-1">
+                      Prairie Card のサーバーが応答していません。サンプルデータで診断機能をお試しいただけます。
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* サンプルデータ使用ボタン（開発環境のみ） */}
+              {error && (
+                <div className="flex gap-2">
+                  {process.env.NODE_ENV === 'development' && (
+                    <motion.button
+                      type="button"
+                      onClick={useSampleData}
+                      className="flex-1 py-3 px-4 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg
+                        font-medium transition-colors flex items-center justify-center gap-2"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <User className="w-4 h-4" />
+                      サンプルデータを使用
+                    </motion.button>
+                  )}
+                  <motion.button
+                    type="button"
+                    onClick={() => {
+                      clearError();
+                      if (nfcError) clearNFCError();
+                      if (qrError) clearQRError();
+                    }}
+                    className="py-3 px-4 min-h-[44px] bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg
+                      font-medium transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    閉じる
+                  </motion.button>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -392,8 +490,8 @@ export default function PrairieCardInput({
           type="submit"
           disabled={loading || !url.trim()}
           className={`
-            w-full py-3 px-6 
-            font-semibold rounded-xl
+            w-full py-4 px-6 min-h-[52px]
+            font-semibold rounded-xl text-base
             transition-all duration-300
             ${loading || !url.trim()
               ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
