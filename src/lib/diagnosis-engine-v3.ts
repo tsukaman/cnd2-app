@@ -616,14 +616,14 @@ export class SimplifiedDiagnosisEngine {
     let result: DiagnosisResult;
     
     if (mode === 'duo' && profiles.length === 2) {
-      // プロフィールからURLを生成（ダミー）
+      // プロフィールからURLを生成（テスト用ダミー）
       const urls: [string, string] = [
-        'https://prairie.cards/profile1',
-        'https://prairie.cards/profile2'
+        'https://example.com/test/user1',
+        'https://example.com/test/user2'
       ];
       result = await this.generateDuoDiagnosis(urls);
     } else if (mode === 'group') {
-      const urls = profiles.map((_, i) => `https://prairie.cards/profile${i + 1}`);
+      const urls = profiles.map((_, i) => `https://example.com/test/user${i + 1}`);
       result = await this.generateGroupDiagnosis(urls);
     } else {
       throw new Error('Invalid mode or profile count');

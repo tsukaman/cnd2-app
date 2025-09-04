@@ -6,13 +6,16 @@ const { parseFromHTML, validatePrairieCardUrl } = require('../prairie-parser');
 
 describe('Prairie Card Parser', () => {
   describe('validatePrairieCardUrl', () => {
+    // Note: These tests only validate URL format, no actual network access is made
     it('should accept valid Prairie Card URLs', () => {
-      expect(validatePrairieCardUrl('https://prairie.cards/user123')).toBe(true);
-      expect(validatePrairieCardUrl('https://my.prairie.cards/profile')).toBe(true);
-      expect(validatePrairieCardUrl('https://subdomain.prairie.cards/test')).toBe(true);
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/tsukaman')).toBe(true);
+      expect(validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043')).toBe(true);
     });
 
     it('should reject invalid URLs', () => {
+      expect(validatePrairieCardUrl('https://prairie.cards/user123')).toBe(false); // prairie.cards は無効
+      expect(validatePrairieCardUrl('https://subdomain.prairie.cards/test')).toBe(false); // サブドメインは無効
+      expect(validatePrairieCardUrl('https://my.prairie.cards/profile')).toBe(false); // 不正なパスパターン
       expect(validatePrairieCardUrl('https://example.com')).toBe(false);
       expect(validatePrairieCardUrl('https://fake-prairie.cards.com')).toBe(false);
       expect(validatePrairieCardUrl('not-a-url')).toBe(false);
