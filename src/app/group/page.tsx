@@ -11,6 +11,7 @@ import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
 // import { isProduction } from '@/lib/utils/environment';
 import { logger } from '@/lib/logger';
+import { saveDiagnosisResult } from '@/lib/utils/kv-storage';
 import type { PrairieProfile } from '@/types';
 
 export default function GroupPage() {
@@ -54,34 +55,16 @@ export default function GroupPage() {
     if (validProfiles.length >= 3) {
       const result = await generateDiagnosis(validProfiles, 'group');
       if (result) {
-        // LocalStorageに保存
-        localStorage.setItem(`diagnosis-result-${result.id}`, JSON.stringify(result));
-        
-        // KVにも保存（非同期、リトライ付き）
-        const saveToKV = async () => {
-          for (let i = 0; i < RETRY_CONFIG.maxRetries; i++) {
-            try {
-              const response = await fetch('/api/results', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(result),
-              });
-              if (response.ok) {
-                logger.info('[Group] Successfully saved to KV');
-                return;
-              }
-              logger.warn(`[Group] KV save attempt ${i + 1} failed:`, response.status);
-            } catch (_err) {
-              logger.warn(`[Group] KV save attempt ${i + 1} error:`, _err);
-            }
-            // Wait before retry (exponential backoff)
-            if (i < RETRY_CONFIG.maxRetries - 1) {
-              await new Promise(resolve => setTimeout(resolve, calculateBackoffDelay(i)));
-            }
+        // 結果を保存（LocalStorage + KV）
+        saveDiagnosisResult(result, {
+          saveToKV: true,
+          retryCount: RETRY_CONFIG.maxRetries,
+          retryDelay: RETRY_CONFIG.baseDelay
+        }).then(saveResult => {
+          if (!saveResult.kvSaved) {
+            logger.warn('[Group] Failed to save to KV storage:', saveResult.error);
           }
-          logger.error('[Group] Failed to save to KV after all retries');
-        };
-        saveToKV();
+        });
         
         // Navigate to home with result in state
         router.push(`/?result=${result.id}&mode=group`);
