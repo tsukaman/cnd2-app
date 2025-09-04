@@ -84,7 +84,7 @@ NODE_ENV=development
 # .env.local
 OPENAI_API_KEY=sk-xxxxx-dev
 NODE_ENV=development
-ENABLE_FALLBACK=false    # フォールバック無効（エラー即座検知）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=true          # デバッグ情報出力
 LOG_LEVEL=debug          # 詳細ログ
 ```
@@ -95,7 +95,7 @@ LOG_LEVEL=debug          # 詳細ログ
 # Cloudflare Dashboard (Preview)
 OPENAI_API_KEY=sk-xxxxx-staging
 NODE_ENV=production
-ENABLE_FALLBACK=true     # フォールバック許可（ステージングのみ）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=true          # デバッグ情報出力
 LOG_LEVEL=info
 ```
@@ -104,9 +104,9 @@ LOG_LEVEL=info
 
 ```bash
 # Cloudflare Dashboard (Production)
-OPENAI_API_KEY=sk-xxxxx-prod
+OPENAI_API_KEY=sk-xxxxx-prod  # 必須（フォールバック無効化済み）
 NODE_ENV=production
-ENABLE_FALLBACK=false    # フォールバック無効（イベント時推奨）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=false         # デバッグ情報OFF
 LOG_LEVEL=warn           # 警告以上のみ
 ```
