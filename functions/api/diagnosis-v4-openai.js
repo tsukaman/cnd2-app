@@ -181,14 +181,15 @@ export async function generateFortuneDiagnosis(profiles, mode, env) {
   }
   
   // デバッグモード時のみ詳細情報を出力
-  if (debugMode) {
+  if (debugMode && env?.OPENAI_API_KEY) {
     const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
     const filteredKeys = getFilteredEnvKeys(env);
     
     console.log('[V4-OpenAI Engine] === DEBUG MODE ===');
     console.log('[V4-OpenAI Engine] Environment check:', {
-      keyStatus: env?.OPENAI_API_KEY ? 'configured' : 'missing',
-      keyPrefix: keyInfo.prefix  // 安全な接頭辞のみ（sk-xxx形式）
+      keyStatus: 'configured',
+      keyFormat: keyInfo.format,  // 'valid' or 'invalid'
+      startsWithSk: keyInfo.startsWithSk
     });
     
     logger.log('[DEBUG] Starting diagnosis with profiles:', profiles.map(p => p.basic?.name || p.name));
@@ -259,12 +260,18 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   // APIキーの妥当性を検証
   if (!isValidOpenAIKey(openaiApiKey)) {
     // フォールバック診断を完全に無効化 - 常にエラーを投げる
-    const keyInfo = getSafeKeyInfo(openaiApiKey);
     let errorMessage = 'OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable in Cloudflare Pages settings.';
     
     if (openaiApiKey && openaiApiKey.length > 0) {
       // キーは存在するが無効な形式
-      errorMessage = `OpenAI API key appears to be invalid (${keyInfo.prefix}...). Please check OPENAI_API_KEY environment variable in Cloudflare Pages settings.`;
+      const keyInfo = getSafeKeyInfo(openaiApiKey);
+      if (keyInfo.startsWithSk) {
+        errorMessage = 'OpenAI API key format appears valid but may be expired or incorrect. Please verify the OPENAI_API_KEY in Cloudflare Pages settings.';
+      } else if (keyInfo.hasWhitespace) {
+        errorMessage = 'OpenAI API key contains whitespace. Please check for extra spaces in OPENAI_API_KEY environment variable.';
+      } else {
+        errorMessage = 'OpenAI API key format is invalid. It should start with "sk-". Please check OPENAI_API_KEY in Cloudflare Pages settings.';
+      }
     }
     
     const error = new Error(errorMessage);

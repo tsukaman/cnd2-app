@@ -28,21 +28,22 @@ export async function onRequestPost({ request, env }) {
   }
   
   // デバッグモード時のみ詳細情報を出力
-  if (debugMode) {
+  if (debugMode && env?.OPENAI_API_KEY) {
     const filteredKeys = getFilteredEnvKeys(env);
     const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
     
     console.error('[Diagnosis API] === DEBUG MODE ===');
     console.error('[Diagnosis API] Environment status:', {
-      keyStatus: env?.OPENAI_API_KEY ? 'configured' : 'missing',
-      keyPrefix: keyInfo.prefix,  // 安全な接頭辞のみ（sk-xxx形式）
+      keyStatus: 'configured',
+      keyFormat: keyInfo.format,  // 'valid' or 'invalid'
+      startsWithSk: keyInfo.startsWithSk,
       envCount: Object.keys(env || {}).length,
-      hasRequiredVars: ['OPENAI_API_KEY', 'DIAGNOSIS_KV'].map(k => `${k}: ${env?.[k] ? 'yes' : 'no'}`).join(', ')
+      hasRequiredVars: ['OPENAI_API_KEY', 'DIAGNOSIS_KV'].every(k => !!env?.[k])
     });
     
     logger.debug('[Diagnosis API] Detailed Environment Debug:', {
       availableKeys: filteredKeys.join(', '),
-      keyInfo: keyInfo
+      hasWhitespace: keyInfo.hasWhitespace
     });
   }
   
