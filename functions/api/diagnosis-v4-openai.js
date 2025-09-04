@@ -225,12 +225,31 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   const debugMode = env?.DEBUG_MODE === 'true';
   const openaiApiKey = env?.OPENAI_API_KEY;
   
+  // デバッグ: 環境変数の状態を詳細にログ出力
+  console.log('[V4-OpenAI Engine] ========== DETAILED ENVIRONMENT DEBUG ==========');
+  console.log('[V4-OpenAI Engine] Environment check:');
+  console.log('[V4-OpenAI Engine] - env object exists:', !!env);
+  console.log('[V4-OpenAI Engine] - env type:', typeof env);
+  console.log('[V4-OpenAI Engine] - env keys:', env ? Object.keys(env).filter(k => !k.includes('SECRET') && !k.includes('PASSWORD')).join(', ') : 'N/A');
+  console.log('[V4-OpenAI Engine] - env.OPENAI_API_KEY exists:', !!env?.OPENAI_API_KEY);
+  console.log('[V4-OpenAI Engine] - Key type:', typeof openaiApiKey);
+  console.log('[V4-OpenAI Engine] - Key value type check:', openaiApiKey === null ? 'null' : openaiApiKey === undefined ? 'undefined' : typeof openaiApiKey);
+  console.log('[V4-OpenAI Engine] - Key length:', openaiApiKey ? openaiApiKey.length : 0);
+  console.log('[V4-OpenAI Engine] - Key starts with "sk-":', openaiApiKey?.startsWith('sk-'));
+  console.log('[V4-OpenAI Engine] - First 10 chars:', openaiApiKey ? openaiApiKey.substring(0, 10) + '...' : 'N/A');
+  console.log('[V4-OpenAI Engine] - Raw key (first 20 chars):', openaiApiKey ? JSON.stringify(openaiApiKey.substring(0, 20)) + '...' : 'N/A');
+  console.log('[V4-OpenAI Engine] - Has whitespace:', openaiApiKey ? openaiApiKey !== openaiApiKey.trim() : false);
+  console.log('[V4-OpenAI Engine] ==============================================');
+  
   // APIキーの妥当性を検証
   if (!isValidOpenAIKey(openaiApiKey)) {
     // フォールバック診断を完全に無効化 - 常にエラーを投げる
     const error = new Error('OpenAI API key is not configured or invalid. Please check OPENAI_API_KEY environment variable in Cloudflare Pages settings.');
     console.error('[V4-OpenAI Engine] ' + error.message);
-    console.error('[V4-OpenAI Engine] Key validation failed. Key length:', openaiApiKey ? openaiApiKey.length : 0);
+    console.error('[V4-OpenAI Engine] Validation details:');
+    console.error('[V4-OpenAI Engine] - Key exists:', !!openaiApiKey);
+    console.error('[V4-OpenAI Engine] - Key length:', openaiApiKey ? openaiApiKey.length : 0);
+    console.error('[V4-OpenAI Engine] - Validation result:', isValidOpenAIKey(openaiApiKey));
     throw error;
   }
   
