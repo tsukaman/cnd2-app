@@ -26,7 +26,16 @@ export default function PrairieCardInput({
   const [platform] = useState(() => detectPlatform());
   const [inputMethod, setInputMethod] = useState<'manual' | 'nfc' | 'qr' | 'clipboard'>('manual');
   
-  const { loading, error, profile, fetchProfile, clearError } = usePrairieCard();
+  const { 
+    loading, 
+    error, 
+    profile, 
+    retryAttempt, 
+    isRetrying, 
+    fetchProfile, 
+    clearError, 
+    useSampleData 
+  } = usePrairieCard();
   
   // NFC Hook (Android only)
   const { 
@@ -344,15 +353,76 @@ export default function PrairieCardInput({
           </motion.div>
         )}
 
-        {/* エラーメッセージ */}
-        {(error || nfcError || qrError) && (
+        {/* リトライ中の表示 */}
+        {isRetrying && retryAttempt > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 text-red-400 text-sm"
+            className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/30 backdrop-blur-sm"
           >
-            <AlertCircle className="w-4 h-4" />
-            <span>{error || nfcError || qrError}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-yellow-400 animate-spin" />
+                <div>
+                  <p className="text-yellow-400 font-semibold">接続を再試行中... ({retryAttempt}/3)</p>
+                  <p className="text-gray-400 text-sm">Prairie Card APIに接続しています</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* エラーメッセージ */}
+        {(error || nfcError || qrError) && !isRetrying && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-red-500/10 rounded-xl border border-red-500/30 backdrop-blur-sm"
+          >
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-red-400 font-semibold">{error || nfcError || qrError}</p>
+                  {error && error.includes('APIが一時的に利用できません') && (
+                    <p className="text-gray-400 text-sm mt-1">
+                      Prairie Card のサーバーが応答していません。サンプルデータで診断機能をお試しいただけます。
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* サンプルデータ使用ボタン */}
+              {error && (
+                <div className="flex gap-2">
+                  <motion.button
+                    type="button"
+                    onClick={useSampleData}
+                    className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg
+                      font-medium transition-colors flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <User className="w-4 h-4" />
+                    サンプルデータを使用
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    onClick={() => {
+                      clearError();
+                      if (nfcError) clearNFCError();
+                      if (qrError) clearQRError();
+                    }}
+                    className="py-2 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg
+                      font-medium transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    閉じる
+                  </motion.button>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 

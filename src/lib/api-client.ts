@@ -3,6 +3,7 @@
 
 import { logger } from './logger';
 import { PrairieProfile, DiagnosisResult } from '@/types';
+import { withRetry, isRetryableError } from './utils/retry';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
@@ -87,20 +88,46 @@ async function handleApiResponse<T = unknown>(response: Response): Promise<T> {
 export const apiClient = {
   // Prairie Card API
   prairie: {
-    async fetch(url: string) {
-      const response = await fetch(getApiUrl('api/prairie'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
+    async fetch(url: string, options?: { enableRetry?: boolean; onRetry?: (attempt: number, error: Error) => void }) {
+      const { enableRetry = true, onRetry } = options || {};
       
-      if (!response.ok) {
-        await handleApiError(response, 'Network error');
+      const fetchFn = async () => {
+        const response = await fetch(getApiUrl('api/prairie'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url }),
+        });
+        
+        if (!response.ok) {
+          // Check if it's a retryable error
+          if (response.status === 502 || response.status === 503 || response.status === 504) {
+            const error = new Error(`Prairie Card APIが一時的に利用できません (${response.status})`);
+            if (enableRetry && isRetryableError(error)) {
+              throw error; // Will be caught by withRetry
+            }
+          }
+          await handleApiError(response, 'Prairie Card の取得に失敗しました');
+        }
+        
+        return handleApiResponse(response);
+      };
+      
+      if (enableRetry) {
+        return withRetry(fetchFn, {
+          maxAttempts: 3,
+          initialDelay: 1000,
+          onRetry: (attempt, error) => {
+            logger.info(`[Prairie API] Retry attempt ${attempt}/3:`, error.message);
+            if (onRetry) {
+              onRetry(attempt, error);
+            }
+          }
+        });
       }
       
-      return handleApiResponse(response);
+      return fetchFn();
     }
   },
   
