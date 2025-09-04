@@ -250,12 +250,19 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   // APIキーの妥当性を検証
   if (!isValidOpenAIKey(openaiApiKey)) {
     // フォールバック診断を完全に無効化 - 常にエラーを投げる
-    const error = new Error('OpenAI API key is not configured or invalid. Please check OPENAI_API_KEY environment variable in Cloudflare Pages settings.');
+    const keyInfo = getSafeKeyInfo(openaiApiKey);
+    let errorMessage = 'OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable in Cloudflare Pages settings.';
+    
+    if (openaiApiKey && openaiApiKey.length > 0) {
+      // キーは存在するが無効な形式
+      errorMessage = `OpenAI API key appears to be invalid (${keyInfo.prefix}...). Please check OPENAI_API_KEY environment variable in Cloudflare Pages settings.`;
+    }
+    
+    const error = new Error(errorMessage);
     console.error('[V4-OpenAI Engine] ' + error.message);
     
     // 詳細なデバッグ情報はDEBUG_MODEまたは開発環境でのみ出力
     if (debugMode) {
-      const keyInfo = getSafeKeyInfo(openaiApiKey);
       console.error('[V4-OpenAI Engine] Validation details:', keyInfo);
     }
     
