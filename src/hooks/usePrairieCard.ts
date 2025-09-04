@@ -3,7 +3,7 @@ import { PrairieProfile } from '@/types';
 import { logger } from '@/lib/logger';
 import { apiClient } from '@/lib/api-client';
 import { getSampleProfile } from '@/lib/constants/sample-profiles';
-import { toast } from 'sonner';
+import { toast, type ExternalToast } from 'sonner';
 
 interface UsePrairieCardReturn {
   loading: boolean;
@@ -97,7 +97,7 @@ export function usePrairieCard(): UsePrairieCardReturn {
       setError(errorMessage);
       
       // Show error toast with actionable guidance
-      const toastOptions: any = {
+      const toastOptions: ExternalToast = {
         description: errorDescription
       };
       
@@ -105,7 +105,9 @@ export function usePrairieCard(): UsePrairieCardReturn {
       if (process.env.NODE_ENV === 'development') {
         toastOptions.action = {
           label: 'サンプルデータを使用',
-          onClick: () => useSampleData()
+          onClick: () => {
+            useSampleData();
+          }
         };
       }
       
@@ -116,6 +118,7 @@ export function usePrairieCard(): UsePrairieCardReturn {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const clearError = useCallback(() => {

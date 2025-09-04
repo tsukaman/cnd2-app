@@ -109,14 +109,26 @@ export default function PrairieCardInput({
   useEffect(() => {
     if (pastedUrl && !url) {
       setUrl(pastedUrl);
-      // Show confirmation before auto-loading
-      const shouldLoad = window.confirm(`Prairie Card URLを検出しました:\n${pastedUrl}\n\n読み込みますか？`);
+      // Show confirmation before auto-loading with URL sanitization
+      const sanitizedUrl = pastedUrl.length > 100 
+        ? pastedUrl.substring(0, 100) + '...' 
+        : pastedUrl;
+      const shouldLoad = window.confirm(`Prairie Card URLを検出しました:\n${sanitizedUrl}\n\n読み込みますか？`);
       if (shouldLoad) {
         handleFetchProfile(pastedUrl);
       }
       clearPastedUrl();
     }
   }, [pastedUrl, handleFetchProfile, clearPastedUrl, url]);
+
+  // Cleanup on unmount - ensure QR scanner is stopped
+  useEffect(() => {
+    return () => {
+      if (qrScanning) {
+        stopQR();
+      }
+    };
+  }, [qrScanning, stopQR]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
