@@ -18,12 +18,15 @@ export async function onRequestPost({ request, env }) {
   const origin = request.headers.get('origin');
   const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
-  // デバッグ: 環境変数の初期状態を確認
-  console.log('[Diagnosis API] Environment Debug:');
-  console.log('[Diagnosis API] - env exists:', !!env);
-  console.log('[Diagnosis API] - env type:', typeof env);
-  console.log('[Diagnosis API] - env.OPENAI_API_KEY exists:', !!env?.OPENAI_API_KEY);
-  console.log('[Diagnosis API] - Available env keys:', env ? Object.keys(env).filter(k => !k.includes('SECRET') && !k.includes('PASSWORD')).slice(0, 10).join(', ') : 'N/A');
+  // デバッグ: 環境変数の初期状態を確認（DEBUG_MODEまたは開発環境でのみ出力）
+  const debugMode = env?.DEBUG_MODE === 'true' || env?.NODE_ENV === 'development';
+  if (debugMode) {
+    console.log('[Diagnosis API] Environment Debug:');
+    console.log('[Diagnosis API] - env exists:', !!env);
+    console.log('[Diagnosis API] - env type:', typeof env);
+    console.log('[Diagnosis API] - env.OPENAI_API_KEY exists:', !!env?.OPENAI_API_KEY);
+    console.log('[Diagnosis API] - Available env keys:', env ? Object.keys(env).filter(k => !k.includes('SECRET') && !k.includes('PASSWORD')).slice(0, 10).join(', ') : 'N/A');
+  }
   
   return await logRequest(request, env, null, async () => {
     try {
