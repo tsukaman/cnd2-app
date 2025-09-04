@@ -73,11 +73,12 @@ export function getFilteredEnvKeys(env, limit = 10) {
 
 // APIキー情報の安全な取得
 export function getSafeKeyInfo(apiKey) {
+  const isValid = apiKey && apiKey.length > 20 && apiKey.startsWith('sk-');
   return {
     exists: !!apiKey,
     format: isValid ? 'valid' : 'invalid',
     length: apiKey?.length || 0,
-    startsWithSk: apiKey?.startsWith('sk-'),
+    startsWithSk: apiKey?.startsWith('sk-') ?? false,
     hasWhitespace: apiKey !== apiKey?.trim()
   };
 }
