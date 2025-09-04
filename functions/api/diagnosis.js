@@ -19,11 +19,23 @@ export async function onRequestPost({ request, env }) {
   const origin = request.headers.get('origin');
   const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
-  // デバッグ: 環境変数の初期状態を確認（DEBUG_MODEまたは開発環境でのみ出力）
+  // 常に環境変数の初期状態を確認（エラー診断用）
   const debugMode = isDebugMode(env);
+  const filteredKeys = getFilteredEnvKeys(env);
+  
+  // エラー診断のため、console.errorで常に出力
+  console.error('[Diagnosis API] === REQUEST START ===');
+  console.error('[Diagnosis API] Environment status:', {
+    envExists: !!env,
+    envType: typeof env,
+    openaiKeyExists: !!env?.OPENAI_API_KEY,
+    openaiKeyLength: env?.OPENAI_API_KEY ? env.OPENAI_API_KEY.length : 0,
+    availableKeys: filteredKeys.length > 0 ? filteredKeys.join(', ') : 'No environment variables',
+    debugMode: debugMode
+  });
+  
   if (debugMode) {
-    const filteredKeys = getFilteredEnvKeys(env);
-    logger.debug('[Diagnosis API] Environment Debug:', {
+    logger.debug('[Diagnosis API] Detailed Environment Debug:', {
       envExists: !!env,
       envType: typeof env,
       openaiKeyExists: !!env?.OPENAI_API_KEY,

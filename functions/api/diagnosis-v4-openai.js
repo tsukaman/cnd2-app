@@ -173,7 +173,21 @@ const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは古今東西のあらゆる�
  */
 export async function generateFortuneDiagnosis(profiles, mode, env) {
   const logger = env?.logger || console;
-  const debugMode = env?.DEBUG_MODE === 'true';
+  const debugMode = isDebugMode(env);
+  
+  // 常に環境変数の状態をログ出力（エラー診断用）
+  const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
+  const filteredKeys = getFilteredEnvKeys(env);
+  
+  console.error('[V4-OpenAI Engine] === DIAGNOSIS START ===');
+  console.error('[V4-OpenAI Engine] Environment check:', {
+    hasEnv: !!env,
+    hasOpenAIKey: !!env?.OPENAI_API_KEY,
+    keyPrefix: keyInfo.prefix,
+    keyLength: keyInfo.length,
+    availableEnvKeys: filteredKeys.length > 0 ? filteredKeys.join(', ') : 'No environment variables',
+    debugMode: debugMode
+  });
   
   if (debugMode) {
     logger.log('[DEBUG] V4-OpenAI Engine - Starting diagnosis with profiles:', JSON.stringify(profiles.map(p => p.basic?.name)));
