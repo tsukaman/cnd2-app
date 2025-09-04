@@ -175,22 +175,22 @@ export async function generateFortuneDiagnosis(profiles, mode, env) {
   const logger = env?.logger || console;
   const debugMode = isDebugMode(env);
   
-  // 常に環境変数の状態をログ出力（エラー診断用）
-  const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
-  const filteredKeys = getFilteredEnvKeys(env);
-  
-  console.error('[V4-OpenAI Engine] === DIAGNOSIS START ===');
-  console.error('[V4-OpenAI Engine] Environment check:', {
-    hasEnv: !!env,
-    hasOpenAIKey: !!env?.OPENAI_API_KEY,
-    keyPrefix: keyInfo.prefix,
-    keyLength: keyInfo.length,
-    availableEnvKeys: filteredKeys.length > 0 ? filteredKeys.join(', ') : 'No environment variables',
-    debugMode: debugMode
-  });
-  
-  if (debugMode) {
-    logger.log('[DEBUG] V4-OpenAI Engine - Starting diagnosis with profiles:', JSON.stringify(profiles.map(p => p.basic?.name)));
+  // デバッグモードまたはAPIキー未設定時のみログ出力
+  if (debugMode || !env?.OPENAI_API_KEY) {
+    const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
+    
+    console.error('[V4-OpenAI Engine] === DIAGNOSIS START ===');
+    console.error('[V4-OpenAI Engine] Environment check:', {
+      keyStatus: env?.OPENAI_API_KEY ? 'configured' : 'missing',
+      keyPrefix: keyInfo.prefix,  // 安全な接頭辞のみ（sk-xxx形式）
+      debugMode: debugMode
+    });
+    
+    if (debugMode) {
+      const filteredKeys = getFilteredEnvKeys(env);
+      logger.log('[DEBUG] V4-OpenAI Engine - Starting diagnosis with profiles:', JSON.stringify(profiles.map(p => p.basic?.name)));
+      logger.log('[DEBUG] Available env keys:', filteredKeys.join(', '));
+    }
   }
   
   // OpenAI APIキーの存在を確認してaiPoweredフラグを返す
@@ -246,19 +246,12 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   const debugMode = isDebugMode(env);
   const openaiApiKey = env?.OPENAI_API_KEY;
   
-  // デバッグ: 環境変数の状態を詳細にログ出力（DEBUG_MODEまたは開発環境でのみ）
+  // デバッグモード時のみ詳細ログ（既に上位関数でログ出力済みなので最小限に）
   if (debugMode) {
-    const keyInfo = getSafeKeyInfo(openaiApiKey);
-    const filteredKeys = getFilteredEnvKeys(env);
-    
-    console.log('[V4-OpenAI Engine] ========== DETAILED ENVIRONMENT DEBUG ==========');
-    console.log('[V4-OpenAI Engine] Environment check:', {
-      envExists: !!env,
-      envType: typeof env,
-      availableKeys: filteredKeys.join(', '),
-      keyInfo: keyInfo
+    console.log('[V4-OpenAI Engine] Starting duo diagnosis for:', {
+      person1: profile1.basic?.name || profile1.name,
+      person2: profile2.basic?.name || profile2.name
     });
-    console.log('[V4-OpenAI Engine] ==============================================');
   }
   
   // APIキーの妥当性を検証
