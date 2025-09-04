@@ -8,7 +8,7 @@ describe('Prairie Card Parser', () => {
   describe('validatePrairieCardUrl', () => {
     it('should accept valid Prairie Card URLs', () => {
       expect(validatePrairieCardUrl('https://my.prairie.cards/u/tsukaman')).toBe(true);
-      expect(validatePrairieCardUrl('https://my.prairie.cards/u/user123')).toBe(true);
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/soudai1007')).toBe(true);
       expect(validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043')).toBe(true);
     });
 

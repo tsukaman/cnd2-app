@@ -7,47 +7,59 @@ import {
 describe('Prairie Card URL Validator', () => {
   describe('validatePrairieCardUrl', () => {
     describe('有効なURL', () => {
-      it('prairie.cardsのHTTPS URLを受け入れる', () => {
-        const result = validatePrairieCardUrl('https://prairie.cards/user123');
+      it('my.prairie.cardsの/u/{username}形式のURLを受け入れる', () => {
+        const result = validatePrairieCardUrl('https://my.prairie.cards/u/tsukaman');
         expect(result.isValid).toBe(true);
         expect(result.error).toBeUndefined();
-        expect(result.normalizedUrl).toBe('https://prairie.cards/user123');
+        expect(result.normalizedUrl).toBe('https://my.prairie.cards/u/tsukaman');
       });
 
-      it('my.prairie.cardsのHTTPS URLを受け入れる', () => {
-        const result = validatePrairieCardUrl('https://my.prairie.cards/u/username');
-        expect(result.isValid).toBe(true);
-        expect(result.error).toBeUndefined();
-      });
-
-      it('サブドメイン付きのprairie.cardsを受け入れる', () => {
-        const result = validatePrairieCardUrl('https://test.prairie.cards/profile');
+      it('my.prairie.cardsの/cards/{uuid}形式のURLを受け入れる', () => {
+        const result = validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043');
         expect(result.isValid).toBe(true);
         expect(result.error).toBeUndefined();
       });
 
       it('末尾のスラッシュを正規化する', () => {
-        const result = validatePrairieCardUrl('https://prairie.cards/user/');
+        const result = validatePrairieCardUrl('https://my.prairie.cards/u/tsukaman/');
         expect(result.isValid).toBe(true);
-        expect(result.normalizedUrl).toBe('https://prairie.cards/user');
+        expect(result.normalizedUrl).toBe('https://my.prairie.cards/u/tsukaman');
       });
     });
 
     describe('無効なURL', () => {
+      it('prairie.cardsドメインを拒否する', () => {
+        const result = validatePrairieCardUrl('https://prairie.cards/u/tsukaman');
+        expect(result.isValid).toBe(false);
+        expect(result.error).toContain('my.prairie.cards ドメインのみ対応');
+      });
+
+      it('サブドメインを拒否する', () => {
+        const result = validatePrairieCardUrl('https://subdomain.prairie.cards/u/tsukaman');
+        expect(result.isValid).toBe(false);
+        expect(result.error).toContain('my.prairie.cards ドメインのみ対応');
+      });
+
+      it('不正なパスパターンを拒否する', () => {
+        const result = validatePrairieCardUrl('https://my.prairie.cards/profile');
+        expect(result.isValid).toBe(false);
+        expect(result.error).toContain('/u/{username} または /cards/{uuid} の形式');
+      });
+
       it('HTTPプロトコルを拒否する', () => {
-        const result = validatePrairieCardUrl('http://prairie.cards/user');
+        const result = validatePrairieCardUrl('http://my.prairie.cards/u/tsukaman');
         expect(result.isValid).toBe(false);
         expect(result.error).toContain('HTTPSプロトコルのみ');
       });
 
       it('FTPプロトコルを拒否する', () => {
-        const result = validatePrairieCardUrl('ftp://prairie.cards/user');
+        const result = validatePrairieCardUrl('ftp://my.prairie.cards/u/tsukaman');
         expect(result.isValid).toBe(false);
         expect(result.error).toContain('HTTPSプロトコルのみ');
       });
 
       it('非標準ポートを拒否する', () => {
-        const result = validatePrairieCardUrl('https://prairie.cards:8080/user');
+        const result = validatePrairieCardUrl('https://my.prairie.cards:8080/u/tsukaman');
         expect(result.isValid).toBe(false);
         expect(result.error).toContain('標準ポート以外');
       });
@@ -55,7 +67,7 @@ describe('Prairie Card URL Validator', () => {
       it('無関係なドメインを拒否する', () => {
         const result = validatePrairieCardUrl('https://example.com/user');
         expect(result.isValid).toBe(false);
-        expect(result.error).toContain('Prairie Cardの公式ドメインではありません');
+        expect(result.error).toContain('my.prairie.cards ドメインのみ対応');
       });
 
       it('prairie.cardsに似た偽ドメインを拒否する', () => {
