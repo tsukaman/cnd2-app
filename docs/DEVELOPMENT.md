@@ -188,11 +188,32 @@ npm test -- --watch
 # カバレージレポートを生成
 npm test -- --coverage
 
+# 特定のファイルのテストを実行
+npm test src/hooks/__tests__/usePrairieCard.test.ts
+
 # 特定のファイルのみテスト
 npm test -- src/lib/__tests__/api-middleware.test.ts
 ```
 
 ### テストの書き方
+
+#### モバイルアクセシビリティテスト
+
+```typescript
+// タッチターゲットサイズのテスト例
+describe('Mobile Accessibility', () => {
+  it('ensures minimum touch target size', () => {
+    render(<PrairieCardInput />);
+    const buttons = screen.getAllByRole('button');
+    
+    buttons.forEach(button => {
+      const styles = window.getComputedStyle(button);
+      const height = parseInt(styles.minHeight);
+      expect(height).toBeGreaterThanOrEqual(44); // iOS minimum
+    });
+  });
+});
+```
 
 #### コンポーネントテスト
 
@@ -360,6 +381,24 @@ npm run build
 # ローカルで本番環境を確認
 npm start
 ```
+
+## アクセシビリティガイドライン
+
+### タッチターゲット
+- **最小サイズ**: 44x44px (iOS) / 48x48px (Android)
+- **実装例**: `min-h-[44px] sm:min-h-0`
+
+### ARIA属性
+- **必須属性**:
+  - `aria-label`: ボタンやリンクに説明を追加
+  - `aria-live`: 動的コンテンツの更新を通知
+  - `aria-describedby`: 追加説明へのリンク
+  - `role`: 要素の役割を明示
+
+### スクリーンリーダー対応
+- 装飾的なアイコンには`aria-hidden="true"`を設定
+- 重要な情報はテキストでも提供
+- フォーカス順序が論理的になるよう配慮
 
 ### デプロイ
 
