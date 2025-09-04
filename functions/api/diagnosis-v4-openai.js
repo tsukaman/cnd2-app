@@ -181,19 +181,19 @@ export async function generateFortuneDiagnosis(profiles, mode, env) {
   }
   
   // デバッグモード時のみ詳細情報を出力
-  if (debugMode && env?.OPENAI_API_KEY) {
-    const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
-    const filteredKeys = getFilteredEnvKeys(env);
-    
-    console.log('[V4-OpenAI Engine] === DEBUG MODE ===');
-    console.log('[V4-OpenAI Engine] Environment check:', {
-      keyStatus: 'configured',
-      keyFormat: keyInfo.format,  // 'valid' or 'invalid'
-      startsWithSk: keyInfo.startsWithSk
-    });
-    
-    logger.log('[DEBUG] Starting diagnosis with profiles:', profiles.map(p => p.basic?.name || p.name));
-    logger.log('[DEBUG] Available env keys:', filteredKeys.length);
+  if (debugMode) {
+    if (env?.OPENAI_API_KEY) {
+      console.log('[V4-OpenAI Engine] === DEBUG MODE ===');
+      console.log('[V4-OpenAI Engine] Environment check: API key configured');
+      
+      // プロファイル情報のみ出力（APIキー情報は出力しない）
+      logger.log('[DEBUG] Starting diagnosis with profiles:', profiles.map(p => p.basic?.name || p.name));
+    } else {
+      // APIキー未設定時も状況を出力
+      console.log('[V4-OpenAI Engine] === DEBUG MODE (No API Key) ===');
+      const filteredKeys = getFilteredEnvKeys(env);
+      console.log('[V4-OpenAI Engine] Available env keys count:', filteredKeys.length);
+    }
   }
   
   // OpenAI APIキーの存在を確認してaiPoweredフラグを返す

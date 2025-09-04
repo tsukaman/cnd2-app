@@ -22,29 +22,38 @@ export async function onRequestPost({ request, env }) {
   // デバッグモードの判定
   const debugMode = isDebugMode(env);
   
-  // APIキー未設定時は最小限の情報のみ出力
+  // APIキー未設定時のエラーと詳細デバッグ
   if (!env?.OPENAI_API_KEY) {
     console.error('[Diagnosis API] OpenAI API key is not configured');
-  }
-  
-  // デバッグモード時のみ詳細情報を出力
-  if (debugMode && env?.OPENAI_API_KEY) {
-    const filteredKeys = getFilteredEnvKeys(env);
-    const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
     
+    // APIキー未設定時でもデバッグモードなら環境情報を出力
+    if (debugMode) {
+      const filteredKeys = getFilteredEnvKeys(env);
+      console.error('[Diagnosis API] === DEBUG MODE (No API Key) ===');
+      console.error('[Diagnosis API] Environment debug:', {
+        keyStatus: 'missing',
+        envCount: Object.keys(env || {}).length,
+        availableEnvKeys: filteredKeys.slice(0, 5).join(', '),
+        hasKVNamespace: !!env?.DIAGNOSIS_KV
+      });
+    }
+  } else if (debugMode) {
+    // APIキーが設定されている場合のデバッグ情報（セキュリティを考慮）
     console.error('[Diagnosis API] === DEBUG MODE ===');
     console.error('[Diagnosis API] Environment status:', {
       keyStatus: 'configured',
-      keyFormat: keyInfo.format,  // 'valid' or 'invalid'
-      startsWithSk: keyInfo.startsWithSk,
       envCount: Object.keys(env || {}).length,
       hasRequiredVars: ['OPENAI_API_KEY', 'DIAGNOSIS_KV'].every(k => !!env?.[k])
     });
     
-    logger.debug('[Diagnosis API] Detailed Environment Debug:', {
-      availableKeys: filteredKeys.join(', '),
-      hasWhitespace: keyInfo.hasWhitespace
-    });
+    // 詳細な検証は開発環境のloggerでのみ（本番では出力されない）
+    if (logger.debug) {
+      const keyInfo = getSafeKeyInfo(env.OPENAI_API_KEY);
+      logger.debug('[Diagnosis API] Key validation:', {
+        format: keyInfo.format,
+        hasWhitespace: keyInfo.hasWhitespace
+      });
+    }
   }
   
   return await logRequest(request, env, null, async () => {
