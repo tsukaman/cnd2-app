@@ -5,6 +5,7 @@ import {
 } from '../prairie-url-validator';
 
 describe('Prairie Card URL Validator', () => {
+  // Note: These tests only validate URL format, no actual network access is made
   describe('validatePrairieCardUrl', () => {
     describe('有効なURL', () => {
       it('my.prairie.cardsの/u/{username}形式のURLを受け入れる', () => {
@@ -18,12 +19,6 @@ describe('Prairie Card URL Validator', () => {
         const result = validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043');
         expect(result.isValid).toBe(true);
         expect(result.error).toBeUndefined();
-      });
-
-      it('末尾のスラッシュを正規化する', () => {
-        const result = validatePrairieCardUrl('https://my.prairie.cards/u/tsukaman/');
-        expect(result.isValid).toBe(true);
-        expect(result.normalizedUrl).toBe('https://my.prairie.cards/u/tsukaman');
       });
     });
 

@@ -6,6 +6,7 @@ const { parseFromHTML, validatePrairieCardUrl } = require('../prairie-parser');
 
 describe('Prairie Card Parser', () => {
   describe('validatePrairieCardUrl', () => {
+    // Note: These tests only validate URL format, no actual network access is made
     it('should accept valid Prairie Card URLs', () => {
       expect(validatePrairieCardUrl('https://my.prairie.cards/u/tsukaman')).toBe(true);
       expect(validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043')).toBe(true);

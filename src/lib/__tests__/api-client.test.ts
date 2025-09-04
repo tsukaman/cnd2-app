@@ -34,14 +34,14 @@ describe('API Client', () => {
           json: async () => mockResponse,
         });
 
-        const result = await apiClient.prairie.fetch('https://prairie.cards/test');
+        const result = await apiClient.prairie.fetch('https://my.prairie.cards/u/testuser');
 
         expect(global.fetch).toHaveBeenCalledWith(
           'https://test-api.example.com/api/prairie',
           expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: 'https://prairie.cards/test' }),
+            body: JSON.stringify({ url: 'https://my.prairie.cards/u/testuser' }),
           })
         );
         // API client now returns data || result for wrapped responses
@@ -57,7 +57,7 @@ describe('API Client', () => {
           json: async () => ({ error: { message: 'Not found' } }),
         });
 
-        await expect(apiClient.prairie.fetch('https://prairie.cards/test'))
+        await expect(apiClient.prairie.fetch('https://example.com/error-test'))
           .rejects.toThrow('Not found');
       });
 
@@ -70,7 +70,7 @@ describe('API Client', () => {
           json: async () => { throw new Error('Parse error'); },
         });
 
-        await expect(apiClient.prairie.fetch('https://prairie.cards/test'))
+        await expect(apiClient.prairie.fetch('https://example.com/error-test'))
           .rejects.toThrow('Prairie Card の取得に失敗しました');
       });
     });

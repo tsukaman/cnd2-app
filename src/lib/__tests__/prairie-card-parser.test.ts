@@ -224,10 +224,10 @@ describe('PrairieCardParser', () => {
         text: async () => validHTML,
       });
 
-      const result = await parser.parseFromURL('https://prairie.cards/testuser');
+      const result = await parser.parseFromURL('https://example.com/testuser');
       
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://prairie.cards/testuser',
+        'https://example.com/testuser',
         expect.objectContaining({
           headers: expect.objectContaining({
             'User-Agent': 'CND2/1.0',
@@ -245,14 +245,14 @@ describe('PrairieCardParser', () => {
         status: 404,
       });
 
-      await expect(parser.parseFromURL('https://prairie.cards/notfound'))
+      await expect(parser.parseFromURL('https://example.com/notfound'))
         .rejects.toThrow('Failed to fetch Prairie Card: 404');
     });
 
     it('ネットワークエラーを処理する', async () => {
       (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(parser.parseFromURL('https://prairie.cards/error'))
+      await expect(parser.parseFromURL('https://example.jp/error'))
         .rejects.toThrow('Network error');
     });
   });
