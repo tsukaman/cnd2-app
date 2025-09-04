@@ -58,7 +58,11 @@ export async function onRequestGet({ request, env }) {
             }
           );
         } catch (parseError) {
-          console.error('Failed to parse KV data:', parseError, { id, dataLength: data?.length });
+          console.error('Failed to parse KV data:', parseError, { 
+            id, 
+            dataLength: data?.length, 
+            dataPreview: data?.substring(0, 100) 
+          });
           // 破損データの場合は404として扱う
           return new Response(
             JSON.stringify({ 
@@ -118,7 +122,7 @@ export async function onRequestPost({ request, env }) {
   try {
     const result = await request.json();
     
-    if (!result || !result.id) {
+    if (!result || typeof result !== 'object' || !result.id || !result.result) {
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -209,7 +213,7 @@ function getCorsHeaders(requestOrigin) {
     'http://localhost:3000',
   ];
   
-  const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
+  const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : null;
   
   return {
     'Access-Control-Allow-Origin': origin,

@@ -52,9 +52,9 @@
 - **Validation**: Zod 3.25
 
 ### バックエンド
-- **Dual API Implementation**: 
-  - Next.js API Routes (src/app/api/*) for development（一部未実装）
-  - Cloudflare Pages Functions (functions/*) for production
+- **API Implementation**: 
+  - Cloudflare Pages Functions (functions/*) - 本番環境のみ
+  - 開発環境ではLocalStorageのみを使用（KV非対応）
   - **AI診断エンジン**: OpenAI GPT-4o-mini統合（v1.5.0）
   - **結果共有**: クエリパラメータ形式 `/duo/results?id=[id]`（静的エクスポート対応）
 - **Runtime**: Edge Runtime compatible
@@ -173,38 +173,33 @@ npm start
 
 ## 🚧 APIエンドポイント
 
-### Next.js API Routes (Development)
-Located in `src/app/api/*` - Used for local development
+### Cloudflare Pages Functions (Production Only)
+Located in `functions/*` - Used for production deployment on Cloudflare Pages
 
-### `/api/diagnosis` - 診断実行
+#### `/api/diagnosis` - 診断実行
 - **Method**: POST
 - **Body**: `{ profiles: PrairieProfile[], mode: 'duo' | 'group' }`
-- **Response**: 診断結果（OpenAI GPT-4o-mini powered with fallback）
+- **Response**: 診断結果（OpenAI GPT-4o-mini powered）
 - **Features**: 
   - 10 requests/minute rate limiting per IP
-  - 10秒APIタイムアウト
-  - Edge Runtime compatible
+  - Edge Runtime optimized
   - HTML sanitization & XSS protection
 
-### `/api/prairie` - Prairie Card解析
+#### `/api/prairie` - Prairie Card解析
 - **Method**: POST  
 - **Body**: `{ url: string } | { html: string }`
 - **Response**: サニタイズされたプロフィール情報
 - **Features**: 
   - Edge Runtime対応高速パーサー
-  - DOMPurify HTML sanitization
+  - HTML sanitization
   - キャッシュ機構付き
 
-### `/api/results/[id]` - 結果取得/削除
-- **Methods**: GET, DELETE
-- **Response**: 保存された診断結果
-- **Features**: KVストレージから取得（7日間自動削除）
+#### `/api/results` - 結果の保存/取得
+- **Methods**: GET (`?id=xxx`), POST
+- **Response**: 診断結果
+- **Features**: Cloudflare KVストレージ（7日間TTL）
 
-### Cloudflare Pages Functions (Production)
-Located in `functions/*` - Used for production deployment on Cloudflare Pages
-- **Runtime**: Cloudflare Workers Runtime
-- **KV Storage**: Cloudflare Workers KV bindings
-- **Edge Deployment**: Global edge network deployment
+**Note**: 開発環境ではLocalStorageのみを使用し、KVストレージへのアクセスは不可
 
 ## 🔧 デバッグモード
 
@@ -430,7 +425,7 @@ npm install
 cp .env.example .env.local
 # .env.localに環境変数を設定
 
-# 開発サーバー起動（Next.js API Routes使用）
+# 開発サーバー起動（LocalStorageのみ、KV非対応）
 npm run dev
 ```
 
@@ -530,7 +525,7 @@ docker run -p 3000:3000 cnd2-app
 - **テスト**: 全460テスト（419合格、41スキップ） ✅
 - **ビルド**: 静的エクスポート成功 ✅
 - **API**: 
-  - Next.js API Routes (development) ✅
+  - Cloudflare Functions (production only) ✅
   - Cloudflare Pages Functions (production) ✅
 - **AI Integration**: OpenAI GPT-4o-mini診断 ✅
 - **セキュリティ**: 

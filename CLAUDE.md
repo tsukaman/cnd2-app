@@ -465,6 +465,23 @@ try {
 
 ### 2025-09-04の変更（最新）
 
+#### PR #179 - Cloudflare Pagesデプロイエラーの修正 🚨
+1. **問題**: Next.js静的エクスポートがApp Router APIルートをサポートしない
+   - PR #178で追加した`src/app/api/results/route.ts`が原因でビルド失敗
+   - エラー: `export const dynamic = "force-static" not configured`
+
+2. **修正内容**:
+   - APIルートファイル（`src/app/api/results/`）を削除
+   - `kv-storage.ts`を修正して環境別処理を明確化
+   - 開発環境: LocalStorageのみ使用
+   - 本番環境: Cloudflare Functions APIを利用
+
+3. **結果**:
+   - Cloudflare Pagesデプロイ成功
+   - 開発と本番で異なるストレージ戦略を実装
+
+### 2025-09-04の変更（その2）
+
 #### PR #171 - デバッグログを条件付き出力に変更 🔧
 1. **背景**: PR #170のデバッグログを本番環境向けに最適化
    - Claude Review評価: 4.0/5.0で改善提案を受ける
@@ -1060,16 +1077,13 @@ try {
 ## 📝 今後の改善項目（ToDo）
 
 ### 結果共有機能の改善（高優先度）
-- [x] **Next.js App Router用APIエンドポイント作成** ✅ 2025-09-04完了
-  - `src/app/api/results/route.ts` を作成
-  - Cloudflare Functions版と同等の機能実装
-  - 開発環境での404エラーを解消
 - [x] **KV保存処理の共通化** ✅ 2025-09-04完了
   - duo/page.tsx と group/page.tsx の重複コードをヘルパー関数に抽出
   - `/lib/utils/kv-storage.ts` として実装
-- [ ] **環境別処理の最適化**
-  - 開発環境: LocalStorage優先、API呼び出し最小化
-  - 本番環境: KVストレージ連携を積極活用
+- [x] **環境別処理の最適化** ✅ 2025-09-04完了
+  - 開発環境: LocalStorageのみ使用（KV非対応）
+  - 本番環境: LocalStorage + Cloudflare KV（Cloudflare Functions経由）
+  - **注意**: Next.js静的エクスポートの制限によりApp Router APIルートは使用不可
 
 ### フォールバック機能削除（最高優先度）
 - [ ] **フェーズ1: 安定性確認**（v1.5.0、2週間）

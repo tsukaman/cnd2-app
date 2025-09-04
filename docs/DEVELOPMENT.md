@@ -240,22 +240,25 @@ describe('ShareButton', () => {
 });
 ```
 
-#### APIテスト
+#### APIテスト（本番環境のみ）
 
-```typescript
-import { NextRequest } from 'next/server';
-import { POST } from '@/app/api/prairie/route';
+**注意**: Next.js静的エクスポート制限により、App Router APIルートは使用できません。APIはCloudflare Pages Functionsでのみ動作します。
 
-describe('Prairie API', () => {
+```javascript
+// functions/api/prairie.test.js
+import handler from '../functions/api/prairie';
+
+describe('Prairie API (Cloudflare Functions)', () => {
   it('fetches profile successfully', async () => {
-    const request = new NextRequest('http://localhost:3000/api/prairie', {
+    const request = new Request('http://localhost:3000/api/prairie', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: 'https://prairie-card.cloudnativedays.jp/u/test'
       }),
     });
 
-    const response = await POST(request);
+    const response = await handler.onRequest({ request, env: {} });
     const data = await response.json();
 
     expect(data.success).toBe(true);

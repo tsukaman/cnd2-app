@@ -84,6 +84,8 @@ describe('kv-storage', () => {
     });
 
     it('should save to KV storage with successful response', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
@@ -100,9 +102,13 @@ describe('kv-storage', () => {
         body: JSON.stringify({ id: mockResult.id, result: mockResult }),
       });
       expect(result).toEqual({ success: true, kvSaved: true });
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
     it('should retry on KV storage failure', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
       (global.fetch as jest.Mock)
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({
@@ -118,9 +124,13 @@ describe('kv-storage', () => {
 
       expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(result).toEqual({ success: true, kvSaved: true });
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
     it('should return error after all retries fail', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
       (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       const result = await saveDiagnosisResult(mockResult, {
@@ -133,12 +143,13 @@ describe('kv-storage', () => {
       expect(result.success).toBe(true); // LocalStorage might succeed
       expect(result.kvSaved).toBe(false);
       expect(result.error).toBe('Network error');
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
-    it('should skip KV storage in development without NEXT_PUBLIC_ENABLE_KV_IN_DEV', async () => {
+    it('should skip KV storage in development', async () => {
       const originalEnv = process.env.NODE_ENV;
       (process.env as any).NODE_ENV = 'development';
-      delete process.env.NEXT_PUBLIC_ENABLE_KV_IN_DEV;
 
       const result = await saveDiagnosisResult(mockResult, {
         saveToKV: true,
@@ -150,10 +161,9 @@ describe('kv-storage', () => {
       (process.env as any).NODE_ENV = originalEnv;
     });
 
-    it('should save to KV in development with NEXT_PUBLIC_ENABLE_KV_IN_DEV', async () => {
+    it('should save to KV in production', async () => {
       const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'development';
-      process.env.NEXT_PUBLIC_ENABLE_KV_IN_DEV = 'true';
+      (process.env as any).NODE_ENV = 'production';
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
@@ -168,7 +178,6 @@ describe('kv-storage', () => {
       expect(result).toEqual({ success: true, kvSaved: true });
 
       (process.env as any).NODE_ENV = originalEnv;
-      delete process.env.NEXT_PUBLIC_ENABLE_KV_IN_DEV;
     });
 
     it('should handle localStorage errors gracefully', async () => {
@@ -189,6 +198,8 @@ describe('kv-storage', () => {
     });
 
     it('should handle HTTP error responses', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -205,9 +216,13 @@ describe('kv-storage', () => {
       expect(result.success).toBe(true);
       expect(result.kvSaved).toBe(false);
       expect(result.error).toContain('Server error');
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
     it('should use exponential backoff for retries', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
       let callCount = 0;
       const startTime = Date.now();
       
@@ -234,6 +249,8 @@ describe('kv-storage', () => {
       expect(result.kvSaved).toBe(true);
       // First retry after 50ms, second after 100ms (50*2)
       expect(elapsedTime).toBeGreaterThanOrEqual(150);
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
   });
 
@@ -250,7 +267,10 @@ describe('kv-storage', () => {
       expect(result).toEqual(mockResult);
     });
 
-    it('should load from KV when localStorage is empty', async () => {
+    it('should load from KV when localStorage is empty in production', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
+      
       localStorageMock.getItem.mockReturnValueOnce(null);
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
@@ -270,9 +290,14 @@ describe('kv-storage', () => {
         })
       );
       expect(result).toEqual(mockResult);
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
-    it('should cache KV result in localStorage', async () => {
+    it('should cache KV result in localStorage in production', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
+      
       localStorageMock.getItem.mockReturnValueOnce(null);
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
@@ -288,6 +313,8 @@ describe('kv-storage', () => {
         'diagnosis-result-test-123',
         JSON.stringify(mockResult)
       );
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
     it('should return null when result not found', async () => {
@@ -320,6 +347,9 @@ describe('kv-storage', () => {
     });
 
     it('should handle KV fetch errors gracefully', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
+      
       localStorageMock.getItem.mockReturnValueOnce(null);
       (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
@@ -330,6 +360,8 @@ describe('kv-storage', () => {
         expect.any(Error)
       );
       expect(result).toBeNull();
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
     it('should handle malformed JSON in localStorage', async () => {
@@ -348,6 +380,9 @@ describe('kv-storage', () => {
     });
 
     it('should skip localStorage when disabled', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = 'production';
+      
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ result: mockResult }),
@@ -360,6 +395,8 @@ describe('kv-storage', () => {
 
       expect(localStorageMock.getItem).not.toHaveBeenCalled();
       expect(result).toEqual(mockResult);
+      
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
     it('should skip KV when disabled', async () => {
