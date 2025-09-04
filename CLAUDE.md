@@ -462,6 +462,7 @@ try {
 
 ## 📚 デバッグ関連ドキュメント
 - [OpenAI API デバッグ実装](docs/2025-09-04-openai-debug-work.md) - DEBUG_MODE環境変数による条件付きログ出力の実装詳細
+- [診断エラー調査ログ](docs/2025-09-05-diagnosis-error-investigation.md) - Cloudflare環境での診断エラー調査と解決
 
 ### 2025-09-04の変更（最新）
 
@@ -599,6 +600,33 @@ try {
    - Claude Review評価: 9.0/10 ⭐⭐⭐⭐⭐
 
 ### 2025-09-05の変更（最新）
+
+#### PR #186 - 診断APIエラーの根本原因を修正 🚨
+1. **問題**: TypeError: generateAstrologicalDiagnosis is not a function
+   - `/functions/api/diagnosis/` ディレクトリに古いコードが残存
+   - Cloudflare Pages がディレクトリを優先するため、正しい diagnosis.js が使われず
+
+2. **解決**:
+   - 重複した古い diagnosis ディレクトリを削除（768行のコード削除）
+   - 正しい `/functions/api/diagnosis.js` が使用されるように
+   - Claude Review: ⭐⭐⭐⭐⭐ (5.0/5.0) - 優秀な修正
+
+3. **教訓**:
+   - Cloudflare Pages のルーティング優先順位を理解することの重要性
+   - ディレクトリ構造の整理とクリーンアップの必要性
+   - 古いコードが予期しない動作を引き起こす可能性
+
+#### PR #184 & #187 - デバッグエンドポイントの追加と削除
+1. **デバッグプロセス**:
+   - 環境変数確認用の一時的なエンドポイントを追加（PR #184）
+   - セキュリティを考慮した実装（認証ヘッダー必須）
+   - 問題解決後、速やかに削除（PR #187）
+   - Claude Review: ⭐⭐⭐⭐⭐ (5.0/5.0) - 適切なセキュリティ対策
+
+2. **セキュリティ改善**:
+   - 全環境で認証必須化
+   - APIキー情報の最小化
+   - 包括的な環境変数フィルタリング
 
 #### PR #183 - Prairie Card取得の502エラー修正とURL検証強化 🚨
 1. **問題**: Prairie Card取得で502 Bad Gatewayエラーが頻発
