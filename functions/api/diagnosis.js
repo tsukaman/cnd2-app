@@ -5,7 +5,7 @@ import { createLogger, logRequest } from '../utils/logger.js';
 import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { generateFortuneDiagnosis } from './diagnosis-v4-openai.js';
-import { isDebugMode, getFilteredEnvKeys } from '../utils/debug-helpers.js';
+import { isDebugMode, getFilteredEnvKeys, getSafeKeyInfo } from '../utils/debug-helpers.js';
 
 /**
  * Handle POST requests to generate diagnosis
@@ -22,27 +22,28 @@ export async function onRequestPost({ request, env }) {
   // デバッグモードの判定
   const debugMode = isDebugMode(env);
   
-  // デバッグモードまたはAPIキー未設定時のみログ出力
-  if (debugMode || !env?.OPENAI_API_KEY) {
+  // APIキー未設定時は最小限の情報のみ出力
+  if (!env?.OPENAI_API_KEY) {
+    console.error('[Diagnosis API] OpenAI API key is not configured');
+  }
+  
+  // デバッグモード時のみ詳細情報を出力
+  if (debugMode) {
     const filteredKeys = getFilteredEnvKeys(env);
     const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
     
-    console.error('[Diagnosis API] === REQUEST START ===');
+    console.error('[Diagnosis API] === DEBUG MODE ===');
     console.error('[Diagnosis API] Environment status:', {
       keyStatus: env?.OPENAI_API_KEY ? 'configured' : 'missing',
-      keyPrefix: keyInfo.prefix,  // 安全な接頭辞のみ
+      keyPrefix: keyInfo.prefix,  // 安全な接頭辞のみ（sk-xxx形式）
       envCount: Object.keys(env || {}).length,
-      hasRequiredVars: ['OPENAI_API_KEY', 'DIAGNOSIS_KV'].map(k => k + ': ' + (env?.[k] ? 'yes' : 'no')).join(', '),
-      debugMode: debugMode
+      hasRequiredVars: ['OPENAI_API_KEY', 'DIAGNOSIS_KV'].map(k => `${k}: ${env?.[k] ? 'yes' : 'no'}`).join(', ')
     });
     
-    // デバッグモード時のみ詳細情報
-    if (debugMode) {
-      logger.debug('[Diagnosis API] Detailed Environment Debug:', {
-        availableKeys: filteredKeys.join(', '),
-        keyInfo: keyInfo
-      });
-    }
+    logger.debug('[Diagnosis API] Detailed Environment Debug:', {
+      availableKeys: filteredKeys.join(', '),
+      keyInfo: keyInfo
+    });
   }
   
   return await logRequest(request, env, null, async () => {

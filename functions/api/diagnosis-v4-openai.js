@@ -175,22 +175,24 @@ export async function generateFortuneDiagnosis(profiles, mode, env) {
   const logger = env?.logger || console;
   const debugMode = isDebugMode(env);
   
-  // デバッグモードまたはAPIキー未設定時のみログ出力
-  if (debugMode || !env?.OPENAI_API_KEY) {
+  // APIキー未設定時は最小限の情報のみ
+  if (!env?.OPENAI_API_KEY) {
+    console.error('[V4-OpenAI Engine] OpenAI API key is not configured');
+  }
+  
+  // デバッグモード時のみ詳細情報を出力
+  if (debugMode) {
     const keyInfo = getSafeKeyInfo(env?.OPENAI_API_KEY);
+    const filteredKeys = getFilteredEnvKeys(env);
     
-    console.error('[V4-OpenAI Engine] === DIAGNOSIS START ===');
-    console.error('[V4-OpenAI Engine] Environment check:', {
+    console.log('[V4-OpenAI Engine] === DEBUG MODE ===');
+    console.log('[V4-OpenAI Engine] Environment check:', {
       keyStatus: env?.OPENAI_API_KEY ? 'configured' : 'missing',
-      keyPrefix: keyInfo.prefix,  // 安全な接頭辞のみ（sk-xxx形式）
-      debugMode: debugMode
+      keyPrefix: keyInfo.prefix  // 安全な接頭辞のみ（sk-xxx形式）
     });
     
-    if (debugMode) {
-      const filteredKeys = getFilteredEnvKeys(env);
-      logger.log('[DEBUG] V4-OpenAI Engine - Starting diagnosis with profiles:', JSON.stringify(profiles.map(p => p.basic?.name)));
-      logger.log('[DEBUG] Available env keys:', filteredKeys.join(', '));
-    }
+    logger.log('[DEBUG] Starting diagnosis with profiles:', profiles.map(p => p.basic?.name || p.name));
+    logger.log('[DEBUG] Available env keys:', filteredKeys.length);
   }
   
   // OpenAI APIキーの存在を確認してaiPoweredフラグを返す
