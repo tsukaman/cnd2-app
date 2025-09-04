@@ -204,8 +204,11 @@ jobs:
 # アプリケーションの起動確認
 curl https://cnd2.cloudnativedays.jp
 
-# APIエンドポイントの確認
-curl https://cnd2.cloudnativedays.jp/api/health
+# Cloudflare Functions APIエンドポイントの確認（本番環境のみ）
+curl https://cnd2.cloudnativedays.jp/api/prairie \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://my.prairie.cards/u/alice"}'
 
 # セキュリティヘッダーの確認
 curl -I https://cnd2.cloudnativedays.jp

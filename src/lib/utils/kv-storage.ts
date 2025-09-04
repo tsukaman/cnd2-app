@@ -49,7 +49,18 @@ export async function saveDiagnosisResult(
   let lastError: Error | null = null;
   for (let i = 0; i < retryCount; i++) {
     try {
-      const response = await fetch('/api/results', {
+      // 本番環境ではCloudflare FunctionsのAPIエンドポイントを使用
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? '/api/results'  // Cloudflare Functionsが処理
+        : null;
+      
+      if (!apiUrl) {
+        // 開発環境ではKV保存をスキップ
+        logger.info('[KV Storage] Skipping KV save in development (no API endpoint)');
+        return { success: true, kvSaved: false };
+      }
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,8 +136,8 @@ export async function loadDiagnosisResult(
     }
   }
 
-  // KVストレージから取得を試みる
-  if (checkKV) {
+  // KVストレージから取得を試みる（本番環境のみ）
+  if (checkKV && process.env.NODE_ENV === 'production') {
     try {
       const response = await fetch(`/api/results?id=${id}`, {
         headers: {

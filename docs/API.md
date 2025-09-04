@@ -2,7 +2,11 @@
 
 ## 概要
 
-CND² APIはNext.js App Routerを使用したRESTful APIです。すべてのAPIエンドポイントには以下の共通機能が実装されています：
+CND² APIはCloudflare Pages Functionsを使用したRESTful APIです（本番環境のみ）。
+
+**重要**: Next.js 15の静的エクスポート（`output: 'export'`）制限により、Next.js App Router APIルートは使用できません。開発環境ではLocalStorageのみを使用し、本番環境でCloudflare Pages Functionsが動作します。
+
+すべてのAPIエンドポイントには以下の共通機能が実装されています：
 
 - **レート制限**: 10リクエスト/分 (IPアドレス別)
 - **エラーハンドリング**: 構造化されたエラーレスポンス
@@ -15,9 +19,8 @@ CND² APIはNext.js App Routerを使用したRESTful APIです。すべてのAPI
 
 ### ベースURL
 ```
-開発環境: http://localhost:3000/api
+開発環境: APIなし（LocalStorageのみ）
 本番環境: https://cnd2.cloudnativedays.jp/api
-Cloudflare Pages Functions: https://cnd2.cloudnativedays.jp/functions/api
 ```
 
 ### 認証
@@ -37,11 +40,10 @@ X-RateLimit-Reset: <Unix timestamp>
 
 ### ランタイム範囲
 
-このAPIはEdge Runtime互換のため、以下の環境で動作します：
+APIは以下の環境でのみ動作します：
 
-- **Next.js API Routes** (開発環境)
-- **Cloudflare Workers** (本番環境)
-- **Vercel Edge Runtime**
+- **Cloudflare Pages Functions** (本番環境のみ)
+- **開発環境**: APIなし、LocalStorageのみ使用
 
 ### APIタイムアウト
 
@@ -49,14 +51,13 @@ X-RateLimit-Reset: <Unix timestamp>
 
 ### 診断API
 
-#### POST /api/diagnosis (Next.js API Routes)
-#### POST /functions/api/diagnosis (Cloudflare Pages Functions)
+#### POST /api/diagnosis (Cloudflare Pages Functions - 本番環境のみ)
 
 Prairie Cardのプロフィール情報から相性診断を生成します。
 
-**エンドポイントの選択:**
-- **開発環境**: `/api/diagnosis` (Next.js API Routes)
-- **本番環境**: `/functions/api/diagnosis` (Cloudflare Pages Functions + KVストレージ)
+**エンドポイント:**
+- **本番環境のみ**: `/api/diagnosis` (Cloudflare Pages Functions + KVストレージ)
+- **開発環境**: APIなし（LocalStorageのみ使用）
 
 **機能:**
 - **AI診断**: OpenAI GPT-4o-miniによるAIパワード診断 (環境変数で切り替え可能)
@@ -180,8 +181,7 @@ Content-Type: application/json
 
 ### Prairie Card API
 
-#### POST /api/prairie (Next.js API Routes)
-#### POST /functions/api/prairie (Cloudflare Pages Functions)
+#### POST /api/prairie (Cloudflare Pages Functions - 本番環境のみ)
 
 Prairie CardのURLからプロフィール情報を取得、またはHTMLコンテンツを直接解析します。
 
@@ -266,8 +266,7 @@ https://my.prairie.cards/u/bob
 
 ### 診断結果取得API
 
-#### GET /api/results/[id] (Next.js API Routes)
-#### GET /functions/api/results/[id] (Cloudflare Pages Functions)
+#### GET /api/results?id=[id] (Cloudflare Pages Functions - 本番環境のみ)
 
 保存された診断結果を取得します。
 
@@ -503,16 +502,8 @@ async function getDiagnosisResult(id: string) {
 ### cURL
 
 ```bash
-# 診断を生成 (Next.js API Routes)
-curl -X POST http://localhost:3000/api/diagnosis \
-  -H "Content-Type: application/json" \
-  -d '{
-    "profiles": [...],
-    "mode": "duo"
-  }'
-
-# 診断を生成 (Cloudflare Pages Functions)
-curl -X POST https://cnd2.cloudnativedays.jp/functions/api/diagnosis \
+# 診断を生成 (Cloudflare Pages Functions - 本番環境のみ)
+curl -X POST https://cnd2.cloudnativedays.jp/api/diagnosis \
   -H "Content-Type: application/json" \
   -d '{
     "profiles": [...],
