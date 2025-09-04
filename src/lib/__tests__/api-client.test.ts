@@ -53,7 +53,7 @@ describe('API Client', () => {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (global.fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 404,
           json: async () => ({ error: { message: 'Not found' } }),
@@ -67,14 +67,14 @@ describe('API Client', () => {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
+        (global.fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 500,
           json: async () => { throw new Error('Parse error'); },
         });
 
         await expect(apiClient.prairie.fetch('https://prairie.cards/test'))
-          .rejects.toThrow('Network error');
+          .rejects.toThrow('Prairie Card の取得に失敗しました');
       });
     });
   });
