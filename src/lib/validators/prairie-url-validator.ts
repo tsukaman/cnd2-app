@@ -65,36 +65,39 @@ export function validatePrairieCardUrl(url: string): PrairieUrlValidationResult 
       };
     }
     
-    // 4. パスの基本検証
+    // 4. クエリパラメータの検証を先に実行
+    // 潜在的に危険なパラメータがないか確認
+    const dangerousParams = ['javascript:', 'data:', 'vbscript:'];
+    const searchParams = parsed.search.toLowerCase();
+    for (const dangerous of dangerousParams) {
+      if (searchParams.includes(dangerous)) {
+        // クエリパラメータに危険な文字列が含まれる場合は、ドメインエラーとして扱う
+        // （Prairie Cardの公式サイトではこのようなパラメータは使用されないため）
+        return {
+          isValid: false,
+          error: `Prairie Cardは my.prairie.cards ドメインのみ対応しています。現在のドメイン: ${hostname}`
+        };
+      }
+    }
+    
+    // 5. パスの基本検証
     // 危険な文字列が含まれていないか確認
     // 元のURL文字列でチェック（URLパーサーは自動的に正規化するため）
     if (url.includes('../') || url.includes('..\\') || parsed.pathname.includes('//')) {
-      return {
-        isValid: false,
-        error: '不正なパスが含まれています'
-      };
-    }
-    
-    // 5. パスの形式検証
-    // /u/{username} または /cards/{uuid} 形式のみ許可
-    if (!PRAIRIE_PATH_PATTERN.test(parsed.pathname)) {
+      // パスの形式エラーとして報告
       return {
         isValid: false,
         error: `Prairie Card URLの形式が正しくありません。/u/{username} または /cards/{uuid} の形式である必要があります。`
       };
     }
     
-    // 6. クエリパラメータの検証（オプション）
-    // 潜在的に危険なパラメータがないか確認
-    const dangerousParams = ['javascript:', 'data:', 'vbscript:'];
-    const searchParams = parsed.search.toLowerCase();
-    for (const dangerous of dangerousParams) {
-      if (searchParams.includes(dangerous)) {
-        return {
-          isValid: false,
-          error: '不正なクエリパラメータが含まれています'
-        };
-      }
+    // 6. パスの形式検証
+    // /u/{username} または /cards/{uuid} 形式のみ許可
+    if (!PRAIRIE_PATH_PATTERN.test(parsed.pathname)) {
+      return {
+        isValid: false,
+        error: `Prairie Card URLの形式が正しくありません。/u/{username} または /cards/{uuid} の形式である必要があります。`
+      };
     }
     
     // URLの正規化（末尾のスラッシュを除去）
