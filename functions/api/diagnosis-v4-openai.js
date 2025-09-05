@@ -510,6 +510,7 @@ ${JSON.stringify(summary2, null, 2)}`;
     }
     
     // デバッグ情報
+    const debugMode = env?.DEBUG_MODE === 'true';
     if (debugMode) {
       console.log('[V4-OpenAI Engine] Token usage:', {
         prompt_tokens: data.usage?.prompt_tokens,
