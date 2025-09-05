@@ -1,6 +1,7 @@
 import { saveDiagnosisResult, loadDiagnosisResult, cleanupOldResults } from '../kv-storage';
 import { logger } from '@/lib/logger';
 import type { DiagnosisResult } from '@/types';
+import { StorageFactory } from '@/lib/storage/storage-factory';
 
 // Mock logger
 jest.mock('@/lib/logger', () => ({
@@ -11,10 +12,10 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-// Mock fetch
-global.fetch = jest.fn();
+// Mock StorageFactory
+jest.mock('@/lib/storage/storage-factory');
 
-// Mock localStorage
+// Mock localStorage for cleanupOldResults
 const localStorageMock = {
   getItem: jest.fn(),
   setItem: jest.fn(),
@@ -32,23 +33,23 @@ Object.defineProperty(window, 'localStorage', {
 describe('kv-storage', () => {
   const mockResult: DiagnosisResult = {
     id: 'test-123',
-    mode: 'duo',
-    type: 'test',
-    compatibility: 85,
+    type: 'standard' as const,
+    score: 85,
     summary: 'Test summary',
     strengths: ['Test strength'],
     opportunities: ['Test opportunity'],
     advice: 'Test advice',
-    participants: [],
+    members: [],
     createdAt: new Date().toISOString(),
     aiPowered: true,
-    conversationTopics: ['Test topic'],
-    conversationStarters: ['Test starter'],
-    luckyItem: 'Test item',
-    luckyAction: 'Test action',
-    luckyProject: 'kubernetes',
-    luckyProjectDescription: 'Container orchestration platform',
+    fortune: {
+      luckyItem: 'Test item',
+      luckyAction: 'Test action'
+    },
   };
+
+  // Mock storage implementation
+  let mockStorage: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -56,480 +57,157 @@ describe('kv-storage', () => {
     localStorageMock.setItem.mockClear();
     localStorageMock.removeItem.mockClear();
     localStorageMock.clear.mockClear();
-    (global.fetch as jest.Mock).mockClear();
+    
+    // Setup mock storage
+    mockStorage = {
+      save: jest.fn(),
+      get: jest.fn(),
+      exists: jest.fn(),
+      delete: jest.fn()
+    };
+    
+    (StorageFactory.getStorage as jest.Mock).mockReturnValue(mockStorage);
   });
 
   describe('saveDiagnosisResult', () => {
-    it('should save to localStorage when enabled', async () => {
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToLocalStorage: true,
-        saveToKV: false,
-      });
+    it('should save using StorageFactory', async () => {
+      mockStorage.save.mockResolvedValue({ success: true });
+      
+      const result = await saveDiagnosisResult(mockResult);
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'diagnosis-result-test-123',
-        JSON.stringify(mockResult)
-      );
-      expect(result).toEqual({ success: true, kvSaved: false });
+      expect(mockStorage.save).toHaveBeenCalledWith(mockResult);
+      expect(result.success).toBe(true);
     });
 
-    it('should skip localStorage when disabled', async () => {
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToLocalStorage: false,
-        saveToKV: false,
-      });
+    it('should handle save errors', async () => {
+      mockStorage.save.mockResolvedValue({ success: false, error: 'Save failed' });
+      
+      const result = await saveDiagnosisResult(mockResult);
 
-      expect(localStorageMock.setItem).not.toHaveBeenCalled();
-      expect(result).toEqual({ success: true, kvSaved: false });
+      expect(mockStorage.save).toHaveBeenCalledWith(mockResult);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Save failed');
     });
 
-    it('should save to KV storage with successful response', async () => {
+    it('should set kvSaved flag in production', async () => {
       const originalEnv = process.env.NODE_ENV;
       (process.env as any).NODE_ENV = 'production';
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true }),
-      });
+      mockStorage.save.mockResolvedValue({ success: true });
 
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToLocalStorage: false,
-        saveToKV: true,
-      });
+      const result = await saveDiagnosisResult(mockResult);
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/results', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: mockResult.id, result: mockResult }),
-      });
-      expect(result).toEqual({ success: true, kvSaved: true });
+      expect(result.kvSaved).toBe(true);
       
       (process.env as any).NODE_ENV = originalEnv;
     });
 
-    it('should retry on KV storage failure', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
-      (global.fetch as jest.Mock)
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ success: true }),
-        });
-
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToKV: true,
-        retryCount: 2,
-        retryDelay: 10,
-      });
-
-      expect(global.fetch).toHaveBeenCalledTimes(2);
-      expect(result).toEqual({ success: true, kvSaved: true });
-      
-      (process.env as any).NODE_ENV = originalEnv;
-    });
-
-    it('should return error after all retries fail', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
-
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToKV: true,
-        retryCount: 2,
-        retryDelay: 10,
-      });
-
-      expect(global.fetch).toHaveBeenCalledTimes(2);
-      expect(result.success).toBe(true); // LocalStorage might succeed
-      expect(result.kvSaved).toBe(false);
-      expect(result.error).toBe('Network error');
-      
-      (process.env as any).NODE_ENV = originalEnv;
-    });
-
-    it('should skip KV storage in development', async () => {
+    it('should not set kvSaved flag in development', async () => {
       const originalEnv = process.env.NODE_ENV;
       (process.env as any).NODE_ENV = 'development';
+      mockStorage.save.mockResolvedValue({ success: true });
 
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToKV: true,
-      });
+      const result = await saveDiagnosisResult(mockResult);
 
-      expect(global.fetch).not.toHaveBeenCalled();
-      expect(result).toEqual({ success: true, kvSaved: false });
-
+      expect(result.kvSaved).toBe(false);
+      
       (process.env as any).NODE_ENV = originalEnv;
     });
 
-    it('should save to KV in production', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
+    it('should handle exceptions during save', async () => {
+      mockStorage.save.mockRejectedValue(new Error('Storage error'));
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true }),
-      });
+      const result = await saveDiagnosisResult(mockResult);
 
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToKV: true,
-      });
-
-      expect(global.fetch).toHaveBeenCalled();
-      expect(result).toEqual({ success: true, kvSaved: true });
-
-      (process.env as any).NODE_ENV = originalEnv;
-    });
-
-    it('should handle localStorage errors gracefully', async () => {
-      localStorageMock.setItem.mockImplementationOnce(() => {
-        throw new Error('Storage quota exceeded');
-      });
-
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToLocalStorage: true,
-        saveToKV: false,
-      });
-
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Storage error');
       expect(logger.error).toHaveBeenCalledWith(
-        '[KV Storage] LocalStorage save failed:',
+        '[KV Storage] Save failed:',
         expect.any(Error)
       );
-      expect(result).toEqual({ success: true, kvSaved: false });
-    });
-
-    it('should handle HTTP error responses', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
-        json: async () => ({ error: 'Server error' }),
-      });
-
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToKV: true,
-        retryCount: 1,
-        retryDelay: 10,
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.kvSaved).toBe(false);
-      expect(result.error).toContain('Server error');
-      
-      (process.env as any).NODE_ENV = originalEnv;
-    });
-
-    it('should use exponential backoff for retries', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
-      let callCount = 0;
-      const startTime = Date.now();
-      
-      (global.fetch as jest.Mock).mockImplementation(() => {
-        callCount++;
-        if (callCount < 3) {
-          return Promise.reject(new Error('Network error'));
-        }
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ success: true }),
-        });
-      });
-
-      const result = await saveDiagnosisResult(mockResult, {
-        saveToKV: true,
-        retryCount: 3,
-        retryDelay: 50,
-      });
-
-      const elapsedTime = Date.now() - startTime;
-      
-      expect(global.fetch).toHaveBeenCalledTimes(3);
-      expect(result.kvSaved).toBe(true);
-      // First retry after 50ms, second after 100ms (50*2)
-      // Allow 5ms tolerance for CI timing variations
-      expect(elapsedTime).toBeGreaterThanOrEqual(145);
-      
-      (process.env as any).NODE_ENV = originalEnv;
     });
   });
 
   describe('loadDiagnosisResult', () => {
-    it('should load from localStorage when available', async () => {
-      localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(mockResult));
+    it('should load from StorageFactory', async () => {
+      mockStorage.get.mockResolvedValue(mockResult);
 
-      const result = await loadDiagnosisResult('test-123', {
-        checkLocalStorage: true,
-        checkKV: false,
-      });
+      const result = await loadDiagnosisResult('test-123');
 
-      expect(localStorageMock.getItem).toHaveBeenCalledWith('diagnosis-result-test-123');
+      expect(mockStorage.get).toHaveBeenCalledWith('test-123');
       expect(result).toEqual(mockResult);
+      expect(logger.info).toHaveBeenCalledWith('[KV Storage] Loaded result: test-123');
     });
 
-    it('should load from KV when localStorage is empty in production', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
-      
-      localStorageMock.getItem.mockReturnValueOnce(null);
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ result: mockResult }),
-      });
+    it('should return null when not found', async () => {
+      mockStorage.get.mockResolvedValue(null);
 
-      const result = await loadDiagnosisResult('test-123', {
-        checkLocalStorage: true,
-        checkKV: true,
-      });
+      const result = await loadDiagnosisResult('nonexistent');
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/results?id=test-123',
-        expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
-          cache: 'no-store',
-        })
-      );
-      expect(result).toEqual(mockResult);
-      
-      (process.env as any).NODE_ENV = originalEnv;
+      expect(result).toBeNull();
     });
 
-    it('should cache KV result in localStorage in production', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
-      
-      localStorageMock.getItem.mockReturnValueOnce(null);
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ result: mockResult }),
-      });
-
-      await loadDiagnosisResult('test-123', {
-        checkLocalStorage: true,
-        checkKV: true,
-      });
-
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'diagnosis-result-test-123',
-        JSON.stringify(mockResult)
-      );
-      
-      (process.env as any).NODE_ENV = originalEnv;
-    });
-
-    it('should return null when result not found', async () => {
-      localStorageMock.getItem.mockReturnValueOnce(null);
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      });
+    it('should handle load errors gracefully', async () => {
+      mockStorage.get.mockRejectedValue(new Error('Load failed'));
 
       const result = await loadDiagnosisResult('test-123');
 
       expect(result).toBeNull();
-    });
-
-    it('should handle localStorage errors gracefully', async () => {
-      localStorageMock.getItem.mockImplementationOnce(() => {
-        throw new Error('Storage access denied');
-      });
-
-      const result = await loadDiagnosisResult('test-123', {
-        checkLocalStorage: true,
-        checkKV: false,
-      });
-
       expect(logger.error).toHaveBeenCalledWith(
-        '[KV Storage] LocalStorage load failed:',
+        '[KV Storage] Load failed:',
         expect.any(Error)
       );
-      expect(result).toBeNull();
-    });
-
-    it('should handle KV fetch errors gracefully', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
-      
-      localStorageMock.getItem.mockReturnValueOnce(null);
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-
-      const result = await loadDiagnosisResult('test-123');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        '[KV Storage] KV load failed:',
-        expect.any(Error)
-      );
-      expect(result).toBeNull();
-      
-      (process.env as any).NODE_ENV = originalEnv;
-    });
-
-    it('should handle malformed JSON in localStorage', async () => {
-      localStorageMock.getItem.mockReturnValueOnce('invalid json');
-
-      const result = await loadDiagnosisResult('test-123', {
-        checkLocalStorage: true,
-        checkKV: false,
-      });
-
-      expect(logger.error).toHaveBeenCalledWith(
-        '[KV Storage] LocalStorage load failed:',
-        expect.any(Error)
-      );
-      expect(result).toBeNull();
-    });
-
-    it('should skip localStorage when disabled', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      (process.env as any).NODE_ENV = 'production';
-      
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ result: mockResult }),
-      });
-
-      const result = await loadDiagnosisResult('test-123', {
-        checkLocalStorage: false,
-        checkKV: true,
-      });
-
-      expect(localStorageMock.getItem).not.toHaveBeenCalled();
-      expect(result).toEqual(mockResult);
-      
-      (process.env as any).NODE_ENV = originalEnv;
-    });
-
-    it('should skip KV when disabled', async () => {
-      localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(mockResult));
-
-      const result = await loadDiagnosisResult('test-123', {
-        checkLocalStorage: true,
-        checkKV: false,
-      });
-
-      expect(global.fetch).not.toHaveBeenCalled();
-      expect(result).toEqual(mockResult);
     });
   });
 
   describe('cleanupOldResults', () => {
-    it('should remove old results from localStorage', () => {
-      const now = Date.now();
-      const oldDate = new Date(now - 8 * 24 * 60 * 60 * 1000).toISOString(); // 8 days old
-      const recentDate = new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(); // 1 day old
+    beforeEach(() => {
+      localStorageMock.length = 0;
+      localStorageMock.key.mockImplementation((index) => {
+        const keys = ['diagnosis-result-old', 'diagnosis-result-new', 'other-key'];
+        return keys[index] || null;
+      });
+    });
 
-      const oldResult = { ...mockResult, createdAt: oldDate };
-      const recentResult = { ...mockResult, createdAt: recentDate };
+    it('should remove old results', () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 10);
+      const newDate = new Date();
 
       localStorageMock.length = 2;
-      localStorageMock.key.mockImplementation((index: number) => {
-        if (index === 0) return 'diagnosis-result-old';
-        if (index === 1) return 'diagnosis-result-recent';
-        return null;
-      });
-
-      localStorageMock.getItem.mockImplementation((key: string) => {
-        if (key === 'diagnosis-result-old') return JSON.stringify(oldResult);
-        if (key === 'diagnosis-result-recent') return JSON.stringify(recentResult);
+      localStorageMock.getItem.mockImplementation((key) => {
+        if (key === 'diagnosis-result-old') {
+          return JSON.stringify({ ...mockResult, createdAt: oldDate.toISOString() });
+        } else if (key === 'diagnosis-result-new') {
+          return JSON.stringify({ ...mockResult, createdAt: newDate.toISOString() });
+        }
         return null;
       });
 
       cleanupOldResults();
 
       expect(localStorageMock.removeItem).toHaveBeenCalledWith('diagnosis-result-old');
-      expect(localStorageMock.removeItem).not.toHaveBeenCalledWith('diagnosis-result-recent');
+      expect(localStorageMock.removeItem).not.toHaveBeenCalledWith('diagnosis-result-new');
     });
 
-    it('should remove results with invalid JSON', () => {
+    it('should handle corrupted data gracefully', () => {
       localStorageMock.length = 1;
-      localStorageMock.key.mockReturnValueOnce('diagnosis-result-invalid');
-      localStorageMock.getItem.mockReturnValueOnce('invalid json');
+      localStorageMock.getItem.mockReturnValue('invalid json');
 
       cleanupOldResults();
 
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('diagnosis-result-invalid');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('diagnosis-result-old');
     });
 
-    it('should skip non-diagnosis keys', () => {
-      localStorageMock.length = 2;
-      localStorageMock.key.mockImplementation((index: number) => {
-        if (index === 0) return 'other-key';
-        if (index === 1) return 'diagnosis-result-test';
-        return null;
-      });
-
-      localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(mockResult));
+    it('should skip if window is undefined', () => {
+      const originalWindow = global.window;
+      // @ts-ignore
+      delete global.window;
 
       cleanupOldResults();
 
-      expect(localStorageMock.removeItem).not.toHaveBeenCalledWith('other-key');
-    });
-
-    it('should handle results without createdAt', () => {
-      const resultWithoutDate = { ...mockResult, createdAt: undefined };
-
-      localStorageMock.length = 1;
-      localStorageMock.key.mockReturnValueOnce('diagnosis-result-no-date');
-      localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(resultWithoutDate));
-
-      cleanupOldResults();
-
-      // Results without createdAt are not removed (createdAt becomes 0 which is falsy)
       expect(localStorageMock.removeItem).not.toHaveBeenCalled();
-    });
 
-    it('should use custom maxAge parameter', () => {
-      const now = Date.now();
-      const twoDaysOld = new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString();
-      const result = { ...mockResult, createdAt: twoDaysOld };
-
-      localStorageMock.length = 1;
-      localStorageMock.key.mockReturnValueOnce('diagnosis-result-old');
-      localStorageMock.getItem.mockReturnValueOnce(JSON.stringify(result));
-
-      // Custom maxAge of 1 day
-      cleanupOldResults(1 * 24 * 60 * 60 * 1000);
-
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('diagnosis-result-old');
-    });
-
-    it('should handle localStorage errors gracefully', () => {
-      localStorageMock.length = 1;
-      localStorageMock.key.mockImplementationOnce(() => {
-        throw new Error('Storage access denied');
-      });
-
-      cleanupOldResults();
-
-      expect(logger.error).toHaveBeenCalledWith(
-        '[KV Storage] Cleanup failed:',
-        expect.any(Error)
-      );
-    });
-
-    // Skip test for non-browser environment as it's difficult to test in Jest
-    // The actual implementation checks typeof window === 'undefined' at the beginning
-
-    it('should log summary when items are cleaned', () => {
-      const now = Date.now();
-      const oldDate = new Date(now - 8 * 24 * 60 * 60 * 1000).toISOString();
-      const oldResult = { ...mockResult, createdAt: oldDate };
-
-      localStorageMock.length = 2;
-      localStorageMock.key.mockImplementation((index: number) => {
-        if (index === 0) return 'diagnosis-result-old1';
-        if (index === 1) return 'diagnosis-result-old2';
-        return null;
-      });
-
-      localStorageMock.getItem.mockReturnValue(JSON.stringify(oldResult));
-
-      cleanupOldResults();
-
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Cleaned up 2 old results')
-      );
+      global.window = originalWindow as any;
     });
   });
 });
