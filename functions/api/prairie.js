@@ -20,8 +20,11 @@ export async function onRequestPost({ request, env }) {
   const corsHeaders = { ...getCorsHeaders(origin), ...getSecurityHeaders() };
   
   return await logRequest(request, env, null, async () => {
+    let url, html;
     try {
-      const { url, html } = await request.json();
+      const data = await request.json();
+      url = data.url;
+      html = data.html;
       
       // Validation
       if (!url && !html) {
