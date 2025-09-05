@@ -3,6 +3,9 @@ import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
 import { PrairieProfileExtractor } from '@/lib/prairie-profile-extractor';
 import { PrairieProfile } from '@/types';
+import { getCorsHeaders } from '@/lib/cors';
+import { validatePrairieCardUrl } from '@/lib/validators/prairie-url-validator';
+import { sanitizer } from '@/lib/sanitizer';
 
 /**
  * Prairie Card API endpoint
@@ -24,17 +27,27 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     let htmlContent = html;
     
     if (url && !html) {
-      // Validate URL
-      const urlObj = new URL(url);
-      const allowedHosts = ['prairie.cards', 'my.prairie.cards'];
-      
-      if (!allowedHosts.includes(urlObj.hostname)) {
+      // Enhanced URL validation using dedicated validator
+      const validationResult = validatePrairieCardUrl(url);
+      if (!validationResult.isValid) {
         throw new ApiError(
-          'Invalid Prairie Card URL',
+          validationResult.error || 'Invalid Prairie Card URL',
           ApiErrorCode.VALIDATION_ERROR,
           400
         );
       }
+      
+      // Use the normalized and sanitized URL
+      const sanitizedUrl = sanitizer.sanitizeURL(validationResult.normalizedUrl || url);
+      if (!sanitizedUrl) {
+        throw new ApiError(
+          'URL contains potentially dangerous content',
+          ApiErrorCode.VALIDATION_ERROR,
+          400
+        );
+      }
+      
+      const urlObj = new URL(sanitizedUrl);
       
       // 開発環境用のモックデータ
       if (process.env.NODE_ENV === 'development') {
@@ -100,7 +113,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒タイムアウト
       
       try {
-        const response = await fetch(url, {
+        const response = await fetch(sanitizedUrl, {
           headers: {
             'User-Agent': 'CND2/2.0 PrairieCardParser',
             'Accept': 'text/html,application/xhtml+xml',
@@ -183,13 +196,12 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
 });
 
 // Handle OPTIONS for CORS
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   return new NextResponse(null, {
     status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
+    headers: corsHeaders as HeadersInit,
   });
 }

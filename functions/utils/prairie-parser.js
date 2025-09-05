@@ -580,16 +580,47 @@ function parseFromHTML(html, env) {
  */
 function validatePrairieCardUrl(url) {
   try {
-    const parsed = new URL(url);
+    // Trim and normalize the URL
+    const normalizedUrl = url.trim();
+    
+    // Check for dangerous protocols before parsing
+    const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
+    const lowerUrl = normalizedUrl.toLowerCase();
+    for (const protocol of dangerousProtocols) {
+      if (lowerUrl.startsWith(protocol)) {
+        return false;
+      }
+    }
+    
+    const parsed = new URL(normalizedUrl);
     
     // Only allow HTTPS protocol (security requirement)
     if (parsed.protocol !== 'https:') {
       return false;
     }
     
+    // Check for standard port (443) or no port specified
+    if (parsed.port && parsed.port !== '443') {
+      return false;
+    }
+    
     // Only allow my.prairie.cards domain to avoid server load
     if (parsed.hostname !== 'my.prairie.cards') {
       return false;
+    }
+    
+    // Check for path traversal attempts
+    if (normalizedUrl.includes('../') || normalizedUrl.includes('..\\') || parsed.pathname.includes('//')) {
+      return false;
+    }
+    
+    // Check for dangerous query parameters
+    const dangerousParams = ['javascript:', 'data:', 'vbscript:'];
+    const searchParams = parsed.search.toLowerCase();
+    for (const dangerous of dangerousParams) {
+      if (searchParams.includes(dangerous)) {
+        return false;
+      }
     }
     
     // Check for valid path patterns

@@ -7,7 +7,10 @@
  * 許可されたオリジンを取得
  */
 export function getAllowedOrigins(): string[] {
-  const defaultOrigins = ['https://cnd2-app.pages.dev'];
+  const defaultOrigins = [
+    'https://cnd2-app.pages.dev',
+    'https://cnd2.cloudnativedays.jp'
+  ];
   
   // 環境変数から追加のオリジンを取得（カンマ区切り）
   const additionalOrigins = process.env.ALLOWED_ORIGINS || process.env.NEXT_PUBLIC_ALLOWED_ORIGINS;

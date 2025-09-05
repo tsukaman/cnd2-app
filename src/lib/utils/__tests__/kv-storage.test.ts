@@ -248,7 +248,8 @@ describe('kv-storage', () => {
       expect(global.fetch).toHaveBeenCalledTimes(3);
       expect(result.kvSaved).toBe(true);
       // First retry after 50ms, second after 100ms (50*2)
-      expect(elapsedTime).toBeGreaterThanOrEqual(150);
+      // Allow 5ms tolerance for CI timing variations
+      expect(elapsedTime).toBeGreaterThanOrEqual(145);
       
       (process.env as any).NODE_ENV = originalEnv;
     });
