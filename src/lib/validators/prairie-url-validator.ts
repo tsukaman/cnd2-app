@@ -11,8 +11,8 @@ const ALLOWED_PRAIRIE_HOSTS = new Set([
 
 // Prairie CardのURL パターン
 // - /u/{username} 形式 (ユーザー名にはアルファベット、数字、アンダースコア、ハイフン、ドットを許可)
-// - /cards/{uuid} 形式
-const PRAIRIE_PATH_PATTERN = /^\/(?:u\/[a-zA-Z0-9._-]+|cards\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/;
+// - /cards/{uuid} 形式 (UUIDは大文字小文字両方を許可)
+const PRAIRIE_PATH_PATTERN = /^\/(?:u\/[a-zA-Z0-9._-]+|cards\/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$/;
 
 export interface PrairieUrlValidationResult {
   isValid: boolean;
