@@ -44,6 +44,29 @@ function isValidOpenAIKey(key) {
 // Fallback configurationは完全に無効化済み
 // フォールバック診断は使用しない
 
+/**
+ * OpenRouter APIキーの妥当性を検証
+ * @param {string} key - 検証するAPIキー
+ * @returns {boolean} キーが有効な場合はtrue
+ */
+function isValidOpenRouterKey(key) {
+  if (!key || typeof key !== 'string') return false;
+  
+  const trimmedKey = key.trim();
+  
+  // OpenRouterキーは sk-or-v1- で始まる
+  if (!trimmedKey.startsWith('sk-or-v1-')) {
+    return false;
+  }
+  
+  // 短すぎるキーを拒否
+  if (trimmedKey.length < 20) {
+    return false;
+  }
+  
+  return true;
+}
+
 // Configuration constants
 const CONFIG = {
   TEMPERATURE: 0.95,  // より創造的な出力のため温度を上げる
@@ -321,7 +344,8 @@ function selectRandomCNCFProject() {
  */
 async function generateDuoDiagnosis(profile1, profile2, env) {
   const debugLogger = createSafeDebugLogger(env, '[V4-OpenAI Engine]');
-  const openaiApiKey = env?.OPENAI_API_KEY;
+  const openRouterApiKey = env?.OPENROUTER_API_KEY;
+  const openaiApiKey = env?.OPENAI_API_KEY; // 後方互換性のため残す
   
   // デバッグモード時のみ詳細ログ（既に上位関数でログ出力済みなので最小限に）
   debugLogger.debug('Starting duo diagnosis for:', {
@@ -329,32 +353,38 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
     person2: profile2.basic?.name || profile2.name
   });
   
-  // APIキーの妥当性を検証
-  if (!isValidOpenAIKey(openaiApiKey)) {
-    // フォールバック診断を完全に無効化 - 常にエラーを投げる
-    let errorMessage = 'OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable in Cloudflare Pages settings.';
-    let keyInfo = null;
+  // OpenRouterまたはOpenAI APIキーの検証
+  const hasValidOpenRouter = isValidOpenRouterKey(openRouterApiKey);
+  const hasValidOpenAI = isValidOpenAIKey(openaiApiKey);
+  
+  if (!hasValidOpenRouter && !hasValidOpenAI) {
+    // どちらのAPIキーも有効でない
+    let errorMessage = 'API key is not configured. Please set OPENROUTER_API_KEY environment variable in Cloudflare Pages settings.';
     
-    if (openaiApiKey && openaiApiKey.length > 0) {
-      // キーは存在するが無効な形式
-      keyInfo = getSafeKeyInfo(openaiApiKey);
+    // デバッグ情報
+    debugLogger.debug('API key validation:', {
+      hasOpenRouter: !!openRouterApiKey,
+      hasOpenAI: !!openaiApiKey,
+      openRouterValid: hasValidOpenRouter,
+      openAIValid: hasValidOpenAI
+    });
+    
+    if (openRouterApiKey && !hasValidOpenRouter) {
+      errorMessage = 'OpenRouter API key is invalid. It should start with "sk-or-v1-". Please check OPENROUTER_API_KEY in Cloudflare Pages settings.';
+    } else if (!openRouterApiKey && openaiApiKey && !hasValidOpenAI) {
+      // OpenAI APIキーは存在するが無効（後方互換性）
+      const keyInfo = getSafeKeyInfo(openaiApiKey);
       if (keyInfo.startsWithSk) {
-        errorMessage = 'OpenAI API key format appears valid but may be expired or incorrect. Please verify the OPENAI_API_KEY in Cloudflare Pages settings.';
+        errorMessage = 'OpenAI API key format appears valid but OpenRouter is recommended. Please set OPENROUTER_API_KEY.';
       } else if (keyInfo.hasWhitespace) {
-        errorMessage = 'OpenAI API key contains whitespace. Please check for extra spaces in OPENAI_API_KEY environment variable.';
+        errorMessage = 'OpenAI API key contains whitespace. Please use OpenRouter instead (OPENROUTER_API_KEY).';
       } else {
-        errorMessage = 'OpenAI API key format is invalid. It should start with "sk-". Please check OPENAI_API_KEY in Cloudflare Pages settings.';
+        errorMessage = 'OpenAI API key format is invalid. Please set up OpenRouter (OPENROUTER_API_KEY).';
       }
     }
     
     const error = new Error(errorMessage);
     debugLogger.error(error.message);
-    
-    // 詳細なデバッグ情報はDEBUG_MODEまたは開発環境でのみ出力（keyInfoが存在する場合のみ）
-    if (keyInfo) {
-      debugLogger.debug('Validation details:', keyInfo);
-    }
-    
     throw error;
   }
   
@@ -393,7 +423,7 @@ ${JSON.stringify(summary2, null, 2)}`;
     };
 
     const response = await callOpenAIWithProxy({
-      apiKey: openaiApiKey,
+      apiKey: openaiApiKey || 'dummy-key-for-openrouter', // OpenRouterはOPENROUTER_API_KEYを使用
       body: requestBody,
       env: env,
       debugLogger: debugLogger
