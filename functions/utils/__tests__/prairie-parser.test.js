@@ -29,6 +29,43 @@ describe('Prairie Card Parser', () => {
       expect(validatePrairieCardUrl('https://fake-prairie.cards.com')).toBe(false);
       expect(validatePrairieCardUrl('not-a-url')).toBe(false);
     });
+
+    // Security edge cases - no server access
+    it('should reject dangerous protocols', () => {
+      expect(validatePrairieCardUrl('javascript:alert(1)')).toBe(false);
+      expect(validatePrairieCardUrl('data:text/html,<script>alert(1)</script>')).toBe(false);
+      expect(validatePrairieCardUrl('vbscript:msgbox("test")')).toBe(false);
+      expect(validatePrairieCardUrl('file:///etc/passwd')).toBe(false);
+    });
+
+    it('should reject path traversal attempts', () => {
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/../../../admin')).toBe(false);
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/..\\..\\admin')).toBe(false);
+      expect(validatePrairieCardUrl('https://my.prairie.cards//u//user')).toBe(false);
+    });
+
+    it('should reject non-standard ports', () => {
+      expect(validatePrairieCardUrl('https://my.prairie.cards:8080/u/user')).toBe(false);
+      expect(validatePrairieCardUrl('https://my.prairie.cards:3000/u/user')).toBe(false);
+      expect(validatePrairieCardUrl('https://my.prairie.cards:443/u/user')).toBe(true); // Port 443 is OK
+    });
+
+    it('should reject dangerous query parameters', () => {
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/user?redirect=javascript:alert(1)')).toBe(false);
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/user?data=data:text/html,<script>alert(1)</script>')).toBe(false);
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/user?theme=dark&lang=ja')).toBe(true); // Normal params OK
+    });
+
+    it('should reject HTTP protocol', () => {
+      expect(validatePrairieCardUrl('http://my.prairie.cards/u/user')).toBe(false);
+      expect(validatePrairieCardUrl('http://my.prairie.cards/cards/uuid')).toBe(false);
+    });
+
+    it('should handle null and undefined gracefully', () => {
+      expect(validatePrairieCardUrl(null)).toBe(false);
+      expect(validatePrairieCardUrl(undefined)).toBe(false);
+      expect(validatePrairieCardUrl('')).toBe(false);
+    });
   });
 
   describe('parseFromHTML', () => {
