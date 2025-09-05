@@ -5,6 +5,7 @@ import { createLogger, logRequest } from '../utils/logger.js';
 import { safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { parseFromHTML, validatePrairieCardUrl } from '../utils/prairie-parser.js';
 import { createErrorResponse, ERROR_CODES } from '../utils/error-messages.js';
+import { incrementMetrics, isDevelopment } from '../utils/kv-helpers.js';
 
 /**
  * Handle POST requests to scrape and parse Prairie Card data
@@ -141,16 +142,9 @@ export async function onRequestPost({ request, env }) {
         source: 'fetch',
       };
       
-      // Track success metrics
-      if (env.DIAGNOSIS_KV) {
-        try {
-          const metricsKey = METRICS_KEYS.PRAIRIE_SUCCESS;
-          const currentCount = await env.DIAGNOSIS_KV.get(metricsKey);
-          const count = safeParseInt(currentCount, 0);
-          await env.DIAGNOSIS_KV.put(metricsKey, String(count + 1));
-        } catch (e) {
-          logger.debug('Failed to update metrics', { error: e.message });
-        }
+      // Track success metrics (production only)
+      if (!isDevelopment(env)) {
+        await incrementMetrics(env, METRICS_KEYS.PRAIRIE_SUCCESS);
       }
       
       return successResponse(
@@ -167,16 +161,9 @@ export async function onRequestPost({ request, env }) {
         errorStack: error.stack,
       });
       
-      // Track error metrics
-      if (env.DIAGNOSIS_KV) {
-        try {
-          const metricsKey = METRICS_KEYS.PRAIRIE_ERROR;
-          const currentCount = await env.DIAGNOSIS_KV.get(metricsKey);
-          const count = safeParseInt(currentCount, 0);
-          await env.DIAGNOSIS_KV.put(metricsKey, String(count + 1));
-        } catch (e) {
-          logger.debug('Failed to update error metrics', { error: e.message });
-        }
+      // Track error metrics (production only)
+      if (!isDevelopment(env)) {
+        await incrementMetrics(env, METRICS_KEYS.PRAIRIE_ERROR);
       }
       
       // Determine appropriate error code based on error message

@@ -1,6 +1,7 @@
 // Results API for Cloudflare Functions
 import { getCorsHeaders } from '../utils/response.js';
 import { createErrorResponse, createSuccessResponse, ERROR_CODES } from '../utils/error-messages.js';
+import { kvGet, kvPut, isDevelopment } from '../utils/kv-helpers.js';
 
 // GET handler for query parameter format (/api/results?id=xxx)
 export async function onRequestGet({ request, env }) {
@@ -26,19 +27,34 @@ export async function onRequestGet({ request, env }) {
       );
     }
     
-    // Fetch from KV if available
-    if (env.DIAGNOSIS_KV) {
-      const key = `diagnosis:${id}`;
-      const data = await env.DIAGNOSIS_KV.get(key);
-      
-      if (data) {
-        try {
-          const result = JSON.parse(data);
-          
-          // データの基本的な検証
-          if (!result || typeof result !== 'object') {
-            throw new Error('Invalid result format');
+    // Skip KV in development environment for optimization
+    if (isDevelopment(env)) {
+      // 開発環境ではKVを使用しない
+      const errorResp = createErrorResponse(ERROR_CODES.RESULT_NOT_FOUND);
+      return new Response(
+        JSON.stringify(errorResp),
+        {
+          status: 404,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
           }
+        }
+      );
+    }
+    
+    // Fetch from KV (production only)
+    const key = `diagnosis:${id}`;
+    const data = await kvGet(env, key);
+    
+    if (data) {
+      try {
+        const result = JSON.parse(data);
+        
+        // データの基本的な検証
+        if (!result || typeof result !== 'object') {
+          throw new Error('Invalid result format');
+        }
           
           const successResp = createSuccessResponse({
             result,
@@ -57,25 +73,24 @@ export async function onRequestGet({ request, env }) {
               },
             }
           );
-        } catch (parseError) {
-          console.error('Failed to parse KV data:', parseError, { 
-            id, 
-            dataLength: data?.length, 
-            dataPreview: data?.substring(0, 100) 
-          });
-          // 破損データの場合は404として扱う
-          const errorResp = createErrorResponse(ERROR_CODES.RESULT_NOT_FOUND, 'Result data is corrupted');
-          return new Response(
-            JSON.stringify(errorResp),
-            {
-              status: 404,
-              headers: {
-                'Content-Type': 'application/json',
-                ...corsHeaders,
-              },
-            }
-          );
-        }
+      } catch (parseError) {
+        console.error('Failed to parse KV data:', parseError, { 
+          id, 
+          dataLength: data?.length, 
+          dataPreview: data?.substring(0, 100) 
+        });
+        // 破損データの場合は404として扱う
+        const errorResp = createErrorResponse(ERROR_CODES.RESULT_NOT_FOUND, 'Result data is corrupted');
+        return new Response(
+          JSON.stringify(errorResp),
+          {
+            status: 404,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders,
+            },
+          }
+        );
       }
     }
     
@@ -130,10 +145,11 @@ export async function onRequestPost({ request, env }) {
       );
     }
     
-    // Store in KV if available
-    if (env.DIAGNOSIS_KV) {
+    // Skip KV storage in development
+    if (!isDevelopment(env)) {
+      // Store in KV (production only)
       const key = `diagnosis:${result.id}`;
-      await env.DIAGNOSIS_KV.put(key, JSON.stringify(result), {
+      await kvPut(env, key, JSON.stringify(result), {
         expirationTtl: 7 * 24 * 60 * 60, // 7 days
       });
       

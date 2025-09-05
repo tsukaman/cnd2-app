@@ -8,6 +8,7 @@ import { generateFortuneDiagnosis } from './diagnosis-v4-openai.js';
 import { createSafeDebugLogger, getSafeKeyInfo, getFilteredEnvKeys } from '../utils/debug-helpers.js';
 import { convertProfilesToFullFormat } from '../utils/profile-converter.js';
 import { createErrorResponse, createSuccessResponse, ERROR_CODES } from '../utils/error-messages.js';
+import { kvPut, isDevelopment } from '../utils/kv-helpers.js';
 
 /**
  * Handle POST requests to generate diagnosis
@@ -70,25 +71,28 @@ export async function onRequestPost({ request, env }) {
       // Generate diagnosis result using V4 engine
       const result = await generateFortuneDiagnosis(prairieProfiles, mode, env);
       
-      // Store in KV if available
-      if (env.DIAGNOSIS_KV) {
+      // Skip KV storage in development
+      if (!isDevelopment(env)) {
+        // Store in KV (production only)
         const key = `diagnosis:${result.id}`;
         const startKV = Date.now();
         
         try {
-          await env.DIAGNOSIS_KV.put(key, JSON.stringify(result), {
+          const saved = await kvPut(env, key, JSON.stringify(result), {
             expirationTtl: KV_TTL.DIAGNOSIS,
           });
           
-          logger.metric('kv_write_duration', Date.now() - startKV, 'ms', {
-            key,
-            operation: 'put',
-          });
-          
-          logger.info('Diagnosis stored in KV', { 
-            id: result.id,
-            ttl: '7days' 
-          });
+          if (saved) {
+            logger.metric('kv_write_duration', Date.now() - startKV, 'ms', {
+              key,
+              operation: 'put',
+            });
+            
+            logger.info('Diagnosis stored in KV', { 
+              id: result.id,
+              ttl: '7days' 
+            });
+          }
         } catch (kvError) {
           // Log but don't fail the request
           logger.error('Failed to store in KV', kvError, { id: result.id });
