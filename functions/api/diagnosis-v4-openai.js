@@ -7,6 +7,7 @@ import { generateId } from '../utils/id.js';
 import { CNCF_PROJECTS, getProjectDetails } from '../utils/cncf-projects.js';
 import { createSafeDebugLogger, getSafeKeyInfo, isProduction } from '../utils/debug-helpers.js';
 import { convertToFullProfile, extractMinimalProfile } from '../utils/profile-converter.js';
+import { callOpenAIWithProxy, isRegionRestrictionError } from '../utils/openai-proxy.js';
 
 /**
  * OpenAI APIキーの妥当性を検証
@@ -381,28 +382,29 @@ ${JSON.stringify(summary1, null, 2)}
 ＜2人目のプロフィール＞
 ${JSON.stringify(summary2, null, 2)}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiApiKey}`
-      },
-      body: JSON.stringify({
-        model: CONFIG.MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: FORTUNE_TELLING_SYSTEM_PROMPT
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: CONFIG.TEMPERATURE,
-        max_tokens: CONFIG.MAX_TOKENS,
-        response_format: { type: "json_object" }
-      })
+    // プロキシ経由でOpenAI APIを呼び出す（地域制限回避）
+    const requestBody = {
+      model: CONFIG.MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: FORTUNE_TELLING_SYSTEM_PROMPT
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: CONFIG.TEMPERATURE,
+      max_tokens: CONFIG.MAX_TOKENS,
+      response_format: { type: "json_object" }
+    };
+
+    const response = await callOpenAIWithProxy({
+      apiKey: openaiApiKey,
+      body: requestBody,
+      env: env,
+      debugLogger: debugLogger
     });
     
     if (!response.ok) {
@@ -431,6 +433,14 @@ ${JSON.stringify(summary2, null, 2)}`;
         errorMessage = 'Rate limit exceeded. Please try again later.';
       } else if (response.status === 401) {
         errorMessage = 'Invalid API key. Please check your OpenAI API key configuration.';
+      } else if (response.status === 403 || isRegionRestrictionError(response, error)) {
+        // 地域制限エラーの処理
+        errorMessage = 'OpenAI API access denied due to region restrictions. The service is currently unavailable from this location.';
+        debugLogger.error('Region restriction detected:', {
+          status: response.status,
+          error: error.error?.message || 'Country, region, or territory not supported',
+          suggestion: 'Configure Cloudflare AI Gateway or use a proxy endpoint by setting CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_GATEWAY_ID, or OPENAI_PROXY_URL environment variables'
+        });
       } else if (response.status === 503) {
         errorMessage = 'OpenAI service is temporarily unavailable. Please try again later.';
       } else if (error.error?.message) {
