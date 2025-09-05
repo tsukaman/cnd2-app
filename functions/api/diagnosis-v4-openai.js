@@ -259,6 +259,15 @@ function summarizeProfile(profile) {
  * CNCFプロジェクトをランダムに選択
  */
 function selectRandomCNCFProject() {
+  // プロジェクトリストが空の場合のフォールバック
+  if (!CNCF_PROJECTS || CNCF_PROJECTS.length === 0) {
+    return {
+      name: 'Kubernetes',
+      description: 'コンテナ化アプリケーションのデプロイ、スケーリング、管理を自動化するオープンソースシステム',
+      url: 'https://www.cncf.io/projects/kubernetes/'
+    };
+  }
+  
   // ランダムにプロジェクト名を選択
   const randomIndex = Math.floor(Math.random() * CNCF_PROJECTS.length);
   const projectName = CNCF_PROJECTS[randomIndex];
@@ -266,11 +275,12 @@ function selectRandomCNCFProject() {
   // プロジェクトの詳細情報を取得
   const projectDetails = getProjectDetails(projectName);
   
-  // プロジェクト名をURLフレンドリーにする（スペースをハイフンに、小文字に）
+  // プロジェクト名をURLフレンドリーにする（より堅牢な処理）
   const urlName = projectName.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[()]/g, '')
-    .replace(/\//g, '-');
+    .replace(/\s+/g, '-')           // スペース → ハイフン
+    .replace(/[^\w-]/g, '')         // 英数字とハイフン以外を削除
+    .replace(/-+/g, '-')            // 連続ハイフンを1つに
+    .replace(/^-|-$/g, '');         // 前後のハイフンを削除
   
   return {
     name: projectName,
