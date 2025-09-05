@@ -50,9 +50,16 @@ export async function onRequestGet({ request, env }) {
       try {
         const result = JSON.parse(data);
         
-        // データの基本的な検証（より具体的な検証）
-        if (!result || typeof result !== 'object' || !result.id) {
-          throw new Error('Invalid DiagnosisResult format: missing required fields');
+        // データの基本的な検証（必須フィールドの検証）
+        if (!result || typeof result !== 'object') {
+          throw new Error('Invalid DiagnosisResult format: not an object');
+        }
+        
+        // 必須フィールドの検証
+        const requiredFields = ['id', 'mode', 'compatibility'];
+        const missingFields = requiredFields.filter(field => result[field] === undefined || result[field] === null);
+        if (missingFields.length > 0) {
+          throw new Error(`Invalid DiagnosisResult format: missing required fields: ${missingFields.join(', ')}`);
         }
           
           const successResp = createSuccessResponse({
@@ -75,8 +82,7 @@ export async function onRequestGet({ request, env }) {
       } catch (parseError) {
         console.error('Failed to parse KV data:', parseError, { 
           id, 
-          dataLength: data?.length, 
-          dataPreview: data?.substring(0, 50) // 機密情報露出リスクを低減
+          dataSize: `[${data?.length || 0} characters]` // データサイズのみ記録（内容は除外）
         });
         // 破損データの場合は404として扱う
         const errorResp = createErrorResponse(ERROR_CODES.RESULT_NOT_FOUND, 'Result data is corrupted');
