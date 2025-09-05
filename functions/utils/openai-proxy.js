@@ -58,7 +58,7 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
   
   // 方法1: OpenRouter経由（地域制限回避の最も確実な方法）
   // OpenRouterはCloudflare AI Gatewayと互換性があり、地域制限を確実に回避できる
-  if (env?.OPENROUTER_API_KEY && env.OPENROUTER_API_KEY.startsWith('sk-or-')) {
+  if (env?.OPENROUTER_API_KEY && env.OPENROUTER_API_KEY.startsWith('sk-or-v1-')) {
     // AI Gateway経由でOpenRouterを使用（キャッシング・分析のメリットあり）
     if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
       const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openrouter`;

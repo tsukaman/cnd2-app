@@ -87,7 +87,7 @@ describe('callOpenAIWithProxy', () => {
         apiKey: 'test-key',
         body: { model: 'gpt-4o-mini', messages: [] },
         env: {
-          OPENROUTER_API_KEY: 'invalid-key', // sk-or-で始まらない
+          OPENROUTER_API_KEY: 'invalid-key', // sk-or-v1-で始まらない
           CLOUDFLARE_ACCOUNT_ID: 'account123',
           CLOUDFLARE_GATEWAY_ID: 'gateway123'
         },
