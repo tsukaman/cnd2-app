@@ -15,6 +15,27 @@ describe('Prairie Card URL Validator', () => {
         expect(result.normalizedUrl).toBe('https://my.prairie.cards/u/tsukaman');
       });
 
+      it('ドットを含むユーザー名も受け入れる', () => {
+        const result = validatePrairieCardUrl('https://my.prairie.cards/u/akane.sakaki');
+        expect(result.isValid).toBe(true);
+        expect(result.error).toBeUndefined();
+        expect(result.normalizedUrl).toBe('https://my.prairie.cards/u/akane.sakaki');
+      });
+
+      it('複数ドットを含むユーザー名を受け入れる', () => {
+        const result = validatePrairieCardUrl('https://my.prairie.cards/u/user.name.test');
+        expect(result.isValid).toBe(true);
+        expect(result.error).toBeUndefined();
+        expect(result.normalizedUrl).toBe('https://my.prairie.cards/u/user.name.test');
+      });
+
+      it('ドット、アンダースコア、ハイフンの組み合わせを受け入れる', () => {
+        const result = validatePrairieCardUrl('https://my.prairie.cards/u/user.name_123-test');
+        expect(result.isValid).toBe(true);
+        expect(result.error).toBeUndefined();
+        expect(result.normalizedUrl).toBe('https://my.prairie.cards/u/user.name_123-test');
+      });
+
       it('my.prairie.cardsの/cards/{uuid}形式のURLを受け入れる', () => {
         const result = validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043');
         expect(result.isValid).toBe(true);
