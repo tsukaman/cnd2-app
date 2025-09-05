@@ -12,6 +12,27 @@ const {
 } = require('../cncf-projects.js');
 
 describe('CNCF Project Advanced Tests', () => {
+  // Store original state for restoration
+  let originalProjects = [];
+  let originalGraduated = [];
+  let originalIncubating = [];
+  let originalSandbox = [];
+
+  beforeEach(() => {
+    // Save original state before each test
+    originalProjects = [...ALL_CNCF_PROJECTS];
+    originalGraduated = [...CNCF_GRADUATED_PROJECTS];
+    originalIncubating = [...CNCF_INCUBATING_PROJECTS];
+    originalSandbox = [...CNCF_SANDBOX_PROJECTS];
+  });
+
+  afterEach(() => {
+    // Restore original state after each test
+    ALL_CNCF_PROJECTS.splice(0, ALL_CNCF_PROJECTS.length, ...originalProjects);
+    CNCF_GRADUATED_PROJECTS.splice(0, CNCF_GRADUATED_PROJECTS.length, ...originalGraduated);
+    CNCF_INCUBATING_PROJECTS.splice(0, CNCF_INCUBATING_PROJECTS.length, ...originalIncubating);
+    CNCF_SANDBOX_PROJECTS.splice(0, CNCF_SANDBOX_PROJECTS.length, ...originalSandbox);
+  });
   
   describe('Category Distribution Analysis', () => {
     it('should have proper distribution across categories', () => {
@@ -64,21 +85,28 @@ describe('CNCF Project Advanced Tests', () => {
         selections[project.name]++;
       }
       
-      // Calculate expected frequency
+      // Calculate expected frequency and standard deviation
       const expectedFrequency = sampleSize / ALL_CNCF_PROJECTS.length;
-      const tolerance = expectedFrequency * 0.5; // 50% tolerance for random distribution
+      // Standard deviation for uniform distribution (binomial approximation)
+      const stdDev = Math.sqrt(expectedFrequency * (1 - 1 / ALL_CNCF_PROJECTS.length));
       
-      // Check that each project is selected somewhat uniformly
+      // 3-sigma rule: 99.7% of values should be within 3 standard deviations
+      const lowerBound = expectedFrequency - 3 * stdDev;
+      const upperBound = expectedFrequency + 3 * stdDev;
+      
+      // Check that each project is selected within expected bounds
       const frequencies = Object.values(selections);
-      let withinToleranceCount = 0;
+      let withinBoundsCount = 0;
       frequencies.forEach(freq => {
-        if (freq > expectedFrequency - tolerance && freq < expectedFrequency + tolerance) {
-          withinToleranceCount++;
+        if (freq >= lowerBound && freq <= upperBound) {
+          withinBoundsCount++;
         }
       });
       
-      // At least 90% of projects should be within tolerance
-      expect(withinToleranceCount / frequencies.length).toBeGreaterThan(0.9);
+      // Using 3-sigma rule, we expect 99.7% of values within bounds
+      // Allow for small variation due to randomness (99% threshold)
+      const successRate = withinBoundsCount / frequencies.length;
+      expect(successRate).toBeGreaterThan(0.99);
     });
 
     it('should properly distribute selections by category', () => {
@@ -157,6 +185,8 @@ describe('CNCF Project Advanced Tests', () => {
     });
 
     it('should have meaningful descriptions', () => {
+      const projectsWithoutJapanese = [];
+      
       ALL_CNCF_PROJECTS.forEach(project => {
         // Japanese description should be at least 10 characters
         expect(project.description.length).toBeGreaterThanOrEqual(10);
@@ -170,15 +200,20 @@ describe('CNCF Project Advanced Tests', () => {
         // Note: Some projects may have English names in Japanese description
         const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(project.description);
         if (project.name !== 'PARSEC' && project.name !== 'OpenFeature' && project.name !== 'OpenTelemetry') {
-          // Most projects should have Japanese in description
+          // Collect projects without Japanese for summary
           if (!hasJapanese) {
-            console.log(`Project without Japanese: ${project.name}`);
+            projectsWithoutJapanese.push(project.name);
           }
         }
         
         // English description should primarily be in English (allow for some technical terms)
         // This is a soft check since some technical terms might remain
       });
+      
+      // Report summary only in development environment
+      if (projectsWithoutJapanese.length > 0 && process.env.NODE_ENV === 'development') {
+        console.log(`Projects without Japanese descriptions: ${projectsWithoutJapanese.join(', ')}`);
+      }
     });
   });
 
@@ -375,9 +410,8 @@ describe('CNCF Project Advanced Tests', () => {
     });
 
     it('should provide fallback when projects list is empty', () => {
-      // Temporarily mock empty list
-      const originalProjects = ALL_CNCF_PROJECTS;
-      ALL_CNCF_PROJECTS.length = 0;
+      // Clear the array safely (will be restored by afterEach)
+      ALL_CNCF_PROJECTS.splice(0, ALL_CNCF_PROJECTS.length);
       
       const result = selectRandomCNCFProject();
       
@@ -385,8 +419,7 @@ describe('CNCF Project Advanced Tests', () => {
       expect(result.url).toBe('https://kubernetes.io/');
       expect(result.description).toContain('コンテナ');
       
-      // Restore original
-      ALL_CNCF_PROJECTS.push(...originalProjects);
+      // No need to manually restore - afterEach will handle it
     });
   });
 });
