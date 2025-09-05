@@ -192,19 +192,3 @@ export async function onRequestOptions({ request }) {
   });
 }
 
-function getCorsHeaders(requestOrigin) {
-  const allowedOrigins = [
-    'https://cnd2-app.pages.dev',
-    'https://cnd2.cloudnativedays.jp',
-    'http://localhost:3000',
-  ];
-  
-  const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : null;
-  
-  return {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-  };
-}
