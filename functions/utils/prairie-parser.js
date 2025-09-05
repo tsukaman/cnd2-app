@@ -5,6 +5,15 @@
 
 import { createSafeDebugLogger } from './debug-helpers.js';
 
+/**
+ * Escape regular expression special characters
+ * @param {string} string - String to escape
+ * @returns {string} - Escaped string safe for regex
+ */
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Constants for array limits and string lengths
 const LIMITS = {
   SKILLS: 15,           // Maximum number of skills to extract
@@ -290,15 +299,6 @@ function extractProfileFromMeta(html) {
  */
 function extractAvatarFromMeta(html) {
   return extractMetaContent(html, 'og:image');
-}
-
-/**
- * Escape regular expression special characters
- * @param {string} string - String to escape
- * @returns {string} - Escaped string safe for regex
- */
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
