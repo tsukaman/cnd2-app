@@ -63,11 +63,13 @@ OpenAI APIの地域制限問題を解決するため、OpenRouterを優先的に
 ### 推奨設定（OpenRouter + AI Gateway）
 ```bash
 # OpenRouter（必須）
-OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxx
+# ⚠️ 重要: 以下は例です。実際のAPIキーに置き換えてください
+OPENROUTER_API_KEY=sk-or-v1-your-actual-key-here
 
 # Cloudflare AI Gateway（推奨）
-CLOUDFLARE_ACCOUNT_ID=your-account-id
-CLOUDFLARE_GATEWAY_ID=your-gateway-id
+# ⚠️ 重要: 実際のアカウントIDとゲートウェイIDに置き換えてください
+CLOUDFLARE_ACCOUNT_ID=your-actual-account-id
+CLOUDFLARE_GATEWAY_ID=your-actual-gateway-id
 
 # 基本設定
 NODE_ENV=production
@@ -77,7 +79,8 @@ DEBUG_MODE=false
 ### 後方互換性設定（OpenAIのみ）
 ```bash
 # OpenAI API（地域制限の影響あり）
-OPENAI_API_KEY=sk-xxxxxxxxxxxx
+# ⚠️ 重要: 以下は例です。実際のAPIキーに置き換えてください
+OPENAI_API_KEY=sk-your-actual-key-here
 
 # 基本設定
 NODE_ENV=production

@@ -6,10 +6,10 @@
 
 | 変数名 | 説明 | 設定値例 | 設定場所 | 優先度 |
 |--------|------|----------|----------|--------|
-| `OPENROUTER_API_KEY` | OpenRouter APIキー（推奨） | `sk-or-v1-xxxxx` | Cloudflare Dashboard | 高 |
-| `OPENAI_API_KEY` | OpenAI APIキー（後方互換性） | `sk-xxxxx` | Cloudflare Dashboard | 低 |
-| `CLOUDFLARE_ACCOUNT_ID` | CloudflareアカウントID | `xxxxx` | Cloudflare Dashboard | 中 |
-| `CLOUDFLARE_GATEWAY_ID` | AI Gateway ID | `xxxxx` | Cloudflare Dashboard | 中 |
+| `OPENROUTER_API_KEY` | OpenRouter APIキー（推奨） | `sk-or-v1-実際のキー` ⚠️ | Cloudflare Dashboard | 高 |
+| `OPENAI_API_KEY` | OpenAI APIキー（後方互換性） | `sk-実際のキー` ⚠️ | Cloudflare Dashboard | 低 |
+| `CLOUDFLARE_ACCOUNT_ID` | CloudflareアカウントID | `実際のID` ⚠️ | Cloudflare Dashboard | 中 |
+| `CLOUDFLARE_GATEWAY_ID` | AI Gateway ID | `実際のID` ⚠️ | Cloudflare Dashboard | 中 |
 | `NODE_ENV` | 実行環境 | `production` | Cloudflare Dashboard | 高 |
 
 ### 🎛️ 動作制御（イベント運用）
@@ -72,10 +72,11 @@
 
 ```bash
 # .env.local（Gitには含めない）
-OPENROUTER_API_KEY=sk-or-v1-xxxxx  # 推奨：地域制限回避
-# OPENAI_API_KEY=sk-xxxxx  # オプション：後方互換性
-CLOUDFLARE_ACCOUNT_ID=xxxxx  # AI Gateway使用時
-CLOUDFLARE_GATEWAY_ID=xxxxx  # AI Gateway使用時
+# ⚠️ 重要: 以下は例です。実際の値に置き換えてください
+OPENROUTER_API_KEY=sk-or-v1-your-actual-key  # 推奨：地域制限回避
+# OPENAI_API_KEY=sk-your-actual-key  # オプション：後方互換性
+CLOUDFLARE_ACCOUNT_ID=your-actual-id  # AI Gateway使用時
+CLOUDFLARE_GATEWAY_ID=your-actual-id  # AI Gateway使用時
 DEBUG_MODE=true  # 開発時は詳細ログを出力
 NODE_ENV=development
 ```
