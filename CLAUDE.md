@@ -419,6 +419,7 @@ try {
 - [環境変数設定ガイド](docs/ENVIRONMENT_VARIABLES.md) - すべての環境変数の詳細
 - [イベント運用ガイド](docs/EVENT_OPERATION_GUIDE.md) - CloudNative Days Winter 2025運用手順
 - [フォールバック削除計画](docs/FALLBACK_REMOVAL_PLAN.md) - 段階的削除の詳細計画
+- [技術的負債TODOリスト](docs/TODO-TECHNICAL-DEBT.md) - コードレビューで発見された改善項目の管理
 
 ## 🔄 最近の重要な変更
 
@@ -1124,6 +1125,8 @@ try {
 5. **型安全性向上**: DiagnosisResult型の統一
 
 ## 📝 今後の改善項目（ToDo）
+
+> **Note**: 詳細な技術的負債と改善項目は [技術的負債TODOリスト](docs/TODO-TECHNICAL-DEBT.md) を参照してください。
 
 ### 結果共有機能の改善（高優先度）
 - [x] **KV保存処理の共通化** ✅ 2025-09-04完了
