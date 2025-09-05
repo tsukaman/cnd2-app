@@ -543,7 +543,7 @@ docker run -p 3000:3000 cnd2-app
   - Cloudflare Functions (production only) ✅
   - 診断機能正常動作 ✅
   - Cloudflare Pages Functions (production) ✅
-- **AI Integration**: OpenAI GPT-4o-mini診断 ✅
+- **AI Integration**: OpenRouter/GPT-4o-mini診断 ✅
 - **セキュリティ**: 
   - HTML sanitization & XSS protection ✅
   - Rate limiting (10 req/min per IP) ✅
