@@ -2,295 +2,262 @@
  * CNCF (Cloud Native Computing Foundation) プロジェクトリスト
  * https://www.cncf.io/projects/
  * 
- * 最終更新: 2025-09-04
- * プロジェクト総数: 216 (Graduated: 31, Incubating: 36, Sandbox: 133, Archived: 16)
+ * 最終更新: 2025-09-05
+ * プロジェクト総数: 200 (Graduated: 31, Incubating: 36, Sandbox: 133)
  */
 
 export interface CNCFProject {
   name: string;
   description: string;
+  description_en?: string;
   homepage: string;
 }
 
 // Graduated Projects (成熟したプロジェクト) - 31プロジェクト
 export const CNCF_GRADUATED_PROJECTS: CNCFProject[] = [
-  { name: 'Argo', description: 'ワークフローを実行し、クラスターを管理し、GitOpsを正しく実践するためのKubernetesネイティブツール。', homepage: 'https://argoproj.github.io/' },
-  { name: 'cert-manager', description: 'Kubernetes で TLS 証明書を自動的に発行・管理する。', homepage: 'https://cert-manager.io/' },
-  { name: 'Cilium', description: 'eBPF に基づくネットワーキング、セキュリティ、観測性を提供する。', homepage: 'https://cilium.io/' },
-  { name: 'CloudEvents', description: 'イベントの識別とルーティングを支援するため、共通のイベントメタデータとその位置を標準化する。', homepage: 'https://cloudevents.io/' },
-  { name: 'containerd', description: 'オープンで信頼性の高いコンテナランタイム。', homepage: 'https://containerd.io/' },
-  { name: 'CoreDNS', description: 'CoreDNS はプラグインを連結して拡張できる DNS サーバー。', homepage: 'https://coredns.io/' },
-  { name: 'CRI-O', description: 'Kubernetes のコンテナランタイムインターフェースを OCI に基づき実装したもの。', homepage: 'https://cri-o.io/' },
-  { name: 'CubeFS', description: 'クラウドネイティブな分散ストレージ。', homepage: 'https://cubefs.io/' },
-  { name: 'Envoy', description: 'エッジとサービスプロキシ。', homepage: 'https://www.envoyproxy.io/' },
-  { name: 'etcd', description: '分散型で信頼性が高いキーバリューストア。', homepage: 'https://etcd.io/' },
-  { name: 'Flux', description: 'アプリとインフラのためのGitOps。', homepage: 'https://fluxcd.io/' },
-  { name: 'Fluentd', description: 'ログデータのためのユニファイドロギングレイヤ。', homepage: 'https://www.fluentd.org/' },
-  { name: 'Harbor', description: 'クラウドネイティブなコンテナイメージレジストリで、スキャン、レプリケーション、署名、ロールベースアクセスをサポート。', homepage: 'https://goharbor.io/' },
-  { name: 'Helm', description: 'Kubernetesパッケージマネージャー。', homepage: 'https://helm.sh/' },
-  { name: 'Istio', description: 'サービスの接続、保護、制御、観測。', homepage: 'https://istio.io/' },
-  { name: 'Jaeger', description: '分散トレースプラットフォーム。', homepage: 'https://www.jaegertracing.io/' },
-  { name: 'Keda', description: 'イベント駆動型アプリケーションの自動スケーリング。', homepage: 'https://keda.sh/' },
-  { name: 'Kubernetes', description: 'コンテナ化されたアプリケーションのデプロイ、スケール、管理を自動化するオープンソースシステム。', homepage: 'https://kubernetes.io/' },
-  { name: 'Linkerd', description: 'Kubernetesのための軽量サービスメッシュ。', homepage: 'https://linkerd.io/' },
-  { name: 'NATS', description: '現代の分散システムのための非常に高性能なメッセージング。', homepage: 'https://nats.io/' },
-  { name: 'Open Policy Agent', description: 'ポリシーベースの管理。', homepage: 'https://www.openpolicyagent.org/' },
-  { name: 'OpenTelemetry', description: 'テレメトリデータの管理を標準化。', homepage: 'https://opentelemetry.io/' },
-  { name: 'Prometheus', description: '監視とアラートのツールキット。', homepage: 'https://prometheus.io/' },
-  { name: 'Rook', description: 'Kubernetesのためのクラウドネイティブストレージ。', homepage: 'https://rook.io/' },
-  { name: 'SPIFFE', description: '分散システムのためのIDフレームワーク。', homepage: 'https://spiffe.io/' },
-  { name: 'SPIRE', description: 'SPIFFEランタイム環境 - 実装。', homepage: 'https://spiffe.io/spire/' },
-  { name: 'The Update Framework (TUF)', description: 'ソフトウェアアップデートシステムのセキュリティ改善。', homepage: 'https://theupdateframework.io/' },
-  { name: 'Thanos', description: 'HA Prometheus セットアップ。', homepage: 'https://thanos.io/' },
-  { name: 'TiKV', description: 'クラウドネイティブな分散キーバリューデータベース。', homepage: 'https://tikv.org/' },
-  { name: 'Vitess', description: 'MySQLのための水平スケーリングシステム。', homepage: 'https://vitess.io/' }
+  { name: 'Argo', description: 'ArgoはKubernetesネイティブなワークフロー実行、クラスター管理、GitOpsを実現するツール群です。', description_en: 'Kubernetes-native tools to run workflows, manage clusters, and do GitOps right.', homepage: 'https://argoproj.github.io/' },
+  { name: 'cert-manager', description: 'cert-managerはKubernetesでTLS証明書の自動発行と管理を行うツールです。', description_en: 'Automatically provision and manage TLS certificates in Kubernetes', homepage: 'https://cert-manager.io/' },
+  { name: 'Cilium', description: 'CiliumはeBPFを活用したネットワーキング、セキュリティ、可観測性のプラットフォームです。', description_en: 'eBPF-based Networking, Security, and Observability', homepage: 'https://cilium.io/' },
+  { name: 'CloudEvents', description: 'CloudEventsはイベント識別とルーティングを容易にするために共通のイベントメタデータとその場所を標準化する仕様です。', description_en: 'Standardizing common eventing metadata and their location to help with event identification and routing.', homepage: 'https://cloudevents.io/' },
+  { name: 'containerd', description: 'containerdはオープンで信頼性の高いコンテナランタイムです。', description_en: 'An open and reliable container runtime', homepage: 'https://containerd.io/' },
+  { name: 'CoreDNS', description: 'CoreDNSはプラグインを連結して機能を拡張できるDNSサーバーです。', description_en: 'CoreDNS is a DNS server that chains plugins', homepage: 'https://coredns.io/' },
+  { name: 'CRI-O', description: 'CRI-OはOCI仕様に基づいたKubernetesコンテナランタイムインターフェースの実装です。', description_en: 'Open Container Initiative-based implementation of Kubernetes Container Runtime Interface', homepage: 'https://cri-o.io/' },
+  { name: 'CubeFS', description: 'CubeFSはクラウドネイティブな分散ストレージです。', description_en: 'cloud-native distributed storage', homepage: 'https://cubefs.io/' },
+  { name: 'Dapr', description: 'Daprはクラウドとエッジにまたがる分散アプリを構築するためのポータブルなイベント駆動型ランタイムです。', description_en: 'Dapr is a portable, event-driven, runtime for building distributed applications across cloud and edge.', homepage: 'https://dapr.io' },
+  { name: 'Envoy', description: 'Envoyはクラウドネイティブで高性能なエッジ/ミドル/サービスプロキシです。', description_en: 'Cloud-native high-performance edge/middle/service proxy', homepage: 'https://www.envoyproxy.io' },
+  { name: 'etcd', description: 'etcdは分散システムの重要データを扱う信頼性の高い分散キー値ストアです。', description_en: 'Distributed reliable key-value store for the most critical data of a distributed system', homepage: 'https://etcd.io/' },
+  { name: 'Falco', description: 'Falcoはクラウドネイティブ環境向けのランタイムセキュリティツールです。', description_en: 'Cloud Native Runtime Security', homepage: 'https://falco.org/' },
+  { name: 'Fluentd', description: 'FluentdはCNCF配下の統合ログ収集レイヤーです。', description_en: 'Fluentd: Unified Logging Layer (project under CNCF)', homepage: 'https://www.fluentd.org/' },
+  { name: 'Flux', description: 'FluxはGitOpsツールキットを基盤とするオープンで拡張可能なKubernetes向け継続的デリバリーソリューションです。', description_en: 'Open and extensible continuous delivery solution for Kubernetes. Powered by GitOps Toolkit.', homepage: 'https://fluxcd.io/' },
+  { name: 'Harbor', description: 'Harborはコンテンツの保存・署名・スキャンを行う信頼性の高いオープンソースのクラウドネイティブレジストリです。', description_en: 'An open source trusted cloud native registry project that stores, signs, and scans content.', homepage: 'https://goharbor.io/' },
+  { name: 'Helm', description: 'HelmはKubernetesのパッケージマネージャーです。', description_en: 'The Kubernetes Package Manager', homepage: 'https://helm.sh/' },
+  { name: 'in-toto', description: 'in-totoはソフトウェアサプライチェーンの完全性を保護するためのフレームワークです。', description_en: 'in-toto is a framework to protect supply chain integrity.', homepage: 'https://in-toto.io' },
+  { name: 'Istio', description: 'Istioサービスメッシュは可観測性、トラフィック管理、セキュリティ、ポリシーを簡素化します。', description_en: 'Simplify observability, traffic management, security, and policy with the Istio service mesh.', homepage: 'https://istio.io/' },
+  { name: 'Jaeger', description: 'JaegerはCNCFの分散トレーシングプラットフォームです。', description_en: 'CNCF Jaeger, a Distributed Tracing Platform', homepage: 'https://www.jaegertracing.io/' },
+  { name: 'KEDA', description: 'KEDAはKubernetesをベースとしたイベントドリブンのオートスケーリングコンポーネントで、イベントに応じてコンテナをスケールさせます。', description_en: ' KEDA is a Kubernetes-based Event Driven Autoscaling component. It provides event driven scale for any container running in Kubernetes ', homepage: 'https://keda.sh/' },
+  { name: 'KubeEdge', description: 'KubeEdgeはクラウドとエッジをつなぐKubernetesネイティブのエッジコンピューティングフレームワークです。', description_en: 'Kubernetes Native Edge Computing Framework (project under CNCF)', homepage: 'https://kubeedge.io/en/' },
+  { name: 'Kubernetes', description: 'Kubernetesはコンテナ化されたアプリケーションのデプロイ、スケーリング、管理を自動化するオープンソースシステムです。', description_en: 'Kubernetes is an open-source system for automating deployment, scaling, and management of containerized applications', homepage: 'https://kubernetes.io/' },
+  { name: 'Linkerd', description: 'Linkerdは非常に軽量でシンプルかつ強力なサービスメッシュで、Kubernetesにセキュリティや可観測性、信頼性を追加します。', description_en: 'Ultra light, ultra simple, ultra powerful. Linkerd adds security, observability, and reliability to Kubernetes, without the complexity.', homepage: 'https://linkerd.io/' },
+  { name: 'Open Policy Agent (OPA)', description: 'Open Policy Agent (OPA)は汎用のオープンソースポリシーエンジンです。', description_en: 'Open Policy Agent (OPA) is an open source, general-purpose policy engine.', homepage: 'https://www.openpolicyagent.org/' },
+  { name: 'Prometheus', description: 'Prometheusはモニタリングシステム兼時系列データベースです。', description_en: 'The Prometheus monitoring system and time series database.', homepage: 'https://prometheus.io/' },
+  { name: 'Rook', description: 'RookはKubernetes向けのストレージオーケストレーションツールです。', description_en: 'Storage Orchestration for Kubernetes', homepage: 'https://rook.io/' },
+  { name: 'SPIFFE', description: 'SPIFFEは標準化されたアイデンティティフレームワークを提供するプロジェクトです。', description_en: 'The SPIFFE Project', homepage: 'https://spiffe.io/' },
+  { name: 'SPIRE', description: 'SPIREはSPIFFEの実行環境を提供するソフトウェアです。', description_en: 'The SPIFFE Runtime Environment', homepage: 'https://spiffe.io/spire/' },
+  { name: 'The Update Framework (TUF)', description: 'The Update Framework (TUF)はソフトウェアアップデートの安全な配布を支援するフレームワークで、このプロジェクトはそのPythonリファレンス実装です。', description_en: 'Python reference implementation of The Update Framework (TUF)', homepage: 'https://theupdateframework.github.io/' },
+  { name: 'TiKV', description: 'TiKVはGoogle SpannerやHBaseの設計に基づいた分散トランザクショナルKey-Valueデータベースで、管理が容易で分散ファイルシステムに依存しません。', description_en: 'A distributed transactional key-value database. Based on the design of Google Spanner and HBase, but simpler to manage and without dependencies on any distributed filesystem', homepage: 'https://tikv.org' },
+  { name: 'Vitess', description: 'VitessはMySQL互換で水平スケーラブルなクラウドネイティブデータベースソリューションです。', description_en: 'MySQL-compatible, horizontally scalable, cloud-native database solution.', homepage: 'https://vitess.io/' }
 ];
 
 // Incubating Projects (成長中のプロジェクト) - 36プロジェクト
 export const CNCF_INCUBATING_PROJECTS: CNCFProject[] = [
-  { name: 'Backstage', description: '開発者ポータルを構築するためのオープンプラットフォーム。', homepage: 'https://backstage.io/' },
-  { name: 'Buildpacks', description: 'ソースコードをコンテナイメージに変換する高レベルな抽象化。', homepage: 'https://buildpacks.io/' },
-  { name: 'Chaos Mesh', description: 'Kubernetesのためのカオスエンジニアリングプラットフォーム。', homepage: 'https://chaos-mesh.org/' },
-  { name: 'Contour', description: 'KubernetesのためのEnvoyベースのイングレスコントローラー。', homepage: 'https://projectcontour.io/' },
-  { name: 'Cortex', description: 'Prometheusのための長期ストレージ。', homepage: 'https://cortexmetrics.io/' },
-  { name: 'Crossplane', description: 'インフラを構成、組み合わせ、消費するためのKubernetes拡張。', homepage: 'https://crossplane.io/' },
-  { name: 'CubeFS', description: 'クラウドネイティブな分散ストレージ。', homepage: 'https://cubefs.io/' },
-  { name: 'dapr', description: '分散アプリケーションランタイム。', homepage: 'https://dapr.io/' },
-  { name: 'Dragonfly', description: '効率的、安全、インテリジェントなP2Pベースのファイル配信システム。', homepage: 'https://d7y.io/' },
-  { name: 'emissary-ingress', description: 'KubernetesのためのEnvoyベースのAPIゲートウェイ。', homepage: 'https://www.getambassador.io/products/api-gateway/' },
-  { name: 'Falco', description: 'アプリケーションとコンテナのためのランタイムセキュリティ。', homepage: 'https://falco.org/' },
-  { name: 'gRPC', description: 'モバイルとHTTP/2デザイン。', homepage: 'https://grpc.io/' },
-  { name: 'in-toto', description: 'ソフトウェアサプライチェーンの完全性を保護。', homepage: 'https://in-toto.io/' },
-  { name: 'Karmada', description: 'マルチクラウドおよびマルチクラスターKubernetesオーケストレーション。', homepage: 'https://karmada.io/' },
-  { name: 'Keycloak', description: 'アプリケーションとサービスのためのオープンソースのアイデンティティとアクセス管理。', homepage: 'https://www.keycloak.org/' },
-  { name: 'Knative', description: 'サーバーレスワークロードを構築、デプロイ、管理するKubernetesプラットフォーム。', homepage: 'https://knative.dev/' },
-  { name: 'Kubeflow', description: 'KubernetesのためのMLツールキット。', homepage: 'https://www.kubeflow.org/' },
-  { name: 'KubeVirt', description: 'Kubernetes上の仮想マシン管理。', homepage: 'https://kubevirt.io/' },
-  { name: 'Litmus', description: 'Kubernetesのためのカオスエンジニアリング。', homepage: 'https://litmuschaos.io/' },
-  { name: 'Longhorn', description: 'Kubernetesのためのクラウドネイティブ分散ブロックストレージ。', homepage: 'https://longhorn.io/' },
-  { name: 'Metal3', description: 'ベアメタルホストプロビジョニング。', homepage: 'https://metal3.io/' },
-  { name: 'Network Service Mesh', description: 'L2/L3ペイロードのサービスメッシュ。', homepage: 'https://networkservicemesh.io/' },
-  { name: 'Notary', description: 'Dockerレジストリからコンテンツの信頼性を確保。', homepage: 'https://notaryproject.dev/' },
-  { name: 'OpenFeature', description: 'オープンスタンダードのフィーチャーフラグ。', homepage: 'https://openfeature.dev/' },
-  { name: 'OpenKruise', description: 'Kubernetesのためのアプリワークロードエンジン。', homepage: 'https://openkruise.io/' },
-  { name: 'OpenMetrics', description: 'メトリクス公開標準。', homepage: 'https://openmetrics.io/' },
-  { name: 'Operator Framework', description: 'オペレータパターンでKubernetesネイティブアプリケーションを管理。', homepage: 'https://operatorframework.io/' },
-  { name: 'Paralus', description: '一元化されたKubernetesアクセス管理。', homepage: 'https://www.paralus.io/' },
-  { name: 'Pixie', description: 'オープンソースの観測性ツール（Kubernetes用）。', homepage: 'https://px.dev/' },
-  { name: 'Porter', description: 'パッケージデプロイメントの抽象化。', homepage: 'https://porter.sh/' },
-  { name: 'Service Mesh Interface', description: 'サービスメッシュの標準インターフェース。', homepage: 'https://smi-spec.io/' },
-  { name: 'Strimzi', description: 'KubernetesでApache Kafkaを実行。', homepage: 'https://strimzi.io/' },
-  { name: 'Telepresence', description: 'ローカル開発、グローバルテスト。', homepage: 'https://www.telepresence.io/' },
-  { name: 'Trickster', description: '高速HTTPリバースプロキシキャッシュ。', homepage: 'https://tricksterproxy.io/' },
-  { name: 'Virtual Kubelet', description: 'サーバーレスKubeletの実装。', homepage: 'https://virtual-kubelet.io/' },
-  { name: 'Volcano', description: 'バッチシステム上のKubernetes。', homepage: 'https://volcano.sh/' }
+  { name: 'Artifact Hub', description: 'Artifact Hubはクラウドネイティブパッケージの検索、インストール、公開を行うハブです。', description_en: 'Find, install and publish Cloud Native packages', homepage: 'https://artifacthub.io' },
+  { name: 'Backstage', description: 'Backstageは開発者向けポータルを構築するためのオープンなフレームワークです。', description_en: 'Backstage is an open framework for building developer portals', homepage: 'https://backstage.io/' },
+  { name: 'Buildpacks', description: 'BuildpacksはCloud Native Buildpacksを利用してアプリをビルドするためのCLIツールです。', description_en: 'CLI for building apps using Cloud Native Buildpacks', homepage: 'https://buildpacks.io/' },
+  { name: 'Chaos Mesh', description: 'Chaos MeshはKubernetes向けのカオスエンジニアリングプラットフォームです。', description_en: 'A Chaos Engineering Platform for Kubernetes.', homepage: 'https://chaos-mesh.org/' },
+  { name: 'Cloud Custodian', description: 'Cloud Custodianはクラウドのセキュリティ、コスト最適化、ガバナンスを実現するルールエンジンで、YAMLでポリシーを記述します。', description_en: 'Rules engine for cloud security, cost optimization, and governance, DSL in yaml for policies to query, filter, and take actions on resources', homepage: 'https://cloudcustodian.io/' },
+  { name: 'Container Network Interface (CNI)', description: 'Container Network Interface (CNI)はLinuxコンテナ向けの標準的なネットワークインターフェース仕様です。', description_en: 'Container Network Interface - networking for Linux containers', homepage: 'https://www.cni.dev/' },
+  { name: 'Contour', description: 'ContourはEnvoyプロキシを利用するKubernetesのIngressコントローラーです。', description_en: 'Contour is a Kubernetes ingress controller using Envoy proxy.', homepage: 'https://projectcontour.io' },
+  { name: 'Cortex', description: 'Cortexは水平スケーラブルで高可用なマルチテナントの長期保存可能なPrometheusです。', description_en: 'A horizontally scalable, highly available, multi-tenant, long term Prometheus.', homepage: 'https://cortexmetrics.io/' },
+  { name: 'Crossplane', description: 'Crossplaneはコードを書かずにコントロールプレーンを構築できるクラウドネイティブなフレームワークです。', description_en: 'Crossplane is the cloud native control plane framework that allows you to build control planes without needing to write code. Crossplane has a highly extensible backend that enables you to orchestrate applications and infrastructure no matter where they run and a highly configurable frontend that lets you define the declarative API it offers.', homepage: 'https://crossplane.io/' },
+  { name: 'Dragonfly', description: 'DragonflyはP2Pベースのファイル配布とイメージ高速化システムで、CNCFでインキュベーションプロジェクトとしてホストされています。', description_en: 'Dragonfly is an open source P2P-based file distribution and image acceleration system. It is hosted by the Cloud Native Computing Foundation (CNCF) as an Incubating Level Project.', homepage: 'https://d7y.io/' },
+  { name: 'Emissary-Ingress', description: 'Emissary-IngressはEnvoy Proxy上に構築されたマイクロサービス向けのKubernetesネイティブAPIゲートウェイです。', description_en: 'open source Kubernetes-native API gateway for microservices built on the Envoy Proxy', homepage: 'https://www.getambassador.io/' },
+  { name: 'Flatcar Container Linux', description: 'Flatcar Container Linuxはコンテナワークロード向けに設計されたコミュニティLinuxディストリビューションで、高いセキュリティと低メンテナンスを特徴とします。', description_en: 'A community Linux distribution designed for container workloads, with high security and low maintenance', homepage: 'https://www.flatcar.org/' },
+  { name: 'gRPC', description: 'gRPCはCベース実装のRPCフレームワークで、多数の言語バインディングを提供します。', description_en: 'The C based gRPC (C++, Python, Ruby, Objective-C, PHP, C#)', homepage: 'https://grpc.io/' },
+  { name: 'Karmada', description: 'Karmadaはオープンでマルチクラウド・マルチクラスターのKubernetesオーケストレーションを提供します。', description_en: 'Open, Multi-Cloud, Multi-Cluster Kubernetes Orchestration', homepage: 'https://karmada.io/' },
+  { name: 'Keptn', description: 'Keptnはクラウドネイティブアプリのライフサイクルオーケストレーションを行い、SLOに基づくマルチステージのデリバリーと運用を自動化します。', description_en: 'Cloud-native application life-cycle orchestration. Keptn automates your SLO-driven multi-stage delivery and operations & remediation of your applications.', homepage: 'https://www.keptn.sh' },
+  { name: 'Keycloak', description: 'Keycloakは業界標準のセキュリティプロトコルに基づくオープンソースのアイデンティティおよびアクセス管理ソリューションです。', description_en: 'Keycloak is an open-source identity and access management solution for modern applications and services,  built on top of industry security standard protocols.', homepage: 'https://www.keycloak.org/' },
+  { name: 'Knative', description: 'KnativeはKubernetes上でサーバーレスアプリを実行するための開発者向けプラットフォームで、オートスケーリングやイベントルーティングなどを提供します。', description_en: 'Knative is a developer-focused serverless application layer which is a great complement to the existing Kubernetes application constructs. Knative consists of three components: an HTTP-triggered autoscaling container runtime called “Knative Serving”, a CloudEvents-over-HTTP asynchronous routing layer called “Knative Eventing”, and a developer-focused function framework which leverages the Serving and Eventing components, called "Knative Functions".', homepage: 'https://knative.dev' },
+  { name: 'Kubeflow', description: 'Kubeflowは機械学習ワークフローをKubernetes上に簡単・移植可能・スケーラブルに展開できるようにするプロジェクトです。', description_en: 'The Kubeflow project is dedicated to making deployments of machine learning workflows on Kubernetes simple, portable and scalable by providing a straightforward way to deploy best-of-breed open-source systems for ML to diverse infrastructures.', homepage: 'https://kubeflow.org' },
+  { name: 'Kubescape', description: 'Kubescapeはクラスターやマニフェスト、コードリポジトリ、コンテナレジストリをスキャンし、設定不備や脆弱性を検出するセキュリティおよびコンプライアンスプラットフォームです。', description_en: 'Kubescape is an open source security and compliance platform that scans clusters, Kubernetes manifest files (YAML files, and Helm charts), code repositories, container registries and images. It detects misconfigurations according to frameworks such as the NSA-CISA,  MITRE ATT&CK® and CIS, as well as software vulnerabilities, and calculates risk scores.', homepage: 'https://kubescape.io/' },
+  { name: 'KubeVela', description: 'KubeVelaはモダンなアプリケーションプラットフォームです。', description_en: 'The Modern Application Platform.', homepage: 'https://kubevela.io' },
+  { name: 'KubeVirt', description: 'KubeVirtは仮想マシンを定義・管理するためのKubernetes仮想化APIとランタイムを提供します。', description_en: 'Kubernetes Virtualization API and runtime in order to define and manage virtual machines.', homepage: 'https://kubevirt.io/' },
+  { name: 'Kyverno', description: 'Kyvernoはクラウドネイティブ環境向けのポリシー管理ツールです。', description_en: 'Cloud Native Policy Management', homepage: 'https://kyverno.io/' },
+  { name: 'Litmus', description: 'LitmusはSREや開発者がクラウドネイティブな方法でカオスエンジニアリングを実践できるよう支援するツールです。', description_en: 'Litmus helps  SREs and developers practice chaos engineering in a Cloud-native way. Chaos experiments are published at the ChaosHub  (https://hub.litmuschaos.io). Community notes is at https://hackmd.io/a4Zu_sH4TZGeih-xCimi3Q', homepage: 'https://litmuschaos.io/' },
+  { name: 'Longhorn', description: 'LonghornはKubernetes向けのクラウドネイティブな分散ストレージです。', description_en: 'Cloud-native distributed storage for Kubernetes', homepage: 'https://longhorn.io/' },
+  { name: 'NATS', description: 'NATSはデバイス、エッジ、クラウド、ハイブリッド環境を接続する分散システム向けのメッセージング技術です。', description_en: 'NATS.io is a connective technology for distributed systems and is a perfect fit to connect devices, edge, cloud or hybrid deployments. True multi-tenancy makes NATS ideal for SaaS and self-healing and scaling technology allows for topology changes anytime with zero downtime.', homepage: 'https://nats.io/' },
+  { name: 'Notary Project', description: 'Notary Projectはコンテナイメージなどのアーティファクトに署名と検証を行うCLIツールです。', description_en: 'A CLI tool to sign and verify artifacts', homepage: 'https://notaryproject.dev/' },
+  { name: 'OpenCost', description: 'OpenCostはKubernetesにおける現在および過去のコストとリソース割り当てを可視化します。', description_en: 'OpenCost provides visibility into current and historical Kubernetes spend and resource allocation.', homepage: 'https://www.opencost.io/' },
+  { name: 'OpenFeature', description: 'OpenFeatureはフィーチャーフラグの標準化を目指すプロジェクトです。', description_en: 'Standardizing Feature Flagging for Everyone', homepage: 'https://openfeature.dev/' },
+  { name: 'OpenKruise', description: 'OpenKruiseはKubernetes上で大規模アプリケーションの自動管理を行うCNCFインキュベーションプロジェクトです。', description_en: 'Automated management of large-scale applications on Kubernetes (incubating project under CNCF)', homepage: 'https://openkruise.io/' },
+  { name: 'OpenTelemetry', description: 'OpenTelemetryは分散トレーシングとメトリクス収集のための標準化されたテレメトリーフレームワークです。', description_en: 'OpenTelemetry community content', homepage: 'https://opentelemetry.io/' },
+  { name: 'OpenYurt', description: 'OpenYurtはネイティブなKubernetesをエッジに拡張するオープンプラットフォームです。', description_en: 'An open platform that extending your native Kubernetes to edge.', homepage: 'https://openyurt.io/' },
+  { name: 'Operator Framework', description: 'Operator FrameworkはKubernetesアプリケーションを構築するためのSDKで、高レベルAPIや抽象化、プロジェクトの雛形を提供します。', description_en: 'SDK for building Kubernetes applications. Provides high level APIs, useful abstractions, and project scaffolding.', homepage: 'https://operatorframework.io/' },
+  { name: 'Strimzi', description: 'StrimziはKubernetes上でApache Kafkaを実行するためのプロジェクトです。', description_en: 'Apache Kafka® running on Kubernetes', homepage: 'https://strimzi.io/' },
+  { name: 'Thanos', description: 'Thanosは長期保存機能を備えた高可用なPrometheusのセットアップで、CNCFインキュベーションプロジェクトです。', description_en: 'Highly available Prometheus setup with long term storage capabilities. A CNCF Incubating project.', homepage: 'https://thanos.io/' },
+  { name: 'Volcano', description: 'VolcanoはCNCF配下のクラウドネイティブなバッチシステムです。', description_en: 'A Cloud Native Batch System (Project under CNCF)', homepage: 'https://volcano.sh/' },
+  { name: 'wasmCloud', description: 'wasmCloudは任意のクラウドやKubernetes、エッジでポリグロットアプリを構築・管理・スケールできるCNCFのオープンソースプロジェクトです。', description_en: 'wasmCloud is an open source Cloud Native Computing Foundation (CNCF) project that enables teams to build, manage, and scale polyglot apps across any cloud, K8s, or edge.', homepage: 'https://wasmcloud.com' }
 ];
 
-// Sandbox Projects (実験的なプロジェクト) - 133プロジェクト（主要なもののみ抜粋）
+// Sandbox Projects (実験的プロジェクト) - 133プロジェクト
 export const CNCF_SANDBOX_PROJECTS: CNCFProject[] = [
-  { name: 'Aeraki Mesh', description: 'Istioサービスメッシュの非HTTPトラフィック管理。', homepage: 'https://www.aeraki.net/' },
-  { name: 'Akri', description: 'リーフデバイスの発見と活用。', homepage: 'https://docs.akri.sh/' },
-  { name: 'Antrea', description: 'KubernetesのためのCNI。', homepage: 'https://antrea.io/' },
-  { name: 'Athenz', description: 'X.509証明書ベースのサービス認証。', homepage: 'https://www.athenz.io/' },
-  { name: 'BFE', description: 'モダンレイヤー7ロードバランサー。', homepage: 'https://www.bfe-networks.net/' },
-  { name: 'Brigade', description: 'Kubernetesのためのイベントドリブンスクリプティング。', homepage: 'https://brigade.sh/' },
-  { name: 'Carvel', description: 'シンプルで構成可能なツールをKubernetesのアプリ開発デプロイに提供。', homepage: 'https://carvel.dev/' },
-  { name: 'Cert-Store Operator', description: 'cert-managerから様々なターゲットに証明書を同期。', homepage: 'https://cert-store-operator.io/' },
-  { name: 'ChaosBlade', description: 'カオスエンジニアリング実験ツールキット。', homepage: 'https://chaosblade.io/' },
-  { name: 'CNCF Distribution', description: 'OCI仕様を実装したコンテナレジストリ。', homepage: 'https://distribution.github.io/distribution/' },
-  { name: 'CNI-Genie', description: '複数のCNIプラグインを実現。', homepage: 'https://github.com/cni-genie/CNI-Genie' },
-  { name: 'Confidential Containers', description: 'コンフィデンシャルコンピューティングとコンテナの統合。', homepage: 'https://confidentialcontainers.org/' },
-  { name: 'Coredge.io', description: 'エッジコンピューティングプラットフォーム。', homepage: 'https://coredge.io/' },
-  { name: 'Copacetic', description: 'コンテナイメージのパッチング。', homepage: 'https://project-copacetic.github.io/copacetic/website/' },
-  { name: 'Curiefense', description: 'クラウドネイティブアプリケーションセキュリティプラットフォーム。', homepage: 'https://www.curiefense.io/' },
-  { name: 'Curve', description: '分散ストレージシステム。', homepage: 'https://www.opencurve.io/' },
-  { name: 'DevSpace', description: 'Kubernetesのための開発者ツール。', homepage: 'https://devspace.sh/' },
-  { name: 'DevStream', description: 'DevOpsツールチェーン管理。', homepage: 'https://www.devstream.io/' },
-  { name: 'Dex', description: 'OpenID Connect IdPおよびOAuth 2.0プロバイダ。', homepage: 'https://dexidp.io/' },
-  { name: 'Easegress', description: 'トラフィックオーケストレーションシステム。', homepage: 'https://megaease.com/easegress/' },
-  { name: 'External Secrets Operator', description: 'Kubernetesで外部のシークレット管理システムを統合。', homepage: 'https://external-secrets.io/' },
-  { name: 'FabEdge', description: 'エッジコンピューティングKubernetesマルチクラスタソリューション。', homepage: 'https://fabedge.io/' },
-  { name: 'FOSSA', description: 'オープンソースライセンスとセキュリティ管理。', homepage: 'https://fossa.com/' },
-  { name: 'Flagger', description: '高度なデプロイメント戦略。', homepage: 'https://flagger.app/' },
-  { name: 'fluid', description: 'Kubernetesのためのデータアクセラレーション。', homepage: 'https://fluid-cloudnative.github.io/' },
-  { name: 'funcX', description: '高性能関数サービングプラットフォーム。', homepage: 'https://funcx.org/' },
-  { name: 'Gardener', description: 'マルチクラウドKubernetesサービス。', homepage: 'https://gardener.cloud/' },
-  { name: 'GitOps Working Group', description: 'GitOpsの原則と実践。', homepage: 'https://opengitops.dev/' },
-  { name: 'HereSphere', description: '地理空間データの処理と分析。', homepage: 'https://here.com/platform' },
-  { name: 'Hexa', description: 'マルチクラウドポリシーオーケストレーション。', homepage: 'https://hexaorchestration.org/' },
-  { name: 'HwameiStor', description: 'Kubernetesのための高可用性ローカルストレージシステム。', homepage: 'https://hwameistor.io/' },
-  { name: 'Inclavare Containers', description: 'コンフィデンシャルコンピューティング。', homepage: 'https://inclavare-containers.io/' },
-  { name: 'Inspektor Gadget', description: 'KubernetesとLinuxのためのデバッグツール。', homepage: 'https://www.inspektor-gadget.io/' },
-  { name: 'k3s', description: '軽量Kubernetes。', homepage: 'https://k3s.io/' },
-  { name: 'k8gb', description: 'マルチクラスタロードバランシング。', homepage: 'https://www.k8gb.io/' },
-  { name: 'K8up', description: 'KubernetesのためのバックアップオペレータKubernetesネイティブアプリケーションのためのバックアップ', homepage: 'https://k8up.io/' },
-  { name: 'Kamus', description: 'Kubernetesのためのシークレット暗号化。', homepage: 'https://kamus.soluto.io/' },
-  { name: 'Kanister', description: 'Kubernetesのためのアプリレベルデータ管理。', homepage: 'https://kanister.io/' },
-  { name: 'Kcp', description: 'KubernetesのようなControlプレーン。', homepage: 'https://www.kcp.io/' },
-  { name: 'Keptn', description: '雲ネイティブアプリケーション制御プレーン。', homepage: 'https://keptn.sh/' },
-  { name: 'Keto', description: 'アクセス制御サーバー。', homepage: 'https://www.ory.sh/keto/' },
-  { name: 'Keylime', description: 'ランタイム整合性測定とリモート認証。', homepage: 'https://keylime.dev/' },
-  { name: 'Ko', description: 'GoアプリケーションのKubernetesデプロイ。', homepage: 'https://ko.build/' },
-  { name: 'Krustlet', description: 'WebAssemblyをKubernetesで実行。', homepage: 'https://krustlet.dev/' },
-  { name: 'Kube-OVN', description: 'KubernetesのためのCNI実装。', homepage: 'https://kube-ovn.io/' },
-  { name: 'Kube-rs', description: 'RustのためのKubernetesクライアントとコントローラランタイム。', homepage: 'https://kube.rs/' },
-  { name: 'KubeArmor', description: 'コンテナとKubernetesのためのランタイムセキュリティエンフォースメント。', homepage: 'https://kubearmor.io/' },
-  { name: 'Kubebuilder', description: 'Kubernetes APIのビルド。', homepage: 'https://kubebuilder.io/' },
-  { name: 'KubeEdge', description: 'エッジでKubernetesを動作させる。', homepage: 'https://kubeedge.io/' },
-  { name: 'KubeEye', description: 'Kubernetesの診断ツール。', homepage: 'https://kubeeye.io/' },
-  { name: 'Kuberhealthy', description: '合成チェックコントローラ。', homepage: 'https://kuberhealthy.com/' },
-  { name: 'KubeRS', description: 'カスタマイズされたロールアウトと実験。', homepage: 'https://kubers.io/' },
-  { name: 'KubeVela', description: 'アプリケーション配信プラットフォーム。', homepage: 'https://kubevela.io/' },
-  { name: 'Kubewarden', description: 'ポリシーエンジン。', homepage: 'https://www.kubewarden.io/' },
-  { name: 'Kudo', description: 'Kubernetesオペレータの宣言的方法。', homepage: 'https://kudo.dev/' },
-  { name: 'Kuma', description: 'ユニバーサルサービスメッシュ。', homepage: 'https://kuma.io/' },
-  { name: 'KusionStack', description: 'プラットフォームエンジニアリングのためのスタック。', homepage: 'https://kusionstack.io/' },
-  { name: 'Kyverno', description: 'Kubernetesネイティブポリシー管理。', homepage: 'https://kyverno.io/' },
-  { name: 'Lima', description: 'macOSのためのLinux。', homepage: 'https://lima-vm.io/' },
-  { name: 'Meshery', description: 'クラウドネイティブ管理プレーン。', homepage: 'https://meshery.io/' },
-  { name: 'MetalLB', description: 'ベアメタルKubernetesクラスターのロードバランサー。', homepage: 'https://metallb.universe.tf/' },
-  { name: 'Microcks', description: 'API＆マイクロサービスモッキング、テスティング。', homepage: 'https://microcks.io/' },
-  { name: 'MicroK8s', description: 'シンプル、小さな、高速なKubernetes。', homepage: 'https://microk8s.io/' },
-  { name: 'mpi-operator', description: 'Kubernetesのオールリデュース訓練。', homepage: 'https://github.com/kubeflow/mpi-operator' },
-  { name: 'Nocalhost', description: 'クラウド開発環境。', homepage: 'https://nocalhost.dev/' },
-  { name: 'ORAS', description: 'OCI Registry As Storage。', homepage: 'https://oras.land/' },
-  { name: 'Parsec', description: 'プラットフォーム非依存セキュリティAPI。', homepage: 'https://parsec.community/' },
-  { name: 'Piraeus Datastore', description: 'Kubernetesの高可用性データストア。', homepage: 'https://piraeus.io/' },
-  { name: 'Pipecd', description: '連続配送。', homepage: 'https://pipecd.dev/' },
-  { name: 'Pravega', description: '流れるデータのストレージ。', homepage: 'https://pravega.io/' },
-  { name: 'Radius', description: 'クラウドネイティブアプリケーションプラットフォーム。', homepage: 'https://radapp.io/' },
-  { name: 'RisingWave', description: 'リアルタイムデータウェアハウス。', homepage: 'https://www.risingwave.com/' },
-  { name: 'Robusta', description: 'Kubernetesのためのトラブルシューティング。', homepage: 'https://home.robusta.dev/' },
-  { name: 'SchemaHero', description: '宣言的データベーススキーマ管理。', homepage: 'https://schemahero.io/' },
-  { name: 'Serverless Devs', description: 'サーバーレス開発ツール。', homepage: 'https://www.serverless-devs.com/' },
-  { name: 'Sieve', description: 'コントローラバグを自動的に発見。', homepage: 'https://github.com/sieve-project/sieve' },
-  { name: 'Slimtoolkit', description: 'コンテナ最適化。', homepage: 'https://slimtoolkit.org/' },
-  { name: 'SpiderPool', description: 'KubernetesのためのIPアドレス管理。', homepage: 'https://spiderpool.io/' },
-  { name: 'SPIFFE', description: '動的環境のためのID標準。', homepage: 'https://spiffe.io/' },
-  { name: 'SPIRE', description: 'SPIFFEランタイム環境。', homepage: 'https://spiffe.io/spire/' },
-  { name: 'Submariner', description: 'Kubernetesクラスターをネットワーク接続。', homepage: 'https://submariner.io/' },
-  { name: 'Sustainable Computing', description: '持続可能なコンピューティング。', homepage: 'https://sustainable-computing.io/' },
-  { name: 'Testkube', description: 'Kubernetesのためのクラウドネイティブテスト。', homepage: 'https://testkube.io/' },
-  { name: 'Tink', description: '暗号化API。', homepage: 'https://developers.google.com/tink' },
-  { name: 'Tinkerbell', description: 'ベアメタルプロビジョニング。', homepage: 'https://tinkerbell.org/' },
-  { name: 'Tremor', description: 'イベント処理システム。', homepage: 'https://www.tremor.rs/' },
-  { name: 'Trivy', description: 'コンテナおよびその他のアーティファクトの脆弱性スキャナー。', homepage: 'https://trivy.dev/' },
-  { name: 'Trveact', description: '分散ソーシャルメディアプラットフォーム。', homepage: 'https://treeverse.io/' },
-  { name: 'Updatecli', description: '設定管理自動化。', homepage: 'https://www.updatecli.io/' },
-  { name: 'Velero', description: 'Kubernetesのためのバックアップ＆移行。', homepage: 'https://velero.io/' },
-  { name: 'vcluster', description: '仮想Kubernetesクラスター。', homepage: 'https://www.vcluster.com/' },
-  { name: 'Vineyard', description: 'メモリデータ共有。', homepage: 'https://v6d.io/' },
-  { name: 'Virtink', description: '軽量なKubernetes上の仮想化。', homepage: 'https://virtink.io/' },
-  { name: 'wasmCloud', description: 'WebAssemblyアプリケーションランタイム。', homepage: 'https://wasmcloud.com/' },
-  { name: 'WasmEdge Runtime', description: 'エッジコンピューティングのためのWebAssemblyランタイム。', homepage: 'https://wasmedge.org/' },
-  { name: 'Werf', description: 'CI/CDのためのGitOpsツール。', homepage: 'https://werf.io/' },
-  { name: 'xDS', description: 'Envoyデータプレーン API。', homepage: 'https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol' },
-  { name: 'xline', description: '地理的に分散したメタデータ管理。', homepage: 'https://xline.cloud/' },
-  { name: 'zot', description: 'OCIネイティブコンテナレジストリ。', homepage: 'https://zotregistry.io/' }
+  { name: 'Aeraki Mesh', description: 'Aeraki Meshはサービスメッシュ内のレイヤ7トラフィックを管理するためのツールです。', description_en: 'Aeraki Mesh allows you to manage any layer-7 traffic in a service mesh', homepage: 'https://www.aeraki.net/' },
+  { name: 'Akri', description: 'Akriはエッジ向けのKubernetesリソースインターフェースです。', description_en: 'A Kubernetes Resource Interface for the Edge', homepage: 'https://docs.akri.sh' },
+  { name: 'Antrea', description: 'AntreaはOpen vSwitchをベースとしたKubernetesネットワーキングプロジェクトです。', description_en: 'Kubernetes networking based on Open vSwitch', homepage: 'https://antrea.io/' },
+  { name: 'Armada', description: 'ArmadaはKubernetes上の高スループットなワークロードに対応するマルチクラスター・バッチキューイングシステムです。', description_en: 'A multi-cluster batch queuing system for high-throughput workloads on Kubernetes.', homepage: 'https://armadaproject.io/' },
+  { name: 'Athenz', description: 'AthenzはX.509証明書に基づくサービス認証と細粒度のアクセス制御を提供するオープンソースプラットフォームです。', description_en: 'Open source platform for X.509 certificate based service authentication and fine grained access control in dynamic infrastructures', homepage: 'https://www.athenz.io' },
+  { name: 'Atlantis', description: 'Atlantisはチーム向けのTerraformプルリクエスト自動化ツールです。', description_en: 'Terraform Pull Request Automation for Teams', homepage: 'https://www.runatlantis.io/' },
+  { name: 'Bank-Vaults', description: 'Bank-VaultsはHashiCorp VaultをKubernetesで運用するための多機能ツールセットで、オペレーターやCLIなどを提供します。', description_en: 'Bank-Vaults is a Vault swiss-army knife: a K8s operator, Go client with automatic token renewal, automatic configuration, multiple unseal options and more. A CLI tool to init, unseal and configure Vault (auth methods, secret engines). Direct secret injection into Pods.', homepage: 'https://bank-vaults.dev/' },
+  { name: 'BFE', description: 'BFEはBaidu FrontEndから派生したオープンソースのレイヤ7ロードバランサーです。', description_en: 'Open-source layer 7 load balancer derived from proprietary Baidu FrontEnd', homepage: 'https://www.bfe-networks.net' },
+  { name: 'bpfman', description: 'bpfmanはLinuxやKubernetes環境向けのeBPFマネージャーです。', description_en: 'An eBPF Manager for Linux and Kubernetes', homepage: 'https://bpfman.io/' },
+  { name: 'Capsule', description: 'Capsuleは上流のKubernetesのみを利用してマルチテナントかつポリシーベースの環境を実現するマイクロサービス型のエコシステムです。', description_en: 'Capsule implements a multi-tenant and policy-based environment in your Kubernetes cluster. It is designed as a micro-services-based ecosystem with the minimalist approach, leveraging only on upstream Kubernetes.', homepage: 'https://capsule.clastix.io' },
+  { name: 'Carina', description: 'CarinaはKubernetes向けの高性能かつ運用不要なローカルストレージソリューションです。', description_en: 'Carina: an high performance and ops-free local storage for kubernetes', homepage: 'https://carina-io.github.io/' },
+  { name: 'Cartography', description: 'Cartographyはインフラ資産とその関係を直感的なグラフで可視化するPythonツールです。', description_en: 'Cartography is a Python tool that consolidates infrastructure assets and the relationships between them in an intuitive graph view.', homepage: 'https://cartography-cncf.github.io/cartography/' },
+  { name: 'Carvel', description: 'Carvelはアプリケーションの構築・設定・デプロイを支援する単目的で組み合わせ可能なツール群を提供します。', description_en: 'Carvel provides a set of reliable, single-purpose, composable tools that aid in your application building, configuration, and deployment to Kubernetes.', homepage: 'https://carvel.dev' },
+  { name: 'CDK for Kubernetes (CDK8s)', description: 'CDK8sは馴染みのあるプログラミング言語とオブジェクト指向APIを用いてKubernetesアプリとコンポーネントを定義できるツールです。', description_en: 'CDK8s lets you define Kubernetes apps and components using familiar programming languages and object-oriented APIs.', homepage: 'https://cdk8s.io/' },
+  { name: 'Chaosblade', description: 'ChaosbladeはAlibabaが開発した、シンプルで強力なカオスエンジニアリング実験ツールキットです。', description_en: 'An easy to use and powerful chaos engineering experiment toolkit.（阿里巴巴开源的一款简单易用、功能强大的混沌实验注入工具）', homepage: 'https://chaosblade.io/' },
+  { name: 'CloudNativePG', description: 'CloudNativePGはKubernetes環境でPostgreSQLデータベースを展開から運用まで一貫して管理するための包括的なプラットフォームです。', description_en: 'CloudNativePG is a comprehensive platform designed to seamlessly manage PostgreSQL databases within Kubernetes environments, covering the entire operational lifecycle from initial deployment to ongoing maintenance', homepage: 'https://www.cloudnative-pg.io/' },
+  { name: 'Clusternet', description: 'Clusternetはパブリックやプライベート、エッジを含むKubernetesクラスターをインターネットのように簡単に管理することを目指すプロジェクトです。', description_en: '[CNCF Sandbox Project] Managing your Kubernetes clusters (including public, private, edge, etc.) as easily as visiting the Internet', homepage: 'https://clusternet.io' },
+  { name: 'Clusterpedia', description: 'Clusterpediaは複数クラスターにまたがるリソース検索を支援するツールで、単一種類または複数種類のリソースを同時に検索できます。', description_en: 'Clusterpedia is used for complex resources search across multiple clusters, support simultaneous search of a single kind of resource  or multiple kinds of resources existing in multiple clusters.', homepage: 'https://clusterpedia.io' },
+  { name: 'CNI-Genie', description: 'CNI-Genieはデプロイ時にPodネットワークを選択できるプラグインで、CalicoやFlannel、Romana、Weaveなどをサポートします。', description_en: 'CNI-Genie for choosing pod network of your choice during deployment time. Supported pod networks - Calico, Flannel, Romana, Weave ', homepage: 'https://cnigenie.netlify.app' },
+  { name: 'Confidential Containers', description: 'Confidential Containersは信頼された実行環境を利用してコンテナとデータを保護し、クラウドネイティブな機密計算を実現するオープンソースコミュニティです。', description_en: 'Confidential Containers is an open source community working to enable cloud native  confidential computing by leveraging Trusted Execution Environments to protect  containers and data.', homepage: 'https://confidentialcontainers.org/' },
+  { name: 'Connect RPC', description: 'Connect RPCはブラウザやgRPC互換のHTTP APIを構築するためのライブラリ群です。', description_en: 'Connect is a family of libraries for building browser and gRPC-compatible HTTP APIs.', homepage: 'https://connectrpc.com/' },
+  { name: 'ContainerSSH', description: 'ContainerSSHはSSH接続ごとにコンテナを起動し、接続終了時にそのコンテナを削除する仕組みを提供します。', description_en: 'ContainerSSH launches a new container for each SSH connection in Kubernetes, Podman or Docker. The user is transparently dropped in the container and the container is removed when the user disconnects. Authentication and container configuration are dynamic using webhooks, no system users required.', homepage: 'https://containerssh.io' },
+  { name: 'Copa', description: 'Copaはコンテナイメージに直接パッチを適用するためのCLIツールです。', description_en: '🧵 CLI tool for directly patching container images!', homepage: 'https://github.com/project-copacetic/copacetic' },
+  { name: 'Cozystack', description: 'Cozystackはクラウドを構築するための無償PaaSプラットフォームおよびフレームワークです。', description_en: 'Cozystack is a free PaaS platform and framework for building clouds.', homepage: 'https://cozystack.io' },
+  { name: 'Devfile', description: 'Devfileはクラウド開発ワークスペースの仕様を表すKubernetesネイティブのAPIです。', description_en: 'Kube-native API for cloud development workspaces specification', homepage: 'https://devfile.io' },
+  { name: 'DevSpace', description: 'DevSpaceはKubernetes内でソフトウェアを開発しデプロイフローを自動化できる高速な開発者ツールです。', description_en: 'DevSpace - The Fastest Developer Tool for Kubernetes ⚡ Automate your deployment workflow with DevSpace and develop software directly inside Kubernetes.', homepage: 'https://devspace.sh' },
+  { name: 'DevStream', description: 'DevStreamはオープンソースのDevOpsツールチェーンマネージャーです。', description_en: 'DevStream: the open-source DevOps toolchain manager (DTM).', homepage: 'https://www.devstream.io/' },
+  { name: 'Dex', description: 'Dexはプラグイン可能なコネクタを備えたOpenID ConnectおよびOAuth 2.0プロバイダーです。', description_en: 'OpenID Connect (OIDC) identity and OAuth 2.0 provider with pluggable connectors', homepage: 'https://dexidp.io/' },
+  { name: 'Distribution', description: 'Distributionはコンテナコンテンツのパッケージング、配布、保存、提供を行うツールキットです。', description_en: 'The toolkit to pack, ship, store, and deliver container content', homepage: 'https://github.com/distribution/distribution' },
+  { name: 'Easegress', description: 'Easegressはクラウドネイティブなトラフィックオーケストレーションシステムです。', description_en: 'A Cloud Native traffic orchestration system', homepage: 'https://megaease.com/easegress' },
+  { name: 'Eraser', description: 'Eraserは脆弱性データを利用してクラスター内のすべてのKubernetesノードから使用されていないイメージを削除するツールです。', description_en: 'Eraser uses vulnerability data to remove non-running images from all Kubernetes nodes in a cluster.', homepage: 'https://eraser-dev.github.io/eraser/' },
+  { name: 'external-secrets', description: 'External Secrets Operatorは外部サービスから情報を読み取りKubernetes Secretsとして自動注入するオペレーターです。', description_en: 'External Secrets Operator reads information from a third-party service like AWS Secrets Manager and automatically injects the values as Kubernetes Secrets.', homepage: 'https://external-secrets.io/' },
+  { name: 'Fluid', description: 'Fluidはクラウドネイティブ環境で弾力的なデータ抽象化と加速を提供するオーケストレーションプラットフォームです。', description_en: 'Fluid is an orchestration platform for elastic data abstraction and acceleration in cloud native environment.', homepage: 'https://fluid-cloudnative.github.io/' },
+  { name: 'hami', description: 'hamiは異種AI計算向けの仮想化ミドルウェアです。', description_en: 'Heterogeneous AI Computing Virtualization Middleware', homepage: 'https://project-hami.github.io/HAMi/' },
+  { name: 'Headlamp', description: 'Headlampは拡張可能なオープンソースのマルチクラスターKubernetesユーザーインターフェースです。', description_en: 'Extensible open source multi-cluster Kubernetes user interface', homepage: 'https://headlamp.dev' },
+  { name: 'Hexa', description: 'Hexa Policy Orchestratorは複数のソフトウェアプロバイダーにまたがるアクセス制御ポリシーを一貫して管理するツールです。', description_en: 'Hexa Policy Orchestrator enables you to manage all of your access policies consistently across software providers.', homepage: 'https://hexaorchestration.org/' },
+  { name: 'HwameiStor', description: 'Hwameistorはクラウドネイティブなステートフルワークロード向けの高可用ローカルストレージシステムです。', description_en: 'Hwameistor is an HA local storage system for cloud-native stateful workloads', homepage: 'https://hwameistor.io/' },
+  { name: 'Hyperlight', description: 'Hyperlightは現代のクラウドネイティブワークロード向けに設計された軽量で安全なコンテナランタイムです。', description_en: 'A lightweight, secure container runtime solution designed for modern cloud-native workloads', homepage: 'https://github.com/hyperlight-dev/hyperlight' },
+  { name: 'Inclavare Containers', description: 'Inclavare Containersはクラウドネイティブな機密計算やエンクレーブ実行環境に対応する新しいコンテナランタイムです。', description_en: 'A novel container runtime, aka confidential container, for cloud-native confidential computing and enclave runtime ecosystem.', homepage: 'https://github.com/inclavare-containers/' },
+  { name: 'Inspektor Gadget', description: 'Inspektor GadgetはKubernetesおよびLinux向けのオープンソースeBPFデバッグ・データ収集ツールです。', description_en: 'Open source eBPF debugging and data collection tool for Kubernetes and Linux', homepage: 'https://inspektor-gadget.io/' },
+  { name: 'Interlink', description: 'InterLinkはVirtual Kubeletインターフェースによりリモートリソース上でKubernetes Podを実行する抽象化を提供し、異なる環境でも一貫したクラウドネイティブ体験を実現します。', description_en: 'InterLink aims to provide an abstraction for the execution of a Kubernetes pod on any remote resource capable of managing a Container execution lifecycle thanks to the Virtual Kubelet interface. It allows you to extend your cloud environment anywhere by running Kubernetes workloads on various infrastructures, creating a seamless cloud-native experience across diverse environments.', homepage: 'https://intertwin-eu.github.io/interLink/' },
+  { name: 'k0s', description: 'k0sは単一のバイナリで提供され、事前設定済みのコンポーネントを含むKubernetesディストリビューションです。', description_en: 'k0s is a single binary all-inclusive Kubernetes distribution with all the required bells and whistles preconfigured to make building a Kubernetes clusters a matter of just copying an executable to every host and running it.', homepage: 'https://k0sproject.io' },
+  { name: 'k3s', description: 'k3sは軽量なKubernetesディストリビューションです。', description_en: 'Lightweight Kubernetes', homepage: 'https://k3s.io' },
+  { name: 'k8gb', description: 'k8gbはクラウドネイティブなKubernetes用グローバルDNSロードバランサーです。', description_en: 'A cloud native Kubernetes Global Balancer', homepage: 'https://www.k8gb.io' },
+  { name: 'K8sGPT', description: 'K8sGPTはKubernetesユーザーに高度な診断能力を提供するツールです。', description_en: 'Giving Kubernetes Superpowers to everyone', homepage: 'https://www.k8sgpt.ai' },
+  { name: 'K8up', description: 'K8upはKubernetesおよびOpenShift向けのバックアップオペレーターです。', description_en: 'Kubernetes and OpenShift Backup Operator', homepage: 'https://www.k8up.io/' },
+  { name: 'Kairos', description: 'KairosはエッジKubernetes向けのイミュータブルなLinuxメタディストリビューションです。', description_en: 'The immutable Linux meta-distribution for edge Kubernetes.', homepage: 'https://kairos.io' },
+  { name: 'Kanister', description: 'Kanisterはアプリケーションレベルのデータ管理を行う拡張可能なフレームワークで、Veeam Kastenチームにより開発されました。', description_en: 'An extensible framework for application-level data management on Kubernetes, Kanister is a Cloud Native Computing Foundation sandbox project and was originally created by the Veeam Kasten team.', homepage: 'https://kanister.io' },
+  { name: 'KCL', description: 'KCLは構成やポリシーの記述に使われる制約ベースのレコード・関数型言語です。', description_en: 'A constraint-based record & functional language mainly used in configuration and policy scenarios.', homepage: 'https://kcl-lang.io/' },
+  { name: 'kcp', description: 'kcpはKubernetesやコンテナワークロードを超えた用途に対応するKubernetesライクなコントロールプレーンを提供します。', description_en: 'Kubernetes-like control planes for form-factors and use-cases beyond Kubernetes and container workloads.', homepage: 'https://kcp.io' },
+  { name: 'Kepler', description: 'KeplerはeBPFを利用してエネルギー関連のシステム統計を取得し、Prometheusメトリクスとして出力します。', description_en: 'Kepler (Kubernetes-based Efficient Power Level Exporter) uses eBPF to probe energy related system stats and exports as Prometheus metrics.', homepage: 'https://sustainable-computing.io/' },
+  { name: 'Keylime', description: 'Keylimeはエッジやクラウド、IoT環境で信頼性の維持とブートストラップを支援します。', description_en: 'Bootstrap & Maintain Trust on the Edge / Cloud and IoT.', homepage: 'https://keylime.dev/' },
+  { name: 'kGateway', description: 'kGatewayはEnvoyを基盤としたKubernetesネイティブのAPIゲートウェイで、様々なクラウド環境でAPI接続を管理します。', description_en: 'An Envoy-powered, Kubernetes-native API Gateway that integrates Kubernetes Gateway API with a control plane for API connectivity in any cloud environment.', homepage: 'https://kgateway.dev/' },
+  { name: 'KitOps', description: 'KitOpsはエッジやマルチクラウド、ハイブリッドクラウドのためのパッケージングおよび構成管理のオープン標準です。', description_en: 'An open standard for packaging, managing, and deploying ML models and artifacts across different systems', homepage: 'https://kitops.org/' },
+  { name: 'Kmesh', description: 'KmeshはeBPFとプログラマブルカーネルを基盤とした高性能・低オーバーヘッドのサービスメッシュデータプレーンで、サイドカーなしで通信のトラフィック管理、セキュリティ、監視を実現します。', description_en: 'Kmesh is a high-performance and low overhead service mesh data plane based on eBPF and programmable kernel. Kmesh brings traffic management, security and monitoring to service communication without needing application code changes. It is natively sidecarless, zero intrusion and without adding any resource cost to application container.', homepage: 'https://kmesh.net' },
+  { name: 'ko', description: 'koはGoアプリケーションをビルドしてデプロイするためのツールです。', description_en: 'Build and deploy Go applications', homepage: 'https://ko.build/' },
+  { name: 'Konveyor', description: 'KonveyorはレガシーアプリをKubernetesやクラウドネイティブ技術へ計画的に移行・リファクタリングするための可視化・分析・変換ツールを提供するプロジェクトです。', description_en: 'Konveyor is an open-source project that gives developers and platform teams visibility, analysis, and transformation tools to predictably re-platform and refactor legacy applications at scale for Kubernetes and cloud-native technologies.', homepage: 'https://www.konveyor.io/' },
+  { name: 'Koordinator', description: 'KoordinatorはQoSに基づくスケジューリングシステムで、Kubernetes上でのハイブリッドワークロードの配置と状態を最適化します。', description_en: 'QoS based scheduling system for hybrid orchestration workloads on Kubernetes, bringing workloads the best layout and status.', homepage: 'https://koordinator.sh' },
+  { name: 'kpt', description: 'kptはKubernetes構成編集を自動化するツールです。', description_en: 'Automate Kubernetes Configuration Editing', homepage: 'https://kpt.dev' },
+  { name: 'Krkn', description: 'Krknは障害条件下でのボトルネック発見と復元力・性能向上のためのKubernetes向けカオステスティングツールです。', description_en: 'Chaos testing tool for Kubernetes to identify bottlenecks and improve resilience and performance under failure conditions.', homepage: 'https://krkn-chaos.github.io/krkn' },
+  { name: 'Kuadrant', description: 'KuadrantはGateway APIとIstioベースのゲートウェイコントローラーを組み合わせ、TLSやDNSなどのポリシーで複数クラスターにまたがるサービスを簡単に接続・保護できます。', description_en: 'Kuadrant combines Gateway API and Istio-based gateway controllers to enhance application connectivity. It enables platform engineers  and application developers to easily connect, secure, and protect their services and infrastructure across multiple clusters  with policies for TLS, DNS, application authentication & authorization, and rate limiting.', homepage: 'https://kuadrant.io' },
+  { name: 'Kuasar', description: 'Kuasarは複数のサンドボックス技術を利用したクラウドネイティブなコンテナランタイムで、さまざまなシナリオに対応します。', description_en: 'A multi-sandbox container runtime that provides cloud-native, all-scenario multiple sandbox container solutions.', homepage: 'https://kuasar.io/' },
+  { name: 'Kube-burner', description: 'Kube-burnerはGo言語で書かれたKubernetesのパフォーマンスとスケールテストオーケストレーションフレームワークです。', description_en: 'Kubernetes performance and scale test orchestration framework written in golang', homepage: 'https://kube-burner.github.io/kube-burner/' },
+  { name: 'Kube-OVN', description: 'Kube-OVNはソフトウェア定義ネットワークとクラウドネイティブの橋渡しをするプロジェクトです。', description_en: 'A Bridge between SDN and Cloud Native (Project under CNCF)', homepage: 'https://kube-ovn.io' },
+  { name: 'kube-rs', description: 'kube-rsはKubernetes上でアプリケーションを構築するためのRustエコシステムの中核です。', description_en: 'kube-rs is the core Rust ecosystem for building applications against Kubernetes', homepage: 'https://kube.rs' },
+  { name: 'kube-vip', description: 'kube-vipはコントロールプレーンとKubernetesサービスの両方に仮想IPとロードバランサー機能を提供します。', description_en: 'Kubernetes Virtual IP and Load-Balancer for both control plane and Kubernetes services', homepage: 'https://kube-vip.io' },
+  { name: 'Kubean', description: 'Kubeanはkubesprayなどに基づく、本番向けのクラスターライフサイクル管理ツールチェーンです。', description_en: 'Product ready cluster lifecycle management toolchains based on kubespray and other cluster LCM engine.', homepage: 'https://kubean-io.github.io/kubean/' },
+  { name: 'KubeArmor', description: 'KubeArmorはKubernetesやその他クラウドワークロードの実行時保護を提供し、望ましくない挙動や悪意ある行動を制限します。', description_en: 'Runtime protection for Kubernetes & other cloud Workloads. Kubearmor provides a observability and policy enforcement system to restrict any unwanted, malicious behaviour of cloud-native workloads at runtime.', homepage: 'https://kubearmor.io/' },
+  { name: 'KubeClipper', description: 'KubeClipperはKubernetesの管理を軽量かつ簡便に行うためのツールです。', description_en: 'Manage kubernetes in the most light and convenient way.', homepage: 'https://www.kubeclipper.io/' },
+  { name: 'Kuberhealthy', description: 'KuberhealthyはシンセティックチェックをPodとして実行するKubernetesオペレーターで、Prometheusとの相性が良いです。', description_en: 'A Kubernetes operator for running synthetic checks as pods. Works great with Prometheus!', homepage: 'https://github.com/kuberhealthy/kuberhealthy' },
+  { name: 'KubeSlice', description: 'KubeSliceはアプリケーションスライスを用いてマルチクラウド・マルチクラスター間のサービス接続を実現します。', description_en: 'Multi-Cloud, Multi-Cluster Service Connectivity with Application Slices.', homepage: 'https://kubeslice.io' },
+  { name: 'KubeStellar', description: 'KubeStellarはエッジ、マルチクラウド、ハイブリッドクラウド向けに柔軟なマルチクラスター構成管理を提供します。', description_en: 'KubeStellar - a flexible solution for multi-cluster configuration management for edge, multi-cloud, and hybrid cloud', homepage: 'https://kubestellar.io' },
+  { name: 'Kubewarden', description: 'KubewardenはWebAssemblyを用いたポリシーエンジンで、複数の言語でポリシーを記述でき、Policy as Codeを簡素化します。', description_en: 'Kubewarden is a Policy Engine powered by WebAssembly policies. Its policies can be written in CEL, Rego (OPA & Gatekeeper flavours), Rust, Go, YAML, and others. Kubewarden simplifies Policy-As-Code by allowing policy authors and consumers to use their preferred tooling and stack, develop and test policies out of cluster. ', homepage: 'https://www.kubewarden.io' },
+  { name: 'KUDO', description: 'KUDOは宣言的なKubernetesオペレーターを構築するためのフレームワークです。', description_en: 'Kubernetes Universal Declarative Operator (KUDO)', homepage: 'https://kudo.dev/' },
+  { name: 'Kuma', description: 'KumaはEnvoyを基盤としたコンテナ、Kubernetes、VM向けのマルチゾーンサービスメッシュです。', description_en: '🐻 The multi-zone service mesh for containers, Kubernetes and VMs. Built with Envoy. CNCF Sandbox Project.', homepage: 'https://kuma.io' },
+  { name: 'Kured', description: 'Kuredは基盤OSのパッケージ管理システムが再起動を必要とする場合に安全にノードを自動再起動するKubernetesデーモンセットです。', description_en: 'Kured (KUbernetes REboot Daemon) is a Kubernetes daemonset that performs safe automatic node reboots when the need to do so is indicated by the package management system of the underlying OS', homepage: 'https://kured.dev' },
+  { name: 'KusionStack', description: 'KusionStackは内部開発者プラットフォーム向けの宣言的な意図駆動型プラットフォームオーケストレーターです。', description_en: 'Declarative Intent Driven Platform Orchestrator for Internal Developer Platform (IDP).', homepage: 'https://kusionstack.io/' },
+  { name: 'Lima', description: 'Limaは主にmacOS上でcontainerdを実行するためのLinux仮想マシン環境です。', description_en: 'Linux virtual machines, typically on macOS, for running containerd', homepage: 'https://github.com/lima-vm/lima' },
+  { name: 'Logging Operator (Kube Logging)', description: 'Logging Operator (Kube Logging)はKubernetesのログ管理を行うオペレーターです。', description_en: 'Logging operator for Kubernetes', homepage: 'https://kube-logging.dev/' },
+  { name: 'LoxiLB', description: 'LoxiLBはeBPFをベースとしたクラウドネイティブなロードバランサーで、Kubernetesやエッジ、5G、IoT、XaaSアプリケーションを支えます。', description_en: 'eBPF based cloud-native load-balancer. Powering Kubernetes|Edge|5G|IoT|XaaS Apps.', homepage: 'https://loxilb.io' },
+  { name: 'Merbridge', description: 'MerbridgeはeBPFを利用してサービスメッシュの高速化を図るツールです。', description_en: 'Use eBPF to speed up your Service Mesh like crossing an Einstein-Rosen Bridge.', homepage: 'https://merbridge.io/' },
+  { name: 'Meshery', description: 'Mesheryはクラウドネイティブなサービスメッシュ管理ツールです。', description_en: 'Meshery, the cloud native manager', homepage: 'https://meshery.io' },
+  { name: 'MetalLB', description: 'MetalLBは標準的なルーティングプロトコルを利用するKubernetes向けのネットワークロードバランサー実装です。', description_en: 'A network load-balancer implementation for Kubernetes using standard routing protocols', homepage: 'https://metallb.universe.tf' },
+  { name: 'Metal³', description: 'Metal³はKubernetesにベアメタルホストプロビジョニングを統合します。', description_en: 'Bare metal host provisioning integration for Kubernetes', homepage: 'https://metal3.io/' },
+  { name: 'Microcks', description: 'MicrocksはAPIのモックとテストを行うオープンソースのクラウドネイティブツールで、CNCFサンドボックスプロジェクトです。', description_en: 'The open source, cloud native tool for API Mocking and Testing. Microcks is a Cloud Native Computing Foundation sandbox project 🚀', homepage: 'https://microcks.io' },
+  { name: 'Network Service Mesh', description: 'Network Service MeshはKubernetesクラスター間のサービス接続を実現するネットワークサービスメッシュ技術です。', description_en: 'CNCF is an open source software foundation that hosts and nurtures projects like Kubernetes and Prometheus.', homepage: 'https://networkservicemesh.io/' },
+  { name: 'Open Cluster Management', description: 'Open Cluster Managementは複数クラスターを一元管理するOCMプロジェクトのコアコンポーネントです。', description_en: 'Core components in the OCM project. Report here if you found any issues in OCM.', homepage: 'https://open-cluster-management.io/' },
+  { name: 'Open Policy Containers', description: 'Open Policy ContainersはOPAポリシーをOCI準拠レジストリで構築・タグ付け・プッシュ・プル・署名するためのDocker風CLIです。', description_en: 'A docker-inspired CLI for building, tagging, pushing, pulling, and signing OPA policies to and from OCI-compliant registries.', homepage: 'https://openpolicycontainers.com' },
+  { name: 'OpenEBS', description: 'OpenEBSはKubernetes上でステートフルな永続アプリケーションを支えるオープンソースのコンテナネイティブストレージプラットフォームです。', description_en: 'A popular & widely deployed Open Source Container Native Storage platform for Stateful Persistent Applications on Kubernetes.', homepage: 'https://www.openebs.io/' },
+  { name: 'OpenELB', description: 'OpenELBはベアメタル、エッジ、仮想化環境でKubernetes用ロードバランサーを提供する実装です。', description_en: 'Load Balancer Implementation for Kubernetes in Bare-Metal, Edge, and Virtualization', homepage: 'https://openelb.github.io' },
+  { name: 'OpenFGA', description: 'OpenFGAはGoogle Zanzibarに着想を得て開発された、高性能かつ柔軟な権限管理システムです。', description_en: 'OpenFGA is a high performance and flexible authorization/permission system built for developers and inspired by Google Zanzibar', homepage: 'https://openfga.dev' },
+  { name: 'OpenFunction', description: 'OpenFunctionはクラウドネイティブなFaaSプラットフォームで、CNCFサンドボックスプロジェクトです。', description_en: 'Cloud Native Function-as-a-Service Platform (CNCF Sandbox Project)', homepage: 'https://openfunction.dev' },
+  { name: 'openGemini', description: 'openGeminiは大量のオブザーバビリティデータの保存と解析に特化した高性能な分散時系列データベースです。', description_en: 'openGemini is an open source distributed time series DBMS with high concurrency, high performance, and high scalability, focusing on the storage and analysis of massive observability data.', homepage: 'https://www.opengemini.org' },
+  { name: 'OpenGitOps', description: 'OpenGitOpsはOpenGitOpsプロジェクトに関するトップレベル情報を提供するリポジトリです。', description_en: 'Repository for top-level information about the OpenGitOps project', homepage: 'https://opengitops.dev/' },
+  { name: 'ORAS', description: 'ORASはアーティファクトやイメージ、パッケージなどのコンテンツを管理するOCIレジストリクライアントです。', description_en: 'OCI registry client - managing content like artifacts, images, packages', homepage: 'https://oras.land/' },
+  { name: 'OSCAL-COMPASS', description: 'OSCAL-COMPASSはコンプライアンス用途の文書化アーティファクトの作成、検証、管理を支援するツールセットで、OSCALフォーマットを活用します。', description_en: 'The OSCAL COMPASS project is set of tools that enable the creation, validation, and governance of documentation artifacts for compliance needs. It leverages NIST\'s OSCAL (Open Security Controls Assessment Language) as a standard data format for interchange between tools and people, and provides an opinionated approach to OSCAL SDK and adoption by policy engines.', homepage: 'https://github.com/oscal-compass/community' },
+  { name: 'OVN-Kubernetes', description: 'OVN-Kubernetesは堅牢なKubernetesネットワーキングプラットフォームです。', description_en: 'A robust Kubernetes networking platform', homepage: 'https://ovn-kubernetes.io/' },
+  { name: 'Paralus', description: 'ParalusはゼロトラストアプローチでKubernetesインフラへの制御された監査付きアクセスを実現するオープンソースツールです。', description_en: 'Paralus is a free, open source tool that enables controlled, audited access to Kubernetes infrastructure and Zero trust Kubernetes with zero friction.', homepage: 'https://www.paralus.io/' },
+  { name: 'Parsec', description: 'Parsecはさまざまなセキュリティサービスを抽象化するプラットフォームです。', description_en: 'Platform AbstRaction for SECurity service', homepage: 'https://parsec.community/' },
+  { name: 'Perses', description: 'PersesはPrometheus、Thanos、Jaegerからのオブザーバビリティデータを可視化するダッシュボードツールです。', description_en: 'Perses is a dashboard tool to visualize observability data from Prometheus/Thanos/Jaeger.', homepage: 'https://perses.dev' },
+  { name: 'PipeCD', description: 'PipeCDはあらゆるアプリケーション向けに一貫したデプロイと運用体験を提供するGitOpsスタイルの継続的デリバリープラットフォームです。', description_en: 'GitOps style continuous delivery platform that provides consistent deployment and operations experience for any applications', homepage: 'https://pipecd.dev/' },
+  { name: 'Piraeus Datastore', description: 'Piraeus DatastoreはKubernetes上のLINSTORクラスターを管理するオペレーターです。', description_en: 'The Piraeus Operator manages LINSTOR clusters in Kubernetes.', homepage: 'https://piraeus.io/' },
+  { name: 'Pixie', description: 'Pixieは開発者向けのオープンソースKubernetes可観測性ツールです。', description_en: 'Open source Kubernetes observability for developers', homepage: 'https://px.dev/' },
+  { name: 'Porter', description: 'Porterはアプリケーションアーティファクトやクライアントツール、設定、デプロイ論理を一つのインストーラとしてまとめ、単一コマンドで配布・インストールできるようにします。', description_en: 'Porter enables you to package your application artifact, client tools, configuration and deployment logic together as an installer that you can distribute, and install with a single command.', homepage: 'https://porter.sh/' },
+  { name: 'Pravega', description: 'Pravegaはストリーミングをソフトウェア定義ストレージの新たなプリミティブとして提供します。', description_en: 'Pravega - Streaming as a new software defined storage primitive', homepage: 'https://cncf.pravega.io' },
+  { name: 'Radius', description: 'Radiusは開発者とプラットフォームエンジニアが協力し、コスト・運用・セキュリティのベストプラクティスに沿ったクラウドネイティブアプリケーションを提供・管理できるプラットフォームです。', description_en: 'Radius is a cloud-native application platform that enables developers and the platform engineers that support them to collaborate on delivering and managing cloud-native applications that follow organizational best practices for cost, operations and security, by default.', homepage: 'https://radapp.io/' },
+  { name: 'Ratify', description: 'Ratifyはアーティファクトのセキュリティメタデータの検証を行い、ポリシーに準拠したものだけをデプロイできるKubernetes上の検証エンジンです。', description_en: 'A verification engine on Kubernetes which enables verification of artifact security metadata and admits for deployment only those that comply with policies you create.', homepage: 'https://ratify.dev/' },
+  { name: 'SchemaHero', description: 'SchemaHeroはデータベーススキーマを宣言的に管理するためのKubernetesオペレーターです。', description_en: 'A Kubernetes operator for declarative database schema management (gitops for database schemas)', homepage: 'https://schemahero.io' },
+  { name: 'Score', description: 'Scoreはクラウドネイティブ開発者のために設計されたオープンソースのワークロード仕様で、開発を簡素化します。', description_en: 'Score is an open-source workload specification designed to simplify development for cloud-native developers.', homepage: 'https://score.dev/' },
+  { name: 'sealer', description: 'sealerはKubernetesクラスターと分散アプリケーションを構築・共有・実行できるツールで、CNCFプロジェクトです。', description_en: 'Build, Share and Run Both Your Kubernetes Cluster and Distributed Applications  (Project under CNCF)', homepage: 'http://sealer.cool/' },
+  { name: 'Sermant', description: 'SermantはJavaエージェントに基づくプロキシレスなサービスメッシュソリューションです。', description_en: 'Sermant a proxyless service mesh solution based on Javaagent.', homepage: 'https://sermant.io/' },
+  { name: 'Serverless Devs', description: 'Serverless Devsはサーバーレス開発者向けのツールです。', description_en: ':fire: Serverless Devs: Serverless developer tool ( Serverless Devs: Serverless 开发者工具 )', homepage: 'https://www.serverless-devs.com/' },
+  { name: 'Serverless Workflow', description: 'Serverless Workflowはサーバーレス環境でのワークフロー定義・実行・管理に関する公式仕様で、一貫性と相互運用性を確保します。', description_en: 'Contains the official specification for the Serverless Workflow Domain Specific Language. It provides detailed guidelines and standards for defining, executing, and managing workflows in serverless environments, ensuring consistency and interoperability across implementations.', homepage: 'https://serverlessworkflow.io' },
+  { name: 'Service Mesh Performance', description: 'Service Mesh Performanceはクラウドネイティブ環境におけるサービスメッシュの性能測定を標準化するプロジェクトです。', description_en: 'Standardizing Cloud Native Value Measurement', homepage: 'https://smp-spec.io/' },
+  { name: 'Shipwright', description: 'ShipwrightはKubernetes上でコンテナイメージを構築するためのフレームワークです。', description_en: 'Shipwright - a framework for building container images on Kubernetes', homepage: 'https://shipwright.io' },
+  { name: 'SlimToolkit', description: 'SlimToolkitはコンテナの検査・最適化・デバッグを行うツールです。', description_en: 'Inspect, Optimize and Debug Your Containers', homepage: 'https://slimtoolkit.org/' },
+  { name: 'SOPS', description: 'sopsはAWS KMS、GCP KMS、Azure Key Vault、age、PGPを用いてYAML、JSON、ENV、INI、バイナリ形式のファイルを暗号化・編集できるツールです。', description_en: 'sops is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY formats and encrypts with AWS KMS, GCP KMS, Azure Key Vault, age, and PGP.', homepage: 'https://github.com/getsops' },
+  { name: 'Spiderpool', description: 'SpiderpoolはKubernetesのアンダーレイおよびRDMAネットワークソリューションで、ベアメタル、仮想マシン、パブリッククラウド環境を対象とします。', description_en: 'Spiderpool is the underlay and RDMA network solution of the Kubernetes, for bare metal, VM and public cloud', homepage: 'https://spidernet-io.github.io/spiderpool/' },
+  { name: 'Stacker', description: 'Stackerは宣言的なYAML形式でOCIイメージやSBOMなどのアーティファクトをネイティブに構築するツールです。', description_en: 'Stacker is a tool for building OCI images and related artifacts such as SBOMs natively via a declarative yaml format.', homepage: 'https://stackerbuild.io' },
+  { name: 'Submariner', description: 'Submarinerはオンプレミスやクラウドなど異なるKubernetesクラスター間でPodやサービス同士を直接接続するネットワークを実現します。', description_en: 'Submariner enables direct networking between Pods and Services in different Kubernetes clusters, either on-premises or in the cloud.', homepage: 'https://submariner.io' },
+  { name: 'Telepresence', description: 'TelepresenceはリモートのKubernetesまたはOpenShiftクラスターに接続しながらローカル開発を行うためのツールです。', description_en: 'Local development against a remote Kubernetes or OpenShift cluster', homepage: 'https://www.telepresence.io/' },
+  { name: 'Teller', description: 'Tellerは開発者向けのクラウドネイティブな秘密管理ツールで、コマンドライン上でシークレット管理を完結させます。', description_en: 'Cloud native secrets management for developers - never leave your command line for secrets.', homepage: 'https://tlr.dev' },
+  { name: 'Tinkerbell', description: 'Tinkerbellはベアメタルサーバーをプロビジョニングするためのワークフローエンジンです。', description_en: 'Workflow Engine for provisioning Bare Metal', homepage: 'https://tinkerbell.org/' },
+  { name: 'Tremor', description: 'Tremorはイベントストリーミング処理のためのRustで書かれたメインコードベースです。', description_en: 'Main Tremor Project Rust Codebase', homepage: 'https://www.tremor.rs/' },
+  { name: 'Trickster', description: 'TricksterはHTTPリバースプロキシキャッシュと時系列ダッシュボードを高速化するオープンソースソフトウェアです。', description_en: 'Open Source HTTP Reverse Proxy Cache and Time Series Dashboard Accelerator', homepage: 'https://trickstercache.org' },
+  { name: 'Vineyard', description: 'Vineyard (v6d)はインメモリの不変データ管理システムです。', description_en: 'Vineyard (v6d) is an in-memory immutable data manager.', homepage: 'https://v6d.io' },
+  { name: 'Virtual Kubelet', description: 'Virtual KubeletはオープンソースのKubernetes kubelet実装です。', description_en: 'Virtual Kubelet is an open source Kubernetes kubelet implementation.', homepage: 'https://virtual-kubelet.io/' },
+  { name: 'Visual Studio Code Kubernetes Tools', description: 'Visual Studio Code Kubernetes ToolsはKubernetesで動作するアプリケーションの開発やトラブルシューティングを行うための拡張機能です。', description_en: 'The extension for developers building applications to run in Kubernetes clusters and for DevOps staff troubleshooting Kubernetes applications.', homepage: 'https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools' },
+  { name: 'WasmEdge Runtime', description: 'WasmEdge Runtimeは軽量で高性能かつ拡張可能なWebAssemblyランタイムで、サーバーレスアプリやマイクロサービス、IoTデバイスなどを動かします。', description_en: 'WasmEdge is a lightweight, high-performance, and extensible WebAssembly runtime for cloud native, edge, and decentralized applications. It powers serverless apps, embedded functions, microservices, smart contracts, and IoT devices.', homepage: 'https://wasmedge.org/' },
+  { name: 'werf', description: 'werfはGit、Docker/Buildah、Helm、Kubernetesなどのツールを統合し、Kubernetesへの効率的で一貫したソフトウェア配信を実現するソリューションです。', description_en: 'werf is a solution for implementing efficient and consistent software delivery to Kubernetes. It covers the entire CI/CD lifecycle and all related artifacts, glues commonly used tools (Git, Docker/Buildah, Helm, K8s) and facilitates best practices.', homepage: 'https://werf.io/' },
+  { name: 'Xline', description: 'XlineはETCDインターフェースと互換性を持つ高性能なジオ分散メタデータ管理システムです。', description_en: 'Xline is a high-performance geo-distributed metadata management system, which is compatible with the ETCD interface.', homepage: 'https://www.xline.cloud' },
+  { name: 'youki', description: 'youkiはRustで書かれたコンテナランタイムです。', description_en: 'A container runtime written in Rust', homepage: 'https://youki-dev.github.io/youki/' },
+  { name: 'zot', description: 'zotはコンテナイメージやOCIアーティファクトを配布するためのOCIネイティブなコンテナレジストリです。', description_en: 'Zot is an OCI-native container registry for distributing container images and OCI artifacts.', homepage: 'https://zotregistry.dev/' }
 ];
 
-// すべてのプロジェクトを結合（ラッキープロジェクト選択用）
+// すべてのプロジェクト（カテゴリー統合）
 export const ALL_CNCF_PROJECTS: CNCFProject[] = [
   ...CNCF_GRADUATED_PROJECTS,
   ...CNCF_INCUBATING_PROJECTS,
   ...CNCF_SANDBOX_PROJECTS
 ];
 
-// プロジェクト総数
-export const CNCF_PROJECT_COUNT = {
-  graduated: CNCF_GRADUATED_PROJECTS.length,
-  incubating: CNCF_INCUBATING_PROJECTS.length,
-  sandbox: CNCF_SANDBOX_PROJECTS.length,
-  total: ALL_CNCF_PROJECTS.length
+// ランダムにCNCFプロジェクトを選択する関数
+export function getRandomCNCFProject(category?: 'graduated' | 'incubating' | 'sandbox'): CNCFProject {
+  let projects: CNCFProject[];
+  
+  switch (category) {
+    case 'graduated':
+      projects = CNCF_GRADUATED_PROJECTS;
+      break;
+    case 'incubating':
+      projects = CNCF_INCUBATING_PROJECTS;
+      break;
+    case 'sandbox':
+      projects = CNCF_SANDBOX_PROJECTS;
+      break;
+    default:
+      projects = ALL_CNCF_PROJECTS;
+  }
+  
+  return projects[Math.floor(Math.random() * projects.length)];
+}
+
+// プロジェクト統計情報
+export const CNCF_STATS = {
+  total: 200,
+  graduated: 31,
+  incubating: 36,
+  sandbox: 133,
+  lastUpdated: '2025-09-05'
 };
-
-/**
- * ランダムにCNCFプロジェクトを選択
- * diagnosis-engine-v3.tsで使用されるため、emoji プロパティを追加
- */
-export function getRandomCNCFProject(): CNCFProject & { emoji: string } {
-  const randomIndex = Math.floor(Math.random() * ALL_CNCF_PROJECTS.length);
-  const project = ALL_CNCF_PROJECTS[randomIndex];
-  // デフォルトの絵文字を追加（プロジェクトの種類に応じて）
-  const emoji = '🚀'; // CNCFプロジェクトの共通絵文字
-  return {
-    ...project,
-    emoji
-  };
-}
-
-/**
- * 多様なラッキーアイテムのリスト
- */
-export const LUCKY_ITEMS = [
-  // 技術系
-  'メカニカルキーボード', 'ワイヤレスマウス', 'USB-Cハブ', 'ノイズキャンセリングヘッドフォン',
-  'スタンディングデスク', 'モニターアーム', '4Kディスプレイ', 'エルゴノミクスチェア',
-  
-  // 飲み物・食べ物
-  'コーヒー豆', '緑茶', 'エナジードリンク', 'プロテインバー', 'ナッツ',
-  'チョコレート', 'グミ', '炭酸水', 'スムージー', 'ヨーグルト',
-  
-  // 文房具
-  'モレスキンノート', '万年筆', 'ポストイット', 'ホワイトボードマーカー',
-  '消せるボールペン', 'マインドマップ用紙', '付箋', 'クリップボード',
-  
-  // 趣味・リラックス
-  '観葉植物', 'アロマディフューザー', 'ストレスボール', 'Rubiks Cube',
-  'フィジェットスピナー', 'ミニチュア模型', 'パズル', 'ボードゲーム',
-  
-  // 本・学習
-  'オライリーの新刊', '技術書', 'ビジネス書', 'マンガ',
-  'Kindle', 'オーディオブック', 'オンライン講座', 'Udemy割引クーポン',
-  
-  // その他
-  'ステッカー', 'Tシャツ', 'パーカー', 'トートバッグ',
-  'マグカップ', 'タンブラー', 'スマートウォッチ', 'フィットネストラッカー'
-];
-
-/**
- * ランダムにラッキーアイテムを選択
- */
-export function getRandomLuckyItem(): string {
-  const randomIndex = Math.floor(Math.random() * LUCKY_ITEMS.length);
-  return LUCKY_ITEMS[randomIndex];
-}
-
-/**
- * 多様なラッキーアクションのリスト
- */
-export const LUCKY_ACTIONS = [
-  // 技術系
-  'git commit --amend を試してみる', 'READMEを更新する', 'テストを1つ書く',
-  '新しいVSCode拡張を試す', 'コードレビューをする', 'リファクタリングを楽しむ',
-  'ドキュメントを改善する', 'issueを1つクローズする', 'デバッグを楽しむ',
-  
-  // 学習系
-  '新しいプログラミング言語を15分触る', 'YouTubeで技術動画を観る', 'Qiitaに記事を書く',
-  'オンライン勉強会に参加する', 'OSSにコントリビュートする', 'ブログを書く',
-  
-  // 休憩系
-  '15分の散歩をする', 'ストレッチをする', '深呼吸を3回する',
-  '好きな音楽を1曲聴く', 'コーヒーブレイクを取る', '窓の外を眺める',
-  '瞑想を5分する', '目を閉じて休憩する', '水分補給をする',
-  
-  // コミュニケーション系
-  'チームメンバーに感謝を伝える', 'Slackで雑談する', 'ペアプロを提案する',
-  'モブプログラミングを楽しむ', '1on1を設定する', 'フィードバックを求める',
-  
-  // 整理整頓系
-  'デスクを片付ける', 'ブラウザのタブを整理する', 'メールの受信箱を空にする',
-  'Slackの通知を整理する', 'カレンダーを見直す', 'ToDoリストを更新する',
-  
-  // 健康系
-  '姿勢を正す', '目薬をさす', '肩を回す', '首をストレッチする',
-  '手首を休める', 'ブルーライトカットメガネをかける', '画面から離れる'
-];
-
-/**
- * ランダムにラッキーアクションを選択
- */
-export function getRandomLuckyAction(): string {
-  const randomIndex = Math.floor(Math.random() * LUCKY_ACTIONS.length);
-  return LUCKY_ACTIONS[randomIndex];
-}

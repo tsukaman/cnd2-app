@@ -4,7 +4,7 @@
  */
 
 import { generateId } from '../utils/id.js';
-import { CNCF_PROJECTS, getProjectDetails } from '../utils/cncf-projects.js';
+const { ALL_CNCF_PROJECTS, getRandomCNCFProject } = require('../utils/cncf-projects.js');
 import { createSafeDebugLogger, getSafeKeyInfo, isProduction } from '../utils/debug-helpers.js';
 import { convertToFullProfile, extractMinimalProfile } from '../utils/profile-converter.js';
 
@@ -297,32 +297,21 @@ function summarizeProfile(profile) {
  */
 function selectRandomCNCFProject() {
   // プロジェクトリストが空の場合のフォールバック
-  if (!CNCF_PROJECTS || CNCF_PROJECTS.length === 0) {
+  if (!ALL_CNCF_PROJECTS || ALL_CNCF_PROJECTS.length === 0) {
     return {
       name: 'Kubernetes',
       description: 'コンテナ化アプリケーションのデプロイ、スケーリング、管理を自動化するオープンソースシステム',
-      url: 'https://www.cncf.io/projects/kubernetes/'
+      url: 'https://kubernetes.io/'
     };
   }
   
-  // ランダムにプロジェクト名を選択
-  const randomIndex = Math.floor(Math.random() * CNCF_PROJECTS.length);
-  const projectName = CNCF_PROJECTS[randomIndex];
-  
-  // プロジェクトの詳細情報を取得
-  const projectDetails = getProjectDetails(projectName);
-  
-  // プロジェクト名をURLフレンドリーにする（より堅牢な処理）
-  const urlName = projectName.toLowerCase()
-    .replace(/\s+/g, '-')           // スペース → ハイフン
-    .replace(/[^\w-]/g, '')         // 英数字とハイフン以外を削除
-    .replace(/-+/g, '-')            // 連続ハイフンを1つに
-    .replace(/^-|-$/g, '');         // 前後のハイフンを削除
+  // getRandomCNCFProject関数を使用してプロジェクトを選択
+  const project = getRandomCNCFProject();
   
   return {
-    name: projectName,
-    description: projectDetails ? projectDetails.description : `CNCFの${projectName}プロジェクト`,
-    url: `https://www.cncf.io/projects/${urlName}/`
+    name: project.name,
+    description: project.description,
+    url: project.homepage
   };
 }
 
@@ -550,8 +539,8 @@ function generateFallbackDiagnosis_DEPRECATED(profile1, profile2, env) {
   ];
   
   // CNCFプロジェクトからランダムに選択
-  const randomProject = CNCF_PROJECTS[Math.floor(Math.random() * CNCF_PROJECTS.length)];
-  const luckyProject = `${randomProject} - 2人の技術的な成長を加速させる最高のプロジェクト！`;
+  const randomProject = getRandomCNCFProject();
+  const luckyProject = `${randomProject.name} - 2人の技術的な成長を加速させる最高のプロジェクト！`;
   
   // 開発環境では型を明確にフォールバックとわかるようにする
   const typePrefix = isDevelopment ? '[FALLBACK] ' : '';
