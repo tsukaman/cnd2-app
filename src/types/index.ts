@@ -117,10 +117,14 @@ export interface DiagnosisResult {
   createdAt: string;
   aiPowered?: boolean;
   fortuneTelling?: FortuneTelling;
-  // V4 Fortune telling style fields
+  // V4 Fortune telling style fields - 占術的分析フィールド
+  fiveElementsAnalysis?: string;  // 五行思想分析
+  astrologicalAnalysis?: string;  // 占星術分析
+  numerologyAnalysis?: string;  // 数秘術分析
+  energyFieldAnalysis?: string;  // エネルギーフィールド分析
+  technicalSynergy?: string;  // 技術的シナジー分析
+  techStackCompatibility?: string;  // 技術スタック相性（technicalSynergyの別名）
   fortuneAnalysis?: string;  // 多様な占術を統合した分析
-  astrologicalAnalysis?: string;  // @deprecated Use fortuneAnalysis instead
-  techStackCompatibility?: string;
   conversationTopics?: string[];
   // Legacy fields for backward compatibility
   score?: number;
