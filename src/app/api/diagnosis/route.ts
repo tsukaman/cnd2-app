@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
-import { unifiedDiagnosisEngine, type DiagnosisStyle } from '@/lib/diagnosis-engine-unified';
+import { AstrologicalDiagnosisEngineV4 } from '@/lib/diagnosis-engine-v4-openai';
 import { PrairieProfile } from '@/types';
 
 /**
@@ -11,7 +11,7 @@ import { PrairieProfile } from '@/types';
 export const POST = withApiMiddleware(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { profiles, mode = 'duo', style = 'creative' } = body;
+    const { profiles, mode = 'duo' } = body;
 
     if (!profiles || !Array.isArray(profiles)) {
       throw new ApiError(
@@ -66,30 +66,12 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       };
     });
 
-    // Generate diagnosis using unified engine
-    const isValidStyle = (s: string): s is DiagnosisStyle => 
-      ['astrological', 'fortune', 'technical', 'creative'].includes(s);
-    
-    const diagnosisOptions = {
-      style: isValidStyle(style) ? style : 'creative',
-      model: 'gpt-4o-mini' as const,
-      enableFortuneTelling: true
-    };
-
-    let result;
-    if (mode === 'duo') {
-      result = await unifiedDiagnosisEngine.generateDuoDiagnosis(
-        prairieProfiles[0],
-        prairieProfiles[1],
-        diagnosisOptions
-      );
-    } else {
-      // For group mode, use proper group diagnosis
-      result = await unifiedDiagnosisEngine.generateGroupDiagnosis(
-        prairieProfiles,
-        diagnosisOptions
-      );
-    }
+    // Generate diagnosis using the OpenAI v4 engine
+    const engine = AstrologicalDiagnosisEngineV4.getInstance();
+    const result = await engine.generateDiagnosis(
+      prairieProfiles,
+      mode as 'duo' | 'group'
+    );
 
     return NextResponse.json(result);
   } catch (_error) {

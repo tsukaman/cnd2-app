@@ -13,10 +13,15 @@ import { DiagnosisLoadingAnimation } from '@/components/diagnosis/DiagnosisLoadi
 import { usePrairieCard } from '@/hooks/usePrairieCard';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
-import { ANIMATION_DURATIONS } from '@/lib/constants/diagnosis';
 import { isProduction } from '@/lib/utils/environment';
 import { logger } from '@/lib/logger';
+
 import type { PrairieProfile } from '@/types';
+
+// Animation durations
+const ANIMATION_DURATIONS = {
+  TRANSITION_MS: 500
+} as const;
 
 export default function DuoPage() {
   const router = useRouter();
