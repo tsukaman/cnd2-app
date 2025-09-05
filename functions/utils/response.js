@@ -67,7 +67,7 @@ function normalizeError(error) {
       code: 'VALIDATION_ERROR',
     },
     'Invalid Prairie Card URL': {
-      userMessage: '無効なPrairie Card URLです。prairie.cardsドメインのURLを使用してください。',
+      userMessage: '無効なPrairie Card URLです。my.prairie.cardsドメインのURLを使用してください。',
       code: 'INVALID_PRAIRIE_URL',
     },
     'required': {
