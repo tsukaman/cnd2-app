@@ -333,10 +333,11 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
   if (!isValidOpenAIKey(openaiApiKey)) {
     // フォールバック診断を完全に無効化 - 常にエラーを投げる
     let errorMessage = 'OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable in Cloudflare Pages settings.';
+    let keyInfo = null;
     
     if (openaiApiKey && openaiApiKey.length > 0) {
       // キーは存在するが無効な形式
-      const keyInfo = getSafeKeyInfo(openaiApiKey);
+      keyInfo = getSafeKeyInfo(openaiApiKey);
       if (keyInfo.startsWithSk) {
         errorMessage = 'OpenAI API key format appears valid but may be expired or incorrect. Please verify the OPENAI_API_KEY in Cloudflare Pages settings.';
       } else if (keyInfo.hasWhitespace) {
@@ -349,8 +350,10 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
     const error = new Error(errorMessage);
     debugLogger.error(error.message);
     
-    // 詳細なデバッグ情報はDEBUG_MODEまたは開発環境でのみ出力
-    debugLogger.debug('Validation details:', keyInfo);
+    // 詳細なデバッグ情報はDEBUG_MODEまたは開発環境でのみ出力（keyInfoが存在する場合のみ）
+    if (keyInfo) {
+      debugLogger.debug('Validation details:', keyInfo);
+    }
     
     throw error;
   }
