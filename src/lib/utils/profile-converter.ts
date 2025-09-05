@@ -12,11 +12,11 @@ import type { PrairieProfile } from '@/types';
  * プロフィールデータの型を判定
  */
 export function isPrairieProfile(profile: any): profile is PrairieProfile {
-  return profile && 
+  return !!(profile && 
          typeof profile === 'object' && 
          'basic' in profile &&
          profile.basic &&
-         typeof profile.basic === 'object';
+         typeof profile.basic === 'object');
 }
 
 /**
@@ -100,8 +100,8 @@ export function extractMinimalProfile(profile: PrairieProfile | any): {
       title: profile.basic.title,
       company: profile.basic.company,
       bio: profile.basic.bio,
-      skills: profile.details.skills,
-      interests: profile.details.interests
+      skills: profile.details?.skills || [],
+      interests: profile.details?.interests || []
     };
   }
   

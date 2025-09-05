@@ -11,11 +11,11 @@
  * @returns {boolean} PrairieProfile形式の場合true
  */
 function isPrairieProfile(profile) {
-  return profile && 
+  return !!(profile && 
          typeof profile === 'object' && 
          'basic' in profile &&
          profile.basic &&
-         typeof profile.basic === 'object';
+         typeof profile.basic === 'object');
 }
 
 /**
@@ -91,8 +91,8 @@ function extractMinimalProfile(profile) {
       title: profile.basic.title,
       company: profile.basic.company,
       bio: profile.basic.bio,
-      skills: profile.details.skills,
-      interests: profile.details.interests
+      skills: profile.details?.skills || [],
+      interests: profile.details?.interests || []
     };
   }
   
