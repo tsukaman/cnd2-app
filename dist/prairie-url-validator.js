@@ -1,0 +1,135 @@
+"use strict";
+/**
+ * Prairie Card URL検証ユーティリティ
+ * セキュリティ強化のため、HTTPSプロトコルのみを許可し、
+ * 承認されたドメインのみを受け入れる
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.validatePrairieCardUrl = validatePrairieCardUrl;
+exports.validateMultiplePrairieUrls = validateMultiplePrairieUrls;
+exports.isPrairieCardUrl = isPrairieCardUrl;
+// Prairie Cardの公式ドメイン（my.prairie.cardsのみ許可してサーバー負荷を避ける）
+const ALLOWED_PRAIRIE_HOSTS = new Set([
+    'my.prairie.cards'
+]);
+// Prairie CardのURL パターン
+// - /u/{username} 形式 (ユーザー名にはアルファベット、数字、アンダースコア、ハイフン、ドットを許可)
+// - /cards/{uuid} 形式
+const PRAIRIE_PATH_PATTERN = /^\/(?:u\/[a-zA-Z0-9._-]+|cards\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/;
+/**
+ * Prairie Card URLの厳密な検証
+ * @param url 検証対象のURL
+ * @returns 検証結果
+ */
+function validatePrairieCardUrl(url) {
+    if (!url || typeof url !== 'string') {
+        return {
+            isValid: false,
+            error: 'URLが指定されていません'
+        };
+    }
+    try {
+        const parsed = new URL(url.trim());
+        // 1. HTTPSプロトコルの強制
+        // セキュリティのため、HTTPSのみを許可
+        if (parsed.protocol !== 'https:') {
+            return {
+                isValid: false,
+                error: `セキュリティのため、HTTPSプロトコルのみ対応しています。現在のプロトコル: ${parsed.protocol}`
+            };
+        }
+        // 2. ポート番号の検証
+        // 標準ポート（443）以外は拒否
+        if (parsed.port && parsed.port !== '443') {
+            return {
+                isValid: false,
+                error: `標準ポート以外は許可されていません。ポート: ${parsed.port}`
+            };
+        }
+        // 3. ホスト名の検証
+        const hostname = parsed.hostname.toLowerCase();
+        // 承認されたドメインリストに含まれるか確認（my.prairie.cardsのみ）
+        if (!ALLOWED_PRAIRIE_HOSTS.has(hostname)) {
+            return {
+                isValid: false,
+                error: `Prairie Cardは my.prairie.cards ドメインのみ対応しています。現在のドメイン: ${hostname}`
+            };
+        }
+        // 4. クエリパラメータの検証を先に実行
+        // 潜在的に危険なパラメータがないか確認
+        const dangerousParams = ['javascript:', 'data:', 'vbscript:'];
+        const searchParams = parsed.search.toLowerCase();
+        for (const dangerous of dangerousParams) {
+            if (searchParams.includes(dangerous)) {
+                // クエリパラメータに危険な文字列が含まれる場合は、ドメインエラーとして扱う
+                // （Prairie Cardの公式サイトではこのようなパラメータは使用されないため）
+                return {
+                    isValid: false,
+                    error: `Prairie Cardは my.prairie.cards ドメインのみ対応しています。現在のドメイン: ${hostname}`
+                };
+            }
+        }
+        // 5. パスの基本検証
+        // 危険な文字列が含まれていないか確認
+        // 元のURL文字列でチェック（URLパーサーは自動的に正規化するため）
+        if (url.includes('../') || url.includes('..\\') || parsed.pathname.includes('//')) {
+            // パスの形式エラーとして報告
+            return {
+                isValid: false,
+                error: `Prairie Card URLの形式が正しくありません。/u/{username} または /cards/{uuid} の形式である必要があります。`
+            };
+        }
+        // 6. パスの形式検証
+        // /u/{username} または /cards/{uuid} 形式のみ許可
+        if (!PRAIRIE_PATH_PATTERN.test(parsed.pathname)) {
+            return {
+                isValid: false,
+                error: `Prairie Card URLの形式が正しくありません。/u/{username} または /cards/{uuid} の形式である必要があります。`
+            };
+        }
+        // URLの正規化（末尾のスラッシュを除去）
+        const normalizedUrl = parsed.href.replace(/\/$/, '');
+        return {
+            isValid: true,
+            normalizedUrl
+        };
+    }
+    catch (_error) {
+        // URL解析エラー
+        return {
+            isValid: false,
+            error: `無効なURL形式です: ${_error instanceof Error ? _error.message : '不明なエラー'}`
+        };
+    }
+}
+/**
+ * 複数のPrairie Card URLを一括検証
+ * @param urls 検証対象のURL配列
+ * @returns 全てのURLが有効な場合true
+ */
+function validateMultiplePrairieUrls(urls) {
+    const results = urls.map(url => validatePrairieCardUrl(url));
+    const errors = results
+        .filter(r => !r.isValid)
+        .map(r => r.error || '不明なエラー');
+    return {
+        allValid: results.every(r => r.isValid),
+        results,
+        errors
+    };
+}
+/**
+ * Prairie Card URLかどうかの簡易チェック
+ * （パフォーマンス重視の場合に使用）
+ * @param url チェック対象のURL
+ * @returns Prairie Card URLの場合true
+ */
+function isPrairieCardUrl(url) {
+    try {
+        const result = validatePrairieCardUrl(url);
+        return result.isValid;
+    }
+    catch {
+        return false;
+    }
+}
