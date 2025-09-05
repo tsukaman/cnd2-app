@@ -204,14 +204,32 @@ export default function ResultsPage() {
             </motion.div>
           )}
 
-          {/* 詳細分析セクション */}
+          {/* 詳細分析セクション - 全5つの分析を表示 */}
           <div className="grid gap-6 mb-8">
-            {/* 占星術的分析 - 修正: result.astrologicalAnalysisに直接アクセス */}
-            {(result.astrologicalAnalysis || result.metadata?.analysis?.astrologicalAnalysis) && (
+            {/* 五行思想分析 */}
+            {(result.fiveElementsAnalysis || result.metadata?.analysis?.fiveElementsAnalysis) && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 }}
+                className="bg-amber-900/20 rounded-2xl p-6 border border-amber-500/30"
+              >
+                <div className="flex items-center mb-3">
+                  <span className="text-amber-400 mr-2">☯️</span>
+                  <h3 className="text-lg font-bold text-amber-400">五行思想分析</h3>
+                </div>
+                <p className="text-gray-300">
+                  {result.fiveElementsAnalysis || result.metadata?.analysis?.fiveElementsAnalysis}
+                </p>
+              </motion.div>
+            )}
+
+            {/* 占星術的分析 */}
+            {(result.astrologicalAnalysis || result.metadata?.analysis?.astrologicalAnalysis) && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.7 }}
                 className="bg-blue-900/20 rounded-2xl p-6 border border-blue-500/30"
               >
                 <div className="flex items-center mb-3">
@@ -224,20 +242,56 @@ export default function ResultsPage() {
               </motion.div>
             )}
 
-            {/* 技術スタック相性 - 修正: result.techStackCompatibilityに直接アクセス */}
-            {(result.techStackCompatibility || result.metadata?.analysis?.techStackCompatibility) && (
+            {/* 数秘術分析 */}
+            {(result.numerologyAnalysis || result.metadata?.analysis?.numerologyAnalysis) && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 }}
+                className="bg-indigo-900/20 rounded-2xl p-6 border border-indigo-500/30"
+              >
+                <div className="flex items-center mb-3">
+                  <span className="text-indigo-400 mr-2">🔢</span>
+                  <h3 className="text-lg font-bold text-indigo-400">数秘術分析</h3>
+                </div>
+                <p className="text-gray-300">
+                  {result.numerologyAnalysis || result.metadata?.analysis?.numerologyAnalysis}
+                </p>
+              </motion.div>
+            )}
+
+            {/* エネルギーフィールド分析 */}
+            {(result.energyFieldAnalysis || result.metadata?.analysis?.energyFieldAnalysis) && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.9 }}
+                className="bg-purple-900/20 rounded-2xl p-6 border border-purple-500/30"
+              >
+                <div className="flex items-center mb-3">
+                  <Sparkles className="w-5 h-5 text-purple-400 mr-2" />
+                  <h3 className="text-lg font-bold text-purple-400">エネルギーフィールド分析</h3>
+                </div>
+                <p className="text-gray-300">
+                  {result.energyFieldAnalysis || result.metadata?.analysis?.energyFieldAnalysis}
+                </p>
+              </motion.div>
+            )}
+
+            {/* 技術的シナジー分析 */}
+            {(result.technicalSynergy || result.techStackCompatibility || result.metadata?.analysis?.technicalSynergy || result.metadata?.analysis?.techStackCompatibility) && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.0 }}
                 className="bg-green-900/20 rounded-2xl p-6 border border-green-500/30"
               >
                 <div className="flex items-center mb-3">
                   <Target className="w-5 h-5 text-green-400 mr-2" />
-                  <h3 className="text-lg font-bold text-green-400">技術スタック相性</h3>
+                  <h3 className="text-lg font-bold text-green-400">技術的シナジー</h3>
                 </div>
                 <p className="text-gray-300">
-                  {result.techStackCompatibility || result.metadata?.analysis?.techStackCompatibility}
+                  {result.technicalSynergy || result.techStackCompatibility || result.metadata?.analysis?.technicalSynergy || result.metadata?.analysis?.techStackCompatibility}
                 </p>
               </motion.div>
             )}
@@ -367,11 +421,27 @@ export default function ResultsPage() {
               className="mt-4"
             >
               <div className={LUCKY_PROJECT_STYLES}>
-                <div className="flex items-center justify-center mb-2">
+                <div className="flex items-center justify-center mb-3">
                   <span className="text-2xl mr-2">🚀</span>
                   <span className="text-sm text-gray-400">CNCFラッキープロジェクト</span>
                 </div>
-                <p className="text-purple-300 font-bold text-lg">{result.luckyProject}</p>
+                <p className="text-purple-300 font-bold text-lg mb-2">{result.luckyProject}</p>
+                {result.luckyProjectDescription && (
+                  <p className="text-gray-300 text-sm mb-3">{result.luckyProjectDescription}</p>
+                )}
+                {result.luckyProjectUrl && (
+                  <a 
+                    href={result.luckyProjectUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-purple-400 hover:text-purple-300 transition-colors text-sm"
+                  >
+                    <span className="mr-1">プロジェクトサイトを見る</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
               </div>
             </motion.div>
           )}
