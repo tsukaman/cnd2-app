@@ -3,8 +3,13 @@
 const fs = require('fs');
 const path = require('path');
 
-// Read the new JSON file
-const jsonPath = '/Users/tsukaman/Desktop/cncf_projects-new.json';
+// Read the new JSON file from command line argument or default path
+const jsonPath = process.argv[2] || path.join(process.cwd(), 'cncf_projects.json');
+if (!fs.existsSync(jsonPath)) {
+  console.error(`Error: JSON file not found at ${jsonPath}`);
+  console.error('Usage: node transform-cncf-projects.js <path-to-json>');
+  process.exit(1);
+}
 const projects = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 
 // Group projects by maturity
