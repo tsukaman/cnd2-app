@@ -70,7 +70,7 @@ describe('callOpenAIWithProxy', () => {
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://gateway.ai.cloudflare.com/v1/account123/gateway123/openrouter/api/v1/chat/completions',
+        'https://gateway.ai.cloudflare.com/v1/account123/gateway123/openrouter',
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
