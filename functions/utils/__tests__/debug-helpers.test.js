@@ -18,9 +18,14 @@ describe('debug-helpers', () => {
       expect(isDebugMode({ NODE_ENV: 'development' })).toBe(true);
     });
 
-    it('should require explicit DEBUG_MODE in production', () => {
+    it('should always return false in production for security', () => {
+      // 本番環境では常にfalse（セキュリティ強化）
       expect(isDebugMode({ NODE_ENV: 'production' })).toBe(false);
-      expect(isDebugMode({ NODE_ENV: 'production', DEBUG_MODE: 'true' })).toBe(true);
+      expect(isDebugMode({ NODE_ENV: 'production', DEBUG_MODE: 'true' })).toBe(false);
+      
+      // Cloudflare Pages本番環境でも常にfalse
+      expect(isDebugMode({ CF_PAGES: '1', CF_PAGES_BRANCH: 'main' })).toBe(false);
+      expect(isDebugMode({ CF_PAGES: '1', CF_PAGES_BRANCH: 'main', DEBUG_MODE: 'true' })).toBe(false);
     });
 
     it('should handle null/undefined env', () => {
@@ -208,11 +213,12 @@ describe('debug-helpers', () => {
       expect(console.log).toHaveBeenCalledWith('[DEBUG]', 'test message');
     });
 
-    it('should log in production with DEBUG_MODE=true', () => {
+    it('should NOT log in production even with DEBUG_MODE=true (security)', () => {
       const logger = createSafeDebugLogger({ NODE_ENV: 'production', DEBUG_MODE: 'true' });
       
       logger.log('debug info');
-      expect(console.log).toHaveBeenCalledWith('[DEBUG]', 'debug info');
+      // 本番環境では出力されない
+      expect(console.log).not.toHaveBeenCalled();
     });
 
     it('should sanitize sensitive object properties', () => {

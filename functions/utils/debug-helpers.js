@@ -5,12 +5,18 @@
  * @param {Object} env - Environment object
  * @returns {boolean} True if debug mode is enabled
  */
-export function isDebugMode(env) {
-  // 本番環境では明示的な DEBUG_MODE=true が必要
-  // 開発環境のみ NODE_ENV=development で有効化
-  if (env?.NODE_ENV === 'production') {
-    return env?.DEBUG_MODE === 'true';
+function isDebugMode(env) {
+  // 本番環境では完全にDEBUG_MODEを無効化（セキュリティ強化）
+  // Cloudflare Pages本番環境を検出
+  const isCloudflareProduction = env?.CF_PAGES === '1' && env?.CF_PAGES_BRANCH === 'main';
+  const isProductionNode = env?.NODE_ENV === 'production';
+  
+  if (isCloudflareProduction || isProductionNode) {
+    // 本番環境では強制的にfalseを返す（DEBUG_MODE環境変数を無視）
+    return false;
   }
+  
+  // 開発環境のみDEBUG_MODE=trueまたはNODE_ENV=developmentで有効化
   return env?.DEBUG_MODE === 'true' || env?.NODE_ENV === 'development';
 }
 
@@ -19,7 +25,7 @@ export function isDebugMode(env) {
  * @param {Object} env - Environment object
  * @returns {boolean} True if production environment
  */
-export function isProduction(env) {
+function isProduction(env) {
   return env?.NODE_ENV === 'production' || env?.CF_PAGES === '1';
 }
 
@@ -59,7 +65,7 @@ const SENSITIVE_PATTERNS = [
  * @param {string} key - Key name to check
  * @returns {boolean} True if the key is sensitive
  */
-export function isSensitiveKey(key) {
+function isSensitiveKey(key) {
   if (!key || typeof key !== 'string') return false;
   return SENSITIVE_PATTERNS.some(pattern => pattern.test(key));
 }
@@ -70,7 +76,7 @@ export function isSensitiveKey(key) {
  * @param {number} limit - Maximum number of keys to return
  * @returns {string[]} Array of filtered environment keys
  */
-export function getFilteredEnvKeys(env, limit = 10) {
+function getFilteredEnvKeys(env, limit = 10) {
   if (!env || typeof env !== 'object') return [];
   
   return Object.keys(env)
@@ -84,7 +90,7 @@ export function getFilteredEnvKeys(env, limit = 10) {
  * @param {number} visibleChars - Number of characters to show
  * @returns {string} Masked value
  */
-export function maskSensitiveValue(value, visibleChars = 4) {
+function maskSensitiveValue(value, visibleChars = 4) {
   if (!value || typeof value !== 'string') return '***';
   if (value.length <= visibleChars) return '***';
   
@@ -98,7 +104,7 @@ export function maskSensitiveValue(value, visibleChars = 4) {
  * @param {string} apiKey - API key to check
  * @returns {Object} Safe information about the key
  */
-export function getSafeKeyInfo(apiKey) {
+function getSafeKeyInfo(apiKey) {
   if (!apiKey) {
     return { exists: false, format: 'missing' };
   }
@@ -124,7 +130,7 @@ export function getSafeKeyInfo(apiKey) {
  * @param {string} prefix - Log prefix
  * @returns {Object} Logger object with log, error, warn methods
  */
-export function createSafeDebugLogger(env, prefix = '[DEBUG]') {
+function createSafeDebugLogger(env, prefix = '[DEBUG]') {
   const isProd = isProduction(env);
   const debugEnabled = isDebugMode(env);
   
@@ -215,3 +221,14 @@ function sanitizeString(str) {
   
   return sanitized;
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  isDebugMode,
+  isProduction,
+  isSensitiveKey,
+  getFilteredEnvKeys,
+  maskSensitiveValue,
+  getSafeKeyInfo,
+  createSafeDebugLogger
+};
