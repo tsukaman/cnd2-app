@@ -346,9 +346,8 @@ function extractProfileContentBlocks(html) {
     const blockHtml = match[0];
     
     // Debug: Log the actual HTML block structure
-    if (process.env.DEBUG_MODE === 'true') {
-      console.log('[Prairie Parser] ProfileContent block HTML:', blockHtml.substring(0, 500));
-    }
+    // Note: process is not available in Cloudflare Workers
+    // Use debug logger instead if needed
     
     // Extract title - Prairie Card uses nested structure
     // Try multiple patterns to handle different HTML structures
