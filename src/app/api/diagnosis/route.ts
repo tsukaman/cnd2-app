@@ -68,9 +68,9 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
 
     // Generate diagnosis using the OpenAI v4 engine
     const engine = AstrologicalDiagnosisEngineV4.getInstance();
-    const result = await engine.generateDiagnosis(
-      prairieProfiles,
-      mode as 'duo' | 'group'
+    const result = await engine.generateDuoDiagnosis(
+      prairieProfiles[0],
+      prairieProfiles[1]
     );
 
     return NextResponse.json(result);
