@@ -330,6 +330,226 @@ function extractTextByDataField(html, fieldName) {
 }
 
 /**
+ * Extract ProfileContent blocks from Prairie Card HTML
+ * @param {string} html - HTML content
+ * @returns {Array} - Array of ProfileContent objects
+ */
+function extractProfileContentBlocks(html) {
+  const blocks = [];
+  
+  // Find all elements with data-object-type="ProfileContent"
+  // Prairie Card HTML structure typically has nested divs within an <a> tag
+  const blockPattern = /<a[^>]*data-object-type=["']ProfileContent["'][^>]*>[\s\S]*?<\/a>/gi;
+  const matches = html.matchAll(blockPattern);
+  
+  for (const match of matches) {
+    const blockHtml = match[0];
+    
+    // Debug: Log the actual HTML block structure
+    if (process.env.DEBUG_MODE === 'true') {
+      console.log('[Prairie Parser] ProfileContent block HTML:', blockHtml.substring(0, 500));
+    }
+    
+    // Extract title - Prairie Card uses nested structure
+    // Try multiple patterns to handle different HTML structures
+    let title = '';
+    
+    // Pattern 1: Look for profile_content_title class
+    let titleMatch = blockHtml.match(/<[^>]+class="[^"]*profile_content_title[^"]*"[^>]*>([\s\S]*?)<\//);
+    if (!titleMatch) {
+      // Pattern 2: Look for any element containing the title (often in a heading or strong tag)
+      titleMatch = blockHtml.match(/<(?:h[1-6]|strong|b)[^>]*>([\s\S]*?)<\//);
+    }
+    if (!titleMatch) {
+      // Pattern 3: Look for the first text content that might be a title
+      titleMatch = blockHtml.match(/>([^<]{1,100})</); // Limit to reasonable title length
+    }
+    
+    if (titleMatch && titleMatch[1]) {
+      // Clean up the title - remove nested HTML tags if any
+      title = titleMatch[1]
+        .replace(/<[^>]+>/g, '')  // Remove HTML tags
+        .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
+        .replace(/&amp;/g, '&')    // Decode HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+    }
+    
+    // Extract description - try multiple patterns
+    let description = '';
+    
+    // Pattern 1: Look for profile_content_description class
+    let descMatch = blockHtml.match(/<[^>]+class="[^"]*profile_content_description[^"]*"[^>]*>([\s\S]*?)<\/(?:div|p|span)>/i);
+    
+    if (!descMatch) {
+      // Pattern 2: Look for any div/p/span that contains the main content
+      // Skip the title part and look for the description content
+      const withoutTitle = title ? blockHtml.replace(title, '') : blockHtml;
+      descMatch = withoutTitle.match(/<(?:div|p|span)[^>]*>([\s\S]{10,}?)<\/(?:div|p|span)>/i);
+    }
+    
+    if (!descMatch) {
+      // Pattern 3: Extract all text content from the block (fallback)
+      const textContent = blockHtml
+        .replace(/<br\s*\/?>/gi, '\n')    // Preserve line breaks
+        .replace(/<\/p>\s*<p>/gi, '\n\n')  // Preserve paragraph breaks
+        .replace(/<[^>]+>/g, ' ')          // Replace all HTML tags with spaces
+        .replace(/&nbsp;/g, ' ')           // Replace non-breaking spaces
+        .replace(/&amp;/g, '&')            // Decode HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\s+/g, ' ')              // Normalize whitespace
+        .trim();
+      
+      // If we have a title, remove it from the text to get the description
+      if (title && textContent.includes(title)) {
+        description = textContent.replace(title, '').trim();
+      } else {
+        description = textContent;
+      }
+    } else if (descMatch && descMatch[1]) {
+      // Clean up the description: remove HTML tags but preserve line breaks
+      description = descMatch[1]
+        .replace(/<br\s*\/?>/gi, '\n')  // Replace <br> with newlines
+        .replace(/<\/p>\s*<p>/gi, '\n\n')  // Replace paragraph breaks with double newlines
+        .replace(/<[^>]+>/g, '')  // Remove all other HTML tags
+        .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
+        .replace(/&amp;/g, '&')    // Decode HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\n\s+/g, '\n')  // Clean up extra whitespace after newlines
+        .trim();
+    }
+    
+    // Extract data-href if present (link associated with the content)
+    const hrefPattern = /data-href=["']([^"']+)["']/i;
+    const hrefMatch = blockHtml.match(hrefPattern);
+    const href = hrefMatch ? hrefMatch[1] : undefined;
+    
+    // Extract object ID if present
+    const idPattern = /data-object-id=["']([^"']+)["']/i;
+    const idMatch = blockHtml.match(idPattern);
+    const objectId = idMatch ? idMatch[1] : undefined;
+    
+    // Only add block if we have some content
+    if (title || description) {
+      blocks.push({
+        title,
+        description,
+        href,
+        objectId
+      });
+    }
+  }
+  
+  return blocks;
+}
+
+/**
+ * Parse CNDW2025 structured content from ProfileContent blocks
+ * @param {Array} profileBlocks - Array of ProfileContent blocks
+ * @returns {Object|null} - Parsed CNDW2025 data or null if not found
+ */
+function parseCNDW2025Content(profileBlocks) {
+  // Input validation
+  if (!Array.isArray(profileBlocks) || profileBlocks.length === 0) {
+    return null;
+  }
+  
+  // Find the CNDW2025 block with more flexible pattern
+  const cndwBlock = profileBlocks.find(block => 
+    block?.title && 
+    typeof block.title === 'string' && 
+    /【?CNDW2025】?/.test(block.title)  // Support variations like CNDW2025, 【CNDW2025】, etc.
+  );
+  
+  if (!cndwBlock) {
+    return null;
+  }
+  
+  const content = cndwBlock.description || '';
+  
+  // Parse the structured fields using emoji markers
+  const fields = {
+    interestArea: null,     // 🎯 興味分野
+    favoriteOSS: null,      // 🌟 推しOSS
+    participationCount: null, // 📊 参加回数
+    focusSession: null,     // 🎪 注目セッション
+    message: null           // 🔥 ひとこと
+  };
+  
+  // Define patterns for each field with flexible formatting (supports both Japanese and English)
+  // These patterns handle various formatting variations users might use
+  // First try with emoji markers, then fallback to text-only patterns
+  const patternsWithEmoji = {
+    // 🎯 興味分野 / Interest Area
+    interestArea: /🎯\s*(?:興味分野|Interest\s*Area|分野)[：:：]\s*([^\n🌟📊🎪🔥]+)/i,
+    // 🌟 推しOSS / Favorite OSS
+    favoriteOSS: /🌟\s*(?:推し[Oo][Ss][Ss]|Favorite\s*OSS|OSS)[：:：]\s*([^\n🎯📊🎪🔥]+)/i,
+    // 📊 参加回数 / Participation Count
+    participationCount: /📊\s*(?:参加回数|Participation\s*Count|回数)[：:：]\s*([^\n🎯🌟🎪🔥]+)/i,
+    // 🎪 注目セッション / Focus Session
+    focusSession: /🎪\s*(?:注目セッション|Focus\s*Session|セッション)[：:：]\s*([^\n🎯🌟📊🔥]+)/i,
+    // 🔥 ひとこと / Message
+    message: /🔥\s*(?:ひとこと|Message|コメント|Comment)[：:：]\s*([^\n🎯🌟📊🎪]+)/i
+  };
+  
+  // Fallback patterns without emoji (text-only)
+  const patternsWithoutEmoji = {
+    // 興味分野 / Interest Area (without emoji)
+    interestArea: /(?:^|\n)\s*(?:興味分野|Interest\s*Area|分野)\s*[：:：]\s*([^\n]+)/i,
+    // 推しOSS / Favorite OSS (without emoji)
+    favoriteOSS: /(?:^|\n)\s*(?:推し[Oo][Ss][Ss]|Favorite\s*OSS|OSS)\s*[：:：]\s*([^\n]+)/i,
+    // 参加回数 / Participation Count (without emoji)
+    participationCount: /(?:^|\n)\s*(?:参加回数|Participation\s*Count|回数)\s*[：:：]\s*([^\n]+)/i,
+    // 注目セッション / Focus Session (without emoji)
+    focusSession: /(?:^|\n)\s*(?:注目セッション|Focus\s*Session|セッション)\s*[：:：]\s*([^\n]+)/i,
+    // ひとこと / Message (without emoji)
+    message: /(?:^|\n)\s*(?:ひとこと|Message|コメント|Comment)\s*[：:：]\s*([^\n]+)/i
+  };
+  
+  // Try extraction with emoji first
+  for (const [key, pattern] of Object.entries(patternsWithEmoji)) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      fields[key] = match[1].trim();
+    }
+  }
+  
+  // If no fields were extracted with emoji, try without emoji
+  const hasEmojiData = Object.values(fields).some(value => value !== null);
+  if (!hasEmojiData) {
+    for (const [key, pattern] of Object.entries(patternsWithoutEmoji)) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        fields[key] = match[1].trim();
+      }
+    }
+  }
+  
+  // Return null if no fields were extracted
+  const hasData = Object.values(fields).some(value => value !== null);
+  if (!hasData) {
+    return null;
+  }
+  
+  return {
+    ...fields,
+    // Include the raw content for debugging or fallback
+    raw: content,
+    // Include the block's href if it links to the event page
+    eventUrl: cndwBlock.href
+  };
+}
+
+/**
  * Parse Prairie Card HTML into profile structure
  * @param {string} html - Prairie Card HTML content
  * @returns {Object} - Parsed profile object
@@ -473,6 +693,21 @@ function parseFromHTML(html, env) {
                 extractTextByDataField(html, 'motto') ||
                 undefined;
   
+  // Extract ProfileContent blocks
+  const profileContentBlocks = extractProfileContentBlocks(html);
+  
+  // Parse CNDW2025 structured content
+  const cndw2025Data = parseCNDW2025Content(profileContentBlocks);
+  
+  if (debugMode) {
+    console.log('[Prairie Parser] ProfileContent blocks found:', profileContentBlocks.length);
+    console.log('[Prairie Parser] CNDW2025 data extracted:', cndw2025Data ? 'Yes' : 'No');
+    if (cndw2025Data) {
+      const fields = Object.keys(cndw2025Data).filter(k => k !== 'raw' && k !== 'eventUrl');
+      console.log('[Prairie Parser] CNDW2025 fields:', fields.join(', '));
+    }
+  }
+  
   // Extract social links
   const twitter = extractSocialUrl(html, 'twitter.com') || extractSocialUrl(html, 'x.com');
   const github = extractSocialUrl(html, 'github.com');
@@ -524,7 +759,10 @@ function parseFromHTML(html, env) {
       qiita,
       zenn,
     },
-    custom: {},
+    custom: {
+      profileContentBlocks: profileContentBlocks.filter(Boolean),
+      cndw2025: cndw2025Data || undefined
+    },
     meta: {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

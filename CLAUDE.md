@@ -1017,6 +1017,37 @@ try {
 
 ### 2025-09-05の変更（最新）
 
+#### PR #187 - Prairie Card CNDW2025データ抽出機能の実装 🎯
+1. **ProfileContentブロック抽出機能の追加**
+   - Prairie Cardの`data-object-type="ProfileContent"`要素を検出
+   - title、description、href、objectIdを抽出
+   - 汎用的な実装で将来の拡張に対応
+
+2. **CNDW2025構造化コンテンツのパース**
+   - emoji-basedフィールドマーカーによる柔軟な解析
+   - 5つのフィールドを抽出:
+     - 🎯 興味分野（interestArea）
+     - 🌟 推しOSS（favoriteOSS）
+     - 📊 参加回数（participationCount）
+     - 🎪 注目セッション（focusSession）
+     - 🔥 ひとこと（message）
+
+3. **診断エンジンとの統合**
+   - `summarizeProfile()`関数でCNDW2025データを含める
+   - システムプロンプトに専用セクション追加
+   - イベント特有のデータを「現在のエネルギー状態」として重視
+
+4. **ドキュメント整備**
+   - 参加者向けガイド作成（`docs/CNDW2025_PRAIRIE_CARD_GUIDE.md`）
+   - README.mdへの機能追記
+   - 具体的な記入例と活用方法の説明
+
+5. **技術的特徴**:
+   - Edge Runtime完全互換（正規表現ベース）
+   - 後方互換性維持
+   - グレースフルデグレード対応
+   - Claude Review評価: （PR作成予定）
+
 #### PR #173 - Prairie Card UI/UX改善 ✅
 1. **モバイルアクセシビリティの大幅向上** 
    - タッチターゲット最小44x44px（iOS）、48px（Android）を確保
