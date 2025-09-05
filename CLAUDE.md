@@ -423,7 +423,40 @@ try {
 
 ## 🔄 最近の重要な変更
 
-### 2025-09-03の変更（最新）
+### 2025-09-05の変更（最新）
+
+#### PR #218 - OpenRouter AI Gateway URLパス修正 🚨
+1. **問題**: OpenRouter経由でのAI診断が失敗
+   - URLパスが不完全: `/openrouter` → `/openrouter/api/v1/chat/completions`
+   - OpenRouterは完全なAPIパスを必要とする
+
+2. **修正内容**:
+   - OpenRouter URLパスを正しく修正
+   - HTMLエラーページ検出機能を追加
+   - Content-Typeチェックによる早期エラー検出
+
+3. **結果**:
+   - Claude Review: ⭐⭐⭐⭐⭐ (5.0/5.0)
+   - OpenRouter経由での診断が正常動作
+   - エラーハンドリングの堅牢性向上
+
+#### PR #216 - CNCFプロジェクトテストスイート追加 🧪
+1. **実装内容**:
+   - 44個の包括的なCNCFプロジェクトテスト
+   - 49個のPrairie URL検証テスト（describe.each使用）
+   - 3シグマルールによる統計的精度向上
+   - CI環境対応の条件付きテスト実行
+
+2. **改善点**:
+   - テスト独立性の完全確保（beforeEach/afterEach）
+   - パフォーマンステスト（10,000回/100ms）
+   - メモリリーク検証
+
+3. **結果**:
+   - Claude Review: ⭐⭐⭐⭐⭐ (5.0/5.0)
+   - 全テスト成功（93テスト）
+
+### 2025-09-03の変更
 
 #### PR #156 - Phase 7: any型エラー完全解決 🎉
 1. **問題**: TypeScript strict modeでany型エラーが24個残存

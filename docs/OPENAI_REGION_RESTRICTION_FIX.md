@@ -1,5 +1,7 @@
 # OpenAI API 地域制限問題の解決方法
 
+*最終更新: 2025-09-05 - OpenRouter統合完了*
+
 ## 問題の概要
 
 Cloudflare WorkersがHong Kong（HKG）などの特定のColoから実行される際、OpenAI APIが地域制限により403エラーを返します。

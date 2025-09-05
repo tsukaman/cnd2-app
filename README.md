@@ -18,6 +18,8 @@
 
 **CND²（CloudNative Days × Connect 'n' Discover）** は、CloudNative Days Winter 2025（11月18-19日 @ 東京）のための特別な相性診断アプリケーションです。Prairie Cardの情報を基に、エンジニア同士の技術的な相性や協働の可能性を可視化し、「出会いを二乗でスケール」します。
 
+> **最終更新**: 2025-09-05 - v1.8.0
+
 ### ✨ 主な機能
 
 - **2人診断モード**: 2人のエンジニアの相性を詳細に分析
@@ -127,8 +129,10 @@ cp .env.example .env.local
 `.env.local`ファイルに以下の環境変数を設定してください：
 
 ```bash
-# OpenAI API（必須 - フォールバック無効化済み）
-OPENAI_API_KEY=your-api-key-here
+# OpenRouter API（推奨）または OpenAI API（必須）
+OPENROUTER_API_KEY=sk-or-v1-your-key-here  # OpenRouter経由でのAI Gateway利用
+# または
+OPENAI_API_KEY=sk-your-key-here  # 直接OpenAI API利用（後方互換）
 
 # アプリケーションURL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -328,6 +332,11 @@ cnd2-app/
 - キャッシュ機構付き
 
 ## 🧪 テスト
+
+現在のテスト状況（2025-09-05時点）:
+- **テストスイート**: 47/50 passed (3 skipped)
+- **テストケース**: 759 passed, 43 skipped (合計802)
+- **カバレッジ**: 全体 36.7%（改善中）
 
 ```bash
 # 全テストを実行
