@@ -6,6 +6,7 @@ import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { generateFortuneDiagnosis } from './diagnosis-v4-openai.js';
 import { isDebugMode, getFilteredEnvKeys, getSafeKeyInfo } from '../utils/debug-helpers.js';
+import { convertProfilesToFullFormat } from '../utils/profile-converter.js';
 
 /**
  * Handle POST requests to generate diagnosis
@@ -77,8 +78,11 @@ export async function onRequestPost({ request, env }) {
         participantCount: profiles.length 
       });
       
+      // Convert profiles to PrairieProfile format
+      const prairieProfiles = convertProfilesToFullFormat(profiles);
+      
       // Generate diagnosis result using V4 engine
-      const result = await generateFortuneDiagnosis(profiles, mode, env);
+      const result = await generateFortuneDiagnosis(prairieProfiles, mode, env);
       
       // Store in KV if available
       if (env.DIAGNOSIS_KV) {
