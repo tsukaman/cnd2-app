@@ -33,19 +33,18 @@ Object.defineProperty(window, 'localStorage', {
 describe('kv-storage', () => {
   const mockResult: DiagnosisResult = {
     id: 'test-123',
-    type: 'standard' as const,
-    score: 85,
+    mode: 'duo',
+    type: 'standard',
+    compatibility: 85,
     summary: 'Test summary',
     strengths: ['Test strength'],
     opportunities: ['Test opportunity'],
     advice: 'Test advice',
-    members: [],
+    participants: [],
     createdAt: new Date().toISOString(),
     aiPowered: true,
-    fortune: {
-      luckyItem: 'Test item',
-      luckyAction: 'Test action'
-    },
+    luckyItem: 'Test item',
+    luckyAction: 'Test action'
   };
 
   // Mock storage implementation

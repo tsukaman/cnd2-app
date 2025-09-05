@@ -8,28 +8,18 @@ import type { DiagnosisResult } from '@/types';
 // モックデータ
 const mockDiagnosisResult: DiagnosisResult = {
   id: 'test-id-123',
-  type: 'standard' as const,
-  score: 85,
+  mode: 'duo',
+  type: 'standard',
+  compatibility: 85,
   aiPowered: true,
   createdAt: new Date().toISOString(),
   summary: 'Test summary',
   strengths: ['strength1'],
   opportunities: ['opportunity1'],
   advice: 'Test advice',
-  fortune: {
-    luckyItem: 'Test item',
-    luckyAction: 'Test action'
-  },
-  members: [
-    {
-      name: 'Test User',
-      profile: {
-        name: 'Test User',
-        bio: 'Test bio',
-        interests: ['test']
-      }
-    }
-  ]
+  luckyItem: 'Test item',
+  luckyAction: 'Test action',
+  participants: []
 };
 
 // LocalStorage モック
@@ -69,7 +59,7 @@ describe('StorageFactory', () => {
 
   describe('開発環境', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'development';
+      (process.env as any).NODE_ENV = 'development';
     });
 
     it('LocalStorageImplを返すべき', () => {
@@ -153,7 +143,7 @@ describe('StorageFactory', () => {
 
   describe('本番環境（クライアントサイド）', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'production';
+      (process.env as any).NODE_ENV = 'production';
       // windowが定義されている場合はクライアントサイド
     });
 
@@ -225,7 +215,7 @@ describe('StorageFactory', () => {
     const originalWindow = global.window;
     
     beforeEach(() => {
-      process.env.NODE_ENV = 'production';
+      (process.env as any).NODE_ENV = 'production';
       // windowをundefinedにしてサーバーサイドをシミュレート
       // @ts-ignore
       delete global.window;
@@ -264,7 +254,7 @@ describe('StorageFactory', () => {
 
   describe('シングルトンパターン', () => {
     it('同じインスタンスを返すべき', () => {
-      process.env.NODE_ENV = 'development';
+      (process.env as any).NODE_ENV = 'development';
       
       const storage1 = StorageFactory.getStorage();
       const storage2 = StorageFactory.getStorage();
@@ -273,7 +263,7 @@ describe('StorageFactory', () => {
     });
 
     it('reset後は新しいインスタンスを返すべき', () => {
-      process.env.NODE_ENV = 'development';
+      (process.env as any).NODE_ENV = 'development';
       
       const storage1 = StorageFactory.getStorage();
       StorageFactory.reset();
@@ -311,7 +301,7 @@ describe('StorageFactory', () => {
     });
 
     it('ネットワークエラーを適切に処理すべき', async () => {
-      process.env.NODE_ENV = 'production';
+      (process.env as any).NODE_ENV = 'production';
       StorageFactory.reset();
       
       const storage = StorageFactory.getStorage();
@@ -324,7 +314,7 @@ describe('StorageFactory', () => {
     });
 
     it('HTTPエラーを適切に処理すべき', async () => {
-      process.env.NODE_ENV = 'production';
+      (process.env as any).NODE_ENV = 'production';
       StorageFactory.reset();
       
       const storage = StorageFactory.getStorage();
