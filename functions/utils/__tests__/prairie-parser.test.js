@@ -9,6 +9,8 @@ describe('Prairie Card Parser', () => {
     // Note: These tests only validate URL format, no actual network access is made
     it('should accept valid Prairie Card URLs', () => {
       expect(validatePrairieCardUrl('https://my.prairie.cards/u/tsukaman')).toBe(true);
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/akane.sakaki')).toBe(true); // ドットを含むユーザー名
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/user.name_123-test')).toBe(true); // 複数の特殊文字
       expect(validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043')).toBe(true);
     });
 
