@@ -472,8 +472,13 @@ ${JSON.stringify(summary2, null, 2)}`;
       luckyProject: luckyProject.name,
       luckyProjectDescription: luckyProject.description,
       luckyProjectUrl: luckyProject.url,
+      // 全5つの分析フィールドを含める
+      fiveElementsAnalysis: analysis?.fiveElementsAnalysis || '',
       astrologicalAnalysis: analysis?.astrologicalAnalysis || '',
-      techStackCompatibility: analysis?.techStackCompatibility || '',
+      numerologyAnalysis: analysis?.numerologyAnalysis || '',
+      energyFieldAnalysis: analysis?.energyFieldAnalysis || '',
+      technicalSynergy: analysis?.technicalSynergy || '',
+      techStackCompatibility: analysis?.techStackCompatibility || analysis?.technicalSynergy || '', // 互換性のため
       strengths: [],
       opportunities: [],
       advice: '',
