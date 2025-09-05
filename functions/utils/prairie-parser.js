@@ -855,8 +855,8 @@ function validatePrairieCardUrl(url) {
     
     // Check for valid path patterns
     // /u/{username} - ユーザー名にはアルファベット、数字、ドット、アンダースコア、ハイフンを許可
-    // /cards/{uuid} - UUID形式
-    const pathPattern = /^\/(?:u\/[a-zA-Z0-9._-]+|cards\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/;
+    // /cards/{uuid} - UUID形式（大文字小文字両対応）
+    const pathPattern = /^\/(?:u\/[a-zA-Z0-9._-]+|cards\/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$/;
     return pathPattern.test(parsed.pathname);
   } catch {
     return false;
