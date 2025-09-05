@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
+import { 
+  ErrorCode,
+  ERROR_CODES,
+  getErrorMessage,
+  getErrorStatusCode
+} from '@/lib/constants/error-messages';
 
 /**
- * API Error codes
+ * API Error codes (後方互換性のため維持、新規コードではERROR_CODESを使用)
+ * @deprecated Use ERROR_CODES from '@/lib/constants/error-messages' instead
  */
 export enum ApiErrorCode {
   // Client errors (4xx)
@@ -25,26 +32,62 @@ export enum ApiErrorCode {
 }
 
 /**
- * Custom API Error class
+ * 旧ApiErrorCodeを新ErrorCodeにマッピング
+ */
+const ERROR_CODE_MAPPING: Record<ApiErrorCode, ErrorCode> = {
+  [ApiErrorCode.VALIDATION_ERROR]: ERROR_CODES.VALIDATION_ERROR,
+  [ApiErrorCode.INVALID_URL]: ERROR_CODES.PRAIRIE_INVALID_URL,
+  [ApiErrorCode.UNAUTHORIZED]: ERROR_CODES.UNAUTHORIZED,
+  [ApiErrorCode.FORBIDDEN]: ERROR_CODES.UNAUTHORIZED,
+  [ApiErrorCode.NOT_FOUND]: ERROR_CODES.NOT_FOUND,
+  [ApiErrorCode.METHOD_NOT_ALLOWED]: ERROR_CODES.INVALID_REQUEST,
+  [ApiErrorCode.CONFLICT]: ERROR_CODES.INVALID_REQUEST,
+  [ApiErrorCode.RATE_LIMIT_ERROR]: ERROR_CODES.RATE_LIMIT_EXCEEDED,
+  [ApiErrorCode.RATE_LIMIT_EXCEEDED]: ERROR_CODES.RATE_LIMIT_EXCEEDED,
+  [ApiErrorCode.INTERNAL_ERROR]: ERROR_CODES.INTERNAL_ERROR,
+  [ApiErrorCode.SERVICE_UNAVAILABLE]: ERROR_CODES.STORAGE_KV_UNAVAILABLE,
+  [ApiErrorCode.TIMEOUT_ERROR]: ERROR_CODES.DIAGNOSIS_TIMEOUT,
+  [ApiErrorCode.EXTERNAL_SERVICE_ERROR]: ERROR_CODES.INTERNAL_ERROR,
+  [ApiErrorCode.FETCH_ERROR]: ERROR_CODES.PRAIRIE_FETCH_FAILED,
+  [ApiErrorCode.PARSE_ERROR]: ERROR_CODES.PRAIRIE_PARSE_FAILED,
+};
+
+/**
+ * Custom API Error class (統一エラーシステムとの統合版)
  */
 export class ApiError extends Error {
   public readonly code: ApiErrorCode;
+  public readonly errorCode: ErrorCode; // 新しいエラーコード
   public readonly statusCode: number;
   public readonly details?: unknown;
 
   constructor(
     message: string,
-    code: ApiErrorCode,
+    code: ApiErrorCode | ErrorCode,
     statusCode?: number,
     details?: unknown
   ) {
     super(message);
     this.name = 'ApiError';
-    this.code = code;
+    
+    // 新旧エラーコードの処理
+    if (typeof code === 'string' && code in ApiErrorCode) {
+      // 旧形式のApiErrorCode
+      this.code = code as ApiErrorCode;
+      this.errorCode = ERROR_CODE_MAPPING[code as ApiErrorCode];
+    } else {
+      // 新形式のErrorCode
+      this.errorCode = code as ErrorCode;
+      // 旧コードへの逆マッピング（後方互換性）
+      const legacyCode = Object.entries(ERROR_CODE_MAPPING)
+        .find(([_, v]) => v === code)?.[0] as ApiErrorCode;
+      this.code = legacyCode || ApiErrorCode.INTERNAL_ERROR;
+    }
+    
     this.details = details;
     
     // Use provided status code or get from error code
-    this.statusCode = statusCode ?? getStatusCodeForErrorCode(code);
+    this.statusCode = statusCode ?? getErrorStatusCode(this.errorCode);
     
     // Maintains proper stack trace for where our error was thrown
     if (Error.captureStackTrace) {
@@ -156,19 +199,20 @@ export class ApiError extends Error {
   }
 
   /**
-   * Convert to JSON-serializable object
+   * Convert to JSON-serializable object (新統一形式)
    */
   toJSON(): Record<string, unknown> {
-    const result: Record<string, unknown> = {
-      code: this.code,
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    return {
+      code: this.errorCode, // 新形式のエラーコード
       message: this.message,
+      details: this.details,
+      timestamp: new Date().toISOString(),
+      requestId,
+      // 後方互換性のため旧コードも含める
+      legacyCode: this.code,
     };
-    
-    if (this.details !== undefined) {
-      result.details = this.details;
-    }
-    
-    return result;
   }
 }
 
@@ -268,6 +312,7 @@ export function handleApiError(error: unknown): NextResponse {
 
 /**
  * Create error response
+ * @deprecated Use createApiErrorResponse from '@/lib/utils/error-response' instead
  */
 export function createErrorResponse(
   code: ApiErrorCode,
@@ -283,3 +328,10 @@ export function createErrorResponse(
     { status: error.statusCode }
   );
 }
+
+// Re-export unified error utilities for convenience
+export { 
+  createApiErrorResponse,
+  createApiSuccessResponse,
+  inferErrorCode as inferErrorCodeFromError
+} from '@/lib/utils/error-response';

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiMiddleware } from '@/lib/api-middleware';
-import { ApiError, ApiErrorCode } from '@/lib/api-errors';
+import { ApiError } from '@/lib/api-errors';
+import { ERROR_CODES } from '@/lib/constants/error-messages';
 import { AstrologicalDiagnosisEngineV4 } from '@/lib/diagnosis-engine-v4-openai';
 import { getCorsHeaders } from '@/lib/cors';
 import { convertProfilesToFullFormat } from '@/lib/utils/profile-converter';
@@ -17,7 +18,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     if (!profiles || !Array.isArray(profiles)) {
       throw new ApiError(
         'Profiles array is required',
-        ApiErrorCode.VALIDATION_ERROR,
+        ERROR_CODES.DIAGNOSIS_PROFILES_REQUIRED,
         400
       );
     }
@@ -25,7 +26,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     if (mode === 'duo' && profiles.length !== 2) {
       throw new ApiError(
         'Duo mode requires exactly 2 profiles',
-        ApiErrorCode.VALIDATION_ERROR,
+        ERROR_CODES.DIAGNOSIS_MIN_PROFILES,
         400
       );
     }
@@ -33,7 +34,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     if (mode === 'group' && (profiles.length < 3 || profiles.length > 10)) {
       throw new ApiError(
         'Group mode requires 3-10 profiles',
-        ApiErrorCode.VALIDATION_ERROR,
+        ERROR_CODES.DIAGNOSIS_MIN_PROFILES,
         400
       );
     }
@@ -57,7 +58,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     console.error('[Diagnosis API] Error:', _error);
     throw new ApiError(
       'Failed to generate diagnosis',
-      ApiErrorCode.INTERNAL_ERROR,
+      ERROR_CODES.INTERNAL_ERROR,
       500
     );
   }

@@ -4,6 +4,7 @@ import { errorResponse, successResponse, getCorsHeaders, getSecurityHeaders } fr
 import { createLogger, logRequest } from '../utils/logger.js';
 import { safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { parseFromHTML, validatePrairieCardUrl } from '../utils/prairie-parser.js';
+import { createErrorResponse, ERROR_CODES } from '../utils/error-messages.js';
 
 /**
  * Handle POST requests to scrape and parse Prairie Card data
@@ -25,11 +26,11 @@ export async function onRequestPost({ request, env }) {
       // Validation
       if (!url && !html) {
         logger.warn('Invalid request: missing URL or HTML');
-        return errorResponse(
-          new Error('URL or HTML content is required'),
-          400,
-          corsHeaders
-        );
+        const errorResp = createErrorResponse(ERROR_CODES.PRAIRIE_URL_REQUIRED);
+        return new Response(JSON.stringify(errorResp), {
+          status: 400,
+          headers: corsHeaders
+        });
       }
       
       // Simplified Prairie Card parsing for demo
@@ -43,11 +44,11 @@ export async function onRequestPost({ request, env }) {
         // Validate URL before fetching
         if (!validatePrairieCardUrl(url)) {
           logger.warn('Invalid Prairie Card URL', { url });
-          return errorResponse(
-            new Error('Invalid Prairie Card URL'),
-            400,
-            corsHeaders
-          );
+          const errorResp = createErrorResponse(ERROR_CODES.PRAIRIE_INVALID_URL);
+          return new Response(JSON.stringify(errorResp), {
+            status: 400,
+            headers: corsHeaders
+          });
         }
         
         logger.info('Fetching Prairie Card', { url });
@@ -175,22 +176,34 @@ export async function onRequestPost({ request, env }) {
         }
       }
       
-      // Determine appropriate status code
-      let statusCode = 500;
+      // Determine appropriate error code based on error message
+      let errorCode = ERROR_CODES.INTERNAL_ERROR;
       
       if (error.message.includes('timeout')) {
-        statusCode = 504; // Gateway Timeout
+        errorCode = ERROR_CODES.PRAIRIE_TIMEOUT;
       } else if (error.message.includes('not found')) {
-        statusCode = 404; // Not Found
+        errorCode = ERROR_CODES.PRAIRIE_NOT_FOUND;
       } else if (error.message.includes('Access denied')) {
-        statusCode = 403; // Forbidden  
+        errorCode = ERROR_CODES.UNAUTHORIZED;
       } else if (error.message.includes('scraping failed')) {
-        statusCode = 502; // Bad Gateway
+        errorCode = ERROR_CODES.PRAIRIE_FETCH_FAILED;
       } else if (error.message.includes('Invalid')) {
-        statusCode = 400; // Bad Request
+        errorCode = ERROR_CODES.PRAIRIE_INVALID_URL;
+      } else if (error.message.includes('parse')) {
+        errorCode = ERROR_CODES.PRAIRIE_PARSE_FAILED;
       }
       
-      return errorResponse(error, statusCode, corsHeaders);
+      const errorResp = createErrorResponse(errorCode, error.message);
+      const statusCode = errorResp.error.code === ERROR_CODES.PRAIRIE_TIMEOUT ? 504 :
+                        errorResp.error.code === ERROR_CODES.PRAIRIE_NOT_FOUND ? 404 :
+                        errorResp.error.code === ERROR_CODES.UNAUTHORIZED ? 403 :
+                        errorResp.error.code === ERROR_CODES.PRAIRIE_INVALID_URL ? 400 :
+                        500;
+      
+      return new Response(JSON.stringify(errorResp), {
+        status: statusCode,
+        headers: corsHeaders
+      });
     }
   });
 }

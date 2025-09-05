@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiMiddleware } from '@/lib/api-middleware';
-import { ApiError, ApiErrorCode } from '@/lib/api-errors';
+import { ApiError } from '@/lib/api-errors';
+import { ERROR_CODES } from '@/lib/constants/error-messages';
 import { PrairieProfileExtractor } from '@/lib/prairie-profile-extractor';
 import { PrairieProfile } from '@/types';
 import { getCorsHeaders } from '@/lib/cors';
@@ -19,7 +20,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     if (!url && !html) {
       throw new ApiError(
         'URL or HTML content is required',
-        ApiErrorCode.VALIDATION_ERROR,
+        ERROR_CODES.PRAIRIE_URL_REQUIRED,
         400
       );
     }
@@ -32,7 +33,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       if (!validationResult.isValid) {
         throw new ApiError(
           validationResult.error || 'Invalid Prairie Card URL',
-          ApiErrorCode.VALIDATION_ERROR,
+          ERROR_CODES.PRAIRIE_INVALID_URL,
           400
         );
       }
@@ -42,7 +43,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       if (!sanitizedUrl) {
         throw new ApiError(
           'URL contains potentially dangerous content',
-          ApiErrorCode.VALIDATION_ERROR,
+          ERROR_CODES.PRAIRIE_INVALID_URL,
           400
         );
       }
@@ -126,7 +127,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
         if (!response.ok) {
           throw new ApiError(
             `Failed to fetch Prairie Card: ${response.status}`,
-            ApiErrorCode.EXTERNAL_SERVICE_ERROR,
+            ERROR_CODES.PRAIRIE_FETCH_FAILED,
             502
           );
         }
@@ -138,7 +139,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
         if (_error instanceof Error && _error.name === 'AbortError') {
           throw new ApiError(
             'Prairie Card fetch timeout',
-            ApiErrorCode.EXTERNAL_SERVICE_ERROR,
+            ERROR_CODES.PRAIRIE_TIMEOUT,
             504
           );
         }
@@ -152,7 +153,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     if (!minimalProfile) {
       throw new ApiError(
         'Failed to parse Prairie Card',
-        ApiErrorCode.PARSE_ERROR,
+        ERROR_CODES.PRAIRIE_PARSE_FAILED,
         422
       );
     }
@@ -189,7 +190,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
     console.error('[Prairie API] Error:', _error);
     throw new ApiError(
       'Failed to process Prairie Card',
-      ApiErrorCode.INTERNAL_ERROR,
+      ERROR_CODES.INTERNAL_ERROR,
       500
     );
   }

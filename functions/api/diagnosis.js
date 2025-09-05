@@ -7,6 +7,7 @@ import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { generateFortuneDiagnosis } from './diagnosis-v4-openai.js';
 import { createSafeDebugLogger, getSafeKeyInfo, getFilteredEnvKeys } from '../utils/debug-helpers.js';
 import { convertProfilesToFullFormat } from '../utils/profile-converter.js';
+import { createErrorResponse, createSuccessResponse, ERROR_CODES } from '../utils/error-messages.js';
 
 /**
  * Handle POST requests to generate diagnosis
@@ -51,11 +52,11 @@ export async function onRequestPost({ request, env }) {
         logger.warn('Invalid request: insufficient profiles', { 
           profileCount: profiles?.length || 0 
         });
-        return errorResponse(
-          new Error('At least 2 profiles are required'),
-          400,
-          corsHeaders
-        );
+        const errorResp = createErrorResponse(ERROR_CODES.DIAGNOSIS_MIN_PROFILES);
+        return new Response(JSON.stringify(errorResp), {
+          status: 400,
+          headers: corsHeaders
+        });
       }
       
       logger.info('Generating diagnosis', { 
@@ -104,11 +105,14 @@ export async function onRequestPost({ request, env }) {
       );
     } catch (error) {
       logger.error('Diagnosis generation failed', error);
-      // より詳細なエラーメッセージを返す
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Failed to generate diagnosis';
-      return errorResponse(new Error(errorMessage), 500, corsHeaders);
+      const errorResp = createErrorResponse(
+        ERROR_CODES.DIAGNOSIS_GENERATION_FAILED,
+        error instanceof Error ? error.message : error
+      );
+      return new Response(JSON.stringify(errorResp), {
+        status: 500,
+        headers: corsHeaders
+      });
     }
   });
 }
