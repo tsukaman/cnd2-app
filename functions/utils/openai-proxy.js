@@ -14,12 +14,63 @@
  * @returns {Promise<Response>} APIレスポンス
  */
 export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
-  // 方法1: Cloudflare AI Gatewayを使用（推奨）
-  // Cloudflare AI Gatewayは地域制限を回避し、キャッシング、レート制限、分析も提供
+  // 方法1: OpenRouter経由（地域制限回避の最も確実な方法）
+  // OpenRouterはCloudflare AI Gatewayと互換性があり、地域制限を確実に回避できる
+  if (env?.OPENROUTER_API_KEY) {
+    // AI Gateway経由でOpenRouterを使用（キャッシング・分析のメリットあり）
+    if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
+      const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openrouter`;
+      
+      debugLogger?.log('Using OpenRouter via AI Gateway (region restriction bypass):', {
+        accountId: env.CLOUDFLARE_ACCOUNT_ID.substring(0, 8) + '...',
+        gatewayId: env.CLOUDFLARE_GATEWAY_ID
+      });
+      
+      // OpenRouterではモデル名にプロバイダーのプレフィックスが必要
+      const openRouterBody = {
+        ...body,
+        model: body.model === 'gpt-4o-mini' ? 'openai/gpt-4o-mini' : body.model
+      };
+      
+      return fetch(gatewayUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://cnd2-app.pages.dev',
+          'X-Title': 'CND² Diagnosis'
+        },
+        body: JSON.stringify(openRouterBody)
+      });
+    }
+    
+    // AI Gatewayなしで直接OpenRouterを使用
+    const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    debugLogger?.log('Using OpenRouter directly (region restriction bypass)');
+    
+    const openRouterBody = {
+      ...body,
+      model: body.model === 'gpt-4o-mini' ? 'openai/gpt-4o-mini' : body.model
+    };
+    
+    return fetch(openRouterUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://cnd2-app.pages.dev',
+        'X-Title': 'CND² Diagnosis'
+      },
+      body: JSON.stringify(openRouterBody)
+    });
+  }
+  
+  // 方法2: Cloudflare AI Gateway（OpenAI直接 - 地域制限の影響あり）
+  // 注意：HKGデータセンター経由の場合、403エラーが発生する可能性があります
   if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
     const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openai/chat/completions`;
     
-    debugLogger?.log('Using Cloudflare AI Gateway:', {
+    debugLogger?.log('Using Cloudflare AI Gateway with OpenAI (may fail due to HKG routing):', {
       accountId: env.CLOUDFLARE_ACCOUNT_ID.substring(0, 8) + '...',
       gatewayId: env.CLOUDFLARE_GATEWAY_ID
     });
@@ -34,7 +85,7 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
     });
   }
   
-  // 方法2: カスタムプロキシエンドポイントを使用
+  // 方法3: カスタムプロキシエンドポイントを使用
   if (env?.OPENAI_PROXY_URL) {
     debugLogger?.log('Using custom proxy:', {
       proxyUrl: env.OPENAI_PROXY_URL
@@ -51,7 +102,7 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
     });
   }
   
-  // 方法3: 直接OpenAI APIを呼び出す（デフォルト）
+  // 方法4: 直接OpenAI APIを呼び出す（デフォルト）
   debugLogger?.log('Using direct OpenAI API (may fail due to region restrictions)');
   
   return fetch('https://api.openai.com/v1/chat/completions', {
