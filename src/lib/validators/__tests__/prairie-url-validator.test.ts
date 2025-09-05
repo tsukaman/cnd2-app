@@ -41,6 +41,18 @@ describe('Prairie Card URL Validator', () => {
         expect(result.isValid).toBe(true);
         expect(result.error).toBeUndefined();
       });
+
+      it('大文字を含むUUIDも受け入れる', () => {
+        const result = validatePrairieCardUrl('https://my.prairie.cards/cards/20BC9E4A-C2F4-402A-A449-5C59ECA48043');
+        expect(result.isValid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      it('混合ケースのUUIDも受け入れる', () => {
+        const result = validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9E4a-c2F4-402A-a449-5c59eca48043');
+        expect(result.isValid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
     });
 
     describe('無効なURL', () => {
