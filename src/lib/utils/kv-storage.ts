@@ -1,10 +1,12 @@
 import { logger } from '@/lib/logger';
 import type { DiagnosisResult } from '@/types';
+import { StorageFactory } from '@/lib/storage/storage-factory';
 
 /**
- * 診断結果をローカルストレージとKVストレージに保存
+ * 診断結果をストレージに保存
+ * StorageFactoryを使用して環境に応じた適切なストレージ実装を使用
  * @param result 診断結果
- * @param options オプション設定
+ * @param options オプション設定（後方互換性のため維持）
  */
 export async function saveDiagnosisResult(
   result: DiagnosisResult,
@@ -15,99 +17,34 @@ export async function saveDiagnosisResult(
     retryDelay?: number;
   } = {}
 ): Promise<{ success: boolean; kvSaved?: boolean; error?: string }> {
-  const {
-    saveToLocalStorage = true,
-    saveToKV = true,
-    retryCount = 3,
-    retryDelay = 1000
-  } = options;
-
-  // LocalStorageへの保存
-  if (saveToLocalStorage && typeof window !== 'undefined') {
-    try {
-      const key = `diagnosis-result-${result.id}`;
-      localStorage.setItem(key, JSON.stringify(result));
-      logger.info(`[KV Storage] Saved to LocalStorage: ${result.id}`);
-    } catch (error) {
-      logger.error('[KV Storage] LocalStorage save failed:', error);
-      // LocalStorageのエラーは続行可能なので警告のみ
-    }
+  const storage = StorageFactory.getStorage();
+  
+  try {
+    const saveResult = await storage.save(result);
+    
+    // 後方互換性のため、kvSavedフラグを設定
+    // 開発環境ではLocalStorageのみ、本番環境では両方に保存される
+    const kvSaved = process.env.NODE_ENV === 'production' && saveResult.success;
+    
+    return {
+      ...saveResult,
+      kvSaved
+    };
+  } catch (error) {
+    logger.error('[KV Storage] Save failed:', error);
+    return {
+      success: false,
+      kvSaved: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
-
-  // KVストレージへの保存（APIエンドポイント経由）
-  if (!saveToKV) {
-    return { success: true, kvSaved: false };
-  }
-
-  // 開発環境ではKVストレージをスキップすることも可能
-  if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_ENABLE_KV_IN_DEV) {
-    logger.info('[KV Storage] Skipping KV save in development');
-    return { success: true, kvSaved: false };
-  }
-
-  // リトライ付きでKVストレージに保存
-  let lastError: Error | null = null;
-  for (let i = 0; i < retryCount; i++) {
-    try {
-      // 本番環境ではCloudflare FunctionsのAPIエンドポイントを使用
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? '/api/results'  // Cloudflare Functionsが処理
-        : null;
-      
-      if (!apiUrl) {
-        // 開発環境ではKV保存をスキップ
-        logger.info('[KV Storage] Skipping KV save in development (no API endpoint)');
-        return { success: true, kvSaved: false };
-      }
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: result.id,
-          result: result
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        logger.info(`[KV Storage] Saved to KV: ${result.id}`, data);
-        return { success: true, kvSaved: true };
-      }
-
-      // HTTPエラーの場合
-      const errorData = await response.json().catch(() => null);
-      lastError = new Error(
-        errorData?.error || `HTTP ${response.status}: ${response.statusText}`
-      );
-      logger.warn(`[KV Storage] Save attempt ${i + 1} failed:`, lastError);
-
-    } catch (error) {
-      lastError = error as Error;
-      logger.warn(`[KV Storage] Save attempt ${i + 1} error:`, error);
-    }
-
-    // リトライ間隔を待つ（最後の試行後は待たない）
-    if (i < retryCount - 1) {
-      await new Promise(resolve => setTimeout(resolve, retryDelay * (i + 1)));
-    }
-  }
-
-  // すべてのリトライが失敗
-  logger.error('[KV Storage] All save attempts failed:', lastError);
-  return { 
-    success: true, // LocalStorageには保存できているので部分的成功
-    kvSaved: false, 
-    error: lastError?.message || 'Failed to save to KV storage'
-  };
 }
 
 /**
  * 診断結果をストレージから取得
+ * StorageFactoryを使用して環境に応じた適切なストレージ実装を使用
  * @param id 診断結果ID
- * @param options オプション設定
+ * @param options オプション設定（後方互換性のため維持）
  */
 export async function loadDiagnosisResult(
   id: string,
@@ -116,59 +53,21 @@ export async function loadDiagnosisResult(
     checkKV?: boolean;
   } = {}
 ): Promise<DiagnosisResult | null> {
-  const {
-    checkLocalStorage = true,
-    checkKV = true
-  } = options;
-
-  // LocalStorageから取得を試みる
-  if (checkLocalStorage && typeof window !== 'undefined') {
-    try {
-      const key = `diagnosis-result-${id}`;
-      const data = localStorage.getItem(key);
-      if (data) {
-        const result = JSON.parse(data);
-        logger.info(`[KV Storage] Loaded from LocalStorage: ${id}`);
-        return result;
-      }
-    } catch (error) {
-      logger.error('[KV Storage] LocalStorage load failed:', error);
+  const storage = StorageFactory.getStorage();
+  
+  try {
+    const result = await storage.get(id);
+    
+    if (result) {
+      logger.info(`[KV Storage] Loaded result: ${id}`);
+      return result;
     }
+    
+    return null;
+  } catch (error) {
+    logger.error('[KV Storage] Load failed:', error);
+    return null;
   }
-
-  // KVストレージから取得を試みる（本番環境のみ）
-  if (checkKV && process.env.NODE_ENV === 'production') {
-    try {
-      const response = await fetch(`/api/results?id=${id}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const result = data.result || data;
-        
-        // LocalStorageにもキャッシュ
-        if (checkLocalStorage && typeof window !== 'undefined') {
-          try {
-            const key = `diagnosis-result-${id}`;
-            localStorage.setItem(key, JSON.stringify(result));
-          } catch {
-            // キャッシュ失敗は無視
-          }
-        }
-        
-        logger.info(`[KV Storage] Loaded from KV: ${id}`);
-        return result;
-      }
-    } catch (error) {
-      logger.error('[KV Storage] KV load failed:', error);
-    }
-  }
-
-  return null;
 }
 
 /**
