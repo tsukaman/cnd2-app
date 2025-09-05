@@ -43,6 +43,8 @@ function isValidOpenAIKey(key) {
 const CONFIG = {
   TEMPERATURE: 0.95,  // より創造的な出力のため温度を上げる
   MAX_TOKENS: 3500,    // より詳細な分析を可能にするため増加（2000→3500）
+                       // 推定コスト増加: 約1.75倍 (2000→3500トークン)
+                       // GPT-4o-mini: $0.00015/1K入力トークン、$0.0006/1K出力トークン
   MODEL: 'gpt-4o-mini' // コスト効率を維持
 };
 
