@@ -77,21 +77,22 @@ export async function onRequestPost({ request, env }) {
         const key = `diagnosis:${result.id}`;
         const startKV = Date.now();
         
-        const saved = await kvPut(env, key, JSON.stringify(result), {
-          expirationTtl: KV_TTL.DIAGNOSIS,
-        });
-        
-        if (saved) {
-          
-          logger.metric('kv_write_duration', Date.now() - startKV, 'ms', {
-            key,
-            operation: 'put',
+        try {
+          const saved = await kvPut(env, key, JSON.stringify(result), {
+            expirationTtl: KV_TTL.DIAGNOSIS,
           });
           
-          logger.info('Diagnosis stored in KV', { 
-            id: result.id,
-            ttl: '7days' 
-          });
+          if (saved) {
+            logger.metric('kv_write_duration', Date.now() - startKV, 'ms', {
+              key,
+              operation: 'put',
+            });
+            
+            logger.info('Diagnosis stored in KV', { 
+              id: result.id,
+              ttl: '7days' 
+            });
+          }
         } catch (kvError) {
           // Log but don't fail the request
           logger.error('Failed to store in KV', kvError, { id: result.id });
