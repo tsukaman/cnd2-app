@@ -87,7 +87,14 @@ export class ApiError extends Error {
     this.details = details;
     
     // Use provided status code or get from error code
-    this.statusCode = statusCode ?? getErrorStatusCode(this.errorCode);
+    // Special case: FORBIDDEN should return 403 even though it maps to UNAUTHORIZED
+    if (statusCode !== undefined) {
+      this.statusCode = statusCode;
+    } else if (this.code === ApiErrorCode.FORBIDDEN) {
+      this.statusCode = 403;
+    } else {
+      this.statusCode = getErrorStatusCode(this.errorCode);
+    }
     
     // Maintains proper stack trace for where our error was thrown
     if (Error.captureStackTrace) {
