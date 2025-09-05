@@ -14,6 +14,13 @@ describe('Prairie Card Parser', () => {
       expect(validatePrairieCardUrl('https://my.prairie.cards/cards/20bc9e4a-c2f4-402a-a449-5c59eca48043')).toBe(true);
     });
 
+    it('should handle edge cases with dots', () => {
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/a.b')).toBe(true); // 最小ドットパターン
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/user.name.test')).toBe(true); // 複数ドット
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/.invalid')).toBe(true); // 先頭ドット（現在の正規表現では許可）
+      expect(validatePrairieCardUrl('https://my.prairie.cards/u/invalid.')).toBe(true); // 末尾ドット（現在の正規表現では許可）
+    });
+
     it('should reject invalid URLs', () => {
       expect(validatePrairieCardUrl('https://prairie.cards/user123')).toBe(false); // prairie.cards は無効
       expect(validatePrairieCardUrl('https://subdomain.prairie.cards/test')).toBe(false); // サブドメインは無効
