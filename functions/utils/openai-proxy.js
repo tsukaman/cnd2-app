@@ -18,20 +18,67 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
   console.log('[PROXY DEBUG] Environment check:', {
     hasAccountId: !!env?.CLOUDFLARE_ACCOUNT_ID,
     hasGatewayId: !!env?.CLOUDFLARE_GATEWAY_ID,
+    hasOpenRouter: !!env?.OPENROUTER_API_KEY,
     hasProxyUrl: !!env?.OPENAI_PROXY_URL,
-    envKeys: env ? Object.keys(env).filter(k => k.includes('CLOUDFLARE') || k.includes('OPENAI')) : []
+    envKeys: env ? Object.keys(env).filter(k => k.includes('CLOUDFLARE') || k.includes('OPENAI') || k.includes('OPENROUTER')) : []
   });
   
-  // 方法1: Cloudflare AI Gatewayを使用（推奨）
-  // Cloudflare AI Gatewayは地域制限を回避し、キャッシング、レート制限、分析も提供
+  // 方法1: OpenRouter経由（地域制限回避の推奨方法）
+  // OpenRouterはCloudflare AI Gatewayと互換性があり、地域制限を回避できる
+  if (env?.OPENROUTER_API_KEY) {
+    // AI Gateway経由でOpenRouterを使用
+    if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
+      const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openrouter`;
+      
+      console.log('[PROXY] Using OpenRouter via AI Gateway (region restriction bypass)');
+      debugLogger?.log('Using OpenRouter via AI Gateway');
+      
+      // OpenRouterではモデル名にプロバイダーのプレフィックスが必要
+      const openRouterBody = {
+        ...body,
+        model: body.model === 'gpt-4o-mini' ? 'openai/gpt-4o-mini' : body.model
+      };
+      
+      return fetch(gatewayUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://cnd2-app.pages.dev',
+          'X-Title': 'CND² Diagnosis'
+        },
+        body: JSON.stringify(openRouterBody)
+      });
+    }
+    
+    // AI Gatewayなしで直接OpenRouterを使用
+    const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    console.log('[PROXY] Using OpenRouter directly (region restriction bypass)');
+    
+    const openRouterBody = {
+      ...body,
+      model: body.model === 'gpt-4o-mini' ? 'openai/gpt-4o-mini' : body.model
+    };
+    
+    return fetch(openRouterUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://cnd2-app.pages.dev',
+        'X-Title': 'CND² Diagnosis'
+      },
+      body: JSON.stringify(openRouterBody)
+    });
+  }
+  
+  // 方法2: Cloudflare AI Gateway（OpenAI直接 - 地域制限の影響あり）
+  // 注意：HKGデータセンター経由の場合、403エラーが発生する可能性があります
   if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
     const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openai/chat/completions`;
     
-    console.log('[PROXY] Using Cloudflare AI Gateway'); // 強制ログ
-    debugLogger?.log('Using Cloudflare AI Gateway:', {
-      accountId: env.CLOUDFLARE_ACCOUNT_ID.substring(0, 8) + '...',
-      gatewayId: env.CLOUDFLARE_GATEWAY_ID
-    });
+    console.log('[PROXY] Using Cloudflare AI Gateway with OpenAI (may fail due to HKG routing)');
+    debugLogger?.log('Using Cloudflare AI Gateway with OpenAI');
     
     return fetch(gatewayUrl, {
       method: 'POST',

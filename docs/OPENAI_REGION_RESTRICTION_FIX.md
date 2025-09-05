@@ -2,44 +2,54 @@
 
 ## 問題の概要
 
-Cloudflare WorkersがHong Kong（HKG）などの特定のColoから実行される際、OpenAI APIが地域制限により403エラーを返すことがあります。
+Cloudflare WorkersがHong Kong（HKG）などの特定のColoから実行される際、OpenAI APIが地域制限により403エラーを返します。
+
+**重要**: これはCloudflare AI Gatewayの既知の問題で、2025年9月現在も未解決です。
 
 エラーメッセージ例：
 ```
 Country, region, or territory not supported (Status: 403)
 ```
 
+## 根本原因
+
+- CloudflareはアジアのトラフィックをHong Kong (HKG)データセンター経由でルーティング
+- OpenAIは香港からのアクセスをブロック
+- Cloudflare AI Gatewayを使用しても、Gateway自体がHKG経由でOpenAIにアクセスするため解決しない
+- Smart Placementを使用しても問題は解決しない
+
 ## 解決方法
 
-### 方法1: Cloudflare AI Gateway を使用（推奨）
+### 方法1: OpenRouter を使用（最も推奨）
 
-Cloudflare AI Gatewayは、OpenAI APIへのプロキシとして機能し、地域制限を回避できます。
+OpenRouterは地域制限を回避でき、Cloudflare AI Gatewayと完全に互換性があります。
 
 #### セットアップ手順
 
-1. **Cloudflare Dashboardにログイン**
-   - https://dash.cloudflare.com/
+1. **OpenRouterアカウント作成**
+   - https://openrouter.ai でアカウント作成
+   - APIキーを取得（`sk-or-v1-`で始まる）
+   - クレジットを購入またはOpenAI APIキーをリンク
 
-2. **AI Gatewayを作成**
-   - AI → AI Gateway → Create Gateway
-   - Gateway名を設定（例: `cnd2-openai-gateway`）
-
-3. **環境変数を設定**
+2. **環境変数を設定**
    ```bash
    # Cloudflare Pages設定で以下の環境変数を追加
+   OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxx
+   
+   # オプション：AI Gatewayと組み合わせる場合
    CLOUDFLARE_ACCOUNT_ID=your-account-id
-   CLOUDFLARE_GATEWAY_ID=cnd2-openai-gateway
+   CLOUDFLARE_GATEWAY_ID=your-gateway-name
    ```
 
-4. **デプロイ**
-   - 変更は自動的に反映されます
+3. **デプロイ**
+   - 環境変数保存後、自動的にデプロイされます
 
 #### メリット
-- 地域制限の回避
-- レスポンスのキャッシング
-- レート制限の管理
-- 使用量の分析
-- コスト削減
+- **地域制限を完全に回避**
+- OpenAI互換API
+- 複数のAIモデルにアクセス可能
+- Cloudflare AI Gatewayと組み合わせ可能
+- 安定した接続
 
 ### 方法2: カスタムプロキシエンドポイント
 
