@@ -27,25 +27,18 @@ export async function onRequestGet({ request, env }) {
       );
     }
     
-    // Skip KV in development environment for optimization
-    if (isDevelopment(env)) {
-      // 開発環境ではKVを使用しない
-      const errorResp = createErrorResponse(ERROR_CODES.RESULT_NOT_FOUND);
-      return new Response(
-        JSON.stringify(errorResp),
-        {
-          status: 404,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          }
-        }
-      );
-    }
-    
-    // Fetch from KV (production only)
     const key = `diagnosis:${id}`;
-    const data = await kvGet(env, key);
+    let data;
+    
+    if (isDevelopment(env)) {
+      // Development: Fetch from in-memory storage
+      if (global.devDiagnosisStorage && global.devDiagnosisStorage.has(key)) {
+        data = global.devDiagnosisStorage.get(key);
+      }
+    } else {
+      // Production: Fetch from KV
+      data = await kvGet(env, key);
+    }
     
     if (data) {
       try {
@@ -129,9 +122,21 @@ export async function onRequestPost({ request, env }) {
   const corsHeaders = getCorsHeaders(origin);
   
   try {
-    const result = await request.json();
+    const body = await request.json();
     
-    if (!result || typeof result !== 'object' || !result.id || !result.result) {
+    // データ構造の正規化: { id, result } または直接DiagnosisResultを受け入れる
+    let diagnosisResult;
+    let resultId;
+    
+    if (body && body.result && body.id) {
+      // クライアントから { id, result } 形式で送信された場合
+      diagnosisResult = body.result;
+      resultId = body.id;
+    } else if (body && body.id) {
+      // 直接DiagnosisResultが送信された場合
+      diagnosisResult = body;
+      resultId = body.id;
+    } else {
       const errorResp = createErrorResponse(ERROR_CODES.VALIDATION_ERROR, 'Invalid result data');
       return new Response(
         JSON.stringify(errorResp),
@@ -145,16 +150,16 @@ export async function onRequestPost({ request, env }) {
       );
     }
     
-    // Skip KV storage in development
+    // Store result based on environment
     if (!isDevelopment(env)) {
-      // Store in KV (production only)
-      const key = `diagnosis:${result.id}`;
-      await kvPut(env, key, JSON.stringify(result), {
+      // Production: Store in KV - 診断結果のみを保存（二重構造を避ける）
+      const key = `diagnosis:${resultId}`;
+      await kvPut(env, key, JSON.stringify(diagnosisResult), {
         expirationTtl: 7 * 24 * 60 * 60, // 7 days
       });
       
       const successResp = createSuccessResponse({
-        id: result.id,
+        id: resultId,
         message: 'Result stored successfully',
         storage: 'kv'
       });
@@ -167,20 +172,37 @@ export async function onRequestPost({ request, env }) {
           },
         }
       );
-    }
-    
-    // If KV is not available, return error
-    const kvErrorResp = createErrorResponse(ERROR_CODES.STORAGE_KV_UNAVAILABLE);
-    return new Response(
-      JSON.stringify(kvErrorResp),
-      {
-        status: 503,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
+    } else {
+      // Development: Use in-memory storage (temporary solution)
+      // Note: This is for development only and will be lost on server restart
+      if (!global.devDiagnosisStorage) {
+        global.devDiagnosisStorage = new Map();
       }
-    );
+      
+      const key = `diagnosis:${resultId}`;
+      global.devDiagnosisStorage.set(key, JSON.stringify(diagnosisResult));
+      
+      // Clean up old entries (keep only last 100)
+      if (global.devDiagnosisStorage.size > 100) {
+        const firstKey = global.devDiagnosisStorage.keys().next().value;
+        global.devDiagnosisStorage.delete(firstKey);
+      }
+      
+      const successResp = createSuccessResponse({
+        id: resultId,
+        message: 'Result stored successfully (dev mode: in-memory)',
+        storage: 'memory'
+      });
+      return new Response(
+        JSON.stringify(successResp),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        }
+      );
+    }
   } catch (error) {
     console.error('Results API error:', error);
     
