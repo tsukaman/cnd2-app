@@ -3,6 +3,7 @@ import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
 import { AstrologicalDiagnosisEngineV4 } from '@/lib/diagnosis-engine-v4-openai';
 import { PrairieProfile } from '@/types';
+import { getCorsHeaders } from '@/lib/cors';
 
 /**
  * Diagnosis API endpoint
@@ -89,13 +90,12 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
 });
 
 // Handle OPTIONS for CORS
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   return new NextResponse(null, {
     status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
+    headers: corsHeaders as HeadersInit,
   });
 }

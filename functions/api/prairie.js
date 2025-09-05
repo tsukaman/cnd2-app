@@ -53,29 +53,36 @@ export async function onRequestPost({ request, env }) {
         logger.info('Fetching Prairie Card', { url });
         const startFetch = Date.now();
         
+        // Use AbortController for proper timeout handling and resource cleanup
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
         let response;
         try {
           // Fetch and parse from URL with timeout
-          response = await Promise.race([
-            fetch(url, {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; CND2/1.0; +https://cnd2-app.pages.dev)',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'ja,en;q=0.9',
-                'Accept-Encoding': 'gzip, deflate, br',
-              },
-            }),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Fetch timeout after 10s')), 10000)
-            )
-          ]);
+          response = await fetch(url, {
+            signal: controller.signal,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; CND2/1.0; +https://cnd2-app.pages.dev)',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'ja,en;q=0.9',
+              'Accept-Encoding': 'gzip, deflate, br',
+            },
+          });
         } catch (fetchError) {
+          clearTimeout(timeoutId);
+          const errorMessage = fetchError.name === 'AbortError' 
+            ? 'Fetch timeout after 10s' 
+            : fetchError.message;
+          
           logger.error('Failed to fetch Prairie Card - Network error', fetchError, {
             url,
-            error: fetchError.message,
-            type: 'NETWORK_ERROR',
+            error: errorMessage,
+            type: fetchError.name === 'AbortError' ? 'TIMEOUT_ERROR' : 'NETWORK_ERROR',
           });
-          throw new Error(`Prairie Card scraping failed: ${fetchError.message}. Please check if the URL is correct and accessible.`);
+          throw new Error(`Prairie Card scraping failed: ${errorMessage}. Please check if the URL is correct and accessible.`);
+        } finally {
+          clearTimeout(timeoutId);
         }
         
         logger.metric('prairie_fetch_duration', Date.now() - startFetch, 'ms', {

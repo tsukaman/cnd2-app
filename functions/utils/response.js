@@ -119,12 +119,19 @@ function normalizeError(error) {
  * CORS headers configuration
  */
 export function getCorsHeaders(requestOrigin) {
+  // Production origins
   const allowedOrigins = [
     'https://cnd2-app.pages.dev',
     'https://cnd2.cloudnativedays.jp',
-    'http://localhost:3000',
-    'http://localhost:8788', // Wrangler dev
   ];
+  
+  // Add development origins if in development mode
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+    allowedOrigins.push(
+      'http://localhost:3000',
+      'http://localhost:8788' // Wrangler dev
+    );
+  }
   
   // Check if origin is allowed
   const origin = allowedOrigins.includes(requestOrigin) 
