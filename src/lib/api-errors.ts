@@ -209,7 +209,7 @@ export class ApiError extends Error {
    * Convert to JSON-serializable object (新統一形式)
    */
   toJSON(): Record<string, unknown> {
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     
     return {
       code: this.errorCode, // 新形式のエラーコード

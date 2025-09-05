@@ -206,7 +206,7 @@ export function getErrorStatusCode(code) {
  */
 export function createErrorResponse(code, details = null, customMessage = null, language = 'ja') {
   const message = customMessage || getErrorMessage(code, language);
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   
   return {
     success: false,
@@ -228,7 +228,7 @@ export function createSuccessResponse(data, requestId = null) {
     success: true,
     data,
     timestamp: new Date().toISOString(),
-    requestId: requestId || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    requestId: requestId || `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
   };
 }
 

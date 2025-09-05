@@ -47,7 +47,7 @@ export function createErrorResponse(
   const message = customMessage || getErrorMessage(code, language);
   
   // requestIdの生成（簡易版）
-  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   
   return {
     success: false,
@@ -72,7 +72,7 @@ export function createSuccessResponse<T>(
     success: true,
     data,
     timestamp: new Date().toISOString(),
-    requestId: requestId || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    requestId: requestId || `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
   };
 }
 
