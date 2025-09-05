@@ -398,9 +398,16 @@ function extractProfileContentBlocks(html) {
  * @returns {Object|null} - Parsed CNDW2025 data or null if not found
  */
 function parseCNDW2025Content(profileBlocks) {
-  // Find the CNDW2025 block
+  // Input validation
+  if (!Array.isArray(profileBlocks) || profileBlocks.length === 0) {
+    return null;
+  }
+  
+  // Find the CNDW2025 block with more flexible pattern
   const cndwBlock = profileBlocks.find(block => 
-    block.title && block.title.includes('CNDW2025')
+    block?.title && 
+    typeof block.title === 'string' && 
+    /【?CNDW2025】?/.test(block.title)  // Support variations like CNDW2025, 【CNDW2025】, etc.
   );
   
   if (!cndwBlock) {
@@ -418,19 +425,19 @@ function parseCNDW2025Content(profileBlocks) {
     message: null           // 🔥 ひとこと
   };
   
-  // Define patterns for each field with flexible formatting
+  // Define patterns for each field with flexible formatting (supports both Japanese and English)
   // These patterns handle various formatting variations users might use
   const patterns = {
-    // 🎯 興味分野：value
-    interestArea: /🎯\s*興味分野[：:]\s*([^\n🌟📊🎪🔥]+)/,
-    // 🌟 推しOSS：value
-    favoriteOSS: /🌟\s*推し[Oo][Ss][Ss][：:]\s*([^\n🎯📊🎪🔥]+)/,
-    // 📊 参加回数：value
-    participationCount: /📊\s*参加回数[：:]\s*([^\n🎯🌟🎪🔥]+)/,
-    // 🎪 注目セッション：value
-    focusSession: /🎪\s*注目セッション[：:]\s*([^\n🎯🌟📊🔥]+)/,
-    // 🔥 ひとこと：value
-    message: /🔥\s*ひとこと[：:]\s*([^\n🎯🌟📊🎪]+)/
+    // 🎯 興味分野 / Interest Area
+    interestArea: /🎯\s*(?:興味分野|Interest\s*Area|分野)[：:：]\s*([^\n🌟📊🎪🔥]+)/i,
+    // 🌟 推しOSS / Favorite OSS
+    favoriteOSS: /🌟\s*(?:推し[Oo][Ss][Ss]|Favorite\s*OSS|OSS)[：:：]\s*([^\n🎯📊🎪🔥]+)/i,
+    // 📊 参加回数 / Participation Count
+    participationCount: /📊\s*(?:参加回数|Participation\s*Count|回数)[：:：]\s*([^\n🎯🌟🎪🔥]+)/i,
+    // 🎪 注目セッション / Focus Session
+    focusSession: /🎪\s*(?:注目セッション|Focus\s*Session|セッション)[：:：]\s*([^\n🎯🌟📊🔥]+)/i,
+    // 🔥 ひとこと / Message
+    message: /🔥\s*(?:ひとこと|Message|コメント|Comment)[：:：]\s*([^\n🎯🌟📊🎪]+)/i
   };
   
   // Extract each field
@@ -609,8 +616,12 @@ function parseFromHTML(html, env) {
   const cndw2025Data = parseCNDW2025Content(profileContentBlocks);
   
   if (debugMode) {
-    console.log('[DEBUG] ProfileContent blocks found:', profileContentBlocks.length);
-    console.log('[DEBUG] CNDW2025 data:', cndw2025Data);
+    console.log('[Prairie Parser] ProfileContent blocks found:', profileContentBlocks.length);
+    console.log('[Prairie Parser] CNDW2025 data extracted:', cndw2025Data ? 'Yes' : 'No');
+    if (cndw2025Data) {
+      const fields = Object.keys(cndw2025Data).filter(k => k !== 'raw' && k !== 'eventUrl');
+      console.log('[Prairie Parser] CNDW2025 fields:', fields.join(', '));
+    }
   }
   
   // Extract social links
