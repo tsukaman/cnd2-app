@@ -4,10 +4,13 @@
 
 ### 🔐 必須設定（本番環境）
 
-| 変数名 | 説明 | 設定値例 | 設定場所 |
-|--------|------|----------|----------|
-| `OPENAI_API_KEY` | OpenAI APIキー | `sk-xxxxx` | Cloudflare Dashboard |
-| `NODE_ENV` | 実行環境 | `production` | Cloudflare Dashboard |
+| 変数名 | 説明 | 設定値例 | 設定場所 | 優先度 |
+|--------|------|----------|----------|--------|
+| `OPENROUTER_API_KEY` | OpenRouter APIキー（推奨） | `sk-or-v1-実際のキー` ⚠️ | Cloudflare Dashboard | 高 |
+| `OPENAI_API_KEY` | OpenAI APIキー（後方互換性） | `sk-実際のキー` ⚠️ | Cloudflare Dashboard | 低 |
+| `CLOUDFLARE_ACCOUNT_ID` | CloudflareアカウントID | `実際のID` ⚠️ | Cloudflare Dashboard | 中 |
+| `CLOUDFLARE_GATEWAY_ID` | AI Gateway ID | `実際のID` ⚠️ | Cloudflare Dashboard | 中 |
+| `NODE_ENV` | 実行環境 | `production` | Cloudflare Dashboard | 高 |
 
 ### 🎛️ 動作制御（イベント運用）
 
@@ -69,7 +72,11 @@
 
 ```bash
 # .env.local（Gitには含めない）
-OPENAI_API_KEY=sk-xxxxx  # 必須（フォールバック無効化済み）
+# ⚠️ 重要: 以下は例です。実際の値に置き換えてください
+OPENROUTER_API_KEY=sk-or-v1-your-actual-key  # 推奨：地域制限回避
+# OPENAI_API_KEY=sk-your-actual-key  # オプション：後方互換性
+CLOUDFLARE_ACCOUNT_ID=your-actual-id  # AI Gateway使用時
+CLOUDFLARE_GATEWAY_ID=your-actual-id  # AI Gateway使用時
 DEBUG_MODE=true  # 開発時は詳細ログを出力
 NODE_ENV=development
 ```
@@ -80,7 +87,10 @@ NODE_ENV=development
 
 ```bash
 # .env.local
-OPENAI_API_KEY=sk-xxxxx-dev
+OPENROUTER_API_KEY=sk-or-v1-xxxxx-dev  # 推奨
+# OPENAI_API_KEY=sk-xxxxx-dev  # オプション
+CLOUDFLARE_ACCOUNT_ID=xxxxx-dev
+CLOUDFLARE_GATEWAY_ID=xxxxx-dev
 NODE_ENV=development
 # ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=true          # デバッグ情報出力
@@ -91,7 +101,10 @@ LOG_LEVEL=debug          # 詳細ログ
 
 ```bash
 # Cloudflare Dashboard (Preview)
-OPENAI_API_KEY=sk-xxxxx-staging
+OPENROUTER_API_KEY=sk-or-v1-xxxxx-staging  # 推奨
+# OPENAI_API_KEY=sk-xxxxx-staging  # オプション
+CLOUDFLARE_ACCOUNT_ID=xxxxx
+CLOUDFLARE_GATEWAY_ID=xxxxx
 NODE_ENV=production
 # ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=true          # デバッグ情報出力
@@ -102,9 +115,12 @@ LOG_LEVEL=info
 
 ```bash
 # Cloudflare Dashboard (Production)
-OPENAI_API_KEY=sk-xxxxx-prod  # 必須（フォールバック無効化済み）
+OPENROUTER_API_KEY=sk-or-v1-xxxxx-prod  # 推奨：地域制限回避
+# OPENAI_API_KEY=sk-xxxxx-prod  # オプション
+CLOUDFLARE_ACCOUNT_ID=xxxxx
+CLOUDFLARE_GATEWAY_ID=xxxxx
 NODE_ENV=production
-# ENABLE_FALLBACK は削除済み（PR #169）
+# ENABLE_FALLBACK は削隔済み（PR #169）
 DEBUG_MODE=false         # デバッグ情報OFF
 LOG_LEVEL=warn           # 警告以上のみ
 ```
@@ -113,9 +129,11 @@ LOG_LEVEL=warn           # 警告以上のみ
 
 ```bash
 # Cloudflare Dashboard (Production)
-OPENAI_API_KEY=sk-xxxxx-prod
+OPENROUTER_API_KEY=sk-or-v1-xxxxx-prod  # 推奨
+CLOUDFLARE_ACCOUNT_ID=xxxxx
+CLOUDFLARE_GATEWAY_ID=xxxxx
 NODE_ENV=production
-ENABLE_FALLBACK=false    # フォールバック無効（エラー即座検知）
+# ENABLE_FALLBACK は削除済み（PR #169）
 DEBUG_MODE=false         # デバッグ情報OFF
 LOG_LEVEL=info          # 詳細ログ記録
 SENTRY_DSN=https://xxx  # エラー監視有効
@@ -129,7 +147,9 @@ SENTRY_DSN=https://xxx  # エラー監視有効
 
 ```bash
 # 必須設定
-OPENAI_API_KEY=sk-xxxxx-prod
+OPENROUTER_API_KEY=sk-or-v1-xxxxx-prod  # 推奨：地域制限回避
+CLOUDFLARE_ACCOUNT_ID=xxxxx
+CLOUDFLARE_GATEWAY_ID=xxxxx
 NODE_ENV=production
 
 # 動作制御
@@ -163,7 +183,9 @@ LOG_LEVEL=debug
 
 ```bash
 # Cloudflare Dashboard で変更
-OPENAI_API_KEY=sk-xxxxx-new
+OPENROUTER_API_KEY=sk-or-v1-xxxxx-new  # 推奨
+# または
+OPENAI_API_KEY=sk-xxxxx-new  # 後方互換性
 ```
 
 ## 📊 変数の優先順位
@@ -191,8 +213,9 @@ return false;    // デフォルト
 
 ```typescript
 // Cloudflare Functions内
-console.log('ENABLE_FALLBACK:', env.ENABLE_FALLBACK);
+console.log('OPENROUTER_API_KEY exists:', !!env.OPENROUTER_API_KEY);
 console.log('OPENAI_API_KEY exists:', !!env.OPENAI_API_KEY);
+console.log('AI Gateway configured:', !!env.CLOUDFLARE_ACCOUNT_ID && !!env.CLOUDFLARE_GATEWAY_ID);
 ```
 
 ### 2. Cloudflare Dashboardでログ確認
@@ -271,7 +294,9 @@ if (!isFallbackAllowed(env)) {
 
 #### 確認事項
 1. **環境変数の設定確認**
-   - `OPENAI_API_KEY` が Cloudflare Dashboard で設定されているか
+   - `OPENROUTER_API_KEY` または `OPENAI_API_KEY` が Cloudflare Dashboard で設定されているか
+   - OpenRouter使用時は `sk-or-v1-` で始まるか確認
+   - AI Gateway使用時は `CLOUDFLARE_ACCOUNT_ID` と `CLOUDFLARE_GATEWAY_ID` が設定されているか
    - `DIAGNOSIS_KV` がバインドされているか
 
 2. **ファイル構造の確認**
@@ -284,7 +309,33 @@ if (!isFallbackAllowed(env)) {
 
 詳細は [診断エラー調査ログ](./2025-09-05-diagnosis-error-investigation.md) を参照してください。
 
+## 🌏 OpenRouterと地域制限回避
+
+### 背景
+OpenAI APIは特定地域（香港等）からのアクセスを制限しています。Cloudflare PagesがHKGデータセンターを使用する場合、403エラーが発生します。
+
+### 解決策
+OpenRouterを使用することで、地域制限を回避できます：
+
+1. **OpenRouter直接使用**
+   ```bash
+   OPENROUTER_API_KEY=sk-or-v1-xxxxx
+   ```
+
+2. **Cloudflare AI Gateway経由（推奨）**
+   ```bash
+   OPENROUTER_API_KEY=sk-or-v1-xxxxx
+   CLOUDFLARE_ACCOUNT_ID=xxxxx
+   CLOUDFLARE_GATEWAY_ID=xxxxx
+   ```
+   - キャッシングと分析機能を追加
+   - レート制限やコスト管理が可能
+
+### APIキーの優先順位
+1. `OPENROUTER_API_KEY` （最優先）
+2. `OPENAI_API_KEY` （後方互換性）
+
 ---
 
-*最終更新: 2025-09-05*
+*最終更新: 2025-09-06*
 *CloudNative Days Winter 2025 対応版*

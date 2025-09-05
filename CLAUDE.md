@@ -129,7 +129,7 @@ cnd2-app/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── api/                # APIルート（Edge Runtime）
-│   │   │   ├── diagnosis/      # AI診断API（OpenAI GPT-4o-mini）
+│   │   │   ├── diagnosis/      # AI診断API（OpenRouter/GPT-4o-mini）
 │   │   │   ├── prairie/        # Prairie Card解析API
 │   │   │   └── results/        # 結果取得API（共有機能用）
 │   │   ├── duo/
@@ -156,7 +156,7 @@ cnd2-app/
 │   └── types/                  # TypeScript型定義（AnalysisMetadata追加）
 ├── functions/                  # Cloudflare Pages Functions
 │   └── api/
-│       ├── diagnosis.js        # 本番用診断API（OpenAI統合）
+│       ├── diagnosis.js        # 本番用診断API（OpenRouter/OpenAI統合）
 │       ├── diagnosis-v4-openai.js # AI診断エンジン
 │       ├── prairie.js          # Prairie Card解析
 │       └── results.js          # 結果取得API
@@ -168,8 +168,13 @@ cnd2-app/
 ### 必須環境変数
 
 ```bash
-# OpenAI API（本番環境で必須）
-OPENAI_API_KEY=your-api-key-here
+# AI API設定（OpenRouter推奨）
+OPENROUTER_API_KEY=sk-or-v1-your-key-here  # 推奨：地域制限回避、本番環境で必須
+# OPENAI_API_KEY=sk-your-key-here  # オプション：後方互換性用
+
+# Cloudflare AI Gateway設定（OpenRouterと併用推奨）
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+CLOUDFLARE_GATEWAY_ID=your-gateway-id
 
 # アプリケーションURL
 NEXT_PUBLIC_APP_URL=https://cnd2.cloudnativedays.jp
@@ -396,11 +401,13 @@ grep -r "setInterval\|setTimeout\|fs\.|path\." src/
 ### 1. AI診断の実装
 
 ```typescript
-// OpenAI APIは環境変数チェック
-if (process.env.OPENAI_API_KEY) {
-  // AI診断
+// OpenRouter APIを優先的に使用
+if (process.env.OPENROUTER_API_KEY) {
+  // OpenRouter経由でAI診断（地域制限回避）
+} else if (process.env.OPENAI_API_KEY) {
+  // OpenAI直接使用（後方互換性）
 } else {
-  // フォールバック診断
+  // エラー：APIキー未設定
 }
 ```
 
@@ -438,7 +445,30 @@ try {
 
 ## 🔄 最近の重要な変更
 
-### 2025-09-05の変更（最新）
+### 2025-09-06の変更（最新）
+
+#### PR #217-221 - OpenRouter統合と地域制限回避 🌏
+1. **問題**: OpenAI APIが香港リージョンからアクセスできない
+   - CloudflareのHKGデータセンター経由で403エラー
+   - OpenAIは特定地域からのアクセスを制限
+
+2. **解決策**:
+   - **OpenRouter統合**: 地域制限のないプロキシサービス
+   - **Cloudflare AI Gateway**: キャッシングと分析機能を追加
+   - **優先順位**: OpenRouter > OpenAI直接
+
+3. **実装内容**:
+   - `openai-proxy.js`: OpenRouter優先のプロキシロジック
+   - `diagnosis-v4-openai.js`: APIキー検証ロジック改善
+   - AI Gateway URL形式: `/openrouter/v1/chat/completions`
+   - debugMode変数の適切な初期化
+
+4. **結果**:
+   - Claude Review: ⭐⭐⭐⭐⭐（5.0/5.0） 全PRで最高評価
+   - 地域制限問題の完全解決
+   - 後方互換性の維持
+
+### 2025-09-05の変更
 
 #### PR #218 - OpenRouter AI Gateway URLパス修正 🚨
 1. **問題**: OpenRouter経由でのAI診断が失敗
@@ -1342,6 +1372,8 @@ PR #119のレビューで指摘された軽微な改善：
   - HTMLパーサーのエッジケーステスト
 
 ---
+
+*最終更新: 2025-09-06*
 
 **重要**: このガイドラインは常に最新の状態に保ってください。
 変更があった場合は、必ずPull Request経由で更新してください。

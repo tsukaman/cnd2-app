@@ -18,7 +18,7 @@
 
 **CND²（CloudNative Days × Connect 'n' Discover）** は、CloudNative Days Winter 2025（11月18-19日 @ 東京）のための特別な相性診断アプリケーションです。Prairie Cardの情報を基に、エンジニア同士の技術的な相性や協働の可能性を可視化し、「出会いを二乗でスケール」します。
 
-> **最終更新**: 2025-09-05 - v1.8.0
+> **最終更新**: 2025-09-06 - v1.7.0
 
 ### ✨ 主な機能
 
@@ -130,9 +130,10 @@ cp .env.example .env.local
 
 ```bash
 # OpenRouter API（推奨）または OpenAI API（必須）
-OPENROUTER_API_KEY=sk-or-v1-your-key-here  # OpenRouter経由でのAI Gateway利用
+# ⚠️ 重要: 以下の値は例です。実際のAPIキーに置き換えてください
+OPENROUTER_API_KEY=sk-or-v1-your-actual-key-here  # OpenRouter経由でのAI Gateway利用
 # または
-OPENAI_API_KEY=sk-your-key-here  # 直接OpenAI API利用（後方互換）
+OPENAI_API_KEY=sk-your-actual-key-here  # 直接OpenAI API利用（後方互換）
 
 # アプリケーションURL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -556,7 +557,7 @@ docker run -p 3000:3000 cnd2-app
   - Cloudflare Functions (production only) ✅
   - 診断機能正常動作 ✅
   - Cloudflare Pages Functions (production) ✅
-- **AI Integration**: OpenAI GPT-4o-mini診断 ✅
+- **AI Integration**: OpenRouter/GPT-4o-mini診断 ✅
 - **セキュリティ**: 
   - HTML sanitization & XSS protection ✅
   - Rate limiting (10 req/min per IP) ✅
