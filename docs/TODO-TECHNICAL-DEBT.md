@@ -12,25 +12,19 @@
 
 ## 🔴 高優先度タスク
 
-### 1. プロフィール変換処理の共通化
+### ~~1. プロフィール変換処理の共通化~~ ✅ 完了済み (2025-09-05)
 **問題**: プロフィール変換ロジックが複数箇所に重複している
-- `src/app/api/diagnosis/route.ts` (43-68行目) - 26行の変換ロジック
-- `functions/api/diagnosis-v4-openai.js` - 類似の変換処理
 
-**影響**: 
-- 保守性の低下
-- バグ修正時の漏れリスク
-- 重複コード: 約50行（両ファイル合計）
+**解決案** (実装済み):
+- `src/lib/utils/profile-converter.ts` - TypeScript版を作成 ✅
+- `functions/utils/profile-converter.js` - JavaScript版を作成 ✅
+- 両環境で共通関数（convertToFullProfile, convertProfilesToFullFormat等）を提供 ✅
+- 全APIエンドポイントで共通モジュールを使用 ✅
 
-**解決案**:
-```typescript
-// lib/utils/profile-converter.ts として共通化
-export function convertToFullProfile(profile: any): PrairieProfile
-```
-
-**期待効果**: 
-- コード重複の削減（約50行）
+**達成効果**: 
+- コード重複の完全削減（約50行削除）
 - 一元管理による保守性向上
+- TypeScript/JavaScript両環境での互換性確保
 
 ---
 
@@ -127,6 +121,10 @@ describe.each([
 ## 📝 実装済み項目（記録用）
 
 ### ✅ 完了済み
+- プロフィール変換処理の共通化（2025-09-05）
+  - TypeScript/JavaScript両環境用のprofile-converterモジュール作成
+  - 重複コード約50行を削減
+  - 全APIエンドポイントで共通モジュールを使用
 - エラーメッセージの統一管理（2025-09-05）
   - 統一エラーコード定義ファイル作成
   - TypeScript/JavaScript両環境対応
