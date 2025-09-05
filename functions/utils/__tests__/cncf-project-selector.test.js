@@ -2,138 +2,221 @@
  * CNCFプロジェクトランダム選択のテスト
  */
 
-// Mock data for testing
-const mockProjects = [
-  'Kubernetes',
-  'Prometheus',
-  'Envoy',
-  'CoreDNS',
-  'containerd',
-  'Fluentd',
-  'Open Policy Agent (OPA)',
-  'The Update Framework (TUF)',
-  'Cloud Development Kit for Kubernetes (cdk8s)',
-  'SPIFFE/SPIRE'
-];
+const {
+  CNCF_GRADUATED_PROJECTS,
+  CNCF_INCUBATING_PROJECTS,
+  CNCF_SANDBOX_PROJECTS,
+  ALL_CNCF_PROJECTS,
+  getRandomCNCFProject,
+  CNCF_STATS
+} = require('../cncf-projects.js');
 
-/**
- * URL生成ロジックのテスト用関数（diagnosis-v4-openai.jsと同じロジック）
- */
-function generateUrlName(projectName) {
-  return projectName.toLowerCase()
-    .replace(/\s+/g, '-')           // スペース → ハイフン
-    .replace(/[^\w-]/g, '')         // 英数字とハイフン以外を削除
-    .replace(/-+/g, '-')            // 連続ハイフンを1つに
-    .replace(/^-|-$/g, '');         // 前後のハイフンを削除
-}
-
-describe('CNCF Project URL Generation', () => {
-  describe('URL名の生成', () => {
-    it('基本的なプロジェクト名を正しく変換する', () => {
-      expect(generateUrlName('Kubernetes')).toBe('kubernetes');
-      expect(generateUrlName('Prometheus')).toBe('prometheus');
-      expect(generateUrlName('Envoy')).toBe('envoy');
+describe('CNCF Projects Data Structure', () => {
+  describe('Project counts', () => {
+    it('should have the correct total number of projects', () => {
+      expect(ALL_CNCF_PROJECTS.length).toBe(200);
+      expect(CNCF_STATS.total).toBe(200);
     });
 
-    it('スペースをハイフンに変換する', () => {
-      expect(generateUrlName('Open Policy Agent')).toBe('open-policy-agent');
-      expect(generateUrlName('Cloud Native')).toBe('cloud-native');
+    it('should have the correct number of graduated projects', () => {
+      expect(CNCF_GRADUATED_PROJECTS.length).toBe(31);
+      expect(CNCF_STATS.graduated).toBe(31);
     });
 
-    it('括弧を削除する', () => {
-      expect(generateUrlName('Open Policy Agent (OPA)')).toBe('open-policy-agent-opa');
-      expect(generateUrlName('The Update Framework (TUF)')).toBe('the-update-framework-tuf');
-      expect(generateUrlName('Cloud Development Kit for Kubernetes (cdk8s)'))
-        .toBe('cloud-development-kit-for-kubernetes-cdk8s');
+    it('should have the correct number of incubating projects', () => {
+      expect(CNCF_INCUBATING_PROJECTS.length).toBe(36);
+      expect(CNCF_STATS.incubating).toBe(36);
     });
 
-    it('スラッシュをハイフンに変換する', () => {
-      expect(generateUrlName('SPIFFE/SPIRE')).toBe('spiffespire');
-      expect(generateUrlName('Test/Project/Name')).toBe('testprojectname');
-    });
-
-    it('特殊文字を削除する', () => {
-      expect(generateUrlName('Project@Name')).toBe('projectname');
-      expect(generateUrlName('Project#1')).toBe('project1');
-      expect(generateUrlName('Project&Name')).toBe('projectname');
-      expect(generateUrlName('Project.Name')).toBe('projectname');
-    });
-
-    it('連続するハイフンを1つにまとめる', () => {
-      expect(generateUrlName('Project---Name')).toBe('project-name');
-      expect(generateUrlName('Cloud  Native')).toBe('cloud-native');
-    });
-
-    it('前後のハイフンを削除する', () => {
-      expect(generateUrlName('-Project-')).toBe('project');
-      expect(generateUrlName('---Project---')).toBe('project');
-    });
-
-    it('複雑なケースを正しく処理する', () => {
-      expect(generateUrlName('!!Cloud-Native@@(Test)##Project/2024!!'))
-        .toBe('cloud-nativetestproject2024');
-      expect(generateUrlName('  Spaces  Before  And  After  '))
-        .toBe('spaces-before-and-after');
+    it('should have the correct number of sandbox projects', () => {
+      expect(CNCF_SANDBOX_PROJECTS.length).toBe(133);
+      expect(CNCF_STATS.sandbox).toBe(133);
     });
   });
 
-  describe('ランダム選択の分布', () => {
-    it('すべてのプロジェクトが選択される可能性がある', () => {
-      const selections = new Set();
-      const mockRandom = (index) => {
-        const originalRandom = Math.random;
-        Math.random = () => index / mockProjects.length;
-        const result = Math.floor(Math.random() * mockProjects.length);
-        Math.random = originalRandom;
-        return result;
-      };
+  describe('Project data fields', () => {
+    it('all projects should have required fields', () => {
+      ALL_CNCF_PROJECTS.forEach(project => {
+        expect(project).toHaveProperty('name');
+        expect(project).toHaveProperty('description');
+        expect(project).toHaveProperty('description_en');
+        expect(project).toHaveProperty('homepage');
+        
+        expect(typeof project.name).toBe('string');
+        expect(typeof project.description).toBe('string');
+        expect(typeof project.description_en).toBe('string');
+        expect(typeof project.homepage).toBe('string');
+        
+        expect(project.name.length).toBeGreaterThan(0);
+        expect(project.description.length).toBeGreaterThan(0);
+        expect(project.description_en.length).toBeGreaterThan(0);
+        expect(project.homepage.length).toBeGreaterThan(0);
+      });
+    });
 
-      // 各プロジェクトを模擬的に選択
-      for (let i = 0; i < mockProjects.length; i++) {
-        const index = mockRandom(i);
-        selections.add(mockProjects[index]);
-      }
+    it('all homepage URLs should be valid', () => {
+      ALL_CNCF_PROJECTS.forEach(project => {
+        expect(project.homepage).toMatch(/^https?:\/\//);
+      });
+    });
 
-      // すべてのプロジェクトが選択可能であることを確認
-      expect(selections.size).toBeGreaterThan(0);
-      expect(selections.size).toBeLessThanOrEqual(mockProjects.length);
+    it('Japanese descriptions should be in Japanese', () => {
+      // Check a few known projects for Japanese content
+      const kubernetes = ALL_CNCF_PROJECTS.find(p => p.name === 'Kubernetes');
+      expect(kubernetes).toBeDefined();
+      expect(kubernetes.description).toContain('コンテナ');
+    });
+
+    it('English descriptions should be in English', () => {
+      const kubernetes = ALL_CNCF_PROJECTS.find(p => p.name === 'Kubernetes');
+      expect(kubernetes).toBeDefined();
+      expect(kubernetes.description_en).toContain('containerized');
     });
   });
 
-  describe('エラーハンドリング', () => {
-    it('空文字列を適切に処理する', () => {
-      expect(generateUrlName('')).toBe('');
+  describe('ALL_CNCF_PROJECTS array', () => {
+    it('should combine all categories correctly', () => {
+      const totalFromCategories = 
+        CNCF_GRADUATED_PROJECTS.length + 
+        CNCF_INCUBATING_PROJECTS.length + 
+        CNCF_SANDBOX_PROJECTS.length;
+      
+      expect(ALL_CNCF_PROJECTS.length).toBe(totalFromCategories);
     });
 
-    it('数字のみのプロジェクト名を処理する', () => {
-      expect(generateUrlName('123')).toBe('123');
-      expect(generateUrlName('2024')).toBe('2024');
-    });
-
-    it('日本語などの非ASCII文字を削除する', () => {
-      expect(generateUrlName('プロジェクト')).toBe('');
-      expect(generateUrlName('Project プロジェクト')).toBe('project');
-      expect(generateUrlName('😀 Emoji Project 🚀')).toBe('emoji-project');
+    it('should not have duplicate projects', () => {
+      const projectNames = ALL_CNCF_PROJECTS.map(p => p.name);
+      const uniqueNames = new Set(projectNames);
+      expect(uniqueNames.size).toBe(projectNames.length);
     });
   });
 });
 
-describe('CNCF Project Selection Logic', () => {
-  it('ランダムインデックスが配列範囲内である', () => {
-    for (let i = 0; i < 100; i++) {
-      const randomIndex = Math.floor(Math.random() * mockProjects.length);
-      expect(randomIndex).toBeGreaterThanOrEqual(0);
-      expect(randomIndex).toBeLessThan(mockProjects.length);
-    }
+describe('getRandomCNCFProject function', () => {
+  describe('Random selection', () => {
+    it('should return a valid project', () => {
+      const project = getRandomCNCFProject();
+      expect(project).toBeDefined();
+      expect(project).toHaveProperty('name');
+      expect(project).toHaveProperty('description');
+      expect(project).toHaveProperty('homepage');
+    });
+
+    it('should return graduated projects when specified', () => {
+      const project = getRandomCNCFProject('graduated');
+      expect(CNCF_GRADUATED_PROJECTS).toContainEqual(project);
+    });
+
+    it('should return incubating projects when specified', () => {
+      const project = getRandomCNCFProject('incubating');
+      expect(CNCF_INCUBATING_PROJECTS).toContainEqual(project);
+    });
+
+    it('should return sandbox projects when specified', () => {
+      const project = getRandomCNCFProject('sandbox');
+      expect(CNCF_SANDBOX_PROJECTS).toContainEqual(project);
+    });
+
+    it('should return from all projects when no category specified', () => {
+      const project = getRandomCNCFProject();
+      expect(ALL_CNCF_PROJECTS).toContainEqual(project);
+    });
   });
 
-  it('選択されたプロジェクトが有効である', () => {
-    for (let i = 0; i < 10; i++) {
-      const randomIndex = Math.floor(Math.random() * mockProjects.length);
-      const selected = mockProjects[randomIndex];
-      expect(selected).toBeDefined();
-      expect(typeof selected).toBe('string');
-      expect(selected.length).toBeGreaterThan(0);
-    }
+  describe('Distribution', () => {
+    it('should select different projects over multiple calls', () => {
+      const selections = new Set();
+      // Run 50 times to get a good sample
+      for (let i = 0; i < 50; i++) {
+        const project = getRandomCNCFProject();
+        selections.add(project.name);
+      }
+      // Should have selected multiple different projects
+      expect(selections.size).toBeGreaterThan(10);
+    });
+
+    it('should be able to select any project from the list', () => {
+      // This is a statistical test - with random selection,
+      // we can't guarantee all projects will be selected,
+      // but we can verify the mechanism works
+      const testCategory = 'graduated';
+      const categoryProjects = CNCF_GRADUATED_PROJECTS;
+      const selections = new Set();
+      
+      // Run many times to increase probability
+      for (let i = 0; i < 100; i++) {
+        const project = getRandomCNCFProject(testCategory);
+        selections.add(project.name);
+      }
+      
+      // Should have selected a good portion of available projects
+      expect(selections.size).toBeGreaterThan(categoryProjects.length * 0.3);
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle invalid category gracefully', () => {
+      const project = getRandomCNCFProject('invalid-category');
+      expect(project).toBeDefined();
+      expect(ALL_CNCF_PROJECTS).toContainEqual(project);
+    });
+
+    it('should handle null category', () => {
+      const project = getRandomCNCFProject(null);
+      expect(project).toBeDefined();
+      expect(ALL_CNCF_PROJECTS).toContainEqual(project);
+    });
+
+    it('should handle undefined category', () => {
+      const project = getRandomCNCFProject(undefined);
+      expect(project).toBeDefined();
+      expect(ALL_CNCF_PROJECTS).toContainEqual(project);
+    });
+  });
+});
+
+describe('CNCF_STATS object', () => {
+  it('should have all required properties', () => {
+    expect(CNCF_STATS).toHaveProperty('total');
+    expect(CNCF_STATS).toHaveProperty('graduated');
+    expect(CNCF_STATS).toHaveProperty('incubating');
+    expect(CNCF_STATS).toHaveProperty('sandbox');
+    expect(CNCF_STATS).toHaveProperty('lastUpdated');
+  });
+
+  it('should have correct data types', () => {
+    expect(typeof CNCF_STATS.total).toBe('number');
+    expect(typeof CNCF_STATS.graduated).toBe('number');
+    expect(typeof CNCF_STATS.incubating).toBe('number');
+    expect(typeof CNCF_STATS.sandbox).toBe('number');
+    expect(typeof CNCF_STATS.lastUpdated).toBe('string');
+  });
+
+  it('should have consistent counts', () => {
+    const sum = CNCF_STATS.graduated + CNCF_STATS.incubating + CNCF_STATS.sandbox;
+    expect(sum).toBe(CNCF_STATS.total);
+  });
+
+  it('should have valid date format', () => {
+    expect(CNCF_STATS.lastUpdated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe('Known Projects Validation', () => {
+  it('should include well-known graduated projects', () => {
+    const knownProjects = ['Kubernetes', 'Prometheus', 'Envoy', 'Helm', 'Istio'];
+    const graduatedNames = CNCF_GRADUATED_PROJECTS.map(p => p.name);
+    
+    knownProjects.forEach(name => {
+      expect(graduatedNames).toContain(name);
+    });
+  });
+
+  it('should have proper data for Kubernetes', () => {
+    const kubernetes = ALL_CNCF_PROJECTS.find(p => p.name === 'Kubernetes');
+    expect(kubernetes).toBeDefined();
+    expect(kubernetes.homepage).toBe('https://kubernetes.io/');
+    expect(kubernetes.description).toContain('コンテナ');
+    expect(kubernetes.description_en).toContain('containerized');
   });
 });
