@@ -62,8 +62,8 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
     // AI Gateway経由でOpenRouterを使用（キャッシング・分析のメリットあり）
     if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
       // OpenRouter用のAI Gateway URLを構築
-      // 注意: AI Gatewayは自動的にOpenRouterのエンドポイントにルーティングします
-      const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openrouter`;
+      // 注意: Cloudflareドキュメントに従い、/openrouter/v1/chat/completions形式を使用
+      const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openrouter/v1/chat/completions`;
       
       debugLogger?.log('Using OpenRouter via AI Gateway (region restriction bypass):', {
         accountId: env.CLOUDFLARE_ACCOUNT_ID.substring(0, 8) + '...',
