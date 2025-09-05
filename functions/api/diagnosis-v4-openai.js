@@ -5,7 +5,7 @@
 
 import { generateId } from '../utils/id.js';
 import { CNCF_PROJECTS, getProjectDetails } from '../utils/cncf-projects.js';
-import { isDebugMode, getFilteredEnvKeys, getSafeKeyInfo } from '../utils/debug-helpers.js';
+import { createSafeDebugLogger, getSafeKeyInfo, isProduction } from '../utils/debug-helpers.js';
 import { convertToFullProfile, extractMinimalProfile } from '../utils/profile-converter.js';
 
 /**
@@ -30,7 +30,10 @@ function isValidOpenAIKey(key) {
   // OpenAI APIキーの形式チェック（sk-で始まるか、または組織固有のキー）
   // 注: 将来的にOpenAIがキー形式を変更する可能性があるため、厳格すぎない検証にする
   if (!trimmedKey.startsWith('sk-') && !trimmedKey.includes('org-')) {
-    console.warn('[V4-OpenAI Engine] API key does not match expected format');
+    // 本番環境では警告を出さない
+    if (!isProduction({ NODE_ENV: process?.env?.NODE_ENV })) {
+      console.warn('[V4-OpenAI Engine] API key does not match expected format');
+    }
     // 警告は出すが、拒否はしない（将来の形式変更に対応）
   }
   
@@ -202,27 +205,19 @@ CloudNative Days Winter 2025のエンジニアイベントにおける特別な�
  */
 export async function generateFortuneDiagnosis(profiles, mode, env) {
   const logger = env?.logger || console;
-  const debugMode = isDebugMode(env);
+  const debugLogger = createSafeDebugLogger(env, '[V4-OpenAI Engine]');
   
   // APIキー未設定時は最小限の情報のみ
   if (!env?.OPENAI_API_KEY) {
-    console.error('[V4-OpenAI Engine] OpenAI API key is not configured');
+    logger.error('OpenAI API key is not configured');
   }
   
-  // デバッグモード時のみ詳細情報を出力
-  if (debugMode) {
-    if (env?.OPENAI_API_KEY) {
-      console.log('[V4-OpenAI Engine] === DEBUG MODE ===');
-      console.log('[V4-OpenAI Engine] Environment check: API key configured');
-      
-      // プロファイル情報のみ出力（APIキー情報は出力しない）
-      logger.log('[DEBUG] Starting diagnosis with profiles:', profiles.map(p => p.basic?.name || p.name));
-    } else {
-      // APIキー未設定時も状況を出力
-      console.log('[V4-OpenAI Engine] === DEBUG MODE (No API Key) ===');
-      const filteredKeys = getFilteredEnvKeys(env);
-      console.log('[V4-OpenAI Engine] Available env keys count:', filteredKeys.length);
-    }
+  // デバッグモード時のみ詳細情報を出力（安全なログ）
+  if (env?.OPENAI_API_KEY) {
+    debugLogger.log('Environment check: API key configured');
+    debugLogger.debug('Starting diagnosis with profiles:', profiles.map(p => p.basic?.name || p.name));
+  } else {
+    debugLogger.error('API key missing, cannot proceed with OpenAI diagnosis');
   }
   
   // OpenAI APIキーの存在を確認してaiPoweredフラグを返す
@@ -240,8 +235,8 @@ export async function generateFortuneDiagnosis(profiles, mode, env) {
   const isOpenAIUsed = isValidOpenAIKey(env?.OPENAI_API_KEY) && result.aiPowered === true;
   
   // デバッグモードでaiPowered状態の変化をログ出力
-  if (debugMode && result.aiPowered !== isOpenAIUsed) {
-    logger.log('[DEBUG] aiPowered flag changed from', result.aiPowered, 'to', isOpenAIUsed);
+  if (result.aiPowered !== isOpenAIUsed) {
+    debugLogger.debug('aiPowered flag changed from', result.aiPowered, 'to', isOpenAIUsed);
   }
   
   return {
@@ -313,16 +308,14 @@ function selectRandomCNCFProject() {
  * 2人の相性診断（OpenAI使用）
  */
 async function generateDuoDiagnosis(profile1, profile2, env) {
-  const debugMode = isDebugMode(env);
+  const debugLogger = createSafeDebugLogger(env, '[V4-OpenAI Engine]');
   const openaiApiKey = env?.OPENAI_API_KEY;
   
   // デバッグモード時のみ詳細ログ（既に上位関数でログ出力済みなので最小限に）
-  if (debugMode) {
-    console.log('[V4-OpenAI Engine] Starting duo diagnosis for:', {
-      person1: profile1.basic?.name || profile1.name,
-      person2: profile2.basic?.name || profile2.name
-    });
-  }
+  debugLogger.debug('Starting duo diagnosis for:', {
+    person1: profile1.basic?.name || profile1.name,
+    person2: profile2.basic?.name || profile2.name
+  });
   
   // APIキーの妥当性を検証
   if (!isValidOpenAIKey(openaiApiKey)) {
@@ -342,12 +335,10 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
     }
     
     const error = new Error(errorMessage);
-    console.error('[V4-OpenAI Engine] ' + error.message);
+    debugLogger.error(error.message);
     
     // 詳細なデバッグ情報はDEBUG_MODEまたは開発環境でのみ出力
-    if (debugMode) {
-      console.error('[V4-OpenAI Engine] Validation details:', keyInfo);
-    }
+    debugLogger.debug('Validation details:', keyInfo);
     
     throw error;
   }
@@ -410,7 +401,7 @@ ${JSON.stringify(summary2, null, 2)}`;
         timestamp: new Date().toISOString()
       };
       
-      console.error('[V4-OpenAI Engine] OpenAI API error:', errorDetails);
+      debugLogger.error('OpenAI API error:', errorDetails);
       
       // エラー種別の識別と適切なメッセージ
       let errorMessage = 'OpenAI API error';

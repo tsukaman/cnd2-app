@@ -3,6 +3,8 @@
  * Simplified version without cheerio (using regex for Edge Runtime compatibility)
  */
 
+import { createSafeDebugLogger } from './debug-helpers.js';
+
 // Constants for array limits and string lengths
 const LIMITS = {
   SKILLS: 15,           // Maximum number of skills to extract
@@ -191,19 +193,18 @@ function extractMetaContent(html, property) {
  */
 function extractNameFromMeta(html, env) {
   const debugMode = env?.DEBUG_MODE === 'true';
+  const debugLogger = createSafeDebugLogger(env, '[Prairie Parser]');
   
   // Try multiple sources for name extraction
   const ogTitle = extractMetaContent(html, 'og:title');
   const twitterTitle = extractMetaContent(html, 'twitter:title');
   const titleTag = html.match(/<title>([^<]+)<\/title>/i)?.[1]?.trim();
   
-  if (debugMode) {
-    console.log('[DEBUG] Name extraction sources:', {
-      ogTitle,
-      twitterTitle,
-      titleTag
-    });
-  }
+  debugLogger.debug('Name extraction sources:', {
+    ogTitle,
+    twitterTitle,
+    titleTag
+  });
   
   const titleSource = ogTitle || twitterTitle || titleTag || '';
   
@@ -222,9 +223,7 @@ function extractNameFromMeta(html, env) {
   const nameMatch = titleSource.match(/^(.{1,100}?)\s*の?\s*(?:プロフィール|Profile|Prairie Card)(?:\s|$)/i);
   if (nameMatch) {
     const extractedName = nameMatch[1].trim();
-    if (debugMode) {
-      console.log('[DEBUG] Name extracted with pattern 1:', extractedName);
-    }
+    debugLogger.debug('Name extracted with pattern 1:', extractedName);
     return extractedName;
   }
   
@@ -234,16 +233,12 @@ function extractNameFromMeta(html, env) {
     // Also remove just "Prairie Card" at the end
     cleanName = cleanName.replace(/\s*Prairie\s*Card\s*$/i, '').trim();
     if (cleanName) {
-      if (debugMode) {
-        console.log('[DEBUG] Name extracted with pattern 2:', cleanName);
-      }
+      debugLogger.debug('Name extracted with pattern 2:', cleanName);
       return cleanName;
     }
   }
   
-  if (debugMode) {
-    console.log('[DEBUG] No name extracted from meta tags');
-  }
+  debugLogger.debug('No name extracted from meta tags');
   
   return '';
 }
@@ -341,6 +336,7 @@ function extractTextByDataField(html, fieldName) {
  */
 function parseFromHTML(html, env) {
   const debugMode = env?.DEBUG_MODE === 'true';
+  const debugLogger = createSafeDebugLogger(env, '[Prairie Parser]');
   
   // Handle null or undefined input
   if (!html) {
@@ -350,11 +346,10 @@ function parseFromHTML(html, env) {
   // Convert to string if not already
   html = String(html);
   
-  if (debugMode) {
-    console.log('[DEBUG] Prairie Parser - Starting HTML parsing...');
-    console.log('[DEBUG] HTML length:', html.length);
-    console.log('[DEBUG] HTML sample (first 500 chars):', html.substring(0, 500));
-  }
+  debugLogger.debug('Starting HTML parsing...', {
+    htmlLength: html.length,
+    htmlSample: html.substring(0, 500)
+  });
   
   // Extract information from meta tags first
   const metaName = extractNameFromMeta(html, env);
@@ -373,9 +368,7 @@ function parseFromHTML(html, env) {
     'meta': metaName
   };
   
-  if (debugMode) {
-    console.log('[DEBUG] Name extraction candidates:', nameCandidates);
-  }
+  debugLogger.debug('Name extraction candidates:', nameCandidates);
   
   const name = nameCandidates['profile-name'] || 
                nameCandidates['name'] ||
@@ -541,31 +534,30 @@ function parseFromHTML(html, env) {
     },
   };
   
-  if (debugMode) {
-    console.log('[DEBUG] Final profile structure:', {
-      basic: {
-        name: profile.basic.name,
-        title: profile.basic.title,
-        company: profile.basic.company,
-        bio: profile.basic.bio ? profile.basic.bio.substring(0, 100) + '...' : undefined,
-        hasAvatar: !!profile.basic.avatar
-      },
-      details: {
-        skills: profile.details.skills,
-        interests: profile.details.interests,
-        tags: profile.details.tags,
-        motto: profile.details.motto
-      },
-      social: Object.keys(profile.social).filter(key => profile.social[key]).length + ' links found'
-    });
-  } else {
-    console.log('[Prairie Parser] Parsed profile:', {
+  debugLogger.debug('Final profile structure:', {
+    basic: {
       name: profile.basic.name,
-      hasSkills: profile.details.skills.length > 0,
-      hasTags: profile.details.tags.length > 0,
-      hasInterests: profile.details.interests.length > 0,
-    });
-  }
+      title: profile.basic.title,
+      company: profile.basic.company,
+      bio: profile.basic.bio ? profile.basic.bio.substring(0, 100) + '...' : undefined,
+      hasAvatar: !!profile.basic.avatar
+    },
+    details: {
+      skills: profile.details.skills,
+      interests: profile.details.interests,
+      tags: profile.details.tags,
+      motto: profile.details.motto
+    },
+    social: Object.keys(profile.social).filter(key => profile.social[key]).length + ' links found'
+  });
+  
+  // 本番環境でも最小限の情報を出力
+  debugLogger.log('Parsed profile:', {
+    name: profile.basic.name,
+    hasSkills: profile.details.skills.length > 0,
+    hasTags: profile.details.tags.length > 0,
+    hasInterests: profile.details.interests.length > 0,
+  });
   
   return profile;
 }
