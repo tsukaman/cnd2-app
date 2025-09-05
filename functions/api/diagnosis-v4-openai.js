@@ -70,6 +70,15 @@ const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは占いとクラウドネイ�
 CloudNative Days Winter 2025のエンジニアイベントにおける特別な診断として、
 クラウドネイティブ技術への情熱、Kubernetes愛、DevOps魂などの要素を占術的に解釈します。
 
+【CNDW2025特別データの活用】
+プロフィールに「cndw2025」フィールドがある場合、以下の要素を重視して診断してください：
+- interestArea（興味分野）: 技術的な関心領域の相性
+- favoriteOSS（推しOSS）: 好きなOSSプロジェクトの相性（同じなら運命的、違っても補完関係を見つける）
+- participationCount（参加回数）: イベント参加歴から見る経験の相性
+- focusSession（注目セッション）: 興味の方向性の一致度
+- message（ひとこと）: パーソナリティや意気込みの相性
+これらの要素は占術的に特に重要な「現在のエネルギー状態」を示すものとして扱います。
+
 【重要な診断原則】
 1. 相性は「共通点の多さ」ではなく「エネルギーの調和」で決まります
 2. 五行思想の相生相剋のように、異なる要素が互いを高め合う関係を重視します
@@ -258,7 +267,7 @@ export async function generateFortuneDiagnosis(profiles, mode, env) {
  * プロフィールを要約（品質重視で情報を保持）
  */
 function summarizeProfile(profile) {
-  return {
+  const summary = {
     name: profile.basic?.name || profile.name,
     title: (profile.basic?.title || profile.title || '').substring(0, 100), // 肩書きは重要なので100文字まで
     company: (profile.basic?.company || profile.company || '').substring(0, 50), // 会社名も50文字まで保持
@@ -268,6 +277,19 @@ function summarizeProfile(profile) {
     motto: (profile.details?.motto || profile.motto || '').substring(0, 100), // モットーも重要な個性
     tags: (profile.details?.tags || profile.tags || []).slice(0, 5) // タグ情報も追加
   };
+  
+  // CNDW2025データが存在する場合は追加
+  if (profile.custom?.cndw2025) {
+    summary.cndw2025 = {
+      interestArea: profile.custom.cndw2025.interestArea,      // 🎯 興味分野
+      favoriteOSS: profile.custom.cndw2025.favoriteOSS,        // 🌟 推しOSS
+      participationCount: profile.custom.cndw2025.participationCount, // 📊 参加回数
+      focusSession: profile.custom.cndw2025.focusSession,      // 🎪 注目セッション
+      message: profile.custom.cndw2025.message                 // 🔥 ひとこと
+    };
+  }
+  
+  return summary;
 }
 
 /**

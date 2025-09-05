@@ -335,6 +335,128 @@ function extractTextByDataField(html, fieldName) {
 }
 
 /**
+ * Extract ProfileContent blocks from Prairie Card HTML
+ * @param {string} html - HTML content
+ * @returns {Array} - Array of ProfileContent objects
+ */
+function extractProfileContentBlocks(html) {
+  const blocks = [];
+  
+  // Find all elements with data-object-type="ProfileContent"
+  // Use a more specific pattern that captures the entire content until the matching closing tag
+  const blockPattern = /<a[^>]*data-object-type=["']ProfileContent["'][^>]*>[\s\S]*?<\/a>/gi;
+  const matches = html.matchAll(blockPattern);
+  
+  for (const match of matches) {
+    const blockHtml = match[0];
+    
+    // Extract title from profile_content_title class
+    const titlePattern = /<[^>]+class="[^"]*profile_content_title[^"]*"[^>]*>([^<]+)</i;
+    const titleMatch = blockHtml.match(titlePattern);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    
+    // Extract description from profile_content_description class
+    // Look for the description div and capture everything inside it
+    const descPattern = /<[^>]+class="[^"]*profile_content_description[^"]*"[^>]*>([\s\S]*?)<\/div>/i;
+    const descMatch = blockHtml.match(descPattern);
+    let description = '';
+    
+    if (descMatch && descMatch[1]) {
+      // Clean up the description: remove HTML tags but preserve line breaks
+      description = descMatch[1]
+        .replace(/<br\s*\/?>/gi, '\n')  // Replace <br> with newlines
+        .replace(/<\/p>\s*<p>/gi, '\n')  // Replace paragraph breaks with newlines
+        .replace(/<[^>]+>/g, '')  // Remove all other HTML tags
+        .replace(/\n\s+/g, '\n')  // Clean up extra whitespace after newlines
+        .trim();
+    }
+    
+    // Extract data-href if present (link associated with the content)
+    const hrefPattern = /data-href=["']([^"']+)["']/i;
+    const hrefMatch = blockHtml.match(hrefPattern);
+    const href = hrefMatch ? hrefMatch[1] : undefined;
+    
+    // Extract object ID if present
+    const idPattern = /data-object-id=["']([^"']+)["']/i;
+    const idMatch = blockHtml.match(idPattern);
+    const objectId = idMatch ? idMatch[1] : undefined;
+    
+    blocks.push({
+      title,
+      description,
+      href,
+      objectId
+    });
+  }
+  
+  return blocks;
+}
+
+/**
+ * Parse CNDW2025 structured content from ProfileContent blocks
+ * @param {Array} profileBlocks - Array of ProfileContent blocks
+ * @returns {Object|null} - Parsed CNDW2025 data or null if not found
+ */
+function parseCNDW2025Content(profileBlocks) {
+  // Find the CNDW2025 block
+  const cndwBlock = profileBlocks.find(block => 
+    block.title && block.title.includes('CNDW2025')
+  );
+  
+  if (!cndwBlock) {
+    return null;
+  }
+  
+  const content = cndwBlock.description || '';
+  
+  // Parse the structured fields using emoji markers
+  const fields = {
+    interestArea: null,     // 🎯 興味分野
+    favoriteOSS: null,      // 🌟 推しOSS
+    participationCount: null, // 📊 参加回数
+    focusSession: null,     // 🎪 注目セッション
+    message: null           // 🔥 ひとこと
+  };
+  
+  // Define patterns for each field with flexible formatting
+  // These patterns handle various formatting variations users might use
+  const patterns = {
+    // 🎯 興味分野：value
+    interestArea: /🎯\s*興味分野[：:]\s*([^\n🌟📊🎪🔥]+)/,
+    // 🌟 推しOSS：value
+    favoriteOSS: /🌟\s*推し[Oo][Ss][Ss][：:]\s*([^\n🎯📊🎪🔥]+)/,
+    // 📊 参加回数：value
+    participationCount: /📊\s*参加回数[：:]\s*([^\n🎯🌟🎪🔥]+)/,
+    // 🎪 注目セッション：value
+    focusSession: /🎪\s*注目セッション[：:]\s*([^\n🎯🌟📊🔥]+)/,
+    // 🔥 ひとこと：value
+    message: /🔥\s*ひとこと[：:]\s*([^\n🎯🌟📊🎪]+)/
+  };
+  
+  // Extract each field
+  for (const [key, pattern] of Object.entries(patterns)) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      fields[key] = match[1].trim();
+    }
+  }
+  
+  // Return null if no fields were extracted
+  const hasData = Object.values(fields).some(value => value !== null);
+  if (!hasData) {
+    return null;
+  }
+  
+  return {
+    ...fields,
+    // Include the raw content for debugging or fallback
+    raw: content,
+    // Include the block's href if it links to the event page
+    eventUrl: cndwBlock.href
+  };
+}
+
+/**
  * Parse Prairie Card HTML into profile structure
  * @param {string} html - Prairie Card HTML content
  * @returns {Object} - Parsed profile object
@@ -480,6 +602,17 @@ function parseFromHTML(html, env) {
                 extractTextByDataField(html, 'motto') ||
                 undefined;
   
+  // Extract ProfileContent blocks
+  const profileContentBlocks = extractProfileContentBlocks(html);
+  
+  // Parse CNDW2025 structured content
+  const cndw2025Data = parseCNDW2025Content(profileContentBlocks);
+  
+  if (debugMode) {
+    console.log('[DEBUG] ProfileContent blocks found:', profileContentBlocks.length);
+    console.log('[DEBUG] CNDW2025 data:', cndw2025Data);
+  }
+  
   // Extract social links
   const twitter = extractSocialUrl(html, 'twitter.com') || extractSocialUrl(html, 'x.com');
   const github = extractSocialUrl(html, 'github.com');
@@ -531,7 +664,10 @@ function parseFromHTML(html, env) {
       qiita,
       zenn,
     },
-    custom: {},
+    custom: {
+      profileContentBlocks: profileContentBlocks.filter(Boolean),
+      cndw2025: cndw2025Data || undefined
+    },
     meta: {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
