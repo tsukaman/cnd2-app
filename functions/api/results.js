@@ -3,7 +3,13 @@ import { getCorsHeaders } from '../utils/response.js';
 import { createErrorResponse, createSuccessResponse, ERROR_CODES } from '../utils/error-messages.js';
 import { kvGet, kvPut, isDevelopment } from '../utils/kv-helpers.js';
 
-// GET handler for query parameter format (/api/results?id=xxx)
+/**
+ * GET handler for fetching diagnosis results
+ * @param {Object} context - Cloudflare Pages function context
+ * @param {Request} context.request - The incoming request
+ * @param {Object} context.env - Environment variables and bindings
+ * @returns {Response} The diagnosis result or error response
+ */
 export async function onRequestGet({ request, env }) {
   const origin = request.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
@@ -44,9 +50,9 @@ export async function onRequestGet({ request, env }) {
       try {
         const result = JSON.parse(data);
         
-        // データの基本的な検証
-        if (!result || typeof result !== 'object') {
-          throw new Error('Invalid result format');
+        // データの基本的な検証（より具体的な検証）
+        if (!result || typeof result !== 'object' || !result.id) {
+          throw new Error('Invalid DiagnosisResult format: missing required fields');
         }
           
           const successResp = createSuccessResponse({
@@ -70,7 +76,7 @@ export async function onRequestGet({ request, env }) {
         console.error('Failed to parse KV data:', parseError, { 
           id, 
           dataLength: data?.length, 
-          dataPreview: data?.substring(0, 100) 
+          dataPreview: data?.substring(0, 50) // 機密情報露出リスクを低減
         });
         // 破損データの場合は404として扱う
         const errorResp = createErrorResponse(ERROR_CODES.RESULT_NOT_FOUND, 'Result data is corrupted');
@@ -116,7 +122,19 @@ export async function onRequestGet({ request, env }) {
   }
 }
 
-// POST handler for saving results
+/**
+ * POST handler for saving diagnosis results
+ * @param {Object} context - Cloudflare Pages function context
+ * @param {Request} context.request - The incoming request with diagnosis result
+ * @param {Object} context.env - Environment variables and bindings
+ * @returns {Response} Success confirmation or error response
+ * 
+ * @typedef {Object} DiagnosisResult
+ * @property {string} id - Unique identifier for the diagnosis
+ * @property {string} mode - Diagnosis mode (duo/group)
+ * @property {number} compatibility - Compatibility score
+ * @property {Object} [participants] - Participant profiles
+ */
 export async function onRequestPost({ request, env }) {
   const origin = request.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
@@ -182,10 +200,13 @@ export async function onRequestPost({ request, env }) {
       const key = `diagnosis:${resultId}`;
       global.devDiagnosisStorage.set(key, JSON.stringify(diagnosisResult));
       
-      // Clean up old entries (keep only last 100)
+      // Clean up old entries (keep only last 80 when size exceeds 100)
       if (global.devDiagnosisStorage.size > 100) {
-        const firstKey = global.devDiagnosisStorage.keys().next().value;
-        global.devDiagnosisStorage.delete(firstKey);
+        const keys = Array.from(global.devDiagnosisStorage.keys());
+        const deleteCount = keys.length - 80; // 80件まで削減
+        keys.slice(0, deleteCount).forEach(key => 
+          global.devDiagnosisStorage.delete(key)
+        );
       }
       
       const successResp = createSuccessResponse({
