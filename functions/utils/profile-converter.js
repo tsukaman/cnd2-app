@@ -20,7 +20,7 @@ function isPrairieProfile(profile) {
 
 /**
  * 最小形式のプロフィールを完全なPrairieProfile形式に変換
- * @param {any} profile - 変換対象のプロフィール
+ * @param {any} profile - 変換対象のプロフィール（最小形式またはPrairieProfile形式）
  * @returns {Object} 完全なPrairieProfile形式
  */
 function convertToFullProfile(profile) {
@@ -68,7 +68,7 @@ function convertToFullProfile(profile) {
 
 /**
  * プロフィール配列を一括変換
- * @param {Array} profiles - プロフィールの配列
+ * @param {Array} profiles - プロフィールの配列（最小形式またはPrairieProfile形式の混在可）
  * @returns {Array} PrairieProfile配列
  */
 function convertProfilesToFullFormat(profiles) {
@@ -81,8 +81,8 @@ function convertProfilesToFullFormat(profiles) {
 
 /**
  * プロフィールから診断に必要な最小情報を抽出
- * @param {Object} profile - プロフィール
- * @returns {Object} 最小形式のプロフィール
+ * @param {any} profile - プロフィール（最小形式またはPrairieProfile形式）
+ * @returns {Object} 最小形式のプロフィール（name, title, company, bio, skills, interests）
  */
 function extractMinimalProfile(profile) {
   if (isPrairieProfile(profile)) {
