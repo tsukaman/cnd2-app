@@ -343,30 +343,92 @@ function extractProfileContentBlocks(html) {
   const blocks = [];
   
   // Find all elements with data-object-type="ProfileContent"
-  // Use a more specific pattern that captures the entire content until the matching closing tag
+  // Prairie Card HTML structure typically has nested divs within an <a> tag
   const blockPattern = /<a[^>]*data-object-type=["']ProfileContent["'][^>]*>[\s\S]*?<\/a>/gi;
   const matches = html.matchAll(blockPattern);
   
   for (const match of matches) {
     const blockHtml = match[0];
     
-    // Extract title from profile_content_title class
-    const titlePattern = /<[^>]+class="[^"]*profile_content_title[^"]*"[^>]*>([^<]+)</i;
-    const titleMatch = blockHtml.match(titlePattern);
-    const title = titleMatch ? titleMatch[1].trim() : '';
+    // Debug: Log the actual HTML block structure
+    if (process.env.DEBUG_MODE === 'true') {
+      console.log('[Prairie Parser] ProfileContent block HTML:', blockHtml.substring(0, 500));
+    }
     
-    // Extract description from profile_content_description class
-    // Look for the description div and capture everything inside it
-    const descPattern = /<[^>]+class="[^"]*profile_content_description[^"]*"[^>]*>([\s\S]*?)<\/div>/i;
-    const descMatch = blockHtml.match(descPattern);
+    // Extract title - Prairie Card uses nested structure
+    // Try multiple patterns to handle different HTML structures
+    let title = '';
+    
+    // Pattern 1: Look for profile_content_title class
+    let titleMatch = blockHtml.match(/<[^>]+class="[^"]*profile_content_title[^"]*"[^>]*>([\s\S]*?)<\//);
+    if (!titleMatch) {
+      // Pattern 2: Look for any element containing the title (often in a heading or strong tag)
+      titleMatch = blockHtml.match(/<(?:h[1-6]|strong|b)[^>]*>([\s\S]*?)<\//);
+    }
+    if (!titleMatch) {
+      // Pattern 3: Look for the first text content that might be a title
+      titleMatch = blockHtml.match(/>([^<]{1,100})</); // Limit to reasonable title length
+    }
+    
+    if (titleMatch && titleMatch[1]) {
+      // Clean up the title - remove nested HTML tags if any
+      title = titleMatch[1]
+        .replace(/<[^>]+>/g, '')  // Remove HTML tags
+        .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
+        .replace(/&amp;/g, '&')    // Decode HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+    }
+    
+    // Extract description - try multiple patterns
     let description = '';
     
-    if (descMatch && descMatch[1]) {
+    // Pattern 1: Look for profile_content_description class
+    let descMatch = blockHtml.match(/<[^>]+class="[^"]*profile_content_description[^"]*"[^>]*>([\s\S]*?)<\/(?:div|p|span)>/i);
+    
+    if (!descMatch) {
+      // Pattern 2: Look for any div/p/span that contains the main content
+      // Skip the title part and look for the description content
+      const withoutTitle = title ? blockHtml.replace(title, '') : blockHtml;
+      descMatch = withoutTitle.match(/<(?:div|p|span)[^>]*>([\s\S]{10,}?)<\/(?:div|p|span)>/i);
+    }
+    
+    if (!descMatch) {
+      // Pattern 3: Extract all text content from the block (fallback)
+      const textContent = blockHtml
+        .replace(/<br\s*\/?>/gi, '\n')    // Preserve line breaks
+        .replace(/<\/p>\s*<p>/gi, '\n\n')  // Preserve paragraph breaks
+        .replace(/<[^>]+>/g, ' ')          // Replace all HTML tags with spaces
+        .replace(/&nbsp;/g, ' ')           // Replace non-breaking spaces
+        .replace(/&amp;/g, '&')            // Decode HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\s+/g, ' ')              // Normalize whitespace
+        .trim();
+      
+      // If we have a title, remove it from the text to get the description
+      if (title && textContent.includes(title)) {
+        description = textContent.replace(title, '').trim();
+      } else {
+        description = textContent;
+      }
+    } else if (descMatch && descMatch[1]) {
       // Clean up the description: remove HTML tags but preserve line breaks
       description = descMatch[1]
         .replace(/<br\s*\/?>/gi, '\n')  // Replace <br> with newlines
-        .replace(/<\/p>\s*<p>/gi, '\n')  // Replace paragraph breaks with newlines
+        .replace(/<\/p>\s*<p>/gi, '\n\n')  // Replace paragraph breaks with double newlines
         .replace(/<[^>]+>/g, '')  // Remove all other HTML tags
+        .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
+        .replace(/&amp;/g, '&')    // Decode HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
         .replace(/\n\s+/g, '\n')  // Clean up extra whitespace after newlines
         .trim();
     }
@@ -381,12 +443,15 @@ function extractProfileContentBlocks(html) {
     const idMatch = blockHtml.match(idPattern);
     const objectId = idMatch ? idMatch[1] : undefined;
     
-    blocks.push({
-      title,
-      description,
-      href,
-      objectId
-    });
+    // Only add block if we have some content
+    if (title || description) {
+      blocks.push({
+        title,
+        description,
+        href,
+        objectId
+      });
+    }
   }
   
   return blocks;
@@ -427,7 +492,8 @@ function parseCNDW2025Content(profileBlocks) {
   
   // Define patterns for each field with flexible formatting (supports both Japanese and English)
   // These patterns handle various formatting variations users might use
-  const patterns = {
+  // First try with emoji markers, then fallback to text-only patterns
+  const patternsWithEmoji = {
     // 🎯 興味分野 / Interest Area
     interestArea: /🎯\s*(?:興味分野|Interest\s*Area|分野)[：:：]\s*([^\n🌟📊🎪🔥]+)/i,
     // 🌟 推しOSS / Favorite OSS
@@ -440,11 +506,36 @@ function parseCNDW2025Content(profileBlocks) {
     message: /🔥\s*(?:ひとこと|Message|コメント|Comment)[：:：]\s*([^\n🎯🌟📊🎪]+)/i
   };
   
-  // Extract each field
-  for (const [key, pattern] of Object.entries(patterns)) {
+  // Fallback patterns without emoji (text-only)
+  const patternsWithoutEmoji = {
+    // 興味分野 / Interest Area (without emoji)
+    interestArea: /(?:^|\n)\s*(?:興味分野|Interest\s*Area|分野)\s*[：:：]\s*([^\n]+)/i,
+    // 推しOSS / Favorite OSS (without emoji)
+    favoriteOSS: /(?:^|\n)\s*(?:推し[Oo][Ss][Ss]|Favorite\s*OSS|OSS)\s*[：:：]\s*([^\n]+)/i,
+    // 参加回数 / Participation Count (without emoji)
+    participationCount: /(?:^|\n)\s*(?:参加回数|Participation\s*Count|回数)\s*[：:：]\s*([^\n]+)/i,
+    // 注目セッション / Focus Session (without emoji)
+    focusSession: /(?:^|\n)\s*(?:注目セッション|Focus\s*Session|セッション)\s*[：:：]\s*([^\n]+)/i,
+    // ひとこと / Message (without emoji)
+    message: /(?:^|\n)\s*(?:ひとこと|Message|コメント|Comment)\s*[：:：]\s*([^\n]+)/i
+  };
+  
+  // Try extraction with emoji first
+  for (const [key, pattern] of Object.entries(patternsWithEmoji)) {
     const match = content.match(pattern);
     if (match && match[1]) {
       fields[key] = match[1].trim();
+    }
+  }
+  
+  // If no fields were extracted with emoji, try without emoji
+  const hasEmojiData = Object.values(fields).some(value => value !== null);
+  if (!hasEmojiData) {
+    for (const [key, pattern] of Object.entries(patternsWithoutEmoji)) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        fields[key] = match[1].trim();
+      }
     }
   }
   
