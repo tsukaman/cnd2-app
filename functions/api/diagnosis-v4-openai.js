@@ -6,6 +6,7 @@
 import { generateId } from '../utils/id.js';
 import { CNCF_PROJECTS, getProjectDetails } from '../utils/cncf-projects.js';
 import { isDebugMode, getFilteredEnvKeys, getSafeKeyInfo } from '../utils/debug-helpers.js';
+import { convertToFullProfile, extractMinimalProfile } from '../utils/profile-converter.js';
 
 /**
  * OpenAI APIキーの妥当性を検証
@@ -265,15 +266,19 @@ export async function generateFortuneDiagnosis(profiles, mode, env) {
 
 /**
  * プロフィールを要約（品質重視で情報を保持）
+ * 共通化ユーティリティを使用しつつ、文字数制限を適用
  */
 function summarizeProfile(profile) {
+  const minimal = extractMinimalProfile(profile);
+  
   const summary = {
-    name: profile.basic?.name || profile.name,
-    title: (profile.basic?.title || profile.title || '').substring(0, 100), // 肩書きは重要なので100文字まで
-    company: (profile.basic?.company || profile.company || '').substring(0, 50), // 会社名も50文字まで保持
-    bio: (profile.basic?.bio || profile.bio || '').substring(0, 200), // 自己紹介は200文字まで（重要な情報源）
-    skills: (profile.details?.skills || profile.skills || []).slice(0, 10), // 上位10個のスキル（技術の多様性を伝える）
-    interests: (profile.details?.interests || profile.interests || []).slice(0, 5), // 上位5つの興味（豊かな人物像）
+    name: minimal.name,
+    title: (minimal.title || '').substring(0, 100), // 肩書きは重要なので100文字まで
+    company: (minimal.company || '').substring(0, 50), // 会社名も50文字まで保持
+    bio: (minimal.bio || '').substring(0, 200), // 自己紹介は200文字まで（重要な情報源）
+    skills: (minimal.skills || []).slice(0, 10), // 上位10個のスキル（技術の多様性を伝える）
+    interests: (minimal.interests || []).slice(0, 5), // 上位5つの興味（豊かな人物像）
+    // motto と tags は extractMinimalProfile では取得しないので、元のロジックを維持
     motto: (profile.details?.motto || profile.motto || '').substring(0, 100), // モットーも重要な個性
     tags: (profile.details?.tags || profile.tags || []).slice(0, 5) // タグ情報も追加
   };
