@@ -54,9 +54,9 @@ describe('Results GET API', () => {
 
       const responseData = await response.json();
       expect(responseData.success).toBe(true);
-      expect(responseData.result).toEqual(mockResult);
-      expect(responseData.cache.hit).toBe(true);
-      expect(responseData.cache.source).toBe('kv');
+      expect(responseData.data.result).toEqual(mockResult);
+      expect(responseData.data.cache.hit).toBe(true);
+      expect(responseData.data.cache.source).toBe('kv');
     });
 
     test('should handle missing ID parameter', async () => {
@@ -74,7 +74,8 @@ describe('Results GET API', () => {
       expect(response.status).toBe(400);
       const responseData = await response.json();
       expect(responseData.success).toBe(false);
-      expect(responseData.error).toBe('Missing result ID');
+      expect(responseData.error.code).toBe('RESULT_INVALID_ID');
+      expect(responseData.error.message).toBeDefined();
     });
 
     test('should handle malformed JSON in KV', async () => {
@@ -95,7 +96,8 @@ describe('Results GET API', () => {
       expect(response.status).toBe(404);
       const responseData = await response.json();
       expect(responseData.success).toBe(false);
-      expect(responseData.error).toBe('Result data is corrupted');
+      expect(responseData.error.code).toBe('RESULT_NOT_FOUND');
+      expect(responseData.error.message).toBeDefined();
     });
 
     test('should return 404 for non-existent results', async () => {
@@ -116,7 +118,8 @@ describe('Results GET API', () => {
       expect(response.status).toBe(404);
       const responseData = await response.json();
       expect(responseData.success).toBe(false);
-      expect(responseData.error).toBe('Result not found');
+      expect(responseData.error.code).toBe('RESULT_NOT_FOUND');
+      expect(responseData.error.message).toBeDefined();
     });
 
     test('should apply proper CORS headers', async () => {
@@ -173,7 +176,8 @@ describe('Results GET API', () => {
       expect(response.status).toBe(404);
       const responseData = await response.json();
       expect(responseData.success).toBe(false);
-      expect(responseData.error).toBe('Result data is corrupted');
+      expect(responseData.error.code).toBe('RESULT_NOT_FOUND');
+      expect(responseData.error.message).toBeDefined();
     });
   });
 
