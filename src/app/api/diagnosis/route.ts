@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { ApiError, ApiErrorCode } from '@/lib/api-errors';
 import { AstrologicalDiagnosisEngineV4 } from '@/lib/diagnosis-engine-v4-openai';
-import { PrairieProfile } from '@/types';
 import { getCorsHeaders } from '@/lib/cors';
+import { convertProfilesToFullFormat } from '@/lib/utils/profile-converter';
 
 /**
  * Diagnosis API endpoint
@@ -38,34 +38,8 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       );
     }
 
-    // Convert profiles to PrairieProfile format if needed
-    // Profiles can either be minimal format (from Prairie API) or full PrairieProfile format
-    const prairieProfiles: PrairieProfile[] = profiles.map(p => {
-      // Check if it's already a PrairieProfile (has basic property)
-      if (p.basic) {
-        return p;
-      }
-      
-      // Otherwise convert from minimal format
-      return {
-        basic: {
-          name: p.name || '名称未設定',
-          title: p.title || '',
-          company: p.company || '',
-          bio: p.bio || ''
-        },
-        details: {
-          skills: p.skills || [],
-          interests: p.interests || [],
-          achievements: []
-        },
-        social: {},
-        meta: {
-          sourceUrl: p.sourceUrl || '',
-          extractedAt: new Date().toISOString()
-        }
-      };
-    });
+    // Convert profiles to PrairieProfile format using common utility
+    const prairieProfiles = convertProfilesToFullFormat(profiles);
 
     // Generate diagnosis using the OpenAI v4 engine
     const engine = AstrologicalDiagnosisEngineV4.getInstance();
