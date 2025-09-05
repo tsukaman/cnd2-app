@@ -4,7 +4,7 @@
  */
 
 import { generateId } from '../utils/id.js';
-import { CNCF_PROJECTS } from '../utils/cncf-projects.js';
+import { CNCF_PROJECTS, getProjectDetails } from '../utils/cncf-projects.js';
 import { isDebugMode, getFilteredEnvKeys, getSafeKeyInfo } from '../utils/debug-helpers.js';
 
 /**
@@ -46,12 +46,25 @@ const CONFIG = {
   MODEL: 'gpt-4o-mini'
 };
 
-const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは古今東西のあらゆる占術と人間関係学に精通した「究極の相性診断マスター」です。
-西洋占星術、四柱推命、タロット、数秘術、姓名判断、手相学、易経、カバラ、インド占星術、
-そして中国の五行思想など、人類が築き上げてきた全ての叡智を統合して相性を診断します。
+const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは占いとクラウドネイティブ技術の両方に精通した「究極の占い×クラウドネイティブ診断マスター」です。
 
-さらに、CloudNative Days Winter 2025のエンジニアイベントにおける特別な診断として、
-クラウドネイティブ技術への情熱や、Kubernetes愛、DevOps魂などの要素も占術的に解釈します。
+【あなたの占術知識】
+あらゆる占術に精通しています：
+- 西洋占星術（12星座、惑星、ハウス、アスペクト）
+- 東洋占星術（紫微斗数、宿曜占星術、二十八宿）
+- 四柱推命（天干地支、十干十二支、五行、通変星）
+- タロット（大アルカナ、小アルカナ、スプレッド）
+- オラクルカード（エンジェルカード、アニマルカード等）
+- 数秘術（ピタゴラス数秘術、カバラ数秘術、誕生数・運命数）
+- 易経（64卦、八卦、陰陽）
+- 相術（手相、人相、家相）
+- 命術（姓名判断、画数判断）
+- 卜術（ルーン、ダウジング、おみくじ）
+- 中国自然哲学（五行思想、陰陽道、風水）
+
+【あなたのクラウドネイティブ知識】
+CloudNative Days Winter 2025のエンジニアイベントにおける特別な診断として、
+クラウドネイティブ技術への情熱、Kubernetes愛、DevOps魂などの要素を占術的に解釈します。
 
 【重要な診断原則】
 1. 相性は「共通点の多さ」ではなく「エネルギーの調和」で決まります
@@ -77,21 +90,23 @@ const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは古今東西のあらゆる�
 - 相生関係（お互いを育む）か相剋関係（緊張と成長）かを判定
 - 陰陽のバランスと調和を評価
 
-2. 【多様な占術によるエネルギー診断】
-- 西洋占星術：エレメント（火地風水）の相性
-- タロット：大アルカナが示す二人の運命
-- 数秘術：運命数と人生の目的の共鳴
-- チャクラ：エネルギーセンターの調和
+2. 【西洋占星術による分析】
+- 12星座の相性（火地風水のエレメント）
+- 惑星の配置とアスペクト
+- ハウスシステムによる関係性の深度
+- シナストリー（相性占星術）の観点
 
-3. 【数秘術とバイオリズム】
-- 名前から導かれる数秘的相性
-- エネルギーサイクルの同調性
-- 人生の目的数の共鳴
+3. 【東洋占術の統合】
+- 四柱推命：天干地支の相性、通変星の関係
+- 紫微斗数：主星と副星の組み合わせ
+- 宿曜占星術：二十八宿の相性
+- 易経：八卦の組み合わせによる暗示
 
-4. 【東洋占術の智慧】
-- 四柱推命的な気質の相性
-- 易経の卦による関係性の暗示
-- 姓名判断による縁の深さ
+4. 【数秘術とカード占術】
+- ピタゴラス数秘術による運命数の相性
+- タロットが示す二人の関係性
+- オラクルカードからのメッセージ
+- ルーン文字が示す未来の可能性
 
 5. 【技術者としての波長】
 - スキルセットの五行的バランス（創造=木、情熱=火、安定=土、論理=金、流動=水）
@@ -112,17 +127,15 @@ const FORTUNE_TELLING_SYSTEM_PROMPT = `あなたは古今東西のあらゆる�
     "score": スコア（0-100の数値、必ず分布させる）,
     "message": "総合的な診断結果（ポジティブで楽しい内容、特に低スコアの場合は必ず前向きに）",
     "conversationStarters": [
-      "2人のプロフィールから導き出される具体的な話題を5つ（うち2-3個は必ずクラウドネイティブまたはCNDW2025関連）",
-      "例1：『Kubernetesで一番苦労したエピソードは？』",
-      "例2：『CloudNative Days Winter 2025で楽しみにしているセッションは？』",
-      "例3：『CNCFプロジェクトで好きなものトップ3は？』",
-      "例: 『最もワクワクする新技術は何？』"
+      "2人のプロフィールから導き出される具体的で多様な話題を5つ（技術系1-2個、趣味・ライフスタイル系2-3個、その他自由）",
+      "技術例：『最近学んだ技術で面白かったものは？』",
+      "趣味例：『休日の過ごし方は？』『最近ハマっているものは？』", 
+      "ライフ例：『リモートワークのこだわりは？』『お気に入りのカフェは？』",
+      "自由例：『今年挑戦したいことは？』『チームビルディングで大切にしていることは？』"
     ],
     "hiddenGems": "意外な共通点や発見（前向きで実践的な内容）",
     "luckyItem": "2人の相性から導き出される創造的で面白いラッキーアイテム名（アイテム名のみ、説明不要）",
     "luckyAction": "2人にとって実践しやすく楽しいラッキーアクション（アクション名のみ、説明不要）",
-    "luckyProject": "2人におすすめのCNCFプロジェクト名（プロジェクト名のみ、正確に）",
-    "luckyProjectDescription": "そのCNCFプロジェクトが2人にとってラッキーな理由（短い説明1行）",
     "metadata": {
       "participant1": "1人目の名前",
       "participant2": "2人目の名前",
@@ -243,6 +256,40 @@ function summarizeProfile(profile) {
 }
 
 /**
+ * CNCFプロジェクトをランダムに選択
+ */
+function selectRandomCNCFProject() {
+  // プロジェクトリストが空の場合のフォールバック
+  if (!CNCF_PROJECTS || CNCF_PROJECTS.length === 0) {
+    return {
+      name: 'Kubernetes',
+      description: 'コンテナ化アプリケーションのデプロイ、スケーリング、管理を自動化するオープンソースシステム',
+      url: 'https://www.cncf.io/projects/kubernetes/'
+    };
+  }
+  
+  // ランダムにプロジェクト名を選択
+  const randomIndex = Math.floor(Math.random() * CNCF_PROJECTS.length);
+  const projectName = CNCF_PROJECTS[randomIndex];
+  
+  // プロジェクトの詳細情報を取得
+  const projectDetails = getProjectDetails(projectName);
+  
+  // プロジェクト名をURLフレンドリーにする（より堅牢な処理）
+  const urlName = projectName.toLowerCase()
+    .replace(/\s+/g, '-')           // スペース → ハイフン
+    .replace(/[^\w-]/g, '')         // 英数字とハイフン以外を削除
+    .replace(/-+/g, '-')            // 連続ハイフンを1つに
+    .replace(/^-|-$/g, '');         // 前後のハイフンを削除
+  
+  return {
+    name: projectName,
+    description: projectDetails ? projectDetails.description : `CNCFの${projectName}プロジェクト`,
+    url: `https://www.cncf.io/projects/${urlName}/`
+  };
+}
+
+/**
  * 2人の相性診断（OpenAI使用）
  */
 async function generateDuoDiagnosis(profile1, profile2, env) {
@@ -290,8 +337,8 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
     const summary1 = summarizeProfile(profile1);
     const summary2 = summarizeProfile(profile2);
     
-    // CNCFプロジェクトリストをプロンプトに含める
-    const cncfProjectsList = CNCF_PROJECTS.join(', ');
+    // CNCFプロジェクトをランダムに選択（LLMに選ばせずにJavaScript側で選択）
+    const luckyProject = selectRandomCNCFProject();
     
     const prompt = `以下の2人のプロフィールから相性を診断してください。
 
@@ -299,12 +346,7 @@ async function generateDuoDiagnosis(profile1, profile2, env) {
 ${JSON.stringify(summary1, null, 2)}
 
 ＜2人目のプロフィール＞
-${JSON.stringify(summary2, null, 2)}
-
-＜利用可能なCNCFプロジェクト＞
-${cncfProjectsList}
-
-上記のCNCFプロジェクトから、2人にとって最もラッキーなプロジェクトを1つ選んでください。`;
+${JSON.stringify(summary2, null, 2)}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -412,7 +454,9 @@ ${cncfProjectsList}
       hiddenGems: diagnosis?.hiddenGems || '',
       luckyItem: diagnosis?.luckyItem || '',
       luckyAction: diagnosis?.luckyAction || '',
-      luckyProject: diagnosis?.luckyProject || '',
+      luckyProject: luckyProject.name,
+      luckyProjectDescription: luckyProject.description,
+      luckyProjectUrl: luckyProject.url,
       astrologicalAnalysis: analysis?.astrologicalAnalysis || '',
       techStackCompatibility: analysis?.techStackCompatibility || '',
       strengths: [],
