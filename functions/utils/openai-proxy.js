@@ -5,6 +5,33 @@
  */
 
 /**
+ * OpenRouterでのモデル名マッピング
+ * OpenAIのモデル名をOpenRouter形式に変換
+ */
+const OPENROUTER_MODEL_MAPPING = {
+  'gpt-4o': 'openai/gpt-4o',
+  'gpt-4o-mini': 'openai/gpt-4o-mini',
+  'gpt-4-turbo': 'openai/gpt-4-turbo',
+  'gpt-4': 'openai/gpt-4',
+  'gpt-3.5-turbo': 'openai/gpt-3.5-turbo',
+  'gpt-3.5-turbo-16k': 'openai/gpt-3.5-turbo-16k'
+};
+
+/**
+ * OpenAIモデル名をOpenRouter形式に変換
+ * @param {string} modelName - OpenAIのモデル名
+ * @returns {string} OpenRouter形式のモデル名
+ */
+function convertToOpenRouterModel(modelName) {
+  // すでにプレフィックスがある場合はそのまま返す
+  if (modelName.includes('/')) {
+    return modelName;
+  }
+  // マッピングに存在する場合は変換、なければopenai/プレフィックスを追加
+  return OPENROUTER_MODEL_MAPPING[modelName] || `openai/${modelName}`;
+}
+
+/**
  * OpenAI APIをプロキシ経由で呼び出す
  * @param {Object} params - パラメータ
  * @param {string} params.apiKey - OpenAI APIキー
@@ -14,9 +41,24 @@
  * @returns {Promise<Response>} APIレスポンス
  */
 export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
+  // リクエストボディの検証
+  if (!body || !body.model) {
+    throw new Error('Invalid request body: missing required fields (model)');
+  }
+  
+  // デバッグログ（開発環境のみ）
+  if (env?.DEBUG_MODE === 'true' || env?.NODE_ENV === 'development') {
+    debugLogger?.log('[PROXY DEBUG] Environment check:', {
+      hasAccountId: !!env?.CLOUDFLARE_ACCOUNT_ID,
+      hasGatewayId: !!env?.CLOUDFLARE_GATEWAY_ID,
+      hasOpenRouter: !!env?.OPENROUTER_API_KEY,
+      hasProxyUrl: !!env?.OPENAI_PROXY_URL
+    });
+  }
+  
   // 方法1: OpenRouter経由（地域制限回避の最も確実な方法）
   // OpenRouterはCloudflare AI Gatewayと互換性があり、地域制限を確実に回避できる
-  if (env?.OPENROUTER_API_KEY) {
+  if (env?.OPENROUTER_API_KEY && env.OPENROUTER_API_KEY.startsWith('sk-or-')) {
     // AI Gateway経由でOpenRouterを使用（キャッシング・分析のメリットあり）
     if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
       const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openrouter`;
@@ -29,7 +71,7 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
       // OpenRouterではモデル名にプロバイダーのプレフィックスが必要
       const openRouterBody = {
         ...body,
-        model: body.model === 'gpt-4o-mini' ? 'openai/gpt-4o-mini' : body.model
+        model: convertToOpenRouterModel(body.model)
       };
       
       return fetch(gatewayUrl, {
@@ -50,7 +92,7 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
     
     const openRouterBody = {
       ...body,
-      model: body.model === 'gpt-4o-mini' ? 'openai/gpt-4o-mini' : body.model
+      model: convertToOpenRouterModel(body.model)
     };
     
     return fetch(openRouterUrl, {
@@ -87,6 +129,16 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
   
   // 方法3: カスタムプロキシエンドポイントを使用
   if (env?.OPENAI_PROXY_URL) {
+    // プロキシURLのHTTPS検証
+    try {
+      const proxyUrl = new URL(env.OPENAI_PROXY_URL);
+      if (proxyUrl.protocol !== 'https:') {
+        throw new Error('Custom proxy URL must use HTTPS protocol');
+      }
+    } catch (error) {
+      throw new Error(`Invalid proxy URL: ${error.message}`);
+    }
+    
     debugLogger?.log('Using custom proxy:', {
       proxyUrl: env.OPENAI_PROXY_URL
     });
