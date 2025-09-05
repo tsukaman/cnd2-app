@@ -473,6 +473,18 @@ ${JSON.stringify(summary2, null, 2)}`;
       throw new Error(`${errorMessage} (Status: ${response.status})`);
     }
     
+    // レスポンスのContent-Typeをチェック
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      // HTMLエラーページが返された場合の処理
+      if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+        console.error('[V4-OpenAI Engine] Received HTML error page instead of JSON');
+        throw new Error('API returned HTML error page - check API endpoint configuration');
+      }
+      throw new Error(`Unexpected response format: ${contentType}`);
+    }
+    
     const data = await response.json();
     
     // JSON解析エラーハンドリング

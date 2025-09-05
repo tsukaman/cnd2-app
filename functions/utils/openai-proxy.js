@@ -61,11 +61,14 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
   if (env?.OPENROUTER_API_KEY && env.OPENROUTER_API_KEY.startsWith('sk-or-v1-')) {
     // AI Gateway経由でOpenRouterを使用（キャッシング・分析のメリットあり）
     if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
-      const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openrouter`;
+      // OpenRouter用のAI Gateway URLを構築
+      // 注意: OpenRouterのエンドポイントは /api/v1/chat/completions
+      const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openrouter/api/v1/chat/completions`;
       
       debugLogger?.log('Using OpenRouter via AI Gateway (region restriction bypass):', {
         accountId: env.CLOUDFLARE_ACCOUNT_ID.substring(0, 8) + '...',
-        gatewayId: env.CLOUDFLARE_GATEWAY_ID
+        gatewayId: env.CLOUDFLARE_GATEWAY_ID,
+        url: gatewayUrl.replace(env.OPENROUTER_API_KEY, '[REDACTED]')
       });
       
       // OpenRouterではモデル名にプロバイダーのプレフィックスが必要
