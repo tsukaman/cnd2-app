@@ -14,11 +14,20 @@
  * @returns {Promise<Response>} APIレスポンス
  */
 export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
+  // 環境変数のデバッグ（一時的）
+  console.log('[PROXY DEBUG] Environment check:', {
+    hasAccountId: !!env?.CLOUDFLARE_ACCOUNT_ID,
+    hasGatewayId: !!env?.CLOUDFLARE_GATEWAY_ID,
+    hasProxyUrl: !!env?.OPENAI_PROXY_URL,
+    envKeys: env ? Object.keys(env).filter(k => k.includes('CLOUDFLARE') || k.includes('OPENAI')) : []
+  });
+  
   // 方法1: Cloudflare AI Gatewayを使用（推奨）
   // Cloudflare AI Gatewayは地域制限を回避し、キャッシング、レート制限、分析も提供
   if (env?.CLOUDFLARE_ACCOUNT_ID && env?.CLOUDFLARE_GATEWAY_ID) {
     const gatewayUrl = `https://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/openai/chat/completions`;
     
+    console.log('[PROXY] Using Cloudflare AI Gateway'); // 強制ログ
     debugLogger?.log('Using Cloudflare AI Gateway:', {
       accountId: env.CLOUDFLARE_ACCOUNT_ID.substring(0, 8) + '...',
       gatewayId: env.CLOUDFLARE_GATEWAY_ID
@@ -36,6 +45,7 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
   
   // 方法2: カスタムプロキシエンドポイントを使用
   if (env?.OPENAI_PROXY_URL) {
+    console.log('[PROXY] Using custom proxy:', env.OPENAI_PROXY_URL); // 強制ログ
     debugLogger?.log('Using custom proxy:', {
       proxyUrl: env.OPENAI_PROXY_URL
     });
@@ -52,6 +62,7 @@ export async function callOpenAIWithProxy({ apiKey, body, env, debugLogger }) {
   }
   
   // 方法3: 直接OpenAI APIを呼び出す（デフォルト）
+  console.log('[PROXY] Using direct OpenAI API (may fail due to region restrictions)'); // 強制ログ
   debugLogger?.log('Using direct OpenAI API (may fail due to region restrictions)');
   
   return fetch('https://api.openai.com/v1/chat/completions', {
