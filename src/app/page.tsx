@@ -9,6 +9,7 @@ import { MenuCard } from "@/components/ui/MenuCard";
 import { ConsentDialog } from "@/components/ui/ConsentDialog";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { BackgroundEffects } from "@/components/effects/BackgroundEffects";
+import { AppDescription } from "@/components/landing/AppDescription";
 import { DiagnosisResult as DiagnosisResultComponent } from "@/components/diagnosis/DiagnosisResult";
 import type { DiagnosisResult, ResultApiResponse } from "@/types";
 import { sanitizer } from "@/lib/sanitizer";
@@ -387,6 +388,9 @@ export default function Home() {
             <span className="gradient-text">Prairie Card</span>
           </motion.p>
         </motion.div>
+
+        {/* アプリの説明 */}
+        <AppDescription />
 
         {/* メニューカード */}
         <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto w-full mb-14">
