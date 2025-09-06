@@ -81,11 +81,11 @@ export function AppDescription() {
               <ol className="space-y-3 text-gray-300">
                 <li className="flex gap-3">
                   <span className="text-cyan-400 font-bold">1.</span>
-                  <span>「Let\'s C\'n\'D!」をタップ</span>
+                  <span>「Let's C'n'D!」をクリック</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-cyan-400 font-bold">2.</span>
-                  <span>2人分の Prairie Card URL を入力（QRコード読み取りもOK！）</span>
+                  <span>2人分の Prairie Card URL を入力（QRコード読み取り・AndroidはNFCもOK！）</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-cyan-400 font-bold">3.</span>
