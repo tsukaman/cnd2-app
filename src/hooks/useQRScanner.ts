@@ -100,6 +100,21 @@ export function useQRScanner(): UseQRScannerReturn {
     setIsScanning(true);
 
     try {
+      // Check permissions API if available (Android Chrome supports this)
+      if ('permissions' in navigator && 'query' in navigator.permissions) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          if (permissionStatus.state === 'denied') {
+            setError(CAMERA_ERROR_MESSAGES.PERMISSION_DENIED);
+            setIsScanning(false);
+            return;
+          }
+        } catch (permError) {
+          // Permissions API might not support camera query, continue with getUserMedia
+          logger.debug('Permissions API camera query not supported', permError);
+        }
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment', // Use back camera
@@ -121,12 +136,36 @@ export function useQRScanner(): UseQRScannerReturn {
       logger.error('Camera access error', err);
       
       if (err instanceof Error) {
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        // Android Chrome may throw SecurityError for HTTPS requirement
+        if (err.name === 'SecurityError') {
+          // Check if it's actually a permission issue on Android
+          if (err.message.includes('Permission') || err.message.includes('permission')) {
+            setError(CAMERA_ERROR_MESSAGES.PERMISSION_DENIED);
+          } else {
+            setError('セキュアな接続（HTTPS）が必要です。');
+          }
+        } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
           setError(CAMERA_ERROR_MESSAGES.PERMISSION_DENIED);
         } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
           setError(CAMERA_ERROR_MESSAGES.NOT_FOUND);
         } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
           setError(CAMERA_ERROR_MESSAGES.IN_USE);
+        } else if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+          // Try again with simpler constraints for Android compatibility
+          try {
+            const simpleStream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: 'environment' }
+            });
+            streamRef.current = simpleStream;
+            if (videoRef.current) {
+              videoRef.current.srcObject = simpleStream;
+              await videoRef.current.play();
+              detectQRCode();
+              return;
+            }
+          } catch (retryErr) {
+            setError(CAMERA_ERROR_MESSAGES.GENERIC);
+          }
         } else {
           setError(`カメラアクセスエラー: ${err.message}`);
         }
