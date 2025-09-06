@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { usePrairieCard } from "@/hooks/usePrairieCard";
 import { useNFC } from "@/hooks/useNFC";
-import { useQRScanner } from "@/hooks/useQRScanner";
+// import { useQRScanner } from "@/hooks/useQRScanner";
+import { useQRScannerV2 } from "@/hooks/useQRScannerV2";
 import { useClipboardPaste } from "@/hooks/useClipboardPaste";
 import { PrairieProfile } from "@/types";
 import { detectPlatform } from "@/lib/platform";
@@ -48,7 +49,7 @@ export default function PrairieCardInput({
     clearError: clearNFCError 
   } = useNFC();
   
-  // QR Scanner Hook
+  // QR Scanner Hook V2 (with fallback support)
   const {
     isSupported: qrSupported,
     isScanning: qrScanning,
@@ -57,8 +58,10 @@ export default function PrairieCardInput({
     videoRef,
     startScan: startQR,
     stopScan: stopQR,
-    clearError: clearQRError
-  } = useQRScanner();
+    clearError: clearQRError,
+    permissionState,
+    scannerType
+  } = useQRScannerV2();
   
   // Clipboard Hook
   const {
@@ -329,10 +332,17 @@ export default function PrairieCardInput({
             </div>
             <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
               <div className="bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2">
-                <p className="text-white text-sm font-semibold flex items-center gap-2">
-                  <Camera className="w-4 h-4" />
-                  QRコードを枠内に合わせてください
-                </p>
+                <div>
+                  <p className="text-white text-sm font-semibold flex items-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    QRコードを枠内に合わせてください
+                  </p>
+                  {process.env.NODE_ENV === 'development' && (
+                    <p className="text-white/70 text-xs mt-1">
+                      {scannerType === 'qr-scanner' ? '📦 QR Scannerライブラリ使用中' : '🎯 BarcodeDetector API使用中'}
+                    </p>
+                  )}
+                </div>
               </div>
               <button
                 type="button"

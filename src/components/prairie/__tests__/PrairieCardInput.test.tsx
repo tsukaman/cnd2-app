@@ -16,13 +16,29 @@ jest.mock('@/hooks/useNFC', () => ({
   }),
 }));
 
-jest.mock('@/hooks/useQRScanner', () => ({
-  useQRScanner: () => ({
+// Mock old QR scanner (commented out as we're using V2)
+// jest.mock('@/hooks/useQRScanner', () => ({
+//   useQRScanner: () => ({
+//     isSupported: false,
+//     isScanning: false,
+//     startScanning: jest.fn(),
+//     stopScanning: jest.fn(),
+//     error: null,
+//   }),
+// }));
+
+jest.mock('@/hooks/useQRScannerV2', () => ({
+  useQRScannerV2: () => ({
     isSupported: false,
     isScanning: false,
-    startScanning: jest.fn(),
-    stopScanning: jest.fn(),
+    lastScannedUrl: null,
     error: null,
+    videoRef: { current: null },
+    startScan: jest.fn(),
+    stopScan: jest.fn(),
+    clearError: jest.fn(),
+    permissionState: 'unknown',
+    scannerType: 'none',
   }),
 }));
 
