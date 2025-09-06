@@ -541,7 +541,7 @@ docker run -p 3000:3000 cnd2-app
 ## 🙏 謝辞
 
 - [CloudNative Days Committee](https://cloudnativedays.jp/) - イベント主催
-- [Prairie Card](https://prairie.cards/) - プロフィールシステム提供（Powered by Prairie Card）
+- [Prairie Card](https://prairie.cards/) - プロフィールシステム提供（Works with Prairie Card）
 - [Claude](https://claude.ai) - AI開発アシスタント
 - すべてのコントリビューターとテスター
 

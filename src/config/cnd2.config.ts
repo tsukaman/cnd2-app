@@ -6,7 +6,7 @@ export const CND2_CONFIG = {
     tagline: 'CND × CnD = Your Connection²',
     hashtag: '#CNDxCnD',
     hashtagRaw: 'CNDxCnD',
-    poweredBy: 'Prairie Card'
+    poweredBy: 'Prairie Card'  // Note: "Works with" is prepended when displayed
   },
   
   domains: {

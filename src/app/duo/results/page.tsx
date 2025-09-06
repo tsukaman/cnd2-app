@@ -155,7 +155,7 @@ export default function ResultsPage() {
               </p>
             )}
             <p className="text-sm">
-              <span className="text-purple-400">Powered by </span>
+              <span className="text-purple-400">Works with </span>
               <span className="bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent font-semibold">Prairie Card</span>
             </p>
           </div>

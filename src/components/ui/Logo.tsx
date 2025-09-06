@@ -62,7 +62,7 @@ export function Logo({ size = "lg", animate = true }: LogoProps) {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
       >
-        Powered by {CND2_CONFIG.app.poweredBy}
+        Works with {CND2_CONFIG.app.poweredBy}
       </motion.p>
     </motion.div>
   );

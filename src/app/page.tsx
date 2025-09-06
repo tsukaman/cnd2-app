@@ -384,7 +384,7 @@ export default function Home() {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="text-base md:text-lg font-semibold mt-4"
           >
-            <span className="text-purple-400">Powered by </span>
+            <span className="text-purple-400">Works with </span>
             <span className="gradient-text">Prairie Card</span>
           </motion.p>
         </motion.div>
@@ -393,24 +393,30 @@ export default function Home() {
         <AppDescription />
 
         {/* メニューカード */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto w-full mb-14">
-          <MenuCard
-            href="/duo"
-            icon="🤝"
-            title="Let's Connect 'n' Discover!"
-            description="2人の相性をチェック"
-            delay={0.2}
-          />
-          {/* グループ診断機能は一時的に非表示（開発優先度の調整）
-          <MenuCard
-            href="/group"
-            icon="🎯"
-            title="グループ診断"
-            description="3-6人で診断"
-            delay={0.4}
-          />
-          */}
+        <div className="flex justify-center max-w-md mx-auto w-full mb-8">
+          <div className="w-full">
+            <MenuCard
+              href="/duo"
+              icon="🤝"
+              title="Let's C'n'D!"
+              description="2人の相性をチェック"
+              delay={0.2}
+            />
+          </div>
         </div>
+
+        {/* 診断同意事項 */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-center mb-12 px-4 max-w-md mx-auto"
+        >
+          <p className="text-xs text-gray-500">
+            ※ 診断を開始することで、Prairie Card の公開プロフィール情報の
+            読み取りと分析に同意したものとみなされます
+          </p>
+        </motion.div>
 
         {/* マーケティングコピー */}
         <AnimatePresence mode="wait">

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { ChevronDown, Sparkles, Shield, Heart, Info } from 'lucide-react';
+import { ChevronDown, Sparkles, Shield, Heart } from 'lucide-react';
 
 export function AppDescription() {
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export function AppDescription() {
               <ol className="space-y-3 text-gray-300">
                 <li className="flex gap-3">
                   <span className="text-cyan-400 font-bold">1.</span>
-                  <span>「Let\'s Connect \'n\' Discover!」をタップ</span>
+                  <span>「Let\'s C\'n\'D!」をタップ</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-cyan-400 font-bold">2.</span>
@@ -96,64 +96,11 @@ export function AppDescription() {
           )}
         </motion.div>
 
-        {/* Prairie Cardについて */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <button
-            onClick={() => toggleSection('prairie')}
-            className="w-full text-left bg-gradient-to-r from-green-900/20 to-blue-900/20 backdrop-blur-sm rounded-xl p-4 border border-green-500/20 hover:border-green-400/40 transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Info className="w-5 h-5 text-green-400" />
-                <span className="text-white font-semibold">Prairie Card って？</span>
-              </div>
-              <ChevronDown 
-                className={`w-5 h-5 text-gray-400 transition-transform ${
-                  openSection === 'prairie' ? 'rotate-180' : ''
-                }`}
-              />
-            </div>
-          </button>
-          
-          {openSection === 'prairie' && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="mt-2 bg-gray-900/50 rounded-lg p-4 border border-gray-700/50"
-            >
-              <div className="space-y-3 text-gray-300">
-                <p>
-                  Prairie Card は、イベント参加者のプロフィールを
-                  Web上で簡単に共有できるデジタル名刺サービスです。
-                </p>
-                <p>
-                  技術スタック、興味分野、SNSリンクなど、
-                  あなたの「今」を表現できます。
-                  まだ作成していない方は、ぜひこの機会に作ってみてください！
-                </p>
-                <a 
-                  href="https://my.prairie.cards" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
-                >
-                  → Prairie Card を作成する
-                </a>
-              </div>
-            </motion.div>
-          )}
-        </motion.div>
-
         {/* プライバシーについて */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.6 }}
         >
           <button
             onClick={() => toggleSection('privacy')}
@@ -185,26 +132,24 @@ export function AppDescription() {
                 <ul className="space-y-2 text-sm">
                   <li className="flex gap-2">
                     <span className="text-green-400">✓</span>
-                    <span>Prairie Card の公開情報のみを使用します</span>
+                    <span>Prairie Card のプロフィールページで公開されている情報のみを使用します</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-green-400">✓</span>
+                    <span>読み取ったプロフィール情報は相性診断のみで利用します</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-green-400">✓</span>
+                    <span>読み取ったプロフィール情報は保存されません</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-green-400">✓</span>
                     <span>診断結果は7日間で自動削除されます</span>
                   </li>
-                  <li className="flex gap-2">
-                    <span className="text-green-400">✓</span>
-                    <span>個人を特定する情報は収集しません</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-green-400">✓</span>
-                    <span>診断データは相性分析のみに使用されます</span>
-                  </li>
                 </ul>
                 
                 <div className="pt-3 border-t border-gray-700/50">
                   <p className="text-xs text-gray-400">
-                    ※ 診断を開始することで、Prairie Card の公開プロフィール情報の
-                    読み取りと分析に同意したものとみなされます。
                     診断はエンターテイメント目的であり、
                     結果は参考程度にお楽しみください。
                   </p>
