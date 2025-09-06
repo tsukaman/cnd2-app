@@ -32,11 +32,14 @@ export function AppDescription() {
             <Sparkles className="w-6 h-6 text-yellow-400" />
           </h2>
           
+          <p className="text-gray-300 leading-relaxed mb-4">
+            CND²は、CloudNative Days参加者同士の「つながり」と「発見」をサポートします！
+          </p>
+          
           <p className="text-gray-300 leading-relaxed">
-            Prairie Card を AI が分析して、
-            CloudNative Days 参加者同士の相性を診断。
-            技術の共通点から意外な発見まで、
-            新しい出会いのきっかけを作ります！
+            Prairie Card のプロフィール情報をもとに、AIが2人の相性を楽しく分析。
+            技術の話題から意外な共通点まで、
+            新しい出会いのきっかけを見つけましょう！
           </p>
         </motion.div>
       </div>
