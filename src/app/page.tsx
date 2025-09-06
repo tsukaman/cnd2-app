@@ -392,9 +392,9 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto w-full mb-14">
           <MenuCard
             href="/duo"
-            icon="👥"
-            title="2人診断"
-            description="相性をチェック"
+            icon="🤝"
+            title="Let's Connect 'n' Discover!"
+            description="2人の相性をチェック"
             delay={0.2}
           />
           {/* グループ診断機能は一時的に非表示（開発優先度の調整）

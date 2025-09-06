@@ -161,11 +161,11 @@ export default function DuoPage() {
             >
               <Users className="w-16 h-16 text-cyan-400" />
             </motion.div>
-            <h1 className="text-5xl md:text-6xl font-black mb-3 gradient-text-orange-soft">
-              2人診断
+            <h1 className="text-4xl md:text-5xl font-black mb-3 gradient-text-orange-soft">
+              Let's Connect 'n' Discover!
             </h1>
             <p className="text-gray-300 text-lg">
-              Prairie Cardから相性を診断します
+              Prairie Cardから2人の相性をチェック
             </p>
           </div>
         </motion.div>
