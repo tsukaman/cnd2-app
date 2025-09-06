@@ -167,7 +167,7 @@ CloudNative Days Winter 2025のエンジニアイベントにおける特別な�
 - 必ずスコアの根拠をユーモラスに説明する
 
 【出力指示】
-- 各分析は最低300文字以上で詳細に記述
+- 各分析は250文字程度で簡潔かつ詳細に記述
 - クラウドネイティブの専門用語を必ず5個以上含める
 - ユーモアとテクノロジージョークを織り交ぜる
 - 絶対に退屈な定型文を避ける
@@ -177,7 +177,7 @@ CloudNative Days Winter 2025のエンジニアイベントにおける特別な�
   "diagnosis": {
     "type": "ユニークで面白い診断タイプ名（例：『サービスメッシュ織姫と彦星型』『カオスモンキー型相性』『GitOps同期型』『Zero Trust恋愛型』など、必ず技術用語を含めた創造的な名前）",
     "score": スコア（0-100の数値、必ず分布させる）,
-    "message": "総合的な診断結果（最低400文字。ユーモアとウィット必須。技術ジョーク歓迎）",
+    "message": "総合的な診断結果（250文字程度。ユーモアとウィット必須。技術ジョーク歓迎）",
     "conversationStarters": [
       "2人のプロフィールから導き出される具体的で多様な話題を5つ（技術系2-3個、趣味・ライフスタイル系2-3個）",
       "技術例：『Kubernetesでの最大のやらかしエピソードは？』『理想のCI/CDパイプラインは？』",
@@ -219,11 +219,11 @@ CloudNative Days Winter 2025のエンジニアイベントにおける特別な�
     }
   },
   "analysis": {
-    "fiveElementsAnalysis": "五行思想による相生相剋関係の詳細分析。最低300文字。木=イノベーション、火=パッション、土=インフラ、金=ロジック、水=フローの観点から、Kubernetesのようなオーケストレーションになぞらえて説明",
-    "astrologicalAnalysis": "西洋占星術とタロット、易経、数秘術などを統合した多角的分析。最低400文字。『コンテナ座』『マイクロサービス座』などクラウドネイティブ星座も創造して楽しく解説。必ずユーモアを含める",
-    "numerologyAnalysis": "数秘術とエネルギーパターンの分析。最低300文字。バージョン番号やポート番号になぞらえるなど技術的なメタファーを使用",
-    "energyFieldAnalysis": "オーラとエネルギーフィールドの共鳴分析。最低300文字。ネットワークトポロジーやサービスメッシュになぞらえて説明",
-    "technicalSynergy": "技術的シナジーの占術的解釈。最低300文字。実際の技術スタックやアーキテクチャパターンを例に出して説明"
+    "fiveElementsAnalysis": "五行思想による相生相剋関係の詳細分析。250文字程度。木=イノベーション、火=パッション、土=インフラ、金=ロジック、水=フローの観点から、Kubernetesのようなオーケストレーションになぞらえて説明",
+    "astrologicalAnalysis": "西洋占星術とタロット、易経、数秘術などを統合した多角的分析。250文字程度。『コンテナ座』『マイクロサービス座』などクラウドネイティブ星座も創造して楽しく解説。必ずユーモアを含める",
+    "numerologyAnalysis": "数秘術とエネルギーパターンの分析。250文字程度。バージョン番号やポート番号になぞらえるなど技術的なメタファーを使用",
+    "energyFieldAnalysis": "オーラとエネルギーフィールドの共鳴分析。250文字程度。ネットワークトポロジーやサービスメッシュになぞらえて説明",
+    "technicalSynergy": "技術的シナジーの占術的解釈。250文字程度。実際の技術スタックやアーキテクチャパターンを例に出して説明"
   }
 }`;
 
@@ -542,9 +542,6 @@ ${JSON.stringify(summary2, null, 2)}`;
       energyFieldAnalysis: analysis?.energyFieldAnalysis || '',
       technicalSynergy: analysis?.technicalSynergy || '',
       techStackCompatibility: analysis?.techStackCompatibility || analysis?.technicalSynergy || '', // 互換性のため
-      strengths: [],
-      opportunities: [],
-      advice: '',
       participants: [profile1, profile2],
       createdAt: new Date().toISOString(),
       aiPowered: true,
@@ -622,17 +619,6 @@ function generateFallbackDiagnosis_DEPRECATED(profile1, profile2, env) {
     luckyProject: luckyProject,
     astrologicalAnalysis: `二人のエンジニアリング・エナジーが美しく調和し、まさに分散システムのように補完し合っています。`,
     techStackCompatibility: `お互いの技術スタックが素晴らしい相性を示しています。`,
-    strengths: [
-      '技術的な好奇心が旺盛',
-      'Cloud Nativeへの情熱を共有',
-      'イノベーションを推進する相性'
-    ],
-    opportunities: [
-      '技術ブログの共同執筆',
-      'ハッカソンでのチーム参加',
-      'Lightning Talkでの共同発表'
-    ],
-    advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
     participants: [profile1, profile2],
     createdAt: new Date().toISOString(),
     aiPowered: false,

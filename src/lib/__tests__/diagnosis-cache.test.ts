@@ -52,9 +52,6 @@ describe('DiagnosisCache', () => {
     type: 'Test Type',
     compatibility: 85,
     summary: 'Test summary',
-    strengths: ['S1', 'S2'],
-    opportunities: ['O1', 'O2'],
-    advice: 'Test advice',
     participants: [mockProfile1, mockProfile2],
     createdAt: '2024-01-01T00:00:00Z',
   };

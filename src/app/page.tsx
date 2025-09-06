@@ -78,9 +78,6 @@ export default function Home() {
       type: obj.type ? sanitizer.sanitizeText(obj.type as string) : '',
       summary: obj.summary ? sanitizer.sanitizeText(obj.summary as string) : '',
       message: obj.message ? sanitizer.sanitizeText(obj.message as string) : '',
-      advice: obj.advice ? sanitizer.sanitizeText(obj.advice as string) : undefined,
-      strengths: obj.strengths ? (obj.strengths as string[]).map((s: string) => sanitizer.sanitizeText(s)) : [],
-      opportunities: obj.opportunities ? (obj.opportunities as string[]).map((o: string) => sanitizer.sanitizeText(o)) : [],
       conversationStarters: obj.conversationStarters ? (obj.conversationStarters as string[]).map((c: string) => sanitizer.sanitizeText(c)) : [],
     };
     
