@@ -384,7 +384,7 @@ export default function Home() {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="text-base md:text-lg font-semibold mt-4"
           >
-            <span className="text-purple-400">Powered by </span>
+            <span className="text-purple-400">Works with </span>
             <span className="gradient-text">Prairie Card</span>
           </motion.p>
         </motion.div>

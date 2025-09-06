@@ -48,7 +48,7 @@ export function ConsentDialog({ onConsent }: ConsentDialogProps) {
         </motion.button>
 
         <p className="text-xs text-white/60 mt-4 text-center">
-          Powered by {CND2_CONFIG.app.poweredBy}
+          Works with {CND2_CONFIG.app.poweredBy}
         </p>
       </motion.div>
     </motion.div>
