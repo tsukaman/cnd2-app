@@ -397,6 +397,7 @@ export default function Home() {
             description="相性をチェック"
             delay={0.2}
           />
+          {/* グループ診断機能は一時的に非表示（開発優先度の調整）
           <MenuCard
             href="/group"
             icon="🎯"
@@ -404,6 +405,7 @@ export default function Home() {
             description="3-6人で診断"
             delay={0.4}
           />
+          */}
         </div>
 
         {/* マーケティングコピー */}
