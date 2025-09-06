@@ -33,13 +33,11 @@ export function AppDescription() {
           </h2>
           
           <p className="text-gray-300 leading-relaxed mb-4">
-            CND²（シーエヌディースクエア）は、CloudNative Days の参加者同士の
-            「つながり」と「発見」をサポートする相性診断アプリです。
+            CND²は、CloudNative Days参加者同士の「つながり」と「発見」をサポートします！
           </p>
           
           <p className="text-gray-300 leading-relaxed">
-            Prairie Card のプロフィール情報をもとに、
-            AI が2人の相性を楽しく分析。
+            Prairie Card のプロフィール情報をもとに、AIが2人の相性を楽しく分析。
             技術の話題から意外な共通点まで、
             新しい出会いのきっかけを見つけましょう！
           </p>
@@ -81,11 +79,11 @@ export function AppDescription() {
               <ol className="space-y-3 text-gray-300">
                 <li className="flex gap-3">
                   <span className="text-cyan-400 font-bold">1.</span>
-                  <span>「Let\'s C\'n\'D!」をタップ</span>
+                  <span>「Let's C'n'D!」をクリック</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-cyan-400 font-bold">2.</span>
-                  <span>2人分の Prairie Card URL を入力（QRコード読み取りもOK！）</span>
+                  <span>2人分の Prairie Card URL を入力（QRコード読み取り・AndroidはNFCもOK！）</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-cyan-400 font-bold">3.</span>
