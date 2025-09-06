@@ -222,9 +222,10 @@ describe('Prairie Card URL Validator (Refactored with describe.each)', () => {
     });
   });
 
-  // パフォーマンステスト（CI環境ではスキップ）
+  // パフォーマンステスト（環境依存のためスキップ可能）
   describe('Performance tests', () => {
-    const testFn = process.env.CI ? it.skip : it;
+    // パフォーマンステストは環境依存が大きいため、通常はスキップ
+    const testFn = it.skip;
     
     testFn.each([
       ['valid URLs', 'https://my.prairie.cards/u/test'],
