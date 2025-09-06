@@ -177,7 +177,7 @@ export default function PrairieCardInput({
             <label className="text-sm font-medium text-gray-300">
               {label}
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-nowrap">
               {/* Platform detection status (debug) */}
               {process.env.NODE_ENV === 'development' && (
                 <span className="text-xs text-gray-500 mr-2">
@@ -191,8 +191,8 @@ export default function PrairieCardInput({
                   type="button"
                   onClick={handleNFCScan}
                   className={`
-                    flex items-center gap-1.5 px-3 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm font-medium
-                    transition-all duration-300 min-h-[44px] sm:min-h-0
+                    flex items-center gap-1 sm:gap-1.5 px-2 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium
+                    transition-all duration-300 min-h-[44px] sm:min-h-0 whitespace-nowrap flex-shrink-0
                     ${nfcScanning 
                       ? 'bg-blue-600 text-white' 
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -214,8 +214,8 @@ export default function PrairieCardInput({
                   type="button"
                   onClick={handleQRScan}
                   className={`
-                    flex items-center gap-1.5 px-3 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm font-medium
-                    transition-all duration-300 min-h-[44px] sm:min-h-0
+                    flex items-center gap-1 sm:gap-1.5 px-2 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium
+                    transition-all duration-300 min-h-[44px] sm:min-h-0 whitespace-nowrap flex-shrink-0
                     ${qrScanning || inputMethod === 'qr'
                       ? 'bg-purple-600 text-white' 
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -236,9 +236,9 @@ export default function PrairieCardInput({
                 <motion.button
                   type="button"
                   onClick={handleClipboardPaste}
-                  className="flex items-center gap-1.5 px-3 py-2 sm:px-3 sm:py-1.5 rounded-full text-sm font-medium
+                  className="flex items-center gap-1 sm:gap-1.5 px-2 py-2 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium
                     bg-gray-700 text-gray-300 hover:bg-gray-600 transition-all duration-300
-                    min-h-[44px] sm:min-h-0"
+                    min-h-[44px] sm:min-h-0 whitespace-nowrap flex-shrink-0"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   title="クリップボードから貼り付け"
