@@ -18,7 +18,7 @@
 
 **CND²（CloudNative Days × Connect 'n' Discover）** は、CloudNative Days Winter 2025（11月18-19日 @ 東京）のための特別な相性診断アプリケーションです。Prairie Cardの情報を基に、エンジニア同士の技術的な相性や協働の可能性を可視化し、「出会いを二乗でスケール」します。
 
-> **最終更新**: 2025-09-06 - v1.10.0
+> **最終更新**: 2025-09-06 - v1.11.0
 
 ### ✨ 主な機能
 
@@ -40,7 +40,14 @@
   - Cloudflare AI Gateway経由でのキャッシングと分析
 - **結果共有**: QRコードやNFC、URLでの診断結果シェア機能（静的エクスポート対応）
 - **美しいUI**: ダークテーマベースの洗練されたデザイン
-  - モバイル最適化（タッチターゲット44x44px以上）
+  - **モバイル最適化**（v1.11.0）:
+    - 診断結果のアコーディオンUI（CollapsibleSection）
+    - レスポンシブなテキストサイズ（sm/md breakpoints）
+    - タッチターゲット最小60px確保
+  - **QRスキャナー改善**（v1.11.0）:
+    - Android対応強化（qr-scanner library統合）
+    - iOS/Android両対応の権限処理
+    - エラーハンドリング強化
   - アクセシビリティ対応（WCAG 2.1 Level AA準拠）
 - **プライバシー配慮**: 診断結果は7日後に自動削除
 - **セキュリティ対策**: HTML sanitization & XSS protection完備
@@ -60,6 +67,7 @@
 - **Animation**: Framer Motion 12.23, Three.js, GSAP 3.13
 - **Icons**: Lucide React
 - **Validation**: Zod 3.25
+- **QRスキャナー**: qr-scanner 1.4.2（Android/iOS対応）
 
 ### バックエンド
 - **API Implementation**: 
@@ -84,7 +92,7 @@
 ### テスティング
 - **Test Runner**: Jest 30.0
 - **Testing Library**: React Testing Library 16.3
-- **Coverage**: 775テスト（機能テスト完全カバー）
+- **Coverage**: 460+テスト（全機能カバー）
 - **パフォーマンステスト**: 環境依存のためスキップ可能
 
 ### インフラ・モニタリング
@@ -547,6 +555,22 @@ docker run -p 3000:3000 cnd2-app
 
 ## 🔄 最近の更新
 
+### v1.11.0 (2025-09-06)
+- **モバイル最適化**: 診断結果のUI改善 📱
+  - 5つの占術的分析をアコーディオン形式に変更（CollapsibleSection実装）
+  - 分析文字数を250文字に最適化
+  - レスポンシブなテキストサイズと余白
+  - 不要フィールド削除（strengths、opportunities、advice）
+- **QRスキャナー改善**: Android対応を包括的に強化 📷
+  - qr-scanner library統合によるクロスブラウザ対応
+  - 権限エラーハンドリングの改善
+  - フォールバック機能の実装
+- **ランディングページ改善**: UXとコンテンツの最適化 🎨
+  - Prairie Card説明セクション削除
+  - "Works with Prairie Card"表記への変更
+  - プライバシーポリシーの詳細化
+  - 3ステップガイドの改善
+
 ### v1.10.0 (2025-09-06)
 - **UIリブランド**: 「2人診断」を「Let's Connect 'n' Discover!」にリブランド 🤝
 - **機能最適化**: グループ診断を一時非表示化し、2人診断に開発リソースを集中
@@ -564,7 +588,7 @@ docker run -p 3000:3000 cnd2-app
 
 ## 📊 プロジェクトステータス
 
-- **バージョン**: 1.10.0
+- **バージョン**: 1.11.0
 - **ステータス**: Production Ready
 - **最終更新**: 2025年9月6日
 - **テスト**: 全テスト合格 ✅

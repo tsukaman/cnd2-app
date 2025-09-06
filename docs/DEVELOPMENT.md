@@ -82,7 +82,8 @@ cnd2-app/
 │   │   ├── diagnosis/          # 診断関連コンポーネント
 │   │   │   ├── DiagnosisCard.tsx
 │   │   │   ├── DiagnosisResult.tsx
-│   │   │   └── ScoreDisplay.tsx
+│   │   │   ├── ScoreDisplay.tsx
+│   │   │   └── CollapsibleSection.tsx  # モバイル向けアコーディオンUI
 │   │   ├── prairie/            # Prairie Card関連
 │   │   │   ├── PrairieCardInput.tsx
 │   │   │   └── ProfileDisplay.tsx
@@ -179,7 +180,7 @@ git push origin feature/amazing-feature
 ### テストの実行
 
 ```bash
-# すべてのテストを実行
+# すべてのテストを実行（460+テスト）
 npm test
 
 # ウォッチモードで実行
@@ -448,3 +449,8 @@ A: `--maxWorkers=50%`オプションを使用してテストを並列実行し�
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Jest Documentation](https://jestjs.io/docs/getting-started)
+
+---
+
+*最終更新: 2025-09-06*
+*CloudNative Days Winter 2025 対応版 v1.11.0*

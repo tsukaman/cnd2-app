@@ -8,6 +8,11 @@
 OpenRouterまたはOpenAI APIが必須となり、APIキー未設定時はエラーが発生します。  
 🌏 **地域制限対策**: OpenRouterを使用することで香港リージョン等の地域制限を回避できます。
 
+📱 **v1.11.0アップデート**: モバイル端末での使いやすさが大幅に向上しました。  
+- 診断結果がアコーディオンUIでコンパクトに表示  
+- QRコードスキャナーがAndroidでも安定動作  
+- タッチターゲットが最小60pxに拡大
+
 ## 📚 関連ドキュメント
 
 - [環境変数設定ガイド](./ENVIRONMENT_VARIABLES.md) - すべての環境変数の詳細
@@ -189,4 +194,4 @@ Cloudflare Pagesが香港（HKG）データセンターを使用する場合、O
 ---
 
 *最終更新: 2025-09-06*
-*CloudNative Days Winter 2025 用*
+*CloudNative Days Winter 2025 用 v1.11.0*
