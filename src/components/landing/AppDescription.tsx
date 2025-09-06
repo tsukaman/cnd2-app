@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { ChevronDown, Sparkles, Shield, Heart, Info } from 'lucide-react';
+import { ChevronDown, Sparkles, Shield, Heart } from 'lucide-react';
 
 export function AppDescription() {
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -96,64 +96,11 @@ export function AppDescription() {
           )}
         </motion.div>
 
-        {/* Prairie Cardについて */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <button
-            onClick={() => toggleSection('prairie')}
-            className="w-full text-left bg-gradient-to-r from-green-900/20 to-blue-900/20 backdrop-blur-sm rounded-xl p-4 border border-green-500/20 hover:border-green-400/40 transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Info className="w-5 h-5 text-green-400" />
-                <span className="text-white font-semibold">Prairie Card って？</span>
-              </div>
-              <ChevronDown 
-                className={`w-5 h-5 text-gray-400 transition-transform ${
-                  openSection === 'prairie' ? 'rotate-180' : ''
-                }`}
-              />
-            </div>
-          </button>
-          
-          {openSection === 'prairie' && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="mt-2 bg-gray-900/50 rounded-lg p-4 border border-gray-700/50"
-            >
-              <div className="space-y-3 text-gray-300">
-                <p>
-                  Prairie Card は、イベント参加者のプロフィールを
-                  Web上で簡単に共有できるデジタル名刺サービスです。
-                </p>
-                <p>
-                  技術スタック、興味分野、SNSリンクなど、
-                  あなたの「今」を表現できます。
-                  まだ作成していない方は、ぜひこの機会に作ってみてください！
-                </p>
-                <a 
-                  href="https://my.prairie.cards" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
-                >
-                  → Prairie Card を作成する
-                </a>
-              </div>
-            </motion.div>
-          )}
-        </motion.div>
-
         {/* プライバシーについて */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.6 }}
         >
           <button
             onClick={() => toggleSection('privacy')}
