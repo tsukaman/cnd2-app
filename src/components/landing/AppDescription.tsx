@@ -132,19 +132,19 @@ export function AppDescription() {
                 <ul className="space-y-2 text-sm">
                   <li className="flex gap-2">
                     <span className="text-green-400">✓</span>
-                    <span>Prairie Card の公開情報のみを使用します</span>
+                    <span>Prairie Card のプロフィールページで公開されている情報のみを使用します</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-green-400">✓</span>
+                    <span>読み取ったプロフィール情報は相性診断のみで利用します</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-green-400">✓</span>
+                    <span>読み取ったプロフィール情報は保存されません</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-green-400">✓</span>
                     <span>診断結果は7日間で自動削除されます</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-green-400">✓</span>
-                    <span>個人を特定する情報は収集しません</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-green-400">✓</span>
-                    <span>診断データは相性分析のみに使用されます</span>
                   </li>
                 </ul>
                 
