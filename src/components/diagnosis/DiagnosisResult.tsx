@@ -170,34 +170,6 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             </motion.div>
           )}
 
-          {/* 強みと相性 */}
-          {result.strengths && result.strengths.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.3 }}
-              className="mb-8"
-            >
-              <div className="flex items-center mb-4">
-                <Trophy className="w-5 h-5 text-yellow-400 mr-2" />
-                <h3 className="text-lg font-semibold text-white">強みと相性</h3>
-              </div>
-              <div className="space-y-2">
-                {result.strengths.map((strength, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.4 + index * 0.1 }}
-                    className="flex items-start"
-                  >
-                    <span className="text-yellow-400 mr-2">•</span>
-                    <span className="text-white/80">{strength}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
 
           {/* 点取り占い */}
           {result.fortuneTelling && (
@@ -235,8 +207,8 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
             </motion.div>
           )}
 
-          {/* アドバイスと機会 */}
-          {(result.advice || result.hiddenGems || result.opportunities) && (
+          {/* アドバイス */}
+          {result.hiddenGems && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -248,19 +220,8 @@ export function DiagnosisResultComponent({ result, onReset }: DiagnosisResultPro
                 <h3 className="text-lg font-semibold text-white">アドバイス</h3>
               </div>
               <p className="text-white/80 bg-white/10 rounded-xl p-4">
-                {result.advice || result.hiddenGems}
+                {result.hiddenGems}
               </p>
-              {result.opportunities && result.opportunities.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <h4 className="text-sm font-semibold text-white/60 mb-2">今後の機会:</h4>
-                  {result.opportunities.map((opportunity, index) => (
-                    <div key={index} className="flex items-start">
-                      <span className="text-purple-400 mr-2">→</span>
-                      <span className="text-white/70 text-sm">{opportunity}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </motion.div>
           )}
 

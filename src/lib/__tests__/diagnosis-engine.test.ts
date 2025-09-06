@@ -81,15 +81,10 @@ describe('diagnosis-engine', () => {
       expect(result).toHaveProperty('type');
       expect(result).toHaveProperty('compatibility');
       expect(result).toHaveProperty('summary');
-      expect(result).toHaveProperty('strengths');
-      expect(result).toHaveProperty('opportunities');
-      expect(result).toHaveProperty('advice');
       expect(result).toHaveProperty('participants');
       expect(result).toHaveProperty('createdAt');
       
       expect(result.participants).toHaveLength(2);
-      expect(result.strengths).toHaveLength(3);
-      expect(result.opportunities).toHaveLength(3);
       expect(typeof result.createdAt).toBe('string');
     });
 
@@ -149,14 +144,6 @@ describe('diagnosis-engine', () => {
       expect(result.message).toContain('4² = 16');
     });
 
-    it('includes group-specific opportunities', async () => {
-      const profiles = [mockProfile1, mockProfile2];
-      const result = await engine.generateGroupDiagnosis(profiles);
-      
-      expect(result.opportunities).toContainEqual(expect.stringContaining('ハッカソン'));
-      expect(result.opportunities).toContainEqual(expect.stringContaining('勉強会'));
-      expect(result.opportunities).toContainEqual(expect.stringContaining('オープンソース'));
-    });
 
   });
 });

@@ -224,17 +224,6 @@ export class DiagnosisEngine {
       type: randomType,
       compatibility: randomScore,
       summary: randomMessage,
-      strengths: [
-        `${profiles[0].basic.name}さんと${profiles[1]?.basic.name || 'みなさん'}の共通のスキルが多い`,
-        'CloudNative技術への情熱を共有',
-        '学習意欲が高い組み合わせ'
-      ],
-      opportunities: [
-        '共同でOSSプロジェクトに貢献',
-        '技術ブログの共同執筆',
-        'ハッカソンでのチーム参加'
-      ],
-      advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
       participants: profiles,
       createdAt: new Date().toISOString(),
       // Legacy fields for backward compatibility
@@ -267,17 +256,6 @@ export class DiagnosisEngine {
       type: randomType,
       compatibility: randomScore,
       summary: `${profiles.length}人のグループは${randomType}として完璧に機能します！`,
-      strengths: [
-        'グループ全員が学習意欲が高い',
-        '多様な技術スタックをカバー',
-        'お互いを高め合える関係'
-      ],
-      opportunities: [
-        'グループでハッカソンに参加',
-        '技術勉強会の開催',
-        'オープンソースプロジェクトの立ち上げ'
-      ],
-      advice: 'それぞれの専門分野を活かして、革新的なプロジェクトに挑戦してみましょう。',
       participants: profiles,
       createdAt: new Date().toISOString(),
       // Legacy fields for backward compatibility

@@ -14,9 +14,6 @@ const mockDiagnosisResult: DiagnosisResult = {
   aiPowered: true,
   createdAt: new Date().toISOString(),
   summary: 'Test summary',
-  strengths: ['strength1'],
-  opportunities: ['opportunity1'],
-  advice: 'Test advice',
   luckyItem: 'Test item',
   luckyAction: 'Test action',
   participants: []
