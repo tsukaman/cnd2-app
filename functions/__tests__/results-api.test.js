@@ -27,7 +27,8 @@ describe('Results GET API', () => {
     test('should return result from KV storage with valid ID', async () => {
       const mockResult = {
         id: 'test123',
-        score: 85,
+        mode: 'duo',  // 必須フィールド追加
+        compatibility: 85,  // 必須フィールド追加（scoreから変更）
         type: 'Cloud Native Expert',
         participants: [
           { basic: { name: 'User1' } },
@@ -131,7 +132,7 @@ describe('Results GET API', () => {
         },
       };
 
-      env.DIAGNOSIS_KV.get.mockResolvedValue(JSON.stringify({ id: 'test123' }));
+      env.DIAGNOSIS_KV.get.mockResolvedValue(JSON.stringify({ id: 'test123', mode: 'duo', compatibility: 85 }));
 
       const { onRequestGet } = require('../api/results.js');
       const response = await onRequestGet({ request, env });
@@ -150,7 +151,7 @@ describe('Results GET API', () => {
         },
       };
 
-      env.DIAGNOSIS_KV.get.mockResolvedValue(JSON.stringify({ id: 'test123' }));
+      env.DIAGNOSIS_KV.get.mockResolvedValue(JSON.stringify({ id: 'test123', mode: 'duo', compatibility: 85 }));
 
       const { onRequestGet } = require('../api/results.js');
       const response = await onRequestGet({ request, env });
