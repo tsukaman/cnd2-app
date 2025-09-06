@@ -393,7 +393,7 @@ export default function Home() {
         <AppDescription />
 
         {/* メニューカード */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto w-full mb-14">
+        <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto w-full mb-6">
           <MenuCard
             href="/duo"
             icon="🤝"
@@ -411,6 +411,17 @@ export default function Home() {
           />
           */}
         </div>
+
+        {/* 診断同意事項 */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-xs text-gray-400 text-center mb-12 px-4"
+        >
+          ※ 診断を開始することで、Prairie Card の公開プロフィール情報の<br className="hidden sm:inline" />
+          読み取りと分析に同意したものとみなされます。
+        </motion.p>
 
         {/* マーケティングコピー */}
         <AnimatePresence mode="wait">

@@ -150,8 +150,6 @@ export function AppDescription() {
                 
                 <div className="pt-3 border-t border-gray-700/50">
                   <p className="text-xs text-gray-400">
-                    ※ 診断を開始することで、Prairie Card の公開プロフィール情報の
-                    読み取りと分析に同意したものとみなされます。
                     診断はエンターテイメント目的であり、
                     結果は参考程度にお楽しみください。
                   </p>
