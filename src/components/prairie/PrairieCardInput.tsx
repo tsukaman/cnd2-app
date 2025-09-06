@@ -415,6 +415,20 @@ export default function PrairieCardInput({
                       Prairie Card のサーバーが応答していません。サンプルデータで診断機能をお試しいただけます。
                     </p>
                   )}
+                  {/* Android向けの追加ヘルプ */}
+                  {qrError && qrError.includes('カメラへのアクセスが拒否') && (
+                    <div className="mt-2 text-gray-400 text-sm space-y-1">
+                      <p className="font-semibold">Android端末でカメラが使えない場合：</p>
+                      <ol className="list-decimal list-inside space-y-1 ml-2">
+                        <li>ブラウザの設定を開く（Chrome: ⋮ → 設定）</li>
+                        <li>「サイトの設定」または「プライバシーとセキュリティ」を選択</li>
+                        <li>「カメラ」を選択</li>
+                        <li>このサイトを探して「許可」に変更</li>
+                        <li>ブラウザを再起動してから再試行</li>
+                      </ol>
+                      <p className="text-xs mt-2">それでも解決しない場合は、URLを直接入力するか、貼付ボタンをお使いください。</p>
+                    </div>
+                  )}
                 </div>
               </div>
               
