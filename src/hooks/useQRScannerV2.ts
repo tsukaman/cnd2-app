@@ -200,12 +200,16 @@ export function useQRScannerV2(): UseQRScannerReturn {
 
   // Start scanning
   const startScan = useCallback(async () => {
+    const startTime = Date.now();
+    logger.debug('=== QR Scanner Start ===');
+    
     if (!isSupported) {
       setError(CAMERA_ERROR_MESSAGES.NOT_SUPPORTED);
       return;
     }
 
     const deviceInfo = getDeviceInfo();
+    logger.debug('Device Info:', deviceInfo);
     
     // Clear previous error and set scanning state
     setError(null);
@@ -215,15 +219,45 @@ export function useQRScannerV2(): UseQRScannerReturn {
       // Check if we're in a secure context
       if (!window.isSecureContext) {
         const protocol = window.location.protocol;
-        logger.error('Not in secure context. Protocol:', protocol);
+        const hostname = window.location.hostname;
+        logger.error('Not in secure context', { protocol, hostname });
         
-        if (protocol === 'http:' && window.location.hostname !== 'localhost') {
+        if (protocol === 'http:' && hostname !== 'localhost') {
           setError('HTTPSが必要です。https://でアクセスしてください。');
         } else {
           setError('セキュアな接続が必要です。');
         }
         setIsScanning(false);
         return;
+      }
+
+      // Check Permissions Policy (Feature Policy)
+      logger.debug('Checking Permissions Policy...');
+      if ('featurePolicy' in document) {
+        const policy = (document as any).featurePolicy;
+        if (policy && typeof policy.allowsFeature === 'function') {
+          const cameraAllowed = policy.allowsFeature('camera');
+          logger.debug('Feature Policy camera allowed:', cameraAllowed);
+          if (!cameraAllowed) {
+            logger.error('Camera blocked by Feature Policy');
+            setError('このサイトではカメラ機能がブロックされています。管理者にお問い合わせください。');
+            setIsScanning(false);
+            return;
+          }
+        }
+      }
+
+      // Check Permissions Policy (newer API)
+      if ('permissions' in document && typeof (document as any).permissions?.policy?.allowsFeature === 'function') {
+        const policy = (document as any).permissions.policy;
+        const cameraAllowed = policy.allowsFeature('camera');
+        logger.debug('Permissions Policy camera allowed:', cameraAllowed);
+        if (!cameraAllowed) {
+          logger.error('Camera blocked by Permissions Policy');
+          setError('このサイトではカメラ機能がブロックされています。管理者にお問い合わせください。');
+          setIsScanning(false);
+          return;
+        }
       }
 
       // Special handling for Android WebView
@@ -234,32 +268,77 @@ export function useQRScannerV2(): UseQRScannerReturn {
         return;
       }
 
-      logger.debug('Requesting camera access...');
+      // Check current permission state before requesting
+      logger.debug('Checking current permission state...');
+      if ('permissions' in navigator && 'query' in navigator.permissions) {
+        try {
+          const permResult = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          logger.debug('Current camera permission state:', permResult.state);
+          
+          if (permResult.state === 'denied') {
+            logger.error('Camera permission is already denied');
+            setError(`カメラ権限が拒否されています。
+
+【解決方法】
+1. Chromeの設定を開く（⋮ → 設定）
+2. 「サイトの設定」を選択
+3. 「カメラ」を選択
+4. ブロック済みリストからこのサイトを削除
+5. ページを再読み込み`);
+            setIsScanning(false);
+            return;
+          }
+        } catch (permErr) {
+          logger.debug('Permission query failed:', permErr);
+        }
+      }
+
+      const beforeGetUserMedia = Date.now();
+      logger.debug(`Requesting camera access... (${beforeGetUserMedia - startTime}ms elapsed)`);
       
       // Request camera with minimal constraints for better compatibility
       let stream: MediaStream;
       
       try {
+        // Log before getUserMedia call
+        logger.debug('Calling getUserMedia with simple constraints...');
+        
         // Try simplest constraint first
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false
         });
+        
+        const afterGetUserMedia = Date.now();
+        logger.debug(`getUserMedia succeeded (took ${afterGetUserMedia - beforeGetUserMedia}ms)`);
       } catch (err1) {
-        logger.debug('Simple constraint failed, trying with facingMode');
+        const afterFirstAttempt = Date.now();
+        logger.debug(`First getUserMedia failed after ${afterFirstAttempt - beforeGetUserMedia}ms:`, {
+          name: (err1 as Error).name,
+          message: (err1 as Error).message
+        });
         
         // Try with rear camera preference
         try {
+          logger.debug('Trying with facingMode constraint...');
           stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { ideal: 'environment' } },
             audio: false
           });
+          logger.debug('getUserMedia succeeded with facingMode');
         } catch (err2) {
+          logger.debug('Second attempt failed:', {
+            name: (err2 as Error).name,
+            message: (err2 as Error).message
+          });
+          
           // Final attempt with old syntax
+          logger.debug('Final attempt with basic facingMode...');
           stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment' },
             audio: false
           });
+          logger.debug('getUserMedia succeeded with basic facingMode');
         }
       }
 
@@ -323,20 +402,61 @@ export function useQRScannerV2(): UseQRScannerReturn {
       }
       
     } catch (err) {
+      const elapsedTime = Date.now() - startTime;
       const errorInfo = {
         name: err instanceof Error ? err.name : 'Unknown',
         message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
         deviceInfo: deviceInfo,
         scannerType: scannerType,
-        permissionState: permissionState
+        permissionState: permissionState,
+        elapsedTime: `${elapsedTime}ms`,
+        url: window.location.href,
+        isSecureContext: window.isSecureContext
       };
       
       logger.error('Camera access failed:', errorInfo);
       
       // Provide detailed error messages based on error type
       if (err instanceof Error) {
+        // Log detailed debug info for development
+        if (process.env.NODE_ENV === 'development' || window.location.search.includes('debug=true')) {
+          console.group('🔴 QR Scanner Error Debug Info');
+          console.log('Error Name:', err.name);
+          console.log('Error Message:', err.message);
+          console.log('Time to error:', `${elapsedTime}ms`);
+          console.log('Device:', deviceInfo);
+          console.log('URL:', window.location.href);
+          console.log('Secure Context:', window.isSecureContext);
+          console.log('Permission State:', permissionState);
+          console.log('Stack:', err.stack);
+          console.groupEnd();
+        }
+        
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          setError(`カメラ権限が拒否されました。
+          // Check if error happened too quickly (less than 1 second)
+          if (elapsedTime < 1000) {
+            logger.error('Permission denied too quickly - likely blocked by browser/policy');
+            setError(`カメラアクセスがブラウザによってブロックされています。
+
+【考えられる原因】
+• サイトがカメラ権限のブラックリストに入っている
+• ブラウザのポリシーによるブロック
+• Cloudflare Pagesのドメイン制限
+
+【解決方法】
+1. URLを直接入力するか貼付ボタンを使用
+2. 別のブラウザで試す（Firefox、Edge等）
+3. Chrome設定をリセット:
+   設定 → プライバシーとセキュリティ → 
+   サイトの設定 → すべての権限をリセット
+
+【デバッグ情報】
+エラー発生時間: ${elapsedTime}ms
+デバイス: ${deviceInfo.isAndroid ? 'Android' : 'その他'}
+Chrome: ${deviceInfo.chromeVersion}`);
+          } else {
+            setError(`カメラ権限が拒否されました。
 
 【解決方法】
 1. アドレスバーの鍵アイコン🔒をタップ
@@ -346,16 +466,26 @@ export function useQRScannerV2(): UseQRScannerReturn {
 
 それでも解決しない場合：
 Chrome設定 → サイトの設定 → カメラ → ブロック済みリストを確認`);
+          }
         } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
           setError('カメラが見つかりません。デバイスにカメラが接続されているか確認してください。');
         } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
           setError('カメラが他のアプリで使用中です。他のカメラアプリを閉じてから再試行してください。');
         } else if (err.name === 'SecurityError') {
           setError('セキュリティエラー：HTTPSでアクセスするか、カメラ権限を確認してください。');
+        } else if (err.name === 'TypeError' && err.message.includes('getUserMedia')) {
+          setError(`ブラウザがカメラAPIをサポートしていません。
+
+Chrome最新版へのアップデートをお試しください。
+現在のバージョン: Chrome/${deviceInfo.chromeVersion}`);
         } else if (err.message.includes('timeout')) {
           setError('カメラの起動がタイムアウトしました。ページを再読み込みして再試行してください。');
         } else {
-          setError(`カメラエラー: ${err.message}`);
+          setError(`カメラエラー: ${err.message}
+
+【デバッグ情報】
+エラー: ${err.name}
+時間: ${elapsedTime}ms`);
         }
       } else {
         setError(CAMERA_ERROR_MESSAGES.GENERIC);
