@@ -414,7 +414,7 @@ export default function Home() {
         >
           <p className="text-xs text-gray-500">
             ※ 診断を開始することで、Prairie Card の公開プロフィール情報の
-            読み取りと分析に同意したものとみなされます
+            読み取りと分析に同意したことになります
           </p>
         </motion.div>
 
