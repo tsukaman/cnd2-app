@@ -110,9 +110,6 @@ export interface DiagnosisResult {
   type: string;
   compatibility: number;
   summary: string;
-  strengths: string[];
-  opportunities: string[];
-  advice: string;
   participants: PrairieProfile[];
   createdAt: string;
   aiPowered?: boolean;

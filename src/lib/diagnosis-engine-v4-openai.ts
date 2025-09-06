@@ -17,9 +17,6 @@ const ASTROLOGY_SYSTEM_PROMPT = `あなたは「Cloud Native占星術師」で�
   "astrologicalAnalysis": "占星術的分析（技術を「エナジー」として表現、250-300文字程度）",
   "techStackCompatibility": "技術スタック相性分析（具体的な技術の相性、200文字程度）",
   "conversationTopics": ["会話トピック1", "会話トピック2", "...最大7個"],
-  "strengths": ["強み1", "強み2", "強み3"],
-  "opportunities": ["機会1", "機会2", "機会3"],
-  "advice": "アドバイス（150文字程度、具体的で実践的な内容）",
   "luckyItem": "ラッキーアイテム（エンジニアに関連するもの、絵文字付き）",
   "luckyAction": "ラッキーアクション（一緒にできる技術的な活動、絵文字付き）"
 }
@@ -226,17 +223,6 @@ ${JSON.stringify(summary2, null, 2)}
         '好きな技術書について',
         'OSSへの貢献経験について'
       ],
-      strengths: [
-        '技術的な好奇心が旺盛',
-        'Cloud Nativeへの情熱を共有',
-        'イノベーションを推進する相性'
-      ],
-      opportunities: [
-        '技術ブログの共同執筆',
-        'ハッカソンでのチーム参加',
-        'Lightning Talkでの共同発表'
-      ],
-      advice: 'お互いの専門分野を活かしながら、新しい技術にチャレンジしてみましょう。',
       luckyItem: luckyItems[Math.floor(Math.random() * luckyItems.length)],
       luckyAction: luckyActions[Math.floor(Math.random() * luckyActions.length)],
       participants: [profile1, profile2],

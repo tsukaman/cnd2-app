@@ -46,9 +46,6 @@ const mockDuoDiagnosis: DiagnosisResultType = {
   type: 'クラウドネイティブ・パートナー型',
   compatibility: 85,
   summary: 'テスト診断結果のサマリーです',
-  strengths: ['強み1', '強み2', '強み3'],
-  opportunities: ['機会1', '機会2', '機会3'],
-  advice: 'アドバイス内容',
   participants: [
     { 
       ...createMockPrairieProfile('User1'),
@@ -134,27 +131,6 @@ describe('DiagnosisResult', () => {
       expect(screen.getByText('3人')).toBeInTheDocument(); // グループ人数が表示される
     });
 
-    it('強みを全て表示する', () => {
-      render(<DiagnosisResult result={mockDuoDiagnosis} />);
-      
-      expect(screen.getByText('強み1')).toBeInTheDocument();
-      expect(screen.getByText('強み2')).toBeInTheDocument();
-      expect(screen.getByText('強み3')).toBeInTheDocument();
-    });
-
-    it('改善機会を全て表示する', () => {
-      render(<DiagnosisResult result={mockDuoDiagnosis} />);
-      
-      expect(screen.getByText('機会1')).toBeInTheDocument();
-      expect(screen.getByText('機会2')).toBeInTheDocument();
-      expect(screen.getByText('機会3')).toBeInTheDocument();
-    });
-
-    it('アドバイスを表示する', () => {
-      render(<DiagnosisResult result={mockDuoDiagnosis} />);
-      
-      expect(screen.getByText('アドバイス内容')).toBeInTheDocument();
-    });
 
     it('参加者情報を表示する', () => {
       render(<DiagnosisResult result={mockDuoDiagnosis} />);
@@ -341,9 +317,7 @@ describe('DiagnosisResult', () => {
     it('不完全なデータでもクラッシュしない', () => {
       const incompleteResult: DiagnosisResultType = {
         ...mockDuoDiagnosis,
-        strengths: [],
-        opportunities: [],
-        advice: '',
+        summary: '',
       };
       
       const { container } = render(<DiagnosisResult result={incompleteResult} />);

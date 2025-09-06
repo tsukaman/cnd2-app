@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, Sparkles, Handshake, MessageCircle, Target, TrendingUp, Gift, Star } from 'lucide-react';
+import { ArrowLeft, Users, Sparkles, Handshake, MessageCircle, Target, Gift, Star } from 'lucide-react';
 import Link from 'next/link';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
 import { DiagnosisResult } from '@/types';
 import ShareButton from '@/components/share/ShareButton';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { logger } from '@/lib/logger';
 import dynamic from 'next/dynamic';
 import { DiagnosisFullDebug } from '@/components/diagnosis/DiagnosisFullDebug';
@@ -166,7 +167,7 @@ export default function ResultsPage() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg rounded-3xl p-8 border border-gray-700/50 mb-8"
+          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg rounded-3xl p-6 md:p-8 border border-gray-700/50 mb-8"
         >
           {/* 相性スコア */}
           <div className="text-center mb-8">
@@ -176,15 +177,15 @@ export default function ResultsPage() {
               transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
               className={`inline-block bg-gradient-to-r ${scoreColor} text-transparent bg-clip-text`}
             >
-              <span className="text-8xl font-black">{result.compatibility || result.score || 0}</span>
-              <span className="text-4xl">%</span>
+              <span className="text-6xl md:text-8xl font-black">{result.compatibility || result.score || 0}</span>
+              <span className="text-3xl md:text-4xl">%</span>
             </motion.div>
             {result.type && (
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-xl text-purple-400 font-bold mt-4"
+                className="text-lg md:text-xl text-purple-400 font-bold mt-4"
               >
                 {result.type}
               </motion.p>
@@ -197,106 +198,95 @@ export default function ResultsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="mb-8 p-6 bg-purple-900/20 rounded-2xl border border-purple-500/30"
+              className="mb-8 p-4 md:p-6 bg-purple-900/20 rounded-2xl border border-purple-500/30"
             >
-              <p className="text-white text-lg leading-relaxed">
+              <p className="text-white text-base md:text-lg leading-relaxed">
                 {result.summary || result.message}
               </p>
             </motion.div>
           )}
 
-          {/* 詳細分析セクション - 全5つの分析を表示 */}
-          <div className="grid gap-6 mb-8">
+          {/* 詳細分析セクション - アコーディオン形式 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="space-y-4 mb-8"
+          >
+            <h3 className="text-xl font-bold text-white mb-4 text-center">
+              🔮 詳細な占術的分析
+            </h3>
+            
             {/* 五行思想分析 */}
             {(result.fiveElementsAnalysis || result.metadata?.analysis?.fiveElementsAnalysis) && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-                className="bg-amber-900/20 rounded-2xl p-6 border border-amber-500/30"
+              <CollapsibleSection
+                title="五行思想分析"
+                icon="☯️"
+                className="bg-amber-900/20 border border-amber-500/30"
+                titleClassName="text-amber-400"
               >
-                <div className="flex items-center mb-3">
-                  <span className="text-amber-400 mr-2">☯️</span>
-                  <h3 className="text-lg font-bold text-amber-400">五行思想分析</h3>
-                </div>
-                <p className="text-gray-300">
+                <p className="text-sm md:text-base text-gray-300 leading-relaxed">
                   {result.fiveElementsAnalysis || result.metadata?.analysis?.fiveElementsAnalysis}
                 </p>
-              </motion.div>
+              </CollapsibleSection>
             )}
 
             {/* 占星術的分析 */}
             {(result.astrologicalAnalysis || result.metadata?.analysis?.astrologicalAnalysis) && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-                className="bg-blue-900/20 rounded-2xl p-6 border border-blue-500/30"
+              <CollapsibleSection
+                title="占星術的分析"
+                icon={<Star className="w-5 h-5 text-blue-400" />}
+                className="bg-blue-900/20 border border-blue-500/30"
+                titleClassName="text-blue-400"
               >
-                <div className="flex items-center mb-3">
-                  <Star className="w-5 h-5 text-blue-400 mr-2" />
-                  <h3 className="text-lg font-bold text-blue-400">占星術的分析</h3>
-                </div>
-                <p className="text-gray-300">
+                <p className="text-sm md:text-base text-gray-300 leading-relaxed">
                   {result.astrologicalAnalysis || result.metadata?.analysis?.astrologicalAnalysis}
                 </p>
-              </motion.div>
+              </CollapsibleSection>
             )}
 
             {/* 数秘術分析 */}
             {(result.numerologyAnalysis || result.metadata?.analysis?.numerologyAnalysis) && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
-                className="bg-indigo-900/20 rounded-2xl p-6 border border-indigo-500/30"
+              <CollapsibleSection
+                title="数秘術分析"
+                icon="🔢"
+                className="bg-indigo-900/20 border border-indigo-500/30"
+                titleClassName="text-indigo-400"
               >
-                <div className="flex items-center mb-3">
-                  <span className="text-indigo-400 mr-2">🔢</span>
-                  <h3 className="text-lg font-bold text-indigo-400">数秘術分析</h3>
-                </div>
-                <p className="text-gray-300">
+                <p className="text-sm md:text-base text-gray-300 leading-relaxed">
                   {result.numerologyAnalysis || result.metadata?.analysis?.numerologyAnalysis}
                 </p>
-              </motion.div>
+              </CollapsibleSection>
             )}
 
             {/* エネルギーフィールド分析 */}
             {(result.energyFieldAnalysis || result.metadata?.analysis?.energyFieldAnalysis) && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.9 }}
-                className="bg-purple-900/20 rounded-2xl p-6 border border-purple-500/30"
+              <CollapsibleSection
+                title="エネルギーフィールド分析"
+                icon={<Sparkles className="w-5 h-5 text-purple-400" />}
+                className="bg-purple-900/20 border border-purple-500/30"
+                titleClassName="text-purple-400"
               >
-                <div className="flex items-center mb-3">
-                  <Sparkles className="w-5 h-5 text-purple-400 mr-2" />
-                  <h3 className="text-lg font-bold text-purple-400">エネルギーフィールド分析</h3>
-                </div>
-                <p className="text-gray-300">
+                <p className="text-sm md:text-base text-gray-300 leading-relaxed">
                   {result.energyFieldAnalysis || result.metadata?.analysis?.energyFieldAnalysis}
                 </p>
-              </motion.div>
+              </CollapsibleSection>
             )}
 
             {/* 技術的シナジー分析 */}
             {(result.technicalSynergy || result.techStackCompatibility || result.metadata?.analysis?.technicalSynergy || result.metadata?.analysis?.techStackCompatibility) && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.0 }}
-                className="bg-green-900/20 rounded-2xl p-6 border border-green-500/30"
+              <CollapsibleSection
+                title="技術的シナジー"
+                icon={<Target className="w-5 h-5 text-green-400" />}
+                className="bg-green-900/20 border border-green-500/30"
+                titleClassName="text-green-400"
               >
-                <div className="flex items-center mb-3">
-                  <Target className="w-5 h-5 text-green-400 mr-2" />
-                  <h3 className="text-lg font-bold text-green-400">技術的シナジー</h3>
-                </div>
-                <p className="text-gray-300">
+                <p className="text-sm md:text-base text-gray-300 leading-relaxed">
                   {result.technicalSynergy || result.techStackCompatibility || result.metadata?.analysis?.technicalSynergy || result.metadata?.analysis?.techStackCompatibility}
                 </p>
-              </motion.div>
+              </CollapsibleSection>
             )}
-          </div>
+          </motion.div>
 
           {/* おすすめの会話トピック */}
           {result.conversationStarters && result.conversationStarters.length > 0 && (
@@ -306,10 +296,10 @@ export default function ResultsPage() {
               transition={{ delay: 0.8 }}
               className="mb-8"
             >
-              <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl p-6 border border-cyan-500/30">
+              <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl p-4 md:p-6 border border-cyan-500/30">
                 <div className="flex items-center mb-4">
                   <MessageCircle className="w-6 h-6 text-cyan-400 mr-3" />
-                  <h3 className="text-xl font-bold text-white">💬 おすすめの会話トピック</h3>
+                  <h3 className="text-lg md:text-xl font-bold text-white">💬 おすすめの会話トピック</h3>
                 </div>
                 <div className="space-y-3">
                   {result.conversationStarters.map((topic, index) => (
@@ -318,10 +308,10 @@ export default function ResultsPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.9 + index * 0.1 }}
-                      className="flex items-center bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors"
+                      className="flex items-center bg-white/5 rounded-lg p-2.5 md:p-3 hover:bg-white/10 transition-colors"
                     >
-                      <span className="text-cyan-400 text-lg mr-3">{index + 1}</span>
-                      <span className="text-white/90 flex-1">{topic}</span>
+                      <span className="text-cyan-400 text-base md:text-lg mr-3">{index + 1}</span>
+                      <span className="text-sm md:text-base text-white/90 flex-1 leading-relaxed">{topic}</span>
                     </motion.div>
                   ))}
                 </div>
@@ -329,66 +319,6 @@ export default function ResultsPage() {
             </motion.div>
           )}
 
-          {/* 強みと機会 */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {result.strengths && result.strengths.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 }}
-                className="bg-purple-900/20 rounded-2xl p-6 border border-purple-500/30"
-              >
-                <div className="flex items-center mb-3">
-                  <TrendingUp className="w-5 h-5 text-purple-400 mr-2" />
-                  <h3 className="text-lg font-bold text-purple-400">強み</h3>
-                </div>
-                <ul className="space-y-2">
-                  {result.strengths.map((strength, index) => (
-                    <li key={index} className="text-gray-300 flex items-start">
-                      <span className="text-purple-400 mr-2">✓</span>
-                      {strength}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-
-            {result.opportunities && result.opportunities.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1 }}
-                className="bg-pink-900/20 rounded-2xl p-6 border border-pink-500/30"
-              >
-                <div className="flex items-center mb-3">
-                  <Sparkles className="w-5 h-5 text-pink-400 mr-2" />
-                  <h3 className="text-lg font-bold text-pink-400">機会</h3>
-                </div>
-                <ul className="space-y-2">
-                  {result.opportunities.map((opportunity, index) => (
-                    <li key={index} className="text-gray-300 flex items-start">
-                      <span className="text-pink-400 mr-2">◆</span>
-                      {opportunity}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-          </div>
-
-          {/* アドバイス */}
-          {result.advice && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2 }}
-              className="mb-8 p-6 bg-gradient-to-r from-orange-900/20 to-red-900/20 rounded-2xl border border-orange-500/30"
-            >
-              <p className="text-orange-300 text-lg">
-                💡 {result.advice}
-              </p>
-            </motion.div>
-          )}
 
           {/* ラッキーアイテム・アクション */}
           <motion.div
@@ -401,14 +331,14 @@ export default function ResultsPage() {
               <div className="bg-yellow-900/20 rounded-xl p-4 border border-yellow-500/30 text-center">
                 <Gift className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-400 mb-1">ラッキーアイテム</p>
-                <p className="text-yellow-300 font-bold">{result.luckyItem}</p>
+                <p className="text-sm md:text-base text-yellow-300 font-bold">{result.luckyItem}</p>
               </div>
             )}
             {result.luckyAction && (
               <div className="bg-cyan-900/20 rounded-xl p-4 border border-cyan-500/30 text-center">
                 <Sparkles className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-400 mb-1">ラッキーアクション</p>
-                <p className="text-cyan-300 font-bold">{result.luckyAction}</p>
+                <p className="text-sm md:text-base text-cyan-300 font-bold">{result.luckyAction}</p>
               </div>
             )}
           </motion.div>
@@ -426,7 +356,7 @@ export default function ResultsPage() {
                   <span className="text-2xl mr-2">🚀</span>
                   <span className="text-sm text-gray-400">CNCFラッキープロジェクト</span>
                 </div>
-                <p className="text-purple-300 font-bold text-lg mb-2">{result.luckyProject}</p>
+                <p className="text-purple-300 font-bold text-base md:text-lg mb-2">{result.luckyProject}</p>
                 {result.luckyProjectDescription && (
                   <p className="text-gray-300 text-sm mb-3">{result.luckyProjectDescription}</p>
                 )}
