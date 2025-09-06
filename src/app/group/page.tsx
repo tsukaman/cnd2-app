@@ -19,8 +19,17 @@ export default function GroupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 flex items-center justify-center">
-      <div className="text-center text-white">
-        <p className="text-lg">リダイレクト中...</p>
+      <div className="text-center text-white px-4">
+        <div className="mb-4">
+          <span className="text-6xl mb-4 block" role="img" aria-label="工事中">🚧</span>
+        </div>
+        <h1 className="text-2xl font-bold mb-2">グループ診断は準備中です</h1>
+        <p className="text-lg mb-2 text-gray-300">
+          より良い体験を提供するため、機能を改善しています
+        </p>
+        <p className="text-sm text-gray-400">
+          ホームページにリダイレクト中...
+        </p>
       </div>
     </div>
   );
