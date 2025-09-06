@@ -60,7 +60,8 @@ export default function ResultsPage() {
         if (response.ok) {
           const responseData = await response.json();
           // Cloudflare Functionsのレスポンス形式に対応
-          const data = responseData.result || responseData;
+          // APIレスポンスは { success: true, data: { result: {...} } } の形式
+          const data = responseData.data?.result || responseData.result || responseData;
           setResult(data);
           // LocalStorageにも保存
           localStorage.setItem(`diagnosis-result-${resultId}`, JSON.stringify(data));
