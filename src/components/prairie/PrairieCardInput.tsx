@@ -9,7 +9,6 @@ import { useQRScannerV2 } from "@/hooks/useQRScannerV2";
 import { useClipboardPaste } from "@/hooks/useClipboardPaste";
 import { PrairieProfile } from "@/types";
 import { detectPlatform } from "@/lib/platform";
-import { isDebugMode } from "@/constants/debug";
 import { Loader2, Check, AlertCircle, User, Smartphone, X, QrCode, Clipboard, Camera } from "lucide-react";
 
 interface PrairieCardInputProps {
@@ -182,15 +181,6 @@ export default function PrairieCardInput({
               {label}
             </label>
             <div className="flex items-center gap-1 sm:gap-2 flex-nowrap">
-              {/* Debug information (development or debug mode) */}
-              {isDebugMode() && (
-                <div className="text-xs text-gray-500 mr-2 flex flex-col items-end">
-                  <span>Platform: {platform}</span>
-                  <span>Permission: {permissionState}</span>
-                  <span>Scanner: {scannerType}</span>
-                </div>
-              )}
-              
               {/* NFC Button (Android only) */}
               {nfcSupported && platform === 'android' && (
                 <motion.button
@@ -537,70 +527,6 @@ export default function PrairieCardInput({
             'Prairie Cardを読み込む'
           )}
         </motion.button>
-
-        {/* Camera Permission Test Button (Debug Mode Only) */}
-        {isDebugMode() && (
-          <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-            <p className="text-sm text-gray-400 mb-2">🔧 デバッグツール</p>
-            <motion.button
-              type="button"
-              onClick={async () => {
-                console.group('📷 Camera Permission Test');
-                console.log('Starting camera permission test...');
-                const startTime = Date.now();
-                
-                try {
-                  // Check if in secure context
-                  console.log('Secure Context:', window.isSecureContext);
-                  console.log('Protocol:', window.location.protocol);
-                  console.log('Hostname:', window.location.hostname);
-                  
-                  // Check Permissions API
-                  if ('permissions' in navigator) {
-                    try {
-                      const result = await navigator.permissions.query({ name: 'camera' as PermissionName });
-                      console.log('Current Permission State:', result.state);
-                    } catch (e) {
-                      console.log('Permission Query Failed:', e);
-                    }
-                  }
-                  
-                  // Try to get user media
-                  console.log('Calling getUserMedia...');
-                  const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                  const elapsed = Date.now() - startTime;
-                  console.log(`✅ Success! Got camera stream in ${elapsed}ms`);
-                  
-                  // Clean up
-                  stream.getTracks().forEach(track => track.stop());
-                  
-                  alert(`カメラアクセス成功！\n所要時間: ${elapsed}ms`);
-                } catch (error) {
-                  const elapsed = Date.now() - startTime;
-                  console.error('❌ Camera Test Failed:', {
-                    name: (error as Error).name,
-                    message: (error as Error).message,
-                    elapsed: `${elapsed}ms`
-                  });
-                  
-                  alert(`カメラアクセス失敗\n\nエラー: ${(error as Error).name}\nメッセージ: ${(error as Error).message}\n所要時間: ${elapsed}ms`);
-                }
-                
-                console.groupEnd();
-              }}
-              className="w-full py-2 px-4 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg
-                font-medium transition-colors flex items-center justify-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              📷 カメラ権限テスト
-            </motion.button>
-            <p className="text-xs text-gray-500 mt-2">
-              このボタンでカメラ権限の直接テストができます。
-              コンソールに詳細なログが出力されます。
-            </p>
-          </div>
-        )}
       </form>
     </motion.div>
   );

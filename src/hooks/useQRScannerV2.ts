@@ -72,7 +72,6 @@ async function checkBarcodeDetectorSupport(): Promise<boolean> {
     
     // Check if API exists
     if (!('BarcodeDetector' in window)) {
-      logger.debug('BarcodeDetector API not available');
       return false;
     }
 
@@ -84,7 +83,6 @@ async function checkBarcodeDetectorSupport(): Promise<boolean> {
     
     const formats = await BarcodeDetectorClass.getSupportedFormats();
     if (!formats.includes('qr_code')) {
-      logger.debug('QR code format not supported by BarcodeDetector');
       return false;
     }
 
@@ -97,10 +95,8 @@ async function checkBarcodeDetectorSupport(): Promise<boolean> {
     canvas.height = 1;
     await detector.detect(canvas);
     
-    logger.debug('BarcodeDetector is available and working');
     return true;
   } catch (err) {
-    logger.debug('BarcodeDetector check failed:', err);
     return false;
   }
 }
@@ -125,7 +121,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
   // Check camera support and permissions on mount
   useEffect(() => {
     async function checkSupport() {
-      logger.debug('Device info:', deviceInfo);
 
       // Check basic camera API support
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -145,10 +140,8 @@ export function useQRScannerV2(): UseQRScannerReturn {
           // Listen for permission changes
           result.addEventListener('change', () => {
             setPermissionState(result.state as 'prompt' | 'granted' | 'denied');
-            logger.debug('Permission state changed to:', result.state);
           });
         } catch (err) {
-          logger.debug('Cannot query camera permission:', err);
           setPermissionState('unknown');
         }
       }
@@ -159,11 +152,9 @@ export function useQRScannerV2(): UseQRScannerReturn {
       if (hasBarcodeDetector && !deviceInfo.isWebView) {
         // Use BarcodeDetector if available and not in WebView
         setScannerType('barcodedetector');
-        logger.debug('Using BarcodeDetector API');
       } else {
         // Use qr-scanner library as fallback
         setScannerType('qr-scanner');
-        logger.debug('Using qr-scanner library (fallback)');
       }
     }
 
@@ -204,14 +195,12 @@ export function useQRScannerV2(): UseQRScannerReturn {
           const url = qrCode.rawValue;
           
           if (url && isPrairieCardUrl(url)) {
-            logger.debug('QR code detected (BarcodeDetector):', url);
             setLastScannedUrl(url);
             stopScan();
             return;
           }
         }
       } catch (err) {
-        logger.debug('BarcodeDetector detection error:', err);
       }
     }
     
@@ -223,7 +212,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
 
   // Stop scanning - Define before other functions that use it
   const stopScan = useCallback(() => {
-    logger.debug('Stopping QR scanner');
     setIsScanning(false);
     
     // Stop qr-scanner if active
@@ -256,27 +244,22 @@ export function useQRScannerV2(): UseQRScannerReturn {
 
   // Handle Android Chrome camera access
   const handleAndroidChromeCamera = useCallback(async (): Promise<MediaStream | null> => {
-    logger.debug('Android Chrome detected - calling getUserMedia immediately to preserve user gesture');
     
     try {
       // 即座にgetUserMediaを呼んでユーザージェスチャーを保持
       // まず背面カメラを試みる
       try {
-        logger.debug('Trying rear camera (environment) first...');
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' },  // 背面カメラを指定
           audio: false
         });
-        logger.debug('Got rear camera stream successfully on Android Chrome');
         return stream;
       } catch (err1) {
-        logger.debug('Rear camera failed, trying any available camera...');
         // 背面カメラが失敗した場合は、どのカメラでも受け入れる
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,  // フォールバック：利用可能な任意のカメラ
           audio: false
         });
-        logger.debug('Got camera stream successfully on Android Chrome (fallback)');
         return stream;
       }
     } catch (err) {
@@ -302,7 +285,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
       
       video.onloadedmetadata = () => {
         clearTimeout(timeout);
-        logger.debug('Video metadata loaded');
         resolve();
       };
       
@@ -313,18 +295,15 @@ export function useQRScannerV2(): UseQRScannerReturn {
     });
     
     await videoRef.current.play();
-    logger.debug('Video playback started');
     
     // QR検出を開始
     if (scannerType === 'qr-scanner') {
-      logger.debug('Starting qr-scanner detection');
       const QrScanner = (await import('qr-scanner')).default;
       qrScannerRef.current = new QrScanner(
         videoRef.current,
         (result) => {
           const url = result.data;
           if (url && isPrairieCardUrl(url)) {
-            logger.debug('QR code detected (qr-scanner):', url);
             setLastScannedUrl(url);
             stopScan();
           }
@@ -337,9 +316,7 @@ export function useQRScannerV2(): UseQRScannerReturn {
       );
       
       await qrScannerRef.current.start();
-      logger.debug('qr-scanner started successfully');
     } else {
-      logger.debug('Starting BarcodeDetector detection');
       detectWithBarcodeDetector();
     }
   }, [scannerType, detectWithBarcodeDetector, stopScan]);
@@ -389,14 +366,12 @@ export function useQRScannerV2(): UseQRScannerReturn {
   // Start scanning
   const startScan = useCallback(async () => {
     const startTime = Date.now();
-    logger.debug('=== QR Scanner Start ===');
     
     if (!isSupported) {
       setError(CAMERA_ERROR_MESSAGES.NOT_SUPPORTED);
       return;
     }
 
-    logger.debug('Device Info:', deviceInfo);
     
     // Clear previous error and set scanning state
     setError(null);
@@ -434,12 +409,10 @@ export function useQRScannerV2(): UseQRScannerReturn {
       }
 
       // Check Permissions Policy (Feature Policy)
-      logger.debug('Checking Permissions Policy...');
       if ('featurePolicy' in document) {
         const policy = (document as any).featurePolicy;
         if (policy && typeof policy.allowsFeature === 'function') {
           const cameraAllowed = policy.allowsFeature('camera');
-          logger.debug('Feature Policy camera allowed:', cameraAllowed);
           if (!cameraAllowed) {
             logger.error('Camera blocked by Feature Policy');
             setError('このサイトではカメラ機能がブロックされています。管理者にお問い合わせください。');
@@ -453,7 +426,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
       if ('permissions' in document && typeof (document as any).permissions?.policy?.allowsFeature === 'function') {
         const policy = (document as any).permissions.policy;
         const cameraAllowed = policy.allowsFeature('camera');
-        logger.debug('Permissions Policy camera allowed:', cameraAllowed);
         if (!cameraAllowed) {
           logger.error('Camera blocked by Permissions Policy');
           setError('このサイトではカメラ機能がブロックされています。管理者にお問い合わせください。');
@@ -471,11 +443,9 @@ export function useQRScannerV2(): UseQRScannerReturn {
       }
 
       // Check current permission state before requesting
-      logger.debug('Checking current permission state...');
       if ('permissions' in navigator && 'query' in navigator.permissions) {
         try {
           const permResult = await navigator.permissions.query({ name: 'camera' as PermissionName });
-          logger.debug('Current camera permission state:', permResult.state);
           
           if (permResult.state === 'denied') {
             logger.error('Camera permission is already denied');
@@ -491,19 +461,16 @@ export function useQRScannerV2(): UseQRScannerReturn {
             return;
           }
         } catch (permErr) {
-          logger.debug('Permission query failed:', permErr);
         }
       }
 
       const beforeGetUserMedia = Date.now();
-      logger.debug(`Requesting camera access... (${beforeGetUserMedia - startTime}ms elapsed)`);
       
       // Request camera with minimal constraints for better compatibility
       let stream: MediaStream;
       
       try {
         // Log before getUserMedia call
-        logger.debug('Calling getUserMedia with simple constraints...');
         
         // Try simplest constraint first
         stream = await navigator.mediaDevices.getUserMedia({
@@ -512,39 +479,25 @@ export function useQRScannerV2(): UseQRScannerReturn {
         });
         
         const afterGetUserMedia = Date.now();
-        logger.debug(`getUserMedia succeeded (took ${afterGetUserMedia - beforeGetUserMedia}ms)`);
       } catch (err1) {
         const afterFirstAttempt = Date.now();
-        logger.debug(`First getUserMedia failed after ${afterFirstAttempt - beforeGetUserMedia}ms:`, {
-          name: (err1 as Error).name,
-          message: (err1 as Error).message
-        });
         
         // Try with rear camera preference
         try {
-          logger.debug('Trying with facingMode constraint...');
           stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { ideal: 'environment' } },
             audio: false
           });
-          logger.debug('getUserMedia succeeded with facingMode');
         } catch (err2) {
-          logger.debug('Second attempt failed:', {
-            name: (err2 as Error).name,
-            message: (err2 as Error).message
-          });
           
           // Final attempt with old syntax
-          logger.debug('Final attempt with basic facingMode...');
           stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment' },
             audio: false
           });
-          logger.debug('getUserMedia succeeded with basic facingMode');
         }
       }
 
-      logger.debug('Got camera stream successfully');
       streamRef.current = stream;
       
       if (!videoRef.current) {
@@ -560,7 +513,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
         
         video.onloadedmetadata = () => {
           clearTimeout(timeout);
-          logger.debug('Video metadata loaded');
           resolve();
         };
         
@@ -571,19 +523,16 @@ export function useQRScannerV2(): UseQRScannerReturn {
       });
       
       await videoRef.current.play();
-      logger.debug('Video playback started');
       
       // Start QR detection based on scanner type
       if (scannerType === 'qr-scanner') {
         // Use qr-scanner library
-        logger.debug('Starting qr-scanner detection');
         
         qrScannerRef.current = new QrScanner(
           videoRef.current,
           (result) => {
             const url = result.data;
             if (url && isPrairieCardUrl(url)) {
-              logger.debug('QR code detected (qr-scanner):', url);
               setLastScannedUrl(url);
               stopScan();
             }
@@ -599,7 +548,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
         await qrScannerRef.current.start();
       } else if (scannerType === 'barcodedetector') {
         // Use BarcodeDetector API
-        logger.debug('Starting BarcodeDetector detection');
         detectWithBarcodeDetector();
       }
       
