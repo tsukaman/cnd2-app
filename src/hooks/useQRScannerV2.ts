@@ -34,6 +34,17 @@ function getDeviceInfo(): {
   isWebView: boolean;
   userAgent: string;
 } {
+  // Check if we're in a browser environment
+  if (typeof navigator === 'undefined') {
+    return {
+      isAndroid: false,
+      isChrome: false,
+      chromeVersion: 0,
+      isWebView: false,
+      userAgent: ''
+    };
+  }
+  
   const ua = navigator.userAgent;
   const isAndroid = /Android/i.test(ua);
   const isChrome = /Chrome/i.test(ua) && !/Edge|OPR/i.test(ua);
@@ -54,6 +65,11 @@ function getDeviceInfo(): {
 // Check if BarcodeDetector is available and working
 async function checkBarcodeDetectorSupport(): Promise<boolean> {
   try {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    
     // Check if API exists
     if (!('BarcodeDetector' in window)) {
       logger.debug('BarcodeDetector API not available');
