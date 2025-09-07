@@ -238,6 +238,106 @@ export function useQRScannerV2(): UseQRScannerReturn {
     setIsScanning(true);
 
     try {
+      // Android Chrome特別処理: ユーザージェスチャーが失われる前にgetUserMediaを呼ぶ
+      if (deviceInfo.isAndroid && deviceInfo.isChrome) {
+        logger.debug('Android Chrome detected - calling getUserMedia immediately to preserve user gesture');
+        
+        try {
+          // 即座にgetUserMediaを呼んでユーザージェスチャーを保持
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' } },
+            audio: false
+          });
+          
+          logger.debug('Got camera stream successfully on Android Chrome');
+          streamRef.current = stream;
+          
+          // 成功したら、その後でチェックを実行（エラー表示のため）
+          if (!window.isSecureContext) {
+            logger.warn('Not in secure context but camera already granted');
+          }
+          
+          // ビデオ要素の設定を続行
+          if (!videoRef.current) {
+            throw new Error('Video element not found');
+          }
+          
+          videoRef.current.srcObject = stream;
+          
+          // ビデオの準備を待つ
+          await new Promise<void>((resolve, reject) => {
+            const video = videoRef.current!;
+            const timeout = setTimeout(() => reject(new Error('Video loading timeout')), DEBUG_CONSTANTS.VIDEO_LOADING_TIMEOUT_MS);
+            
+            video.onloadedmetadata = () => {
+              clearTimeout(timeout);
+              logger.debug('Video metadata loaded');
+              resolve();
+            };
+            
+            video.onerror = () => {
+              clearTimeout(timeout);
+              reject(new Error('Video playback error'));
+            };
+          });
+          
+          await videoRef.current.play();
+          logger.debug('Video playback started');
+          
+          // QR検出を開始
+          if (scannerType === 'qr-scanner') {
+            logger.debug('Starting qr-scanner detection');
+            const QrScanner = (await import('qr-scanner')).default;
+            qrScannerRef.current = new QrScanner(
+              videoRef.current,
+              (result) => {
+                const url = result.data;
+                if (url && isPrairieCardUrl(url)) {
+                  logger.debug('QR code detected (qr-scanner):', url);
+                  setLastScannedUrl(url);
+                  stopScan();
+                }
+              },
+              {
+                returnDetailedScanResult: true,
+                highlightScanRegion: false,
+                highlightCodeOutline: false,
+              }
+            );
+            
+            await qrScannerRef.current.start();
+            logger.debug('qr-scanner started successfully');
+          } else {
+            logger.debug('Starting BarcodeDetector detection');
+            detectWithBarcodeDetector();
+          }
+          
+          return; // Android Chrome処理完了
+        } catch (err) {
+          // Android Chromeでエラーが発生した場合
+          const elapsedTime = Date.now() - startTime;
+          logger.error('Android Chrome camera access failed:', {
+            name: (err as Error).name,
+            message: (err as Error).message,
+            elapsed: elapsedTime
+          });
+          
+          if ((err as Error).name === 'NotAllowedError') {
+            if (elapsedTime < DEBUG_CONSTANTS.QUICK_ERROR_THRESHOLD_MS) {
+              setError('カメラアクセスが拒否されました。ブラウザの設定でカメラ権限を許可してください。');
+            } else {
+              setError('カメラ権限が拒否されました。');
+            }
+          } else {
+            setError(`カメラエラー: ${(err as Error).message}`);
+          }
+          
+          setIsScanning(false);
+          return;
+        }
+      }
+      
+      // Android Chrome以外の通常処理
       // Check if we're in a secure context
       if (!window.isSecureContext) {
         const protocol = window.location.protocol;
