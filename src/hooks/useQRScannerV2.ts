@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import QrScanner from 'qr-scanner';
 import { 
   QR_SCAN_INTERVAL_MS, 
@@ -6,6 +6,11 @@ import {
   CAMERA_ERROR_MESSAGES,
   isPrairieCardUrl
 } from '@/constants/scanner';
+import { 
+  DEBUG_CONSTANTS, 
+  isDebugMode, 
+  sanitizeUrl 
+} from '@/constants/debug';
 import { logger } from '@/lib/logger';
 
 interface UseQRScannerReturn {
@@ -92,6 +97,9 @@ export function useQRScannerV2(): UseQRScannerReturn {
   const [permissionState, setPermissionState] = useState<'prompt' | 'granted' | 'denied' | 'unknown'>('unknown');
   const [scannerType, setScannerType] = useState<'barcodedetector' | 'qr-scanner' | 'none'>('none');
   
+  // Memoize device info for performance
+  const deviceInfo = useMemo(() => getDeviceInfo(), []);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -101,7 +109,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
   // Check camera support and permissions on mount
   useEffect(() => {
     async function checkSupport() {
-      const deviceInfo = getDeviceInfo();
       logger.debug('Device info:', deviceInfo);
 
       // Check basic camera API support
@@ -208,7 +215,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
       return;
     }
 
-    const deviceInfo = getDeviceInfo();
     logger.debug('Device Info:', deviceInfo);
     
     // Clear previous error and set scanning state
@@ -354,7 +360,7 @@ export function useQRScannerV2(): UseQRScannerReturn {
       // Wait for video to be ready
       await new Promise<void>((resolve, reject) => {
         const video = videoRef.current!;
-        const timeout = setTimeout(() => reject(new Error('Video loading timeout')), 5000);
+        const timeout = setTimeout(() => reject(new Error('Video loading timeout')), DEBUG_CONSTANTS.VIDEO_LOADING_TIMEOUT_MS);
         
         video.onloadedmetadata = () => {
           clearTimeout(timeout);
@@ -411,7 +417,7 @@ export function useQRScannerV2(): UseQRScannerReturn {
         scannerType: scannerType,
         permissionState: permissionState,
         elapsedTime: `${elapsedTime}ms`,
-        url: window.location.href,
+        url: sanitizeUrl(window.location.href),
         isSecureContext: window.isSecureContext
       };
       
@@ -420,7 +426,7 @@ export function useQRScannerV2(): UseQRScannerReturn {
       // Provide detailed error messages based on error type
       if (err instanceof Error) {
         // Log detailed debug info for development
-        if (process.env.NODE_ENV === 'development' || window.location.search.includes('debug=true')) {
+        if (isDebugMode()) {
           console.group('🔴 QR Scanner Error Debug Info');
           console.log('Error Name:', err.name);
           console.log('Error Message:', err.message);
@@ -434,8 +440,8 @@ export function useQRScannerV2(): UseQRScannerReturn {
         }
         
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          // Check if error happened too quickly (less than 1 second)
-          if (elapsedTime < 1000) {
+          // Check if error happened too quickly (less than threshold)
+          if (elapsedTime < DEBUG_CONSTANTS.QUICK_ERROR_THRESHOLD_MS) {
             logger.error('Permission denied too quickly - likely blocked by browser/policy');
             setError(`カメラアクセスがブラウザによってブロックされています。
 
@@ -499,7 +505,7 @@ Chrome最新版へのアップデートをお試しください。
         streamRef.current = null;
       }
     }
-  }, [isSupported, scannerType, permissionState, detectWithBarcodeDetector]);
+  }, [isSupported, scannerType, permissionState, detectWithBarcodeDetector, deviceInfo]);
 
   // Stop scanning
   const stopScan = useCallback(() => {

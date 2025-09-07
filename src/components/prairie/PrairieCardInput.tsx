@@ -9,6 +9,7 @@ import { useQRScannerV2 } from "@/hooks/useQRScannerV2";
 import { useClipboardPaste } from "@/hooks/useClipboardPaste";
 import { PrairieProfile } from "@/types";
 import { detectPlatform } from "@/lib/platform";
+import { isDebugMode } from "@/constants/debug";
 import { Loader2, Check, AlertCircle, User, Smartphone, X, QrCode, Clipboard, Camera } from "lucide-react";
 
 interface PrairieCardInputProps {
@@ -182,7 +183,7 @@ export default function PrairieCardInput({
             </label>
             <div className="flex items-center gap-1 sm:gap-2 flex-nowrap">
               {/* Debug information (development or debug mode) */}
-              {(process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.location.search.includes('debug=true'))) && (
+              {isDebugMode() && (
                 <div className="text-xs text-gray-500 mr-2 flex flex-col items-end">
                   <span>Platform: {platform}</span>
                   <span>Permission: {permissionState}</span>
@@ -538,7 +539,7 @@ export default function PrairieCardInput({
         </motion.button>
 
         {/* Camera Permission Test Button (Debug Mode Only) */}
-        {(process.env.NODE_ENV === 'development' || (typeof window !== 'undefined' && window.location.search.includes('debug=true'))) && (
+        {isDebugMode() && (
           <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
             <p className="text-sm text-gray-400 mb-2">🔧 デバッグツール</p>
             <motion.button
