@@ -447,6 +447,7 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
               className="group inline-block"
+              aria-label="CloudNative Days Winter 2025 イベントサイトへ移動（新しいタブで開きます）"
             >
               <Image
                 src="/images/trademark@4x.png"
