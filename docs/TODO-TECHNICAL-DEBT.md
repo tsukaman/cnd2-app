@@ -322,7 +322,6 @@ it('should fallback to qr-scanner when BarcodeDetector fails', async () => {
 **期待効果**:
 - フォールバック機構の動作保証
 - クロスブラウザ互換性の確保
-
 ## 📝 実装済み項目（記録用）
 
 ### ✅ 完了済み
