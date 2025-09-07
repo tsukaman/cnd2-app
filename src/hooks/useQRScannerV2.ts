@@ -260,8 +260,9 @@ export function useQRScannerV2(): UseQRScannerReturn {
     
     try {
       // 即座にgetUserMediaを呼んでユーザージェスチャーを保持
+      // Android Chromeでは最もシンプルな制約を使用（facingModeが問題を引き起こす可能性）
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
+        video: true,  // 最もシンプルな制約
         audio: false
       });
       
@@ -339,12 +340,27 @@ export function useQRScannerV2(): UseQRScannerReturn {
       name: err.name,
       message: err.message,
       elapsed: elapsedTime,
-      deviceInfo
+      deviceInfo,
+      isAndroidChrome: deviceInfo.isAndroid && deviceInfo.isChrome
     });
     
     if (err.name === 'NotAllowedError') {
       if (elapsedTime < DEBUG_CONSTANTS.QUICK_ERROR_THRESHOLD_MS) {
-        setError('カメラアクセスが拒否されました。ブラウザの設定でカメラ権限を許可してください。');
+        // Android Chromeの場合、より詳細なエラーメッセージ
+        if (deviceInfo.isAndroid && deviceInfo.isChrome) {
+          setError(`カメラアクセスが即座に拒否されました（${elapsedTime}ms）。
+          
+設定を確認してください：
+1. Chromeアプリの設定でカメラ権限を許可
+2. Androidシステム設定でChromeのカメラ権限を許可
+3. サイトの設定でカメラをブロックしていないか確認
+
+デバッグ情報：
+- エラー時間: ${elapsedTime}ms
+- Chrome: v${deviceInfo.chromeVersion}`);
+        } else {
+          setError('カメラアクセスが拒否されました。ブラウザの設定でカメラ権限を許可してください。');
+        }
       } else {
         setError('カメラ権限が拒否されました。');
       }
