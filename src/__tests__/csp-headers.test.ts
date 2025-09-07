@@ -108,7 +108,7 @@ describe('CSP Headers Configuration', () => {
 
       it('should have Permissions-Policy header', () => {
         expect(rootHeaders).toContain('Permissions-Policy:');
-        expect(rootHeaders).toContain('camera=()');
+        expect(rootHeaders).toContain('camera=(self)');
         expect(rootHeaders).toContain('microphone=()');
         expect(rootHeaders).toContain('geolocation=()');
       });
