@@ -1,6 +1,6 @@
 # 技術的負債 TODO リスト
 
-*最終更新: 2025-09-06 v1.11.0*
+*最終更新: 2025-09-07 v1.11.1*
 
 このドキュメントは、コードレビューで指摘された改善項目と技術的負債を記録し、将来の開発で対応すべき項目を管理するためのものです。
 
@@ -322,6 +322,133 @@ it('should fallback to qr-scanner when BarcodeDetector fails', async () => {
 **期待効果**:
 - フォールバック機構の動作保証
 - クロスブラウザ互換性の確保
+
+---
+
+### 16. SSR対応の環境チェック改善（PR #240レビュー - 2025-09-07）
+**問題**: SSR対応でnavigator/windowオブジェクトのチェックが複数箇所に散在し、一貫性が不足
+
+**現状の課題**:
+- `getDeviceInfo()`は`navigator`をチェック、`checkBarcodeDetectorSupport()`は`window`をチェック
+- 環境チェックのロジックが複数ファイルに分散
+- SSRシナリオのテストが不足
+- ハイドレーション時の値の不一致リスク
+
+**改善提案**:
+
+#### 1. 環境チェックヘルパー関数の導入
+```typescript
+// src/utils/environment.ts
+export const isClientSide = () => typeof window !== 'undefined';
+export const isNavigatorAvailable = () => typeof navigator !== 'undefined';
+export const isBrowserEnvironment = () => isClientSide() && isNavigatorAvailable();
+
+// SSR safe な navigator アクセス
+export const getNavigator = () => {
+  if (!isNavigatorAvailable()) return null;
+  return navigator;
+};
+
+// デフォルト値の定数化
+export const DEFAULT_DEVICE_INFO = {
+  isAndroid: false,
+  isChrome: false,
+  chromeVersion: 0,
+  isWebView: false,
+  userAgent: ''
+} as const;
+```
+
+#### 2. 統一的なチェック方法への移行
+```typescript
+// src/hooks/useQRScannerV2.ts
+import { isBrowserEnvironment, getNavigator, DEFAULT_DEVICE_INFO } from '@/utils/environment';
+
+function getDeviceInfo() {
+  if (!isBrowserEnvironment()) {
+    return DEFAULT_DEVICE_INFO;
+  }
+  const nav = getNavigator();
+  if (!nav) return DEFAULT_DEVICE_INFO;
+  
+  const ua = nav.userAgent;
+  // ... 既存の実装
+}
+
+async function checkBarcodeDetectorSupport() {
+  if (!isBrowserEnvironment()) return false;
+  // ... 既存の実装
+}
+```
+
+#### 3. SSRテストの追加
+```typescript
+// src/hooks/__tests__/useQRScannerV2.ssr.test.ts
+/**
+ * @jest-environment node
+ */
+describe('useQRScannerV2 SSR Support', () => {
+  beforeEach(() => {
+    // Node環境をシミュレート
+    delete (global as any).window;
+    delete (global as any).navigator;
+  });
+
+  test('getDeviceInfo should return default values in SSR', () => {
+    const deviceInfo = getDeviceInfo();
+    expect(deviceInfo).toEqual(DEFAULT_DEVICE_INFO);
+  });
+
+  test('checkBarcodeDetectorSupport should return false in SSR', async () => {
+    const result = await checkBarcodeDetectorSupport();
+    expect(result).toBe(false);
+  });
+
+  test('hook should not throw in SSR environment', () => {
+    expect(() => {
+      const TestComponent = () => {
+        useQRScannerV2();
+        return null;
+      };
+      renderToString(<TestComponent />);
+    }).not.toThrow();
+  });
+});
+```
+
+#### 4. ハイドレーション対策
+```typescript
+// src/hooks/useQRScannerV2.ts
+export function useQRScannerV2() {
+  // SSRとクライアントで同じ初期値を使用
+  const [deviceInfo, setDeviceInfo] = useState(DEFAULT_DEVICE_INFO);
+  
+  // クライアントサイドでのみ実行
+  useEffect(() => {
+    if (isBrowserEnvironment()) {
+      setDeviceInfo(getDeviceInfo());
+    }
+  }, []);
+  
+  // 以降の処理...
+}
+```
+
+**期待効果**:
+- 環境チェックロジックの一元化により保守性向上
+- SSR/CSRの切り替えが明確になり、バグ発生リスク低減
+- テストカバレッジ向上により回帰バグを防止
+- Next.js 13+ App Routerとの互換性向上
+- ハイドレーションエラーの防止
+
+**実装優先度**: 🟡 中（現在の修正で動作はするが、保守性と拡張性のために改善が望ましい）
+
+**関連PR**: 
+- #240（SSR対応でnavigator未定義エラーを修正）- 緊急修正として最小限の変更で対応済み
+- この改善提案は、より包括的で保守性の高いソリューションを提供
+
+**見積もり工数**: 2-3時間（テスト含む）
+
 ## 📝 実装済み項目（記録用）
 
 ### ✅ 完了済み
@@ -361,7 +488,10 @@ it('should fallback to qr-scanner when BarcodeDetector fails', async () => {
 ## 📊 メトリクス
 
 ### 技術的負債の削減状況
-- 2025年9月: 7項目の改善項目を特定
+- 2025年9月: 16項目の改善項目を特定（9/7時点）
+  - 高優先度: 2項目（2項目完了済み）
+  - 中優先度: 9項目（未着手）
+  - 低優先度: 3項目（未着手）
 - 目標: 3ヶ月以内に高優先度項目を完了
 
 ### コード品質指標
