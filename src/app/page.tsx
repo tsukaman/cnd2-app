@@ -13,7 +13,6 @@ import { AppDescription } from "@/components/landing/AppDescription";
 import { DiagnosisResult as DiagnosisResultComponent } from "@/components/diagnosis/DiagnosisResult";
 import type { DiagnosisResult, ResultApiResponse } from "@/types";
 import { sanitizer } from "@/lib/sanitizer";
-import { BarChart3 } from "lucide-react";
 
 // Constants
 const LOADING_SCREEN_DURATION = 1000;
@@ -435,22 +434,6 @@ export default function Home() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Admin Link */}
-        <motion.div
-          className="absolute top-4 right-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Link
-            href="/admin/metrics"
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors text-gray-400 hover:text-white"
-          >
-            <BarChart3 className="w-4 h-4" />
-            <span className="text-sm">Metrics</span>
-          </Link>
-        </motion.div>
-
         {/* フッター with CloudNative Days Logo and Hashtag */}
         <motion.div
           className="text-center"
@@ -459,13 +442,21 @@ export default function Home() {
           transition={{ delay: 0.8 }}
         >
           <div className="flex flex-col items-center gap-4">
-            <Image
-              src="/images/trademark@4x.png"
-              alt="CloudNative Days Winter 2025"
-              width={80}
-              height={80}
-              className="opacity-80 hover:opacity-100 transition-opacity"
-            />
+            <Link
+              href="https://event.cloudnativedays.jp/cndw2025"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-block"
+              aria-label="CloudNative Days Winter 2025 イベントサイトへ移動（新しいタブで開きます）"
+            >
+              <Image
+                src="/images/trademark@4x.png"
+                alt="CloudNative Days Winter 2025"
+                width={80}
+                height={80}
+                className="opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+              />
+            </Link>
             <p className="text-sm md:text-base text-purple-400 font-medium">
               #CNDxCnD
             </p>
