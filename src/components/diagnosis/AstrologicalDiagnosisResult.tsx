@@ -6,6 +6,7 @@ import { Star, Sparkles, Users, MessageCircle, Zap, Trophy, Gift, Target } from 
 import { useState, useEffect } from "react";
 import Confetti from "react-confetti";
 import Image from "next/image";
+import Link from "next/link";
 
 interface AstrologicalDiagnosisResultProps {
   result: DiagnosisResult;
@@ -268,13 +269,20 @@ export function AstrologicalDiagnosisResult({ result, onReset }: AstrologicalDia
           transition={{ delay: 1.1 }}
           className="flex flex-col items-center gap-4 pt-8 border-t border-gray-700"
         >
-          <Image
-            src="/images/trademark@4x.png"
-            alt="CloudNative Days Winter 2025"
-            width={80}
-            height={20}
-            className="opacity-90"
-          />
+          <Link
+            href="https://event.cloudnativedays.jp/cndw2025"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-block"
+          >
+            <Image
+              src="/images/trademark@4x.png"
+              alt="CloudNative Days Winter 2025"
+              width={80}
+              height={20}
+              className="opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+            />
+          </Link>
           <p className="text-sm md:text-base text-purple-400 font-medium">
             #CNDxCnD
           </p>
