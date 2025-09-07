@@ -15,7 +15,7 @@ describe('Cloudflare Functions Middleware', () => {
         API: "default-src 'none'; frame-ancestors 'none';",
         WEB: "default-src 'self' https://cnd2-app.pages.dev https://cnd2.cloudnativedays.jp; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cnd2-app.pages.dev https://cnd2.cloudnativedays.jp https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cnd2-app.pages.dev https://cnd2.cloudnativedays.jp https://fonts.googleapis.com; font-src 'self' https://cnd2-app.pages.dev https://cnd2.cloudnativedays.jp https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://cnd2-app.pages.dev https://cnd2.cloudnativedays.jp https://api.openai.com https://prairie.cards https://*.prairie.cards https://api.qrserver.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;",
       },
-      PERMISSIONS_POLICY: 'camera=(), microphone=(), geolocation=(), payment=()',
+      PERMISSIONS_POLICY: 'camera=(self), microphone=(), geolocation=(), payment=()',
       SECURITY_HEADERS: {
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
@@ -129,7 +129,7 @@ describe('Cloudflare Functions Middleware', () => {
       
       // Check Permissions-Policy for regular pages
       const policy = result.headers.get('Permissions-Policy');
-      expect(policy).toBe('camera=(), microphone=(), geolocation=(), payment=()');
+      expect(policy).toBe('camera=(self), microphone=(), geolocation=(), payment=()');
     });
 
     it('should not set Permissions-Policy for API routes', async () => {
