@@ -260,14 +260,25 @@ export function useQRScannerV2(): UseQRScannerReturn {
     
     try {
       // 即座にgetUserMediaを呼んでユーザージェスチャーを保持
-      // Android Chromeでは最もシンプルな制約を使用（facingModeが問題を引き起こす可能性）
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,  // 最もシンプルな制約
-        audio: false
-      });
-      
-      logger.debug('Got camera stream successfully on Android Chrome');
-      return stream;
+      // まず背面カメラを試みる
+      try {
+        logger.debug('Trying rear camera (environment) first...');
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },  // 背面カメラを指定
+          audio: false
+        });
+        logger.debug('Got rear camera stream successfully on Android Chrome');
+        return stream;
+      } catch (err1) {
+        logger.debug('Rear camera failed, trying any available camera...');
+        // 背面カメラが失敗した場合は、どのカメラでも受け入れる
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,  // フォールバック：利用可能な任意のカメラ
+          audio: false
+        });
+        logger.debug('Got camera stream successfully on Android Chrome (fallback)');
+        return stream;
+      }
     } catch (err) {
       logger.error('Android Chrome camera access failed:', err);
       throw err;
