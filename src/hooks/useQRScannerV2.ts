@@ -221,6 +221,39 @@ export function useQRScannerV2(): UseQRScannerReturn {
     }
   }, [isScanning]);
 
+  // Stop scanning - Define before other functions that use it
+  const stopScan = useCallback(() => {
+    logger.debug('Stopping QR scanner');
+    setIsScanning(false);
+    
+    // Stop qr-scanner if active
+    if (qrScannerRef.current) {
+      qrScannerRef.current.stop();
+      qrScannerRef.current.destroy();
+      qrScannerRef.current = null;
+    }
+    
+    // Clear BarcodeDetector
+    barcodeDetectorRef.current = null;
+    
+    // Stop camera stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    // Clear video
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
+    // Cancel scan timeout
+    if (scanTimeoutRef.current) {
+      clearTimeout(scanTimeoutRef.current);
+      scanTimeoutRef.current = null;
+    }
+  }, []);
+
   // Handle Android Chrome camera access
   const handleAndroidChromeCamera = useCallback(async (): Promise<MediaStream | null> => {
     logger.debug('Android Chrome detected - calling getUserMedia immediately to preserve user gesture');
@@ -548,39 +581,6 @@ export function useQRScannerV2(): UseQRScannerReturn {
       handleCameraError(err as Error, startTime);
     }
   }, [isSupported, scannerType, permissionState, detectWithBarcodeDetector, deviceInfo, handleAndroidChromeCamera, setupVideoAndStartDetection, handleCameraError, stopScan]);
-
-  // Stop scanning
-  const stopScan = useCallback(() => {
-    logger.debug('Stopping QR scanner');
-    setIsScanning(false);
-    
-    // Stop qr-scanner if active
-    if (qrScannerRef.current) {
-      qrScannerRef.current.stop();
-      qrScannerRef.current.destroy();
-      qrScannerRef.current = null;
-    }
-    
-    // Clear BarcodeDetector
-    barcodeDetectorRef.current = null;
-    
-    // Stop camera stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    
-    // Clear video
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    
-    // Cancel scan timeout
-    if (scanTimeoutRef.current) {
-      clearTimeout(scanTimeoutRef.current);
-      scanTimeoutRef.current = null;
-    }
-  }, []);
 
   // Clear error
   const clearError = useCallback(() => {
