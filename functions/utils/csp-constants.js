@@ -110,7 +110,7 @@ const CSP_STRINGS = {
 };
 
 // Permissions Policy for web pages
-const PERMISSIONS_POLICY = 'camera=(), microphone=(), geolocation=(), payment=()';
+const PERMISSIONS_POLICY = 'camera=(self), microphone=(), geolocation=(), payment=()';
 
 // Security headers that apply to all responses
 const SECURITY_HEADERS = {
