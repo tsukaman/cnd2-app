@@ -12,13 +12,15 @@
   [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
   
   **#CNDxCnD**
+  
+  🎯 [CloudNative Days Winter 2025公式サイト](https://event.cloudnativedays.jp/cndw2025)
 </div>
 
 ## 📋 概要
 
 **CND²（CloudNative Days × Connect 'n' Discover）** は、CloudNative Days Winter 2025（11月18-19日 @ 東京）のための特別な相性診断アプリケーションです。Prairie Cardの情報を基に、エンジニア同士の技術的な相性や協働の可能性を可視化し、「出会いを二乗でスケール」します。
 
-> **最終更新**: 2025-09-06 - v1.11.0
+> **最終更新**: 2025-09-07 - v1.12.0
 
 ### ✨ 主な機能
 
@@ -555,6 +557,13 @@ docker run -p 3000:3000 cnd2-app
 
 ## 🔄 最近の更新
 
+### v1.12.0 (2025-09-07)
+- **UX改善**: 一般参加者向けのUI最適化 🎯
+  - 不要なメトリクスダッシュボードリンクを削除
+  - トレードマーク画像からCloudNative Days Winter 2025イベントサイトへの直接リンクを追加
+  - アクセシビリティ向上（aria-label属性の追加）
+  - すべてのページで統一されたイベントリンク表示
+
 ### v1.11.0 (2025-09-06)
 - **モバイル最適化**: 診断結果のUI改善 📱
   - 5つの占術的分析をアコーディオン形式に変更（CollapsibleSection実装）
@@ -588,9 +597,9 @@ docker run -p 3000:3000 cnd2-app
 
 ## 📊 プロジェクトステータス
 
-- **バージョン**: 1.11.0
+- **バージョン**: 1.12.0
 - **ステータス**: Production Ready
-- **最終更新**: 2025年9月6日
+- **最終更新**: 2025年9月7日
 - **テスト**: 全テスト合格 ✅
 - **ビルド**: 静的エクスポート成功 ✅
 - **API**: 
