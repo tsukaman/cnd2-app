@@ -1,6 +1,6 @@
 # 技術的負債 TODO リスト
 
-*最終更新: 2025-09-05 v1.8.0*
+*最終更新: 2025-09-06 v1.11.0*
 
 このドキュメントは、コードレビューで指摘された改善項目と技術的負債を記録し、将来の開発で対応すべき項目を管理するためのものです。
 
@@ -81,6 +81,74 @@
 - 日本語/英語の国際化対応
 - 後方互換性を維持しつつ新システムへ移行
 
+## 🟡 中優先度タスク（追加）
+
+### 9. QRスキャナーのリソース管理改善（PR #235レビュー - 2025-09-06）
+**問題**: カメラストリームやスキャン処理のリソース管理が不完全
+
+**改善提案**:
+```typescript
+// AbortControllerでタイムアウトとキャンセル管理
+const controller = new AbortController();
+setTimeout(() => controller.abort(), 30000); // 30秒タイムアウト
+
+// 権限状態リスナーの適切なクリーンアップ
+useEffect(() => {
+  const handleChange = () => { /* ... */ };
+  result.addEventListener('change', handleChange);
+  return () => result.removeEventListener('change', handleChange);
+}, []);
+```
+
+**期待効果**:
+- メモリリークの防止
+- バッテリー消費の最適化
+- より堅牢なエラーハンドリング
+
+---
+
+### 10. メモリ管理の強化（PR #223レビュー - 2025-09-06）
+**問題**: 開発環境でのメモリストレージが100件を超えた際の削除が1件ずつ
+
+**改善案**:
+```javascript
+// 複数エントリの一括削除で効率化
+if (global.devDiagnosisStorage.size > 100) {
+  const keys = Array.from(global.devDiagnosisStorage.keys());
+  const deleteCount = keys.length - 80; // 80件まで削減
+  keys.slice(0, deleteCount).forEach(key => 
+    global.devDiagnosisStorage.delete(key)
+  );
+}
+```
+
+**期待効果**:
+- パフォーマンス向上
+- メモリ使用量の安定化
+
+---
+
+### 11. データ検証エラーの詳細化（PR #223レビュー - 2025-09-06）
+**問題**: エラーメッセージが汎用的で原因特定が困難
+
+**改善案**:
+```javascript
+// より具体的なエラーメッセージ
+if (!result || typeof result !== 'object') {
+  throw new Error('Invalid DiagnosisResult: expected object, got ' + typeof result);
+}
+if (!result.id) {
+  throw new Error('Invalid DiagnosisResult: missing required field "id"');
+}
+if (!result.score && result.score !== 0) {
+  throw new Error('Invalid DiagnosisResult: missing required field "score"');
+}
+```
+
+**期待効果**:
+- デバッグ時間の短縮
+- エラー原因の即座の特定
+
 ## 🟢 低優先度タスク
 
 ### ~~5. CNCFプロジェクト選択テストの追加~~ ✅ 完了済み (2025-09-05)
@@ -148,6 +216,112 @@ className={`... focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-pur
 - 最初のアコーディオンをデフォルトで開く
 - 人気の高い分析を優先的に表示
 
+---
+
+### 12. CollapsibleSectionコンポーネントのテスト追加（PR #237レビュー - 2025-09-06）
+**問題**: 新規追加されたCollapsibleSectionにテストが不足
+
+**必要なテスト**:
+```typescript
+describe('CollapsibleSection', () => {
+  test('アクセシビリティ属性が適切に設定される', () => {
+    // aria-expanded, aria-controlsのテスト
+  });
+  
+  test('レスポンシブクラスが適用される', () => {
+    // md:プレフィックスのテスト
+  });
+  
+  test('最小タッチターゲットが確保される', () => {
+    // min-h-[60px]のテスト
+  });
+  
+  test('アニメーションが正しく動作する', () => {
+    // Framer Motionアニメーションのテスト
+  });
+});
+```
+
+**期待効果**:
+- 回帰バグの防止
+- アクセシビリティの保証
+- モバイルUXの品質維持
+
+---
+
+### 13. アクセシビリティ属性の追加（PR #231レビュー - 2025-09-06）
+**問題**: 一部のUI要素でアクセシビリティ属性が不足
+
+**改善案**:
+```typescript
+// 診断同意文にrole属性追加
+<p className="text-xs text-gray-500" role="note">
+  ※ 診断を開始することで、Prairie Card の公開プロフィール情報の
+  読み取りと分析に同意したものとみなされます
+</p>
+
+// メニューカードにaria-label追加
+<MenuCard
+  href="/duo"
+  icon="🤝"
+  title="Let's C'n'D!"
+  description="2人の相性をチェック"
+  aria-label="2人の相性診断を開始する"
+/>
+```
+
+**期待効果**:
+- スクリーンリーダー対応の向上
+- WCAG準拠レベルの向上
+
+---
+
+### 14. アニメーション設定の定数化（PR #237レビュー - 2025-09-06）
+**問題**: アニメーション設定値がハードコーディングされている
+
+**改善案**:
+```typescript
+// lib/constants/animation.ts
+export const ANIMATION_CONFIG = {
+  COLLAPSIBLE: {
+    duration: 0.2,
+    ease: 'easeInOut'
+  },
+  PAGE_TRANSITION: {
+    duration: 0.3,
+    ease: 'easeOut'
+  }
+} as const;
+```
+
+**期待効果**:
+- アニメーション速度の一元管理
+- ユーザー設定による調整の容易化
+
+---
+
+### 15. QRスキャナーのフォールバック動作テスト（PR #235レビュー - 2025-09-06）
+**問題**: BarcodeDetector失敗時のフォールバック動作のテストが不足
+
+**必要なテスト**:
+```typescript
+it('should fallback to qr-scanner when BarcodeDetector fails', async () => {
+  // BarcodeDetectorのモックを失敗させる
+  global.BarcodeDetector = undefined;
+  
+  // qr-scannerライブラリが使用されることを確認
+  const { result } = renderHook(() => useQRScannerV2());
+  await act(async () => {
+    await result.current.startScan();
+  });
+  
+  expect(result.current.scannerType).toBe('qr-scanner');
+});
+```
+
+**期待効果**:
+- フォールバック機構の動作保証
+- クロスブラウザ互換性の確保
 ## 📝 実装済み項目（記録用）
 
 ### ✅ 完了済み
