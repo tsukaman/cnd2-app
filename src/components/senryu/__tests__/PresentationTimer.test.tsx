@@ -1,7 +1,6 @@
 import React from 'react';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, act, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import userEvent from '@testing-library/user-event';
 import { PresentationTimer } from '../PresentationTimer';
 
 // Mock framer-motion
@@ -112,9 +111,8 @@ describe('PresentationTimer', () => {
     expect(skipButton).not.toBeInTheDocument();
   });
 
-  test('calls onComplete when skip button is clicked', async () => {
+  test('calls onComplete when skip button is clicked', () => {
     const onComplete = jest.fn();
-    const user = userEvent.setup({ delay: null });
     
     render(
       <PresentationTimer
@@ -126,7 +124,7 @@ describe('PresentationTimer', () => {
     );
 
     const skipButton = screen.getByRole('button', { name: /プレゼンを終了して採点へ/i });
-    await user.click(skipButton);
+    fireEvent.click(skipButton);
 
     expect(onComplete).toHaveBeenCalledTimes(1);
   });

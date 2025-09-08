@@ -76,7 +76,10 @@ export async function onRequestPost(context) {
       
       // Initialize score tracking for current presenter
       const currentPresenter = room.players[room.currentPresenterIndex];
-      if (!room.submittedScores[currentPresenter.id]) {
+      if (!room.submittedScores) {
+        room.submittedScores = {};
+      }
+      if (currentPresenter && !room.submittedScores[currentPresenter.id]) {
         room.submittedScores[currentPresenter.id] = {};
       }
     }
