@@ -24,7 +24,7 @@ export async function onRequestPost(context) {
       });
     }
     
-    // Check if requester is host or current presenter
+    // Check if requester is current presenter (primary) or host (backup)
     const currentPresenter = room.players[room.currentPresenterIndex];
     const isHost = playerId === room.hostId;
     const isCurrentPresenter = currentPresenter && currentPresenter.id === playerId;
@@ -36,6 +36,35 @@ export async function onRequestPost(context) {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
+    }
+    
+    // Implement distributed lock to prevent race conditions
+    const lockKey = `presentation-end:${roomId}:${room.currentPresenterIndex}`;
+    const lockValue = `${playerId}:${Date.now()}`;
+    
+    try {
+      // Try to acquire lock with 30 second TTL
+      const existingLock = await env.SENRYU_KV.get(lockKey);
+      if (existingLock) {
+        // Lock already exists, check if it's expired (older than 30 seconds)
+        const [, timestamp] = existingLock.split(':');
+        if (Date.now() - parseInt(timestamp) < 30000) {
+          console.log(`[Lock] Presentation end already in progress by another client`);
+          return new Response(JSON.stringify({
+            error: 'プレゼン終了処理が既に実行中です'
+          }), {
+            status: 409, // Conflict
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+      }
+      
+      // Acquire lock
+      await env.SENRYU_KV.put(lockKey, lockValue, { expirationTtl: 30 });
+      console.log(`[Lock] Acquired presentation end lock for room ${roomId} by ${playerId}`);
+    } catch (error) {
+      console.error('[Lock] Failed to acquire lock:', error);
+      // Continue without lock (best effort)
     }
     
     // Transition from presenting to scoring
