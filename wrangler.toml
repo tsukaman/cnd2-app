@@ -7,3 +7,8 @@ pages_build_output_dir = "out"
 binding = "DIAGNOSIS_KV"
 id = "623832c2612f48948daa625eacf29792"
 preview_id = "b9f1e0af78a14ebcbfab872fb4764281"
+
+[[kv_namespaces]]
+binding = "SENRYU_KV"
+id = "7eadda14d02b4bb389edaf21f94d1fc8"
+preview_id = "7eadda14d02b4bb389edaf21f94d1fc8"
