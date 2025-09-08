@@ -155,8 +155,8 @@ describe('next-presenter API', () => {
         gameState: 'presenting'
       };
 
-      // Setup: room exists and lock is expired (older than 30 seconds)
-      const expiredTimestamp = Date.now() - 31000;
+      // Setup: room exists and lock is expired (older than 60 seconds)
+      const expiredTimestamp = Date.now() - 61000;
       mockKV.get
         .mockResolvedValueOnce(JSON.stringify(roomData))
         .mockResolvedValueOnce(`other-player:${expiredTimestamp}`); // Expired lock
@@ -287,6 +287,69 @@ describe('next-presenter API', () => {
 
       expect(response.status).toBe(500);
       expect(result.error).toContain('次のプレゼンターへの移行に失敗');
+    });
+
+    test('handles malformed JSON in room data', async () => {
+      mockKV.get.mockResolvedValue('{ invalid json }');
+
+      const context = createMockContext('test-room', {
+        playerId: 'player1'
+      });
+
+      const response = await onRequestPost(context);
+      const result = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(result.error).toBeDefined();
+    });
+
+    test('handles missing request body', async () => {
+      const context = {
+        request: {
+          json: jest.fn().mockRejectedValue(new Error('Invalid JSON'))
+        },
+        env: {
+          SENRYU_KV: mockKV
+        },
+        params: {
+          id: 'test-room'
+        }
+      };
+
+      const response = await onRequestPost(context);
+      const result = await response.json();
+
+      expect(response.status).toBe(500);
+    });
+
+    test('handles race condition with simultaneous requests', async () => {
+      const roomData = {
+        id: 'test-room',
+        hostId: 'host-player',
+        players: [
+          { id: 'host-player', name: 'Host' },
+          { id: 'presenter-player', name: 'Presenter' }
+        ],
+        currentPresenterIndex: 1,
+        gameState: 'presenting'
+      };
+
+      const lockValue = `other-player:${Date.now()}`;
+      
+      // 両プレイヤーが同時にリクエスト
+      mockKV.get
+        .mockResolvedValueOnce(JSON.stringify(roomData)) // room data
+        .mockResolvedValueOnce(lockValue); // existing lock
+
+      const context1 = createMockContext('test-room', {
+        playerId: 'presenter-player'
+      });
+
+      const response1 = await onRequestPost(context1);
+      const result1 = await response1.json();
+
+      expect(response1.status).toBe(409);
+      expect(result1.error).toContain('プレゼン終了処理が既に実行中');
     });
   });
 });

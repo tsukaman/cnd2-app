@@ -13,16 +13,19 @@ interface PresentationTimerProps {
 
 export function PresentationTimer({ duration, onComplete, isActive, allowSkip = false }: PresentationTimerProps) {
   const [timeLeft, setTimeLeft] = useState(duration);
+  const [isCompleted, setIsCompleted] = useState(false);
   
   useEffect(() => {
     if (!isActive) {
       setTimeLeft(duration);
+      setIsCompleted(false);
       return;
     }
     
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
+        if (prev <= 1 && !isCompleted) {
+          setIsCompleted(true);
           onComplete();
           return 0;
         }
@@ -30,8 +33,11 @@ export function PresentationTimer({ duration, onComplete, isActive, allowSkip = 
       });
     }, 1000);
     
-    return () => clearInterval(interval);
-  }, [isActive, duration, onComplete]);
+    // クリーンアップ: コンポーネントアンマウント時やisActive変更時に確実にクリア
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isActive, duration, onComplete, isCompleted]);
   
   const progress = (duration - timeLeft) / duration;
   const minutes = Math.floor(timeLeft / 60);
@@ -50,7 +56,8 @@ export function PresentationTimer({ duration, onComplete, isActive, allowSkip = 
   };
   
   const handleSkip = () => {
-    if (allowSkip) {
+    if (allowSkip && !isCompleted) {
+      setIsCompleted(true);
       onComplete();
     }
   };

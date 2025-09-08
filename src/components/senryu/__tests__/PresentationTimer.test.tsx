@@ -225,4 +225,86 @@ describe('PresentationTimer', () => {
     timerText = container.querySelector('.text-6xl');
     expect(timerText).toHaveStyle({ color: '#EF4444' });
   });
+
+  test('properly cleans up timer on unmount', () => {
+    const onComplete = jest.fn();
+    const { unmount } = render(
+      <PresentationTimer
+        duration={60}
+        onComplete={onComplete}
+        isActive={true}
+      />
+    );
+
+    // タイマーを途中まで進める
+    act(() => {
+      jest.advanceTimersByTime(30000);
+    });
+
+    // コンポーネントをアンマウント
+    unmount();
+
+    // さらに時間を進めてもonCompleteが呼ばれないことを確認
+    act(() => {
+      jest.advanceTimersByTime(35000);
+    });
+
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  test('handles rapid skip button clicks gracefully', () => {
+    const onComplete = jest.fn();
+    
+    render(
+      <PresentationTimer
+        duration={60}
+        onComplete={onComplete}
+        isActive={true}
+        allowSkip={true}
+      />
+    );
+
+    const skipButton = screen.getByRole('button', { name: /プレゼンを終了して採点へ/i });
+    
+    // 複数回連続でクリック
+    fireEvent.click(skipButton);
+    fireEvent.click(skipButton);
+    fireEvent.click(skipButton);
+
+    // onCompleteは1回だけ呼ばれることを確認
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  test('handles edge case of 0 duration', () => {
+    const onComplete = jest.fn();
+    
+    render(
+      <PresentationTimer
+        duration={0}
+        onComplete={onComplete}
+        isActive={true}
+      />
+    );
+
+    // 即座にonCompleteが呼ばれる
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(onComplete).toHaveBeenCalled();
+    expect(screen.getByText('0:00')).toBeInTheDocument();
+  });
+
+  test('handles very long duration correctly', () => {
+    render(
+      <PresentationTimer
+        duration={3661} // 1時間1分1秒
+        onComplete={jest.fn()}
+        isActive={true}
+      />
+    );
+
+    // 分表示が60を超えることを確認
+    expect(screen.getByText('61:01')).toBeInTheDocument();
+  });
 });

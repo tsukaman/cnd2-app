@@ -43,12 +43,12 @@ export async function onRequestPost(context) {
     const lockValue = `${playerId}:${Date.now()}`;
     
     try {
-      // Try to acquire lock with 30 second TTL
+      // Try to acquire lock with 60 second TTL (minimum for KV storage)
       const existingLock = await env.SENRYU_KV.get(lockKey);
       if (existingLock) {
-        // Lock already exists, check if it's expired (older than 30 seconds)
+        // Lock already exists, check if it's expired (older than 60 seconds)
         const [, timestamp] = existingLock.split(':');
-        if (Date.now() - parseInt(timestamp) < 30000) {
+        if (Date.now() - parseInt(timestamp) < 60000) {
           console.log(`[Lock] Presentation end already in progress by another client`);
           return new Response(JSON.stringify({
             error: 'プレゼン終了処理が既に実行中です'
@@ -59,8 +59,8 @@ export async function onRequestPost(context) {
         }
       }
       
-      // Acquire lock
-      await env.SENRYU_KV.put(lockKey, lockValue, { expirationTtl: 30 });
+      // Acquire lock (minimum TTL is 60 seconds for KV storage)
+      await env.SENRYU_KV.put(lockKey, lockValue, { expirationTtl: 60 });
       console.log(`[Lock] Acquired presentation end lock for room ${roomId} by ${playerId}`);
     } catch (error) {
       console.error('[Lock] Failed to acquire lock:', error);
