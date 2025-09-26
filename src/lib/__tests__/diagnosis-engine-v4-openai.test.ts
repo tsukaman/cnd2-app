@@ -203,27 +203,37 @@ describe('AstrologicalDiagnosisEngineV4', () => {
           bio: 'A'.repeat(300), // Very long bio
         },
         details: {
-          topics: [],
-          skills: Array(20).fill('skill'), // 20 skills
+          topics: Array(20).fill('topic'), // 20 topics
+          hashtags: Array(10).fill('#hashtag'), // 10 hashtags
+        },
+        analysis: {
+          techStack: Array(10).fill('tech'), // 10 tech items
           interests: Array(10).fill('interest'), // 10 interests
         },
         social: {},
         custom: {},
         meta: {},
       };
-      
+
       engine = AstrologicalDiagnosisEngineV4.getInstance();
       // プライベートメソッドのテスト
       const summary = (engine as unknown as {
         summarizeProfile: (profile: PrairieProfile) => {
+          name: string;
+          username: string;
           bio: string;
-          skills: string[];
+          location: string;
+          topics: string[];
+          hashtags: string[];
+          techStack: string[];
           interests: string[];
         };
       }).summarizeProfile(profile);
-      
+
       expect(summary.bio.length).toBeLessThanOrEqual(200);
-      expect(summary.skills.length).toBeLessThanOrEqual(10);
+      expect(summary.topics.length).toBeLessThanOrEqual(10);
+      expect(summary.hashtags.length).toBeLessThanOrEqual(5);
+      expect(summary.techStack.length).toBeLessThanOrEqual(5);
       expect(summary.interests.length).toBeLessThanOrEqual(5);
     });
   });

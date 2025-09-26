@@ -40,7 +40,12 @@ describe('next-presenter API', () => {
         gameState: 'presenting'
       };
 
-      mockKV.get.mockResolvedValue(JSON.stringify(roomData));
+      mockKV.get.mockImplementation((key) => {
+        if (key === 'room:test-room') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        return Promise.resolve(null);
+      });
 
       const context = createMockContext('test-room', {
         playerId: 'other-player' // Not host, not presenter
@@ -65,9 +70,15 @@ describe('next-presenter API', () => {
         gameState: 'presenting'
       };
 
-      mockKV.get
-        .mockResolvedValueOnce(JSON.stringify(roomData)) // First call for room data
-        .mockResolvedValueOnce(null); // Second call for lock check
+      mockKV.get.mockImplementation((key) => {
+        if (key === 'room:test-room') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        if (key.startsWith('presentation-end:')) {
+          return Promise.resolve(null); // No lock exists
+        }
+        return Promise.resolve(null);
+      });
 
       mockKV.put.mockResolvedValue();
 
@@ -95,9 +106,15 @@ describe('next-presenter API', () => {
         gameState: 'presenting'
       };
 
-      mockKV.get
-        .mockResolvedValueOnce(JSON.stringify(roomData))
-        .mockResolvedValueOnce(null); // No existing lock
+      mockKV.get.mockImplementation((key) => {
+        if (key === 'room:test-room') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        if (key.startsWith('presentation-end:')) {
+          return Promise.resolve(null); // No lock exists
+        }
+        return Promise.resolve(null);
+      });
 
       mockKV.put.mockResolvedValue();
 
@@ -127,9 +144,15 @@ describe('next-presenter API', () => {
       };
 
       // Setup: room exists and lock is already acquired
-      mockKV.get
-        .mockResolvedValueOnce(JSON.stringify(roomData))
-        .mockResolvedValueOnce(`other-player:${Date.now()}`); // Recent lock
+      mockKV.get.mockImplementation((key) => {
+        if (key === 'room:test-room') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        if (key.startsWith('presentation-end:')) {
+          return Promise.resolve(`other-player:${Date.now()}`); // Recent lock
+        }
+        return Promise.resolve(null);
+      });
 
       const context = createMockContext('test-room', {
         playerId: 'presenter-player'
@@ -157,9 +180,15 @@ describe('next-presenter API', () => {
 
       // Setup: room exists and lock is expired (older than 60 seconds)
       const expiredTimestamp = Date.now() - 61000;
-      mockKV.get
-        .mockResolvedValueOnce(JSON.stringify(roomData))
-        .mockResolvedValueOnce(`other-player:${expiredTimestamp}`); // Expired lock
+      mockKV.get.mockImplementation((key) => {
+        if (key === 'room:test-room') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        if (key.startsWith('presentation-end:')) {
+          return Promise.resolve(`other-player:${expiredTimestamp}`); // Expired lock
+        }
+        return Promise.resolve(null);
+      });
 
       mockKV.put.mockResolvedValue();
 
@@ -190,9 +219,15 @@ describe('next-presenter API', () => {
         presentationStarted: true
       };
 
-      mockKV.get
-        .mockResolvedValueOnce(JSON.stringify(roomData))
-        .mockResolvedValueOnce(null); // No lock
+      mockKV.get.mockImplementation((key) => {
+        if (key === 'room:test-room') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        if (key.startsWith('presentation-end:')) {
+          return Promise.resolve(null); // No lock
+        }
+        return Promise.resolve(null);
+      });
 
       mockKV.put.mockResolvedValue();
 
@@ -228,9 +263,15 @@ describe('next-presenter API', () => {
         submittedScores: {}
       };
 
-      mockKV.get
-        .mockResolvedValueOnce(JSON.stringify(roomData))
-        .mockResolvedValueOnce(null);
+      mockKV.get.mockImplementation((key) => {
+        if (key === 'room:test-room') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        if (key.startsWith('presentation-end:')) {
+          return Promise.resolve(null); // No lock
+        }
+        return Promise.resolve(null);
+      });
 
       mockKV.put.mockResolvedValue();
 
@@ -271,9 +312,15 @@ describe('next-presenter API', () => {
         gameState: 'presenting'
       };
 
-      mockKV.get
-        .mockResolvedValueOnce(JSON.stringify(roomData))
-        .mockResolvedValueOnce(null);
+      mockKV.get.mockImplementation((key) => {
+        if (key === 'room:test-room') {
+          return Promise.resolve(JSON.stringify(roomData));
+        }
+        if (key.startsWith('presentation-end:')) {
+          return Promise.resolve(null); // No lock
+        }
+        return Promise.resolve(null);
+      });
 
       // Simulate KV put failure
       mockKV.put.mockRejectedValue(new Error('KV storage error'));
