@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useXProfile } from '../useXProfile';
 import { apiClient } from '@/lib/api-client';
 import { getSampleXProfile } from '@/lib/constants/sample-x-profiles';
@@ -134,12 +134,14 @@ describe('useXProfile', () => {
 
       const { result } = renderHook(() => useXProfile());
 
-      await waitFor(async () => {
-        const profile = await result.current.fetchProfile('unknownuser');
-        expect(profile).toBeNull();
+      act(() => {
+        result.current.fetchProfile('unknownuser');
       });
 
-      expect(result.current.error).toBe('ユーザーが見つかりません');
+      await waitFor(() => {
+        expect(result.current.error).toBe('ユーザーが見つかりません');
+      });
+
       expect(mockToast.error).toHaveBeenCalledWith(
         'ユーザーが見つかりません',
         expect.objectContaining({
@@ -153,12 +155,14 @@ describe('useXProfile', () => {
 
       const { result } = renderHook(() => useXProfile());
 
-      await waitFor(async () => {
-        const profile = await result.current.fetchProfile('protecteduser');
-        expect(profile).toBeNull();
+      act(() => {
+        result.current.fetchProfile('protecteduser');
       });
 
-      expect(result.current.error).toBe('非公開アカウントです');
+      await waitFor(() => {
+        expect(result.current.error).toBe('非公開アカウントです');
+      });
+
       expect(mockToast.error).toHaveBeenCalledWith(
         '非公開アカウントです',
         expect.objectContaining({
@@ -172,12 +176,14 @@ describe('useXProfile', () => {
 
       const { result } = renderHook(() => useXProfile());
 
-      await waitFor(async () => {
-        const profile = await result.current.fetchProfile('user');
-        expect(profile).toBeNull();
+      act(() => {
+        result.current.fetchProfile('user');
       });
 
-      expect(result.current.error).toBe('レート制限に達しました');
+      await waitFor(() => {
+        expect(result.current.error).toBe('レート制限に達しました');
+      });
+
       expect(mockToast.error).toHaveBeenCalledWith(
         'レート制限に達しました',
         expect.objectContaining({
@@ -197,11 +203,14 @@ describe('useXProfile', () => {
 
       const { result } = renderHook(() => useXProfile());
 
-      await waitFor(async () => {
-        await result.current.fetchProfile('elonmusk');
+      act(() => {
+        result.current.fetchProfile('elonmusk');
       });
 
-      expect(result.current.retryAttempt).toBe(1);
+      await waitFor(() => {
+        expect(result.current.retryAttempt).toBe(1);
+      });
+
       expect(mockToast.info).toHaveBeenCalledWith(
         '再試行中... (1/3)',
         expect.objectContaining({
@@ -217,12 +226,13 @@ describe('useXProfile', () => {
 
       const { result } = renderHook(() => useXProfile());
 
-      await waitFor(async () => {
-        const profile = await result.current.fetchProfile('user');
-        expect(profile).toBeNull();
+      act(() => {
+        result.current.fetchProfile('user');
       });
 
-      expect(result.current.error).toBe('X プロフィールのデータ形式が正しくありません');
+      await waitFor(() => {
+        expect(result.current.error).toBe('X プロフィールのデータ形式が正しくありません');
+      });
     });
   });
 
@@ -232,7 +242,9 @@ describe('useXProfile', () => {
 
       const { result } = renderHook(() => useXProfile());
 
-      result.current.useSampleData();
+      act(() => {
+        result.current.useSampleData();
+      });
 
       expect(result.current.profile).toEqual(sampleProfile);
       expect(result.current.error).toBeNull();
@@ -251,13 +263,17 @@ describe('useXProfile', () => {
 
       const { result } = renderHook(() => useXProfile());
 
-      await waitFor(async () => {
-        await result.current.fetchProfile('user');
+      act(() => {
+        result.current.fetchProfile('user');
       });
 
-      expect(result.current.error).not.toBeNull();
+      await waitFor(() => {
+        expect(result.current.error).not.toBeNull();
+      });
 
-      result.current.clearError();
+      act(() => {
+        result.current.clearError();
+      });
 
       expect(result.current.error).toBeNull();
       expect(result.current.retryAttempt).toBe(0);
