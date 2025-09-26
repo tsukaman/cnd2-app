@@ -11,16 +11,12 @@ describe('diagnosis-engine', () => {
   const mockProfile1: PrairieProfile = {
     basic: {
       name: 'Test User 1',
-      title: 'Backend Engineer',
-      company: 'Tech Corp',
+      username: 'Backend Engineer',
       bio: 'Love Kubernetes',
     },
     details: {
-      tags: ['#kubernetes', '#go'],
-      skills: ['Kubernetes', 'Go', 'Docker'],
-      interests: ['Cloud Native', 'DevOps'],
-      certifications: [],
-      communities: [],
+      topics: ['#kubernetes', '#go', 'Kubernetes', 'Go', 'Docker'],
+      hashtags: ['Cloud Native', 'DevOps'],
     },
     social: {
       twitter: 'test1',
@@ -33,16 +29,12 @@ describe('diagnosis-engine', () => {
   const mockProfile2: PrairieProfile = {
     basic: {
       name: 'Test User 2',
-      title: 'Frontend Engineer',
-      company: 'Web Inc',
+      username: 'Frontend Engineer',
       bio: 'React enthusiast',
     },
     details: {
-      tags: ['#react', '#typescript'],
-      skills: ['React', 'TypeScript', 'Next.js'],
-      interests: ['Web Performance', 'UX'],
-      certifications: [],
-      communities: [],
+      topics: ['#react', '#typescript', 'React', 'TypeScript', 'Next.js'],
+      hashtags: ['Web Performance', 'UX'],
     },
     social: {
       twitter: 'test2',

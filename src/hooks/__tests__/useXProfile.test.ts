@@ -66,13 +66,13 @@ describe('useXProfile', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockApiClient.xProfile = {
-      fetch: jest.fn()
+      fetch: jest.fn() as jest.Mock
     };
   });
 
   describe('fetchProfile', () => {
     it('should fetch X profile successfully', async () => {
-      mockApiClient.xProfile.fetch.mockResolvedValueOnce(sampleProfile);
+      (mockApiClient.xProfile.fetch as jest.Mock).mockResolvedValueOnce(sampleProfile);
 
       const { result } = renderHook(() => useXProfile());
 
@@ -94,7 +94,7 @@ describe('useXProfile', () => {
     });
 
     it('should handle @ prefix in username', async () => {
-      mockApiClient.xProfile.fetch.mockResolvedValueOnce(sampleProfile);
+      (mockApiClient.xProfile.fetch as jest.Mock).mockResolvedValueOnce(sampleProfile);
 
       const { result } = renderHook(() => useXProfile());
 
@@ -107,7 +107,10 @@ describe('useXProfile', () => {
 
     it('should use sample data in development', async () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'development',
+        writable: true
+      });
       mockGetSampleXProfile.mockReturnValueOnce(sampleProfile);
 
       const { result } = renderHook(() => useXProfile());
@@ -126,11 +129,14 @@ describe('useXProfile', () => {
         })
       );
 
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalEnv,
+        writable: true
+      });
     });
 
     it('should handle API errors', async () => {
-      mockApiClient.xProfile.fetch.mockRejectedValueOnce(new Error('User not found'));
+      (mockApiClient.xProfile.fetch as jest.Mock).mockRejectedValueOnce(new Error('User not found'));
 
       const { result } = renderHook(() => useXProfile());
 
@@ -151,7 +157,7 @@ describe('useXProfile', () => {
     });
 
     it('should handle protected account error', async () => {
-      mockApiClient.xProfile.fetch.mockRejectedValueOnce(new Error('Account is protected'));
+      (mockApiClient.xProfile.fetch as jest.Mock).mockRejectedValueOnce(new Error('Account is protected'));
 
       const { result } = renderHook(() => useXProfile());
 
@@ -172,7 +178,7 @@ describe('useXProfile', () => {
     });
 
     it('should handle rate limit error', async () => {
-      mockApiClient.xProfile.fetch.mockRejectedValueOnce(new Error('Rate limit exceeded'));
+      (mockApiClient.xProfile.fetch as jest.Mock).mockRejectedValueOnce(new Error('Rate limit exceeded'));
 
       const { result } = renderHook(() => useXProfile());
 
@@ -194,7 +200,7 @@ describe('useXProfile', () => {
 
     it('should handle retry attempts', async () => {
       let retryCount = 0;
-      mockApiClient.xProfile.fetch.mockImplementationOnce((username, options) => {
+      (mockApiClient.xProfile.fetch as jest.Mock).mockImplementationOnce((username: string, options: any) => {
         if (options?.onRetry) {
           options.onRetry(++retryCount);
         }
@@ -220,7 +226,7 @@ describe('useXProfile', () => {
     });
 
     it('should validate response structure', async () => {
-      mockApiClient.xProfile.fetch.mockResolvedValueOnce({
+      (mockApiClient.xProfile.fetch as jest.Mock).mockResolvedValueOnce({
         invalid: 'data'
       } as any);
 
@@ -259,7 +265,7 @@ describe('useXProfile', () => {
 
   describe('clearError', () => {
     it('should clear error state', async () => {
-      mockApiClient.xProfile.fetch.mockRejectedValueOnce(new Error('Test error'));
+      (mockApiClient.xProfile.fetch as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
 
       const { result } = renderHook(() => useXProfile());
 

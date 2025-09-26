@@ -55,14 +55,17 @@ export function usePrairieCard(): UsePrairieCardReturn {
         }
       }
       
-      // Fetch with retry logic
-      const response = await apiClient.prairie.fetch(url, {
+      // Extract username from URL or use directly
+      const username = url.includes('/') ? url.split('/').pop() || url : url;
+
+      // Fetch with retry logic (redirect to X profile API)
+      const response = await apiClient.xProfile.fetch(username, {
         enableRetry: true,
-        onRetry: (attempt) => {
+        onRetry: (attempt: number) => {
           setRetryAttempt(attempt);
           setIsRetrying(true);
           toast.info(`再試行中... (${attempt}/3)`, {
-            description: 'Prairie Card APIに接続しています'
+            description: 'X Profile APIに接続しています'
           });
         }
       }) as PrairieProfile;
@@ -120,7 +123,6 @@ export function usePrairieCard(): UsePrairieCardReturn {
         toastOptions.action = {
           label: 'サンプルデータを使用',
           onClick: () => {
-            // eslint-disable-next-line react-hooks/rules-of-hooks
             useSampleData();
           }
         };

@@ -52,8 +52,7 @@ const mockDuoDiagnosis: DiagnosisResultType = {
       basic: {
         ...createMockPrairieProfile('User1').basic,
         name: 'User1',
-        title: 'Engineer',
-        company: 'Tech Corp',
+        username: 'Engineer',
         bio: 'Bio1',
       },
     },
@@ -62,8 +61,7 @@ const mockDuoDiagnosis: DiagnosisResultType = {
       basic: {
         ...createMockPrairieProfile('User2').basic,
         name: 'User2',
-        title: 'Developer',
-        company: 'Web Inc',
+        username: 'Developer',
         bio: 'Bio2',
       },
     },
@@ -81,8 +79,7 @@ const mockGroupDiagnosis: DiagnosisResultType = {
       basic: {
         ...createMockPrairieProfile('User3').basic,
         name: 'User3',
-        title: 'Manager',
-        company: 'Cloud Ltd',
+        username: 'Manager',
         bio: 'Bio3',
       },
     },

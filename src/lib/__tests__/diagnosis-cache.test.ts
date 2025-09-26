@@ -11,16 +11,13 @@ describe('DiagnosisCache', () => {
   const mockProfile1: PrairieProfile = {
     basic: {
       name: 'Test User 1',
-      title: 'Engineer',
-      company: 'Tech Corp',
+      username: 'Engineer',
       bio: 'Bio 1',
     },
     details: {
-      tags: [],
-      skills: ['JavaScript', 'React'],
-      interests: ['Web Development'],
-      certifications: [],
-      communities: [],
+      topics: [],
+      topics: ['JavaScript', 'React'],
+      hashtags: ['Web Development'],
     },
     social: {},
     custom: {},
@@ -30,16 +27,13 @@ describe('DiagnosisCache', () => {
   const mockProfile2: PrairieProfile = {
     basic: {
       name: 'Test User 2',
-      title: 'Designer',
-      company: 'Design Inc',
+      username: 'Designer',
       bio: 'Bio 2',
     },
     details: {
-      tags: [],
-      skills: ['Figma', 'UI/UX'],
-      interests: ['Design Systems'],
-      certifications: [],
-      communities: [],
+      topics: [],
+      topics: ['Figma', 'UI/UX'],
+      hashtags: ['Design Systems'],
     },
     social: {},
     custom: {},
@@ -270,8 +264,8 @@ describe('DiagnosisCache', () => {
         basic: { ...mockProfile1.basic, name: 'Alice' },
         details: {
           ...mockProfile1.details,
-          skills: ['JavaScript', 'React'],
-          interests: ['Web'],
+          topics: ['JavaScript', 'React'],
+          hashtags: ['Web'],
         },
       };
       
@@ -280,8 +274,8 @@ describe('DiagnosisCache', () => {
         basic: { ...mockProfile1.basic, name: 'Alice' }, // 同じ名前
         details: {
           ...mockProfile1.details,
-          skills: ['React', 'JavaScript'], // 順序が違う
-          interests: ['Web'],
+          topics: ['React', 'JavaScript'], // 順序が違う
+          hashtags: ['Web'],
         },
       };
       
@@ -296,7 +290,7 @@ describe('DiagnosisCache', () => {
         ...mockProfile1,
         details: {
           ...mockProfile1.details,
-          skills: ['Python', 'Django'],
+          topics: ['Python', 'Django'],
         },
       };
       

@@ -75,23 +75,23 @@ export class AstrologicalDiagnosisEngineV4 {
    */
   private summarizeProfile(profile: PrairieProfile): {
     name: string;
-    title: string;
-    company: string;
+    username: string;
     bio: string;
-    skills: string[];
+    location: string;
+    topics: string[];
+    hashtags: string[];
+    techStack: string[];
     interests: string[];
-    motto: string;
-    tags: string[];
   } {
     return {
       name: profile.basic.name,
-      title: profile.basic.title?.substring(0, 100) || '', // 肩書きは重要なので100文字まで
-      company: profile.basic.company?.substring(0, 50) || '', // 会社名も50文字まで保持
+      username: profile.basic.username || '', // X username
       bio: profile.basic.bio?.substring(0, 200) || '', // 自己紹介は200文字まで（重要な情報源）
-      skills: (profile.details?.skills || []).slice(0, 10), // 上位10個のスキル（技術の多様性を伝える）
-      interests: (profile.details?.interests || []).slice(0, 5), // 上位5つの興味（豊かな人物像）
-      motto: profile.details?.motto?.substring(0, 100) || '', // モットーも重要な個性
-      tags: (profile.details?.tags || []).slice(0, 5) // タグ情報も追加
+      location: profile.basic.location?.substring(0, 50) || '',
+      topics: (profile.details?.topics || []).slice(0, 10), // 上位10個のトピック
+      hashtags: (profile.details?.hashtags || []).slice(0, 5), // 上位5つのハッシュタグ
+      techStack: (profile.analysis?.techStack || []).slice(0, 5), // 技術スタック
+      interests: (profile.analysis?.interests || []).slice(0, 5) // 興味分野
     };
   }
 

@@ -57,16 +57,12 @@ describe('AstrologicalDiagnosisEngineV4', () => {
     const mockProfile1: PrairieProfile = {
       basic: {
         name: 'テストユーザー1',
-        title: 'エンジニア',
-        company: 'テック社',
+        username: 'エンジニア',
         bio: 'クラウドネイティブエンジニア',
       },
       details: {
-        tags: ['cloud'],
-        skills: ['Kubernetes', 'Docker'],
-        interests: ['DevOps'],
-        certifications: [],
-        communities: [],
+        topics: ['cloud', 'Kubernetes', 'Docker'],
+        hashtags: ['DevOps'],
       },
       social: {},
       custom: {},
@@ -76,16 +72,12 @@ describe('AstrologicalDiagnosisEngineV4', () => {
     const mockProfile2: PrairieProfile = {
       basic: {
         name: 'テストユーザー2',
-        title: 'デザイナー',
-        company: 'デザイン社',
+        username: 'デザイナー',
         bio: 'UXデザイナー',
       },
       details: {
-        tags: ['design'],
-        skills: ['Figma', 'Sketch'],
-        interests: ['UI/UX'],
-        certifications: [],
-        communities: [],
+        topics: ['design', 'Figma', 'Sketch'],
+        hashtags: ['UI/UX'],
       },
       social: {},
       custom: {},
@@ -205,34 +197,41 @@ describe('AstrologicalDiagnosisEngineV4', () => {
       const profile: PrairieProfile = {
         basic: {
           name: 'Long Name User',
-          title: 'Very Long Title That Should Be Truncated',
-          company: 'Very Long Company Name That Should Be Truncated As Well',
+          username: 'Very Long Title That Should Be Truncated',
           bio: 'A'.repeat(300), // Very long bio
         },
         details: {
-          tags: [],
-          skills: Array(20).fill('skill'), // 20 skills
+          topics: Array(20).fill('topic'), // 20 topics
+          hashtags: Array(10).fill('#hashtag'), // 10 hashtags
+        },
+        analysis: {
+          techStack: Array(10).fill('tech'), // 10 tech items
           interests: Array(10).fill('interest'), // 10 interests
-          certifications: [],
-          communities: [],
         },
         social: {},
         custom: {},
         meta: {},
       };
-      
+
       engine = AstrologicalDiagnosisEngineV4.getInstance();
       // プライベートメソッドのテスト
       const summary = (engine as unknown as {
         summarizeProfile: (profile: PrairieProfile) => {
+          name: string;
+          username: string;
           bio: string;
-          skills: string[];
+          location: string;
+          topics: string[];
+          hashtags: string[];
+          techStack: string[];
           interests: string[];
         };
       }).summarizeProfile(profile);
-      
+
       expect(summary.bio.length).toBeLessThanOrEqual(200);
-      expect(summary.skills.length).toBeLessThanOrEqual(10);
+      expect(summary.topics.length).toBeLessThanOrEqual(10);
+      expect(summary.hashtags.length).toBeLessThanOrEqual(5);
+      expect(summary.techStack.length).toBeLessThanOrEqual(5);
       expect(summary.interests.length).toBeLessThanOrEqual(5);
     });
   });
