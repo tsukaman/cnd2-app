@@ -110,6 +110,28 @@ export interface GameResult {
   timestamp: string;
 }
 
+// ギャラリーエントリー（新機能）
+export interface GalleryEntry {
+  id: string;                    // エントリーID
+  senryu: Senryu;                // 川柳本体
+  authorName: string;             // 作者名（"詠み人知らず"または実名）
+  authorId: string | null;        // 作者ID（匿名の場合null）
+  isAnonymous: boolean;           // 匿名投稿フラグ
+  likes: number;                  // いいね数
+  likedBy: string[];             // いいねしたユーザーID/セッションID
+  createdAt: string;              // 作成日時
+  roomId: string;                 // 元のゲームルームID
+  roomCode: string;               // 元のルームコード
+  gameDate: string;               // ゲーム実施日
+  playerCount: number;            // ゲーム参加人数（コンテキスト情報）
+}
+
+// 公開設定（新機能）
+export interface PublicationPreference {
+  shareToGallery: boolean;        // ギャラリーに公開するか
+  displayName: 'real' | 'anonymous'; // 実名/匿名の選択
+}
+
 // API レスポンス
 export interface ApiResponse<T = unknown> {
   success: boolean;

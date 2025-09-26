@@ -98,43 +98,8 @@ export async function onRequestPost(context) {
             rank: index + 1
           }));
           
-        // Save to ranking if allowed
-        if (env.SENRYU_KV) {
-          for (const result of room.results) {
-            if (result.player.rankingPreference.allowRanking) {
-              const rankingEntry = {
-                id: `ranking_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                senryu: result.player.senryu,
-                playerName: result.player.name,
-                playerId: result.player.id,
-                anonymousRanking: result.player.rankingPreference.anonymousRanking,
-                scores: {
-                  total: result.player.totalScore,
-                  average: result.averageScore,
-                  details: Object.entries(result.player.scores || {}).map(([scorerId, scoreSet]) => {
-                    const scorer = room.players.find(p => p.id === scorerId);
-                    return {
-                      scorerName: scorer ? scorer.name : 'Unknown',
-                      scores: scoreSet
-                    };
-                  })
-                },
-                scorers: room.players.filter(p => p.id !== result.player.id).map(p => p.name),
-                playerCount: room.players.length,
-                timestamp: new Date().toISOString(),
-                roomId: room.id,
-                roomCode: room.code,
-                isPublic: true
-              };
-              
-              await env.SENRYU_KV.put(
-                `ranking:${rankingEntry.id}`,
-                JSON.stringify(rankingEntry),
-                { expirationTtl: 2592000 } // 30 days
-              );
-            }
-          }
-        }
+        // ランキング自動保存を削除（ギャラリー機能に移行）
+        // ユーザーがゲーム終了後に公開設定を選択する方式に変更
       } else {
         // Move to next presenter
         room.gameState = 'presenting';

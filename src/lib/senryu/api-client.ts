@@ -228,6 +228,83 @@ class SenryuApiClient {
     
     return response.json();
   }
+  
+  // ギャラリー関連API（新機能）
+  async publishToGallery(roomId: string, playerId: string, preference: any): Promise<{ success: boolean; entryId?: string; message: string }> {
+    const response = await fetch(`${API_BASE}/gallery/publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomId, playerId, preference })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to publish to gallery');
+    }
+    
+    return response.json();
+  }
+  
+  async getGalleryList(params?: {
+    sort?: 'latest' | 'popular' | 'random';
+    dateFrom?: string;
+    dateTo?: string;
+    playerCountMin?: number;
+    playerCountMax?: number;
+    offset?: number;
+    limit?: number;
+  }): Promise<{ entries: any[]; total: number; hasMore: boolean }> {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.set(key, String(value));
+        }
+      });
+    }
+    
+    const response = await fetch(`${API_BASE}/gallery/list?${searchParams}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch gallery');
+    }
+    
+    return response.json();
+  }
+  
+  async likeGalleryEntry(entryId: string, sessionId: string): Promise<{ likes: number; liked: boolean; message: string }> {
+    const response = await fetch(`${API_BASE}/gallery/${entryId}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to like entry');
+    }
+    
+    return response.json();
+  }
+  
+  async unlikeGalleryEntry(entryId: string, sessionId: string): Promise<{ likes: number; liked: boolean; message: string }> {
+    const response = await fetch(`${API_BASE}/gallery/${entryId}/like`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to unlike entry');
+    }
+    
+    return response.json();
+  }
 }
 
 export const senryuApi = new SenryuApiClient();
