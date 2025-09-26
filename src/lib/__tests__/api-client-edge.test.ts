@@ -20,14 +20,14 @@ describe('API Client Edge Cases', () => {
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true }),
+        json: async () => ({ success: true, data: { basic: { username: 'test' } } }),
       });
 
-      await apiClient.prairie.fetch('test');
-      
+      await apiClient.xProfile.fetch('test');
+
       // 正しいURLが構築されることを確認
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://test.com/api/prairie',
+        'https://test.com/api/x-profile',
         expect.any(Object)
       );
     });
@@ -42,14 +42,14 @@ describe('API Client Edge Cases', () => {
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true }),
+        json: async () => ({ success: true, data: { basic: { username: 'test' } } }),
       });
 
-      await apiClient.prairie.fetch('test');
+      await apiClient.xProfile.fetch('test');
       
       // 相対パスが使用されることを確認
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/prairie',
+        '/api/x-profile',
         expect.any(Object)
       );
       
@@ -64,14 +64,14 @@ describe('API Client Edge Cases', () => {
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true }),
+        json: async () => ({ success: true, data: { basic: { username: 'test' } } }),
       });
 
-      await apiClient.prairie.fetch('test');
+      await apiClient.xProfile.fetch('test');
       
       // 二重スラッシュにならないことを確認
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://test.com/api/prairie', // 末尾スラッシュが正規化される
+        'https://test.com/api/x-profile', // 末尾スラッシュが正規化される
         expect.any(Object)
       );
     });
@@ -87,16 +87,16 @@ describe('API Client Edge Cases', () => {
       const { apiClient } = require('../api-client');
       
       // SSR環境でのエラー
-      await expect(apiClient.prairie.fetch('test'))
+      await expect(apiClient.xProfile.fetch('test'))
         .rejects.toThrow('API_BASE_URL is not configured for server-side rendering');
     });
 
     it('異なるAPI_BASE_URL形式を正しく処理する', async () => {
       const testCases = [
-        { baseUrl: 'https://test.com', expectedUrl: 'https://test.com/api/prairie' },
-        { baseUrl: 'https://test.com/', expectedUrl: 'https://test.com/api/prairie' },
-        { baseUrl: 'https://api.example.com/v1', expectedUrl: 'https://api.example.com/v1/api/prairie' },
-        { baseUrl: 'https://api.example.com/v1/', expectedUrl: 'https://api.example.com/v1/api/prairie' },
+        { baseUrl: 'https://test.com', expectedUrl: 'https://test.com/api/x-profile' },
+        { baseUrl: 'https://test.com/', expectedUrl: 'https://test.com/api/x-profile' },
+        { baseUrl: 'https://api.example.com/v1', expectedUrl: 'https://api.example.com/v1/api/x-profile' },
+        { baseUrl: 'https://api.example.com/v1/', expectedUrl: 'https://api.example.com/v1/api/x-profile' },
       ];
 
       for (const { baseUrl, expectedUrl } of testCases) {
@@ -112,7 +112,7 @@ describe('API Client Edge Cases', () => {
           json: async () => ({ success: true }),
         });
 
-        await apiClient.prairie.fetch('test');
+        await apiClient.xProfile.fetch('test');
         
         expect(global.fetch).toHaveBeenCalledWith(
           expectedUrl,
@@ -136,14 +136,14 @@ describe('API Client Edge Cases', () => {
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true }),
+        json: async () => ({ success: true, data: { basic: { username: 'test' } } }),
       });
 
-      await apiClient.prairie.fetch('test');
+      await apiClient.xProfile.fetch('test');
       
       // 相対パスでfetchが呼ばれる
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/prairie',
+        '/api/x-profile',
         expect.any(Object)
       );
       
@@ -164,14 +164,14 @@ describe('API Client Edge Cases', () => {
       
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true }),
+        json: async () => ({ success: true, data: { basic: { username: 'test' } } }),
       });
 
-      await apiClient.prairie.fetch('test');
+      await apiClient.xProfile.fetch('test');
       
       // 相対パスでfetchが呼ばれる
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/prairie',
+        '/api/x-profile',
         expect.any(Object)
       );
       

@@ -3,8 +3,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import GroupPage from '../page';
 import { useRouter } from 'next/navigation';
-import { createLocalStorageMock, createMockPrairieProfile } from '@/test-utils/mocks';
-import type { PrairieProfile, DiagnosisResult } from '@/types';
+import { createLocalStorageMock } from '@/test-utils/mocks';
+import { XProfileFactory } from '@/test-utils/x-profile-factory';
+import type { XProfile, DiagnosisResult } from '@/types';
 
 // Next.js navigationモック
 jest.mock('next/navigation', () => ({
@@ -13,9 +14,9 @@ jest.mock('next/navigation', () => ({
     getAll: jest.fn((key) => {
       if (key === 'participant') {
         return [
-          'https://prairie.cards/user1',
-          'https://prairie.cards/user2',
-          'https://prairie.cards/user3',
+          'user1',
+          'user2',
+          'user3',
         ];
       }
       return [];
@@ -30,7 +31,7 @@ global.localStorage = localStorageMock as unknown as Storage;
 // API clientモック
 jest.mock('@/lib/api-client', () => ({
   apiClient: {
-    prairie: {
+    xProfile: {
       fetch: jest.fn(),
     },
     diagnosis: {
@@ -40,33 +41,35 @@ jest.mock('@/lib/api-client', () => ({
 }));
 
 // コンポーネントモック
-jest.mock('@/components/prairie/PrairieCardInput', () => {
-  return function MockPrairieCardInput({ onProfileLoaded }: { onProfileLoaded: (profile: PrairieProfile) => void }) {
+jest.mock('@/components/x-profile/XProfileInput', () => ({
+  __esModule: true,
+  default: function MockXProfileInput({ onProfileLoaded }: { onProfileLoaded: (profile: XProfile) => void }) {
     const React = jest.requireActual('react') as typeof import('react');
     const [error, setError] = React.useState<string | null>(null);
-    
+
     const handleClick = async () => {
       setError(null);
-      // Simulate Prairie card loading
+      // Simulate X profile loading
       try {
         // Always use the mock profile for tests
-        onProfileLoaded(createMockPrairieProfile('Test User'));
+        const { XProfileFactory } = jest.requireActual('@/test-utils/x-profile-factory') as typeof import('@/test-utils/x-profile-factory');
+        onProfileLoaded(XProfileFactory.createDeveloper('Test User'));
       } catch {
         // Show error message like the real component
-        setError('Prairie Cardの読み込みに失敗しました');
+        setError('X プロフィールの読み込みに失敗しました');
       }
     };
-    
+
     return (
-      <div data-testid="prairie-card-input">
+      <div data-testid="x-profile-input">
         <button onClick={handleClick}>
           スキャン
         </button>
         {error && <div className="text-red-600">{error}</div>}
       </div>
     );
-  };
-});
+  },
+}));
 
 jest.mock('@/components/diagnosis/DiagnosisResult', () => ({
   DiagnosisResult: ({ result }: { result: DiagnosisResult }) => (
@@ -97,21 +100,9 @@ describe.skip('GroupPage', () => {
     refresh: jest.fn(),
   };
 
-  const createMockProfile = (name: string) => ({
-    ...createMockPrairieProfile(name),
-    basic: {
-      ...createMockPrairieProfile(name).basic,
-      name,
-      title: `${name} Title`,
-      company: `${name} Company`,
-      bio: `${name} Bio`,
-    },
-    details: {
-      ...createMockPrairieProfile(name).details,
-      skills: [`${name}-skill`],
-      interests: [`${name}-interest`],
-    },
-  });
+  const createMockProfile = (name: string): XProfile => {
+    return XProfileFactory.createDeveloper(name);
+  };
 
   const mockProfiles = [
     createMockProfile('User1'),
@@ -150,8 +141,8 @@ describe.skip('GroupPage', () => {
     it('初期状態で3人分のプロファイルセレクターが表示される', () => {
       render(<GroupPage />);
       
-      // Group page shows one PrairieCardInput at a time with participant cards below
-      expect(screen.getByTestId('prairie-card-input')).toBeInTheDocument();
+      // Group page shows one XProfileInput at a time with participant cards below
+      expect(screen.getByTestId('x-profile-input')).toBeInTheDocument();
       // Verify member counter shows 3 people total
       expect(screen.getByText('メンバー 1 / 3')).toBeInTheDocument();
     });
@@ -182,9 +173,9 @@ describe.skip('GroupPage', () => {
       render(<GroupPage />);
       
       // Wait for component to stabilize and verify initial state
-      // GroupPage shows a single PrairieCardInput with participant tabs
+      // GroupPage shows a single XProfileInput with participant tabs
       await waitFor(() => {
-        expect(screen.getByTestId('prairie-card-input')).toBeInTheDocument();
+        expect(screen.getByTestId('x-profile-input')).toBeInTheDocument();
       });
       
       const addButton = screen.getByRole('button', { name: /メンバー追加/ });
@@ -208,7 +199,7 @@ describe.skip('GroupPage', () => {
   });
 
   describe('プロファイル読み込み', () => {
-    it('Prairie CardのURLからプロファイルを取得する', async () => {
+    it('X プロフィールのユーザー名からプロファイルを取得する', async () => {
       render(<GroupPage />);
       
       // Click scan button which triggers onProfileLoaded in our mock
@@ -265,7 +256,7 @@ describe.skip('GroupPage', () => {
       fireEvent.click(scanButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/Prairie Cardの読み込みに失敗/)).toBeInTheDocument();
+        expect(screen.getByText(/X プロフィールの読み込みに失敗/)).toBeInTheDocument();
       });
     });
   });
@@ -384,9 +375,9 @@ describe.skip('GroupPage', () => {
       render(<GroupPage />);
 
       await waitFor(() => {
-        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('https://prairie.cards/user1');
-        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('https://prairie.cards/user2');
-        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('https://prairie.cards/user3');
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('user1');
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('user2');
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('user3');
       });
     });
   });
