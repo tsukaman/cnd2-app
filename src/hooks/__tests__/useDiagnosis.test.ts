@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useDiagnosis } from '../useDiagnosis';
-import { PrairieProfile, DiagnosisResult } from '@/types';
+import { XProfile, DiagnosisResult } from '@/types';
 import { apiClient } from '@/lib/api-client';
 
 // Mock apiClient and localStorage
@@ -46,42 +46,84 @@ describe('useDiagnosis', () => {
     jest.restoreAllMocks();
   });
 
-  const mockProfiles: PrairieProfile[] = [
+  const mockProfiles: XProfile[] = [
     {
       basic: {
+        id: '123456',
+        username: 'user1',
         name: 'User 1',
-        title: 'Developer',
-        company: 'Tech Corp',
         bio: 'Developer bio',
+        location: 'Tokyo',
+        website: 'https://example.com',
+        avatar: 'https://example.com/avatar.jpg',
+        verified: false,
+        protected: false,
+        createdAt: '2020-01-01T00:00:00.000Z',
+      },
+      metrics: {
+        followers: 1000,
+        following: 500,
+        tweets: 5000,
+        listed: 10
       },
       details: {
-        tags: [],
-        skills: ['React', 'TypeScript'],
-        interests: [],
-        certifications: [],
-        communities: [],
+        recentTweets: [],
+        topics: ['tech', 'programming'],
+        hashtags: ['#react', '#typescript'],
+        mentionedUsers: [],
+        languages: ['ja', 'en'],
+        activeHours: [9, 10, 11]
       },
-      social: {},
-      custom: {},
-      meta: {},
+      analysis: {
+        techStack: ['React', 'TypeScript'],
+        interests: ['web development'],
+        personality: 'Technical professional'
+      },
+      metadata: {
+        fetchedAt: new Date().toISOString(),
+        cacheAge: 3600,
+        embedAvailable: true,
+        scrapingAvailable: true
+      },
     },
     {
       basic: {
+        id: '789012',
+        username: 'user2',
         name: 'User 2',
-        title: 'Designer',
-        company: 'Design Studio',
         bio: 'Designer bio',
+        location: 'Osaka',
+        website: 'https://design.example.com',
+        avatar: 'https://example.com/avatar2.jpg',
+        verified: false,
+        protected: false,
+        createdAt: '2019-01-01T00:00:00.000Z',
+      },
+      metrics: {
+        followers: 2000,
+        following: 300,
+        tweets: 3000,
+        listed: 20
       },
       details: {
-        tags: [],
-        skills: ['Figma', 'CSS'],
-        interests: [],
-        certifications: [],
-        communities: [],
+        recentTweets: [],
+        topics: ['design', 'ux'],
+        hashtags: ['#figma', '#css'],
+        mentionedUsers: [],
+        languages: ['ja'],
+        activeHours: [14, 15, 16]
       },
-      social: {},
-      custom: {},
-      meta: {},
+      analysis: {
+        techStack: ['Figma', 'CSS'],
+        interests: ['design', 'user experience'],
+        personality: 'Creative designer'
+      },
+      metadata: {
+        fetchedAt: new Date().toISOString(),
+        cacheAge: 3600,
+        embedAvailable: true,
+        scrapingAvailable: true
+      },
     },
   ];
 

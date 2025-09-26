@@ -227,7 +227,7 @@ describe.skip('GroupPage', () => {
       const mockProfile2 = createMockProfile('User2');
       const mockProfile3 = createMockProfile('User3');
       
-      (apiClient.prairie.fetch as jest.Mock)
+      (apiClient.xProfile.fetch as jest.Mock)
         .mockResolvedValueOnce({ success: true, data: mockProfile1 })
         .mockResolvedValueOnce({ success: true, data: mockProfile2 })
         .mockResolvedValueOnce({ success: true, data: mockProfile3 });
@@ -255,7 +255,7 @@ describe.skip('GroupPage', () => {
     });
 
     it('プロファイル取得エラーを処理する', async () => {
-      (apiClient.prairie.fetch as jest.Mock).mockRejectedValueOnce(
+      (apiClient.xProfile.fetch as jest.Mock).mockRejectedValueOnce(
         new Error('Failed to fetch profile')
       );
 
@@ -273,7 +273,7 @@ describe.skip('GroupPage', () => {
   describe('診断実行', () => {
     beforeEach(async () => {
       mockProfiles.forEach(profile => {
-        (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce({
+        (apiClient.xProfile.fetch as jest.Mock).mockResolvedValueOnce({
           success: true,
           data: profile,
         });
@@ -295,7 +295,7 @@ describe.skip('GroupPage', () => {
       }
 
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(3);
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledTimes(3);
       });
 
       // 診断開始
@@ -330,7 +330,7 @@ describe.skip('GroupPage', () => {
       }
 
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(3);
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledTimes(3);
       });
 
       // 診断開始
@@ -359,7 +359,7 @@ describe.skip('GroupPage', () => {
       }
 
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(3);
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledTimes(3);
       });
 
       // 診断開始
@@ -375,7 +375,7 @@ describe.skip('GroupPage', () => {
   describe('URLパラメータ処理', () => {
     it('URLパラメータから自動的にプロファイルを読み込む', async () => {
       mockProfiles.forEach(profile => {
-        (apiClient.prairie.fetch as jest.Mock).mockResolvedValueOnce({
+        (apiClient.xProfile.fetch as jest.Mock).mockResolvedValueOnce({
           success: true,
           data: profile,
         });
@@ -384,9 +384,9 @@ describe.skip('GroupPage', () => {
       render(<GroupPage />);
 
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledWith('https://prairie.cards/user1');
-        expect(apiClient.prairie.fetch).toHaveBeenCalledWith('https://prairie.cards/user2');
-        expect(apiClient.prairie.fetch).toHaveBeenCalledWith('https://prairie.cards/user3');
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('https://prairie.cards/user1');
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('https://prairie.cards/user2');
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledWith('https://prairie.cards/user3');
       });
     });
   });
@@ -400,7 +400,7 @@ describe.skip('GroupPage', () => {
     it('同じプロファイルを複数選択できない', async () => {
       const sameProfile = createMockProfile('SameUser');
       
-      (apiClient.prairie.fetch as jest.Mock)
+      (apiClient.xProfile.fetch as jest.Mock)
         .mockResolvedValueOnce({ success: true, data: sameProfile })
         .mockResolvedValueOnce({ success: true, data: sameProfile });
 
@@ -409,13 +409,13 @@ describe.skip('GroupPage', () => {
       // 1人目のスキャン
       fireEvent.click(screen.getAllByText('スキャン')[0]);
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(1);
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledTimes(1);
       });
 
       // 2人目に同じプロファイル
       fireEvent.click(screen.getAllByText('スキャン')[1]);
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(2);
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledTimes(2);
       });
 
       // エラーメッセージが表示される
