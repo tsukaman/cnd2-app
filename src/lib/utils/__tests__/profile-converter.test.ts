@@ -12,16 +12,20 @@ describe('profile-converter', () => {
       const validProfile: PrairieProfile = {
         basic: {
           name: 'Test User',
-          title: 'Developer',
-          company: 'Test Company',
+          username: 'testuser',
           bio: 'Test bio'
         },
+        metrics: {
+          followers: 100,
+          following: 50,
+          tweets: 200,
+          listed: 5
+        },
         details: {
-          tags: [],
-          skills: [],
-          interests: [],
-          certifications: [],
-          communities: [],
+          recentTweets: [],
+          topics: ['JavaScript', 'TypeScript'],
+          hashtags: ['tech', 'dev'],
+          mentionedUsers: []
         },
         social: {},
         custom: {},
@@ -38,7 +42,7 @@ describe('profile-converter', () => {
     it('should return false for minimal profile format', () => {
       const minimalProfile = {
         name: 'Test User',
-        title: 'Developer',
+        username: 'testuser',
         skills: ['JavaScript', 'TypeScript']
       };
       
@@ -74,17 +78,21 @@ describe('profile-converter', () => {
       const prairieProfile: PrairieProfile = {
         basic: {
           name: 'Test User',
-          title: 'Developer',
-          company: 'Test Company',
-          bio: 'Test bio'
+          username: 'testuser',
+          bio: 'Test bio',
+          location: 'Tokyo'
+        },
+        metrics: {
+          followers: 100,
+          following: 50,
+          tweets: 200,
+          listed: 5
         },
         details: {
-          tags: ['cloud'],
-          skills: ['JavaScript'],
-          interests: ['AI'],
-          certifications: ['AWS'],
-          communities: ['CNCF'],
-          motto: 'Keep learning'
+          recentTweets: [],
+          topics: ['JavaScript', 'AI', 'Cloud'],
+          hashtags: ['tech', 'CNCF'],
+          mentionedUsers: []
         },
         social: {
           twitter: '@test',
@@ -106,69 +114,65 @@ describe('profile-converter', () => {
     it('should convert minimal profile to full format', () => {
       const minimalProfile = {
         name: 'Test User',
-        title: 'Developer',
-        company: 'Test Company',
+        username: 'testuser',
         bio: 'Test bio',
         skills: ['JavaScript', 'TypeScript'],
         interests: ['Cloud', 'DevOps'],
         tags: ['tech'],
         certifications: ['AWS'],
-        communities: ['CNCF'],
         motto: 'Always improving',
         twitter: '@test',
         github: 'testuser',
         website: 'https://example.com'
       };
-      
+
       const result = convertToFullProfile(minimalProfile);
-      
+
       expect(result.basic.name).toBe('Test User');
-      expect(result.basic.title).toBe('Developer');
-      expect(result.basic.company).toBe('Test Company');
+      expect(result.basic.username).toBe('testuser');
       expect(result.basic.bio).toBe('Test bio');
-      expect(result.details.skills).toEqual(['JavaScript', 'TypeScript']);
-      expect(result.details.interests).toEqual(['Cloud', 'DevOps']);
-      expect(result.details.tags).toEqual(['tech']);
-      expect(result.details.certifications).toEqual(['AWS']);
-      expect(result.details.communities).toEqual(['CNCF']);
-      expect(result.details.motto).toBe('Always improving');
-      expect(result.social.twitter).toBe('@test');
-      expect(result.social.github).toBe('testuser');
-      expect(result.social.website).toBe('https://example.com');
+      expect(result.details.topics).toContain('JavaScript');
+      expect(result.details.topics).toContain('TypeScript');
+      expect(result.details.topics).toContain('Cloud');
+      expect(result.details.topics).toContain('DevOps');
+      expect(result.details.topics).toContain('tech');
+      expect(result.details.topics).toContain('AWS');
+      expect(result.social?.twitter).toBe('@test');
+      expect(result.social?.github).toBe('testuser');
+      expect(result.social?.website).toBe('https://example.com');
     });
 
     it('should handle empty minimal profile with defaults', () => {
       const emptyProfile = {};
       const result = convertToFullProfile(emptyProfile);
-      
+
       expect(result.basic.name).toBe('名称未設定');
-      expect(result.basic.title).toBe('');
-      expect(result.basic.company).toBe('');
+      expect(result.basic.username).toBe('');
       expect(result.basic.bio).toBe('');
-      expect(result.details.skills).toEqual([]);
-      expect(result.details.interests).toEqual([]);
-      expect(result.details.tags).toEqual([]);
-      expect(result.social.twitter).toBeUndefined();
+      expect(result.details.topics).toEqual([]);
+      expect(result.details.hashtags).toEqual([]);
+      expect(result.details.recentTweets).toEqual([]);
+      expect(result.social?.twitter).toBeUndefined();
       expect(result.custom).toEqual({});
-      expect(result.meta.sourceUrl).toBe('');
-      expect(result.meta.createdAt).toBeDefined();
-      expect(result.meta.updatedAt).toBeDefined();
+      expect(result.meta?.sourceUrl).toBe('');
+      expect(result.meta?.createdAt).toBeDefined();
+      expect(result.meta?.updatedAt).toBeDefined();
     });
 
     it('should handle null profile with defaults', () => {
       const result = convertToFullProfile(null);
-      
+
       expect(result.basic.name).toBe('名称未設定');
-      expect(result.basic.title).toBe('');
-      expect(result.details.skills).toEqual([]);
+      expect(result.basic.username).toBe('');
+      expect(result.details.topics).toEqual([]);
     });
 
     it('should handle undefined profile with defaults', () => {
       const result = convertToFullProfile(undefined);
-      
+
       expect(result.basic.name).toBe('名称未設定');
-      expect(result.basic.title).toBe('');
-      expect(result.details.skills).toEqual([]);
+      expect(result.basic.username).toBe('');
+      expect(result.details.topics).toEqual([]);
     });
 
     it('should preserve custom fields', () => {
@@ -199,29 +203,29 @@ describe('profile-converter', () => {
       };
       
       const result = convertToFullProfile(profileWithMeta);
-      expect(result.meta.sourceUrl).toBe('https://example.com');
-      expect(result.meta.createdAt).toBe('2024-01-01T00:00:00Z');
-      expect(result.meta.updatedAt).toBe('2024-01-02T00:00:00Z');
-      expect(result.meta.connectedBy).toBe('Test App');
-      expect(result.meta.hashtag).toBe('#test');
-      expect(result.meta.isPartialData).toBe(true);
+      expect(result.meta?.sourceUrl).toBe('https://example.com');
+      expect(result.meta?.createdAt).toBe('2024-01-01T00:00:00Z');
+      expect(result.meta?.updatedAt).toBe('2024-01-02T00:00:00Z');
+      expect(result.meta?.connectedBy).toBe('Test App');
+      expect(result.meta?.hashtag).toBe('#test');
+      expect(result.meta?.isPartialData).toBe(true);
     });
   });
 
   describe('convertProfilesToFullFormat', () => {
     it('should convert array of profiles', () => {
       const profiles = [
-        { name: 'User 1', title: 'Dev 1' },
-        { name: 'User 2', title: 'Dev 2' }
+        { name: 'User 1', username: 'user1' },
+        { name: 'User 2', username: 'user2' }
       ];
-      
+
       const results = convertProfilesToFullFormat(profiles);
-      
+
       expect(results).toHaveLength(2);
       expect(results[0].basic.name).toBe('User 1');
-      expect(results[0].basic.title).toBe('Dev 1');
+      expect(results[0].basic.username).toBe('user1');
       expect(results[1].basic.name).toBe('User 2');
-      expect(results[1].basic.title).toBe('Dev 2');
+      expect(results[1].basic.username).toBe('user2');
     });
 
     it('should handle empty array', () => {
@@ -243,16 +247,20 @@ describe('profile-converter', () => {
       const prairieProfile: PrairieProfile = {
         basic: {
           name: 'Prairie User',
-          title: 'Developer',
-          company: 'Company',
+          username: 'prairieuser',
           bio: 'Bio'
         },
+        metrics: {
+          followers: 100,
+          following: 50,
+          tweets: 200,
+          listed: 5
+        },
         details: {
-          tags: [],
-          skills: [],
-          interests: [],
-          certifications: [],
-          communities: []
+          recentTweets: [],
+          topics: ['tech', 'dev'],
+          hashtags: [],
+          mentionedUsers: []
         },
         social: {},
         custom: {},
@@ -262,18 +270,18 @@ describe('profile-converter', () => {
           updatedAt: '2024-01-01T00:00:00Z'
         }
       };
-      
+
       const profiles = [
         prairieProfile,
-        { name: 'Minimal User', title: 'Designer' }
+        { name: 'Minimal User', username: 'minuser' }
       ];
-      
+
       const results = convertProfilesToFullFormat(profiles);
-      
+
       expect(results).toHaveLength(2);
       expect(results[0]).toBe(prairieProfile); // Should be same reference
       expect(results[1].basic.name).toBe('Minimal User');
-      expect(results[1].basic.title).toBe('Designer');
+      expect(results[1].basic.username).toBe('minuser');
     });
   });
 
@@ -282,16 +290,20 @@ describe('profile-converter', () => {
       const prairieProfile: PrairieProfile = {
         basic: {
           name: 'Test User',
-          title: 'Senior Developer',
-          company: 'Tech Company',
+          username: 'testuser',
           bio: 'Experienced developer'
         },
+        metrics: {
+          followers: 100,
+          following: 50,
+          tweets: 200,
+          listed: 5
+        },
         details: {
-          tags: ['cloud', 'devops'],
-          skills: ['JavaScript', 'Python', 'Go'],
-          interests: ['AI', 'ML', 'Cloud'],
-          certifications: ['AWS', 'GCP'],
-          communities: ['CNCF', 'OpenSource']
+          recentTweets: [],
+          topics: ['JavaScript', 'Python', 'Go', 'AI', 'ML', 'Cloud'],
+          hashtags: ['cloud', 'devops'],
+          mentionedUsers: []
         },
         social: {
           twitter: '@test',
@@ -304,38 +316,35 @@ describe('profile-converter', () => {
           updatedAt: '2024-01-01T00:00:00Z'
         }
       };
-      
+
       const result = extractMinimalProfile(prairieProfile);
-      
+
       expect(result).toEqual({
         name: 'Test User',
-        title: 'Senior Developer',
-        company: 'Tech Company',
+        username: 'testuser',
         bio: 'Experienced developer',
-        skills: ['JavaScript', 'Python', 'Go'],
-        interests: ['AI', 'ML', 'Cloud']
+        topics: ['JavaScript', 'Python', 'Go', 'AI', 'ML', 'Cloud'],
+        hashtags: ['cloud', 'devops']
       });
     });
 
     it('should extract minimal info from minimal profile', () => {
       const minimalProfile = {
         name: 'Test User',
-        title: 'Developer',
-        company: 'Company',
+        username: 'testuser',
         bio: 'Bio text',
         skills: ['JS', 'TS'],
         interests: ['Web']
       };
-      
+
       const result = extractMinimalProfile(minimalProfile);
-      
+
       expect(result).toEqual({
         name: 'Test User',
-        title: 'Developer',
-        company: 'Company',
+        username: 'testuser',
         bio: 'Bio text',
-        skills: ['JS', 'TS'],
-        interests: ['Web']
+        topics: ['JS', 'TS', 'Web'],
+        hashtags: []
       });
     });
 
@@ -343,42 +352,39 @@ describe('profile-converter', () => {
       const profile = {
         name: 'Test User'
       };
-      
+
       const result = extractMinimalProfile(profile);
-      
+
       expect(result).toEqual({
         name: 'Test User',
-        title: undefined,
-        company: undefined,
+        username: undefined,
         bio: undefined,
-        skills: [],
-        interests: []
+        topics: [],
+        hashtags: []
       });
     });
 
     it('should handle null profile with defaults', () => {
       const result = extractMinimalProfile(null);
-      
+
       expect(result).toEqual({
         name: '名称未設定',
-        title: undefined,
-        company: undefined,
+        username: undefined,
         bio: undefined,
-        skills: [],
-        interests: []
+        topics: [],
+        hashtags: []
       });
     });
 
     it('should handle undefined profile with defaults', () => {
       const result = extractMinimalProfile(undefined);
-      
+
       expect(result).toEqual({
         name: '名称未設定',
-        title: undefined,
-        company: undefined,
+        username: undefined,
         bio: undefined,
-        skills: [],
-        interests: []
+        topics: [],
+        hashtags: []
       });
     });
 
@@ -386,16 +392,20 @@ describe('profile-converter', () => {
       const prairieProfile: PrairieProfile = {
         basic: {
           name: 'Test User',
-          title: '',
-          company: '',
+          username: '',
           bio: ''
         },
+        metrics: {
+          followers: 0,
+          following: 0,
+          tweets: 0,
+          listed: 0
+        },
         details: {
-          tags: [],
-          skills: [],
-          interests: [],
-          certifications: [],
-          communities: []
+          recentTweets: [],
+          topics: [],
+          hashtags: [],
+          mentionedUsers: []
         },
         social: {},
         custom: {},
@@ -405,16 +415,15 @@ describe('profile-converter', () => {
           updatedAt: '2024-01-01T00:00:00Z'
         }
       };
-      
+
       const result = extractMinimalProfile(prairieProfile);
-      
+
       expect(result).toEqual({
         name: 'Test User',
-        title: '',
-        company: '',
+        username: '',
         bio: '',
-        skills: [],
-        interests: []
+        topics: [],
+        hashtags: []
       });
     });
   });

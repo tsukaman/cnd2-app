@@ -60,9 +60,17 @@ describe('AstrologicalDiagnosisEngineV4', () => {
         username: 'エンジニア',
         bio: 'クラウドネイティブエンジニア',
       },
+      metrics: {
+        followers: 100,
+        following: 50,
+        tweets: 200,
+        listed: 5,
+      },
       details: {
         topics: ['cloud', 'Kubernetes', 'Docker'],
         hashtags: ['DevOps'],
+        recentTweets: [],
+        mentionedUsers: [],
       },
       social: {},
       custom: {},
@@ -75,9 +83,17 @@ describe('AstrologicalDiagnosisEngineV4', () => {
         username: 'デザイナー',
         bio: 'UXデザイナー',
       },
+      metrics: {
+        followers: 200,
+        following: 100,
+        tweets: 300,
+        listed: 10,
+      },
       details: {
         topics: ['design', 'Figma', 'Sketch'],
         hashtags: ['UI/UX'],
+        recentTweets: [],
+        mentionedUsers: [],
       },
       social: {},
       custom: {},
@@ -200,9 +216,17 @@ describe('AstrologicalDiagnosisEngineV4', () => {
           username: 'Very Long Title That Should Be Truncated',
           bio: 'A'.repeat(300), // Very long bio
         },
+        metrics: {
+          followers: 1000,
+          following: 500,
+          tweets: 2000,
+          listed: 10,
+        },
         details: {
           topics: Array(20).fill('topic'), // 20 topics
           hashtags: Array(10).fill('#hashtag'), // 10 hashtags
+          recentTweets: [],
+          mentionedUsers: [],
         },
         analysis: {
           techStack: Array(10).fill('tech'), // 10 tech items

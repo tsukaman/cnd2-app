@@ -3,7 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { DiagnosisResult } from '../DiagnosisResult';
 import { DiagnosisResult as DiagnosisResultType } from '@/types';
-import { setupGlobalMocks, createMockPrairieProfile } from '@/test-utils/mocks';
+import { setupGlobalMocks } from '@/test-utils/mocks';
+import { createMockPrairieProfile } from '@/test-utils/mock-x-profile';
 
 // Mock ShareButton component
 jest.mock('@/components/share/ShareButton', () => ({

@@ -58,19 +58,16 @@ export function createMockXProfile(name: string, overrides?: Partial<XProfile>):
       basic: { ...baseProfile.basic, ...overrides.basic },
       metrics: { ...baseProfile.metrics, ...overrides.metrics },
       details: { ...baseProfile.details, ...overrides.details },
-      analysis: { 
-        ...baseProfile.analysis, 
-        ...(overrides.analysis || {}),
+      analysis: {
         techStack: overrides.analysis?.techStack || baseProfile.analysis?.techStack || [],
-        interests: overrides.analysis?.interests || baseProfile.analysis?.interests || []
+        interests: overrides.analysis?.interests || baseProfile.analysis?.interests || [],
+        personality: overrides.analysis?.personality || baseProfile.analysis?.personality
       },
-      metadata: { 
-        ...baseProfile.metadata, 
-        ...(overrides.metadata || {}),
+      metadata: {
         fetchedAt: overrides.metadata?.fetchedAt || baseProfile.metadata?.fetchedAt || new Date().toISOString(),
-        cacheAge: overrides.metadata?.cacheAge || baseProfile.metadata?.cacheAge || 0,
-        embedAvailable: overrides.metadata?.embedAvailable ?? baseProfile.metadata?.embedAvailable ?? true,
-        scrapingAvailable: overrides.metadata?.scrapingAvailable ?? baseProfile.metadata?.scrapingAvailable ?? true
+        cacheAge: overrides.metadata?.cacheAge ?? baseProfile.metadata?.cacheAge ?? 0,
+        embedAvailable: overrides.metadata?.embedAvailable ?? baseProfile.metadata?.embedAvailable ?? false,
+        scrapingAvailable: overrides.metadata?.scrapingAvailable ?? baseProfile.metadata?.scrapingAvailable ?? false
       }
     };
   }
@@ -108,19 +105,16 @@ export function createMockPrairieProfile(name: string, overrides?: Partial<Prair
       basic: { ...prairieProfile.basic, ...overrides.basic },
       metrics: { ...prairieProfile.metrics, ...overrides.metrics },
       details: { ...prairieProfile.details, ...overrides.details },
-      analysis: { 
-        ...prairieProfile.analysis, 
-        ...(overrides.analysis || {}),
+      analysis: {
         techStack: overrides.analysis?.techStack || prairieProfile.analysis?.techStack || [],
-        interests: overrides.analysis?.interests || prairieProfile.analysis?.interests || []
+        interests: overrides.analysis?.interests || prairieProfile.analysis?.interests || [],
+        personality: overrides.analysis?.personality || prairieProfile.analysis?.personality
       },
-      metadata: { 
-        ...prairieProfile.metadata, 
-        ...(overrides.metadata || {}),
+      metadata: {
         fetchedAt: overrides.metadata?.fetchedAt || prairieProfile.metadata?.fetchedAt || new Date().toISOString(),
-        cacheAge: overrides.metadata?.cacheAge || prairieProfile.metadata?.cacheAge || 0,
-        embedAvailable: overrides.metadata?.embedAvailable ?? prairieProfile.metadata?.embedAvailable ?? true,
-        scrapingAvailable: overrides.metadata?.scrapingAvailable ?? prairieProfile.metadata?.scrapingAvailable ?? true
+        cacheAge: overrides.metadata?.cacheAge ?? prairieProfile.metadata?.cacheAge ?? 0,
+        embedAvailable: overrides.metadata?.embedAvailable ?? prairieProfile.metadata?.embedAvailable ?? false,
+        scrapingAvailable: overrides.metadata?.scrapingAvailable ?? prairieProfile.metadata?.scrapingAvailable ?? false
       },
       social: { ...prairieProfile.social, ...overrides.social },
       custom: { ...prairieProfile.custom, ...overrides.custom },
