@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import { toast } from 'sonner';
@@ -26,6 +26,7 @@ export function LikeButton({
   const [liked, setLiked] = useState(initialLiked);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const handleClick = async () => {
     if (!sessionId) {
@@ -63,9 +64,8 @@ export function LikeButton({
   };
   
   const createFloatingHearts = () => {
-    // 複数の小さなハートを飛ばすアニメーション（実装は簡略化）
-    const container = document.getElementById(`like-container-${entryId}`);
-    if (!container) return;
+    // 複数の小さなハートを飛ばすアニメーション
+    if (!containerRef.current) return;
     
     for (let i = 0; i < 3; i++) {
       setTimeout(() => {
@@ -80,7 +80,7 @@ export function LikeButton({
           left: ${15 + Math.random() * 20}px;
           bottom: 30px;
         `;
-        container.appendChild(heart);
+        containerRef.current?.appendChild(heart);
         
         setTimeout(() => heart.remove(), 1000);
       }, i * 100);
@@ -89,7 +89,7 @@ export function LikeButton({
   
   return (
     <div 
-      id={`like-container-${entryId}`}
+      ref={containerRef}
       className="relative inline-flex items-center gap-2"
     >
       <motion.button

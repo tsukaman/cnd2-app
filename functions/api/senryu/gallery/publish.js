@@ -71,7 +71,8 @@ export async function onRequestPost(context) {
     }
     
     // ギャラリーエントリーを作成
-    const entryId = `gallery_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // crypto.randomUUID()で衝突を回避
+    const entryId = `gallery_${crypto.randomUUID()}`;
     const isAnonymous = preference.displayName === 'anonymous';
     
     const galleryEntry = {

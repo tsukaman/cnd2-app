@@ -20,8 +20,10 @@ export default function SenryuGallery() {
   const [playerCountFilter, setPlayerCountFilter] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   
-  // ギャラリーデータ取得
+  // ギャラリーデータ取得（AbortController追加）
   useEffect(() => {
+    const controller = new AbortController();
+    
     const fetchGallery = async () => {
       setIsLoading(true);
       try {
@@ -34,17 +36,32 @@ export default function SenryuGallery() {
           params.playerCountMax = max;
         }
         
+        // AbortSignalを追加（将来的にAPIクライアントで対応）
         const { entries: data } = await senryuApi.getGalleryList(params);
-        setEntries(data);
-      } catch (error) {
-        console.error('Failed to fetch gallery:', error);
-        toast.error('ギャラリーの読み込みに失敗しました');
+        
+        // コンポーネントがアンマウントされていない場合のみ状態を更新
+        if (!controller.signal.aborted) {
+          setEntries(data);
+        }
+      } catch (error: any) {
+        // 中断エラーは無視
+        if (error.name !== 'AbortError') {
+          console.error('Failed to fetch gallery:', error);
+          toast.error('ギャラリーの読み込みに失敗しました');
+        }
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
     
     fetchGallery();
+    
+    // クリーンアップ関数
+    return () => {
+      controller.abort();
+    };
   }, [sort, playerCountFilter]);
   
   // いいね処理

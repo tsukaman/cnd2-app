@@ -7,14 +7,16 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   
-  // クエリパラメータ取得
+  // クエリパラメータ取得（バリデーション強化）
   const sort = url.searchParams.get('sort') || 'latest'; // latest, popular, random
   const dateFrom = url.searchParams.get('dateFrom');
   const dateTo = url.searchParams.get('dateTo');
-  const playerCountMin = parseInt(url.searchParams.get('playerCountMin') || '0');
-  const playerCountMax = parseInt(url.searchParams.get('playerCountMax') || '100');
-  const offset = parseInt(url.searchParams.get('offset') || '0');
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+  
+  // マイナス値を防ぐバリデーション
+  const playerCountMin = Math.max(0, parseInt(url.searchParams.get('playerCountMin') || '0'));
+  const playerCountMax = Math.max(0, parseInt(url.searchParams.get('playerCountMax') || '100'));
+  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0'));
+  const limit = Math.min(Math.max(1, parseInt(url.searchParams.get('limit') || '20')), 100);
   
   try {
     let entries = [];
@@ -25,7 +27,12 @@ export async function onRequestGet(context) {
       let index = [];
       
       if (indexData) {
-        index = JSON.parse(indexData);
+        try {
+          index = JSON.parse(indexData);
+        } catch (error) {
+          console.error('[Gallery List] Failed to parse index data:', error);
+          index = [];
+        }
       }
       
       // ソート処理
@@ -44,7 +51,13 @@ export async function onRequestGet(context) {
       for (const item of targetIndices) {
         const entryData = await env.SENRYU_KV.get(`gallery:${item.id}`);
         if (entryData) {
-          const entry = JSON.parse(entryData);
+          let entry;
+          try {
+            entry = JSON.parse(entryData);
+          } catch (error) {
+            console.error(`[Gallery List] Failed to parse entry ${item.id}:`, error);
+            continue;
+          }
           
           // フィルタリング
           let include = true;
@@ -78,7 +91,13 @@ export async function onRequestGet(context) {
           
           const entryData = await env.SENRYU_KV.get(`gallery:${item.id}`);
           if (entryData) {
-            const entry = JSON.parse(entryData);
+            let entry;
+            try {
+              entry = JSON.parse(entryData);
+            } catch (error) {
+              console.error(`[Gallery List] Failed to parse entry ${item.id}:`, error);
+              continue;
+            }
             
             let include = true;
             
