@@ -227,27 +227,17 @@ export default function SenryuGameRoom() {
     // プレゼンターが自分のプレゼンを完了させた場合
     const currentPresenter = room?.players?.[room?.currentPresenterIndex];
     const isMyTurn = currentPresenter?.id === playerId;
-    const isHost = room?.hostId === playerId;
     
-    if (playerId && roomId) {
-      // プレゼンター本人またはホストが処理を実行
-      if (isMyTurn || isHost) {
-        try {
-          // 次のプレゼンターに移行
-          const { room: updatedRoom } = await senryuApi.nextPresenter(roomId, { playerId });
-          setPollingRoom(updatedRoom);
-        } catch (error) {
-          console.error('Failed to move to next presenter:', error);
-          // エラー時はホストが再度試行
-          if (isHost) {
-            setTimeout(() => {
-              handleNextPresenter();
-            }, 1000);
-          }
-        }
-      } else {
-        // 参加者の場合、ホストに処理を促すためのログ
-        console.log('Presentation timer completed for participant, waiting for host/presenter to transition');
+    if (playerId && roomId && isMyTurn) {
+      // プレゼンター本人のみが処理を実行
+      console.log(`[Timer] ${playerId} completing presentation for room ${roomId}`);
+      try {
+        // 次のプレゼンターに移行
+        const { room: updatedRoom } = await senryuApi.nextPresenter(roomId, { playerId });
+        setPollingRoom(updatedRoom);
+      } catch (error) {
+        console.error('[Timer] Failed to move to next presenter:', error);
+        // エラー時はSSE/ポーリングによる状態更新を待つ
       }
     }
   };
@@ -540,7 +530,15 @@ export default function SenryuGameRoom() {
                             </h3>
                             <PresentationTimer
                               duration={room.gameConfig?.presentationTimeLimit || room.presentationTimeLimit || 60}
-                              onComplete={handlePresentationComplete}
+                              onComplete={() => {
+                                // 参加者はタイマー終了を観察するのみ（API呼び出しはしない）
+                                if (isMyTurn) {
+                                  // プレゼンター本人のみが終了処理を実行
+                                  handlePresentationComplete();
+                                } else {
+                                  console.log('[Timer] Presentation timer completed for observer');
+                                }
+                              }}
                               isActive={room.presentationStarted || false}
                               allowSkip={isMyTurn} // 自分のターンなら早期終了できる
                             />
