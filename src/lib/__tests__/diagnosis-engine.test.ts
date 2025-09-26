@@ -14,9 +14,17 @@ describe('diagnosis-engine', () => {
       username: 'Backend Engineer',
       bio: 'Love Kubernetes',
     },
+    metrics: {
+      followers: 100,
+      following: 50,
+      tweets: 200,
+      listed: 5,
+    },
     details: {
       topics: ['#kubernetes', '#go', 'Kubernetes', 'Go', 'Docker'],
       hashtags: ['Cloud Native', 'DevOps'],
+      recentTweets: [],
+      mentionedUsers: [],
     },
     social: {
       twitter: 'test1',
@@ -32,9 +40,17 @@ describe('diagnosis-engine', () => {
       username: 'Frontend Engineer',
       bio: 'React enthusiast',
     },
+    metrics: {
+      followers: 200,
+      following: 100,
+      tweets: 300,
+      listed: 10,
+    },
     details: {
       topics: ['#react', '#typescript', 'React', 'TypeScript', 'Next.js'],
       hashtags: ['Web Performance', 'UX'],
+      recentTweets: [],
+      mentionedUsers: [],
     },
     social: {
       twitter: 'test2',
