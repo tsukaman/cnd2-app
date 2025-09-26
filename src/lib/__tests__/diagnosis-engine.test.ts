@@ -15,8 +15,7 @@ describe('diagnosis-engine', () => {
       bio: 'Love Kubernetes',
     },
     details: {
-      topics: ['#kubernetes', '#go'],
-      topics: ['Kubernetes', 'Go', 'Docker'],
+      topics: ['#kubernetes', '#go', 'Kubernetes', 'Go', 'Docker'],
       hashtags: ['Cloud Native', 'DevOps'],
     },
     social: {
@@ -34,8 +33,7 @@ describe('diagnosis-engine', () => {
       bio: 'React enthusiast',
     },
     details: {
-      topics: ['#react', '#typescript'],
-      topics: ['React', 'TypeScript', 'Next.js'],
+      topics: ['#react', '#typescript', 'React', 'TypeScript', 'Next.js'],
       hashtags: ['Web Performance', 'UX'],
     },
     social: {

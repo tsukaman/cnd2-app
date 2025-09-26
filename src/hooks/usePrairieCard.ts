@@ -123,7 +123,6 @@ export function usePrairieCard(): UsePrairieCardReturn {
         toastOptions.action = {
           label: 'サンプルデータを使用',
           onClick: () => {
-            // eslint-disable-next-line react-hooks/rules-of-hooks
             useSampleData();
           }
         };

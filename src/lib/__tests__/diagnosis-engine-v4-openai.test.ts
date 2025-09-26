@@ -61,8 +61,7 @@ describe('AstrologicalDiagnosisEngineV4', () => {
         bio: 'クラウドネイティブエンジニア',
       },
       details: {
-        topics: ['cloud'],
-        topics: ['Kubernetes', 'Docker'],
+        topics: ['cloud', 'Kubernetes', 'Docker'],
         hashtags: ['DevOps'],
       },
       social: {},
@@ -77,8 +76,7 @@ describe('AstrologicalDiagnosisEngineV4', () => {
         bio: 'UXデザイナー',
       },
       details: {
-        topics: ['design'],
-        topics: ['Figma', 'Sketch'],
+        topics: ['design', 'Figma', 'Sketch'],
         hashtags: ['UI/UX'],
       },
       social: {},
