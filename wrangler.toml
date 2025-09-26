@@ -12,3 +12,9 @@ preview_id = "b9f1e0af78a14ebcbfab872fb4764281"
 binding = "SENRYU_KV"
 id = "7eadda14d02b4bb389edaf21f94d1fc8"
 preview_id = "7eadda14d02b4bb389edaf21f94d1fc8"
+
+# Durable Objects for WebSocket game rooms
+[[durable_objects.bindings]]
+name = "SENRYU_ROOM"
+class_name = "SenryuRoom"
+script_name = "senryu-room"

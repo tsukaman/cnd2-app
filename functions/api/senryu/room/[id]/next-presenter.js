@@ -1,3 +1,19 @@
+
+// CORS headers for local development
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400'
+};
+
+// Handle OPTIONS request for CORS preflight
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders
+  });
+}
 export async function onRequestPost(context) {
   const { request, env, params } = context;
   const roomId = params.id;
@@ -20,7 +36,10 @@ export async function onRequestPost(context) {
         error: '部屋が見つかりません'
       }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -34,7 +53,10 @@ export async function onRequestPost(context) {
         error: 'ホストまたは現在のプレゼンターのみが次へ進めることができます'
       }), {
         status: 403,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -54,7 +76,10 @@ export async function onRequestPost(context) {
             error: 'プレゼン終了処理が既に実行中です'
           }), {
             status: 409, // Conflict
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
           });
         }
       }
@@ -99,7 +124,8 @@ export async function onRequestPost(context) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache',
+        ...corsHeaders
       }
     });
     
@@ -109,7 +135,10 @@ export async function onRequestPost(context) {
       error: '次のプレゼンターへの移行に失敗しました'
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
     });
   }
 }

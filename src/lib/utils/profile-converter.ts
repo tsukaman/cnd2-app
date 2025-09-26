@@ -34,18 +34,20 @@ export function convertToFullProfile(profile: any): PrairieProfile {
   // 最小形式から完全形式に変換
   return {
     basic: {
+      username: 'unknown',
       name: profile?.name || '名称未設定',
-      title: profile?.title || '',
-      company: profile?.company || '',
       bio: profile?.bio || ''
     },
+    metrics: {
+      followers: 0,
+      following: 0,
+      tweets: 0
+    },
     details: {
-      tags: profile?.tags || [],
-      skills: profile?.skills || [],
-      interests: profile?.interests || [],
-      certifications: profile?.certifications || [],
-      communities: profile?.communities || [],
-      motto: profile?.motto
+      recentTweets: [],
+      topics: profile?.tags || [],
+      hashtags: [],
+      mentionedUsers: []
     },
     social: {
       twitter: profile?.twitter,
@@ -56,7 +58,15 @@ export function convertToFullProfile(profile: any): PrairieProfile {
       qiita: profile?.qiita,
       zenn: profile?.zenn
     },
-    custom: profile?.custom || {},
+    custom: profile?.custom || {
+      title: profile?.title || '',
+      company: profile?.company || '',
+      skills: profile?.skills || [],
+      interests: profile?.interests || [],
+      certifications: profile?.certifications || [],
+      communities: profile?.communities || [],
+      motto: profile?.motto
+    },
     meta: {
       sourceUrl: profile?.sourceUrl || '',
       createdAt: profile?.createdAt || new Date().toISOString(),
@@ -95,13 +105,14 @@ export function extractMinimalProfile(profile: PrairieProfile | any): {
   interests?: string[];
 } {
   if (isPrairieProfile(profile)) {
+    const custom = profile.custom as any || {};
     return {
       name: profile.basic.name,
-      title: profile.basic.title,
-      company: profile.basic.company,
+      title: custom.title || '',
+      company: custom.company || '',
       bio: profile.basic.bio,
-      skills: profile.details?.skills || [],
-      interests: profile.details?.interests || []
+      skills: custom.skills || [],
+      interests: custom.interests || []
     };
   }
   

@@ -70,8 +70,10 @@ export class PrairieCardParser {
       const sanitizedProfile = sanitizer.sanitizePrairieProfile(profile) as PrairieProfile;
       
       // CND²メタデータを追加
-      sanitizedProfile.meta.connectedBy = 'CND²';
-      sanitizedProfile.meta.hashtag = CND2_CONFIG.app.hashtag;
+      if (sanitizedProfile.meta) {
+        sanitizedProfile.meta.connectedBy = 'CND²';
+        sanitizedProfile.meta.hashtag = CND2_CONFIG.app.hashtag;
+      }
       
       // キャッシュに保存
       await this.cacheManager.save(normalizedUrl, sanitizedProfile);
@@ -179,19 +181,21 @@ export class PrairieCardParser {
     
     return {
       basic: {
+        username: this.extractText($, '.profile-username, .username, [data-field="username"]') || 'unknown',
         name: this.extractText($, '.profile-name, .name, h1.name, [data-field="name"]') || '名前未設定',
-        title: this.extractText($, '.profile-title, .title, .job-title, [data-field="title"]') || '',
-        company: this.extractText($, '.profile-company, .company, .organization, [data-field="company"]') || '',
         bio: this.extractFullText($, '.profile-bio, .bio, .description, .about, [data-field="bio"]') || '',
         avatar: this.extractImage($, '.profile-avatar img, .avatar img, .profile-image img, [data-field="avatar"] img'),
       },
+      metrics: {
+        followers: 0,
+        following: 0,
+        tweets: 0,
+      },
       details: {
-        tags: this.extractTags($),
-        skills: this.extractSkills($),
-        interests: this.extractInterests($),
-        certifications: this.extractCertifications($),
-        communities: this.extractCommunities($),
-        motto: this.extractText($, '.motto, .slogan, [data-field="motto"]'),
+        recentTweets: [],
+        topics: this.extractTags($),
+        hashtags: [],
+        mentionedUsers: [],
       },
       social: {
         twitter: this.extractSocialLink($, 'twitter', 'x.com'),
@@ -236,20 +240,26 @@ export class PrairieCardParser {
       // 最小限の情報でもプロファイルを作成
       const minimalProfile: PrairieProfile = {
         basic: {
+          username: 'unknown',
           name: $('h1, h2, .name').first().text().trim() || 'Unknown',
-          title: $('.title, .role').first().text().trim() || '',
-          company: $('.company, .organization').first().text().trim() || '',
           bio: $('.bio, .description, p').first().text().trim() || '',
         },
+        metrics: {
+          followers: 0,
+          following: 0,
+          tweets: 0,
+        },
         details: {
-          tags: [],
-          skills: [],
-          interests: [],
-          certifications: [],
-          communities: [],
+          recentTweets: [],
+          topics: [],
+          hashtags: [],
+          mentionedUsers: [],
         },
         social: {},
-        custom: {},
+        custom: {
+          title: $('.title, .role').first().text().trim() || '',
+          company: $('.company, .organization').first().text().trim() || '',
+        },
         meta: {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -404,6 +414,21 @@ export class PrairieCardParser {
 
   private extractCustomFields($: cheerio.CheerioAPI): Record<string, unknown> {
     const custom: Record<string, unknown> = {};
+    
+    // Extract title and company
+    const title = this.extractText($, '.profile-title, .title, .job-title, [data-field="title"]');
+    const company = this.extractText($, '.profile-company, .company, .organization, [data-field="company"]');
+    
+    if (title) custom.title = title;
+    if (company) custom.company = company;
+    
+    // Extract Prairie-specific fields
+    custom.skills = this.extractSkills($);
+    custom.interests = this.extractInterests($);
+    custom.certifications = this.extractCertifications($);
+    custom.communities = this.extractCommunities($);
+    const motto = this.extractText($, '.motto, .slogan, [data-field="motto"]');
+    if (motto) custom.motto = motto;
     
     // カスタムフィールドを探す
     $('[data-custom-field]').each((_, elem) => {
