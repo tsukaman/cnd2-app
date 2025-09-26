@@ -57,16 +57,13 @@ describe('AstrologicalDiagnosisEngineV4', () => {
     const mockProfile1: PrairieProfile = {
       basic: {
         name: 'テストユーザー1',
-        title: 'エンジニア',
-        company: 'テック社',
+        username: 'エンジニア',
         bio: 'クラウドネイティブエンジニア',
       },
       details: {
-        tags: ['cloud'],
-        skills: ['Kubernetes', 'Docker'],
-        interests: ['DevOps'],
-        certifications: [],
-        communities: [],
+        topics: ['cloud'],
+        topics: ['Kubernetes', 'Docker'],
+        hashtags: ['DevOps'],
       },
       social: {},
       custom: {},
@@ -76,16 +73,13 @@ describe('AstrologicalDiagnosisEngineV4', () => {
     const mockProfile2: PrairieProfile = {
       basic: {
         name: 'テストユーザー2',
-        title: 'デザイナー',
-        company: 'デザイン社',
+        username: 'デザイナー',
         bio: 'UXデザイナー',
       },
       details: {
-        tags: ['design'],
-        skills: ['Figma', 'Sketch'],
-        interests: ['UI/UX'],
-        certifications: [],
-        communities: [],
+        topics: ['design'],
+        topics: ['Figma', 'Sketch'],
+        hashtags: ['UI/UX'],
       },
       social: {},
       custom: {},
@@ -205,16 +199,13 @@ describe('AstrologicalDiagnosisEngineV4', () => {
       const profile: PrairieProfile = {
         basic: {
           name: 'Long Name User',
-          title: 'Very Long Title That Should Be Truncated',
-          company: 'Very Long Company Name That Should Be Truncated As Well',
+          username: 'Very Long Title That Should Be Truncated',
           bio: 'A'.repeat(300), // Very long bio
         },
         details: {
-          tags: [],
+          topics: [],
           skills: Array(20).fill('skill'), // 20 skills
           interests: Array(10).fill('interest'), // 10 interests
-          certifications: [],
-          communities: [],
         },
         social: {},
         custom: {},

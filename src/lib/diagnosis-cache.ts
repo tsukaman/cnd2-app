@@ -34,8 +34,8 @@ export class DiagnosisCache {
     const profileKeys = profiles
       .map(p => ({
         name: p.basic.name,
-        skills: (p.details.skills || []).sort().join(','),
-        interests: (p.details.interests || []).sort().join(','),
+        topics: (p.details.topics || []).sort().join(','),
+        hashtags: (p.details.hashtags || []).sort().join(','),
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
