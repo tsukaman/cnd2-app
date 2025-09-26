@@ -228,8 +228,8 @@ export function AstrologicalDiagnosisResult({ result, onReset }: AstrologicalDia
                 </div>
                 <div>
                   <p className="text-white font-medium">{participant.basic?.name || `参加者${index + 1}`}</p>
-                  {participant.basic?.company && (
-                    <p className="text-gray-400 text-sm">{participant.basic.company}</p>
+                  {participant.basic?.location && (
+                    <p className="text-gray-400 text-sm">{participant.basic.location}</p>
                   )}
                 </div>
               </div>

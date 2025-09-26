@@ -7,6 +7,7 @@ import { generateId } from '../utils/id.js';
 const { ALL_CNCF_PROJECTS, getRandomCNCFProject } = require('../utils/cncf-projects.js');
 import { createSafeDebugLogger, getSafeKeyInfo, isProduction } from '../utils/debug-helpers.js';
 import { convertToFullProfile, extractMinimalProfile } from '../utils/profile-converter.js';
+import { isXProfile, summarizeXProfile } from '../utils/x-profile-converter.js';
 import { callOpenAIWithProxy, isRegionRestrictionError } from '../utils/openai-proxy.js';
 
 /**
@@ -285,11 +286,17 @@ export async function generateFortuneDiagnosis(profiles, mode, env) {
 
 /**
  * プロフィールを要約（品質重視で情報を保持）
- * 共通化ユーティリティを使用しつつ、文字数制限を適用
+ * XProfileとPrairieProfileの両方に対応
  */
 function summarizeProfile(profile) {
+  // XProfileの場合は専用のサマライザーを使用
+  if (isXProfile(profile)) {
+    return summarizeXProfile(profile);
+  }
+
+  // 従来のPrairieProfile形式の場合
   const minimal = extractMinimalProfile(profile);
-  
+
   const summary = {
     name: minimal.name,
     title: (minimal.title || '').substring(0, 100), // 肩書きは重要なので100文字まで
@@ -301,7 +308,7 @@ function summarizeProfile(profile) {
     motto: (profile.details?.motto || profile.motto || '').substring(0, 100), // モットーも重要な個性
     tags: (profile.details?.tags || profile.tags || []).slice(0, 5) // タグ情報も追加
   };
-  
+
   // CNDW2025データが存在する場合は追加
   if (profile.custom?.cndw2025) {
     summary.cndw2025 = {
@@ -312,7 +319,7 @@ function summarizeProfile(profile) {
       message: profile.custom.cndw2025.message                 // 🔥 ひとこと
     };
   }
-  
+
   return summary;
 }
 

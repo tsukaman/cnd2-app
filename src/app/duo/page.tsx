@@ -8,15 +8,15 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { saveDiagnosisResult } from '@/lib/utils/kv-storage';
 import { BackgroundEffects } from '@/components/effects/BackgroundEffects';
-import PrairieCardInput from '@/components/prairie/PrairieCardInput';
+import XProfileInput from '@/components/x-profile/XProfileInput';
 import { DiagnosisLoadingAnimation } from '@/components/diagnosis/DiagnosisLoadingAnimation';
-import { usePrairieCard } from '@/hooks/usePrairieCard';
+import { useXProfile } from '@/hooks/useXProfile';
 import { useDiagnosis } from '@/hooks/useDiagnosis';
 import { RETRY_CONFIG, calculateBackoffDelay } from '@/lib/constants/retry';
 import { isProduction } from '@/lib/utils/environment';
 import { logger } from '@/lib/logger';
 
-import type { PrairieProfile } from '@/types';
+import type { XProfile } from '@/types';
 
 // Animation durations
 const ANIMATION_DURATIONS = {
@@ -26,9 +26,9 @@ const ANIMATION_DURATIONS = {
 export default function DuoPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<'first' | 'second' | 'ready'>('first');
-  const [profiles, setProfiles] = useState<[PrairieProfile | null, PrairieProfile | null]>([null, null]);
+  const [profiles, setProfiles] = useState<[XProfile | null, XProfile | null]>([null, null]);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const { error: parseError } = usePrairieCard();
+  const { error: parseError } = useXProfile();
   const { generateDiagnosis, loading: diagnosisLoading, error: diagnosisError } = useDiagnosis();
 
   // 1人目のプロフィール読み込み完了時に自動で2人目へ
@@ -55,8 +55,8 @@ export default function DuoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles[1], currentStep, isTransitioning]);
 
-  const handleProfileParsed = (profile: PrairieProfile, index: 0 | 1) => {
-    const newProfiles = [...profiles] as [PrairieProfile | null, PrairieProfile | null];
+  const handleProfileParsed = (profile: XProfile, index: 0 | 1) => {
+    const newProfiles = [...profiles] as [XProfile | null, XProfile | null];
     newProfiles[index] = profile;
     setProfiles(newProfiles);
   };
@@ -165,7 +165,7 @@ export default function DuoPage() {
               Let's Connect 'n' Discover!
             </h1>
             <p className="text-gray-300 text-lg">
-              Prairie Cardから2人の相性をチェック
+              X (Twitter) プロフィールから2人の相性をチェック
             </p>
           </div>
         </motion.div>
@@ -233,12 +233,12 @@ export default function DuoPage() {
               <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg rounded-3xl p-8 border border-gray-700/50">
                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                   <span className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center mr-3 text-sm">1</span>
-                  1人目のPrairie Card
+                  1人目の X プロフィール
                 </h2>
-                
-                <PrairieCardInput 
+
+                <XProfileInput
                   onProfileLoaded={(profile) => handleProfileParsed(profile, 0)}
-                  placeholder="Prairie CardのURLを入力またはQRコードをスキャン"
+                  placeholder="@username または username"
                 />
                 
                 {profiles[0] && (
@@ -270,7 +270,7 @@ export default function DuoPage() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-white flex items-center">
                     <span className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
-                    2人目のPrairie Card
+                    2人目の X プロフィール
                   </h2>
                   <button
                     onClick={handleBack}
@@ -280,10 +280,10 @@ export default function DuoPage() {
                     1人目に戻る
                   </button>
                 </div>
-                
-                <PrairieCardInput 
+
+                <XProfileInput
                   onProfileLoaded={(profile) => handleProfileParsed(profile, 1)}
-                  placeholder="Prairie CardのURLを入力またはQRコードをスキャン"
+                  placeholder="@username または username"
                 />
                 
                 {profiles[1] && (

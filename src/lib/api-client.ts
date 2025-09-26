@@ -2,7 +2,7 @@
 // 環境に応じてエンドポイントを切り替え
 
 import { logger } from './logger';
-import { PrairieProfile, DiagnosisResult } from '@/types';
+import { XProfile, DiagnosisResult } from '@/types';
 import { withRetry, isRetryableError } from './utils/retry';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
@@ -99,54 +99,54 @@ async function handleApiResponse<T = unknown>(response: Response): Promise<T> {
 }
 
 export const apiClient = {
-  // Prairie Card API
-  prairie: {
-    async fetch(url: string, options?: { enableRetry?: boolean; onRetry?: (attempt: number, error: Error) => void }) {
+  // X Profile API
+  xProfile: {
+    async fetch(username: string, options?: { enableRetry?: boolean; onRetry?: (attempt: number, error: Error) => void }) {
       const { enableRetry = true, onRetry } = options || {};
-      
+
       const fetchFn = async () => {
-        const response = await fetch(getApiUrl('api/prairie'), {
+        const response = await fetch(getApiUrl('api/x-profile'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ url }),
+          body: JSON.stringify({ username }),
         });
-        
+
         if (!response.ok) {
           // Check if it's a retryable error
           if (response.status === 502 || response.status === 503 || response.status === 504) {
-            const error = new Error(`Prairie Card APIが一時的に利用できません (${response.status})`);
+            const error = new Error(`X Profile APIが一時的に利用できません (${response.status})`);
             if (enableRetry && isRetryableError(error)) {
               throw error; // Will be caught by withRetry
             }
           }
-          await handleApiError(response, 'Prairie Card の取得に失敗しました');
+          await handleApiError(response, 'X プロフィールの取得に失敗しました');
         }
-        
+
         return handleApiResponse(response);
       };
-      
+
       if (enableRetry) {
         return withRetry(fetchFn, {
           maxAttempts: 3,
           initialDelay: 1000,
           onRetry: (attempt, error) => {
-            logger.info(`[Prairie API] Retry attempt ${attempt}/3:`, error.message);
+            logger.info(`[X Profile API] Retry attempt ${attempt}/3:`, error.message);
             if (onRetry) {
               onRetry(attempt, error);
             }
           }
         });
       }
-      
+
       return fetchFn();
     }
   },
   
   // Diagnosis API
   diagnosis: {
-    async generate(profiles: PrairieProfile[], mode: 'duo' | 'group' = 'duo') {
+    async generate(profiles: XProfile[], mode: 'duo' | 'group' = 'duo') {
       const response = await fetch(getApiUrl('api/diagnosis'), {
         method: 'POST',
         headers: {

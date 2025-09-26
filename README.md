@@ -18,7 +18,7 @@
 
 ## 📋 概要
 
-**CND²（CloudNative Days × Connect 'n' Discover）** は、CloudNative Days Winter 2025（11月18-19日 @ 東京）のための特別な相性診断アプリケーションです。Prairie Cardの情報を基に、エンジニア同士の技術的な相性や協働の可能性を可視化し、「出会いを二乗でスケール」します。
+**CND²（CloudNative Days × Connect 'n' Discover）** は、CloudNative Days Winter 2025（11月18-19日 @ 東京）のための特別な相性診断アプリケーションです。X (Twitter)のプロフィール情報を基に、エンジニア同士の技術的な相性や協働の可能性を可視化し、「出会いを二乗でスケール」します。
 
 > **最終更新**: 2025-09-07 - v1.12.1
 
@@ -28,14 +28,14 @@
   - CND²のコンセプトを体現するメイン機能
   - 「つながり」と「発見」を強調したアクション感あるネーミング
 - **動的スコアリング**: 0-100%の全範囲で相性を評価（低スコアでもポジティブな体験）
-- **Prairie Card連携**: Edge Runtime対応の高速パーサーで自動プロフィール取得
-  - URL自動検出とペースト対応（結果ページでは無効化）
+- **X (Twitter)プロフィール連携**: ハイブリッドAPI（oEmbed + スクレイピング）で自動プロフィール取得
+  - @username入力の簡単な操作（@あり/なし両対応）
   - リトライ機能（最大3回、指数バックオフ）
-  - 開発環境でのサンプルデータサポート
-  - **セキュアなURL検証**: my.prairie.cardsドメインのみ許可（v1.6.1）
-  - **CNDW2025特別対応**: ProfileContentブロックから構造化データを抽出（v1.7.0）
-    - 興味分野、推しOSS、参加回数などの追加情報を診断に活用
-    - 詳細は[Prairie Card設定ガイド](./docs/CNDW2025_PRAIRIE_CARD_GUIDE.md)参照
+  - 開発環境でのサンプルデータサポート（elonmusk, naval, paul_graham等）
+  - **無料API利用**: X oEmbed API（認証不要）+ Webスクレイピング
+  - **豊富なデータ取得**: プロフィール、フォロワー数、最近のツイート、トピック、ハッシュタグ
+    - ツイート内容から技術スタックを自動推測
+    - エンゲージメント率の計算
 - **AI診断**: 
   - OpenAI GPT-4o-miniを使用した高度な相性分析
   - **OpenRouter統合**: 地域制限回避機能（v1.8.0）
@@ -81,7 +81,7 @@
 - **Runtime**: Edge Runtime compatible
 - **AI Integration**: OpenAI API (GPT-4o-mini) with 10s timeout
 - **Data Storage**: Cloudflare Workers KV (7日間自動削除)
-- **Data Parsing**: Edge Runtime compatible Prairie Card parser
+- **Data Parsing**: Edge Runtime compatible X profile fetcher (oEmbed API + Web Scraping)
 - **Rate Limiting**: 10 requests/minute per IP (in-memory store for Edge compatibility)
 - **Security**: 
   - HTML sanitization (カスタムサニタイザー実装)

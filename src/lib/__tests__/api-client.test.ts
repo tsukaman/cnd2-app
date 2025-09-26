@@ -23,25 +23,25 @@ describe('API Client', () => {
     }
   });
 
-  describe('Prairie API', () => {
+  describe('X Profile API', () => {
     describe('fetch', () => {
       it('正しいURLでPOSTリクエストを送信する', async () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-        const mockResponse = { success: true, data: { name: 'Test User' } };
+        const mockResponse = { success: true, data: { basic: { username: 'testuser' } } };
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: async () => mockResponse,
         });
 
-        const result = await apiClient.prairie.fetch('https://my.prairie.cards/u/testuser');
+        const result = await apiClient.xProfile.fetch('testuser');
 
         expect(global.fetch).toHaveBeenCalledWith(
-          'https://test-api.example.com/api/prairie',
+          'https://test-api.example.com/api/x-profile',
           expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: 'https://my.prairie.cards/u/testuser' }),
+            body: JSON.stringify({ username: 'testuser' }),
           })
         );
         // API client now returns data || result for wrapped responses
@@ -58,7 +58,7 @@ describe('API Client', () => {
           json: async () => ({ error: { message: 'Not found' } }),
         });
 
-        await expect(apiClient.prairie.fetch('https://example.com/error-test'))
+        await expect(apiClient.xProfile.fetch('errortest'))
           .rejects.toThrow('Not found');
       });
 
@@ -72,8 +72,8 @@ describe('API Client', () => {
           json: async () => { throw new Error('Parse error'); },
         });
 
-        await expect(apiClient.prairie.fetch('https://example.com/error-test'))
-          .rejects.toThrow('Prairie Card の取得に失敗しました');
+        await expect(apiClient.xProfile.fetch('errortest'))
+          .rejects.toThrow('X プロフィールの取得に失敗しました');
       });
     });
   });
@@ -264,14 +264,14 @@ describe('API Client', () => {
       const { apiClient } = require('../api-client');
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true }),
+        json: async () => ({ success: true, data: { basic: { username: 'test' } } }),
       });
 
       // スラッシュ付きのパスでも正しいURLになる
-      await apiClient.prairie.fetch('test', { enableRetry: false });
+      await apiClient.xProfile.fetch('test');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://test-api.example.com/api/prairie',
+        'https://test-api.example.com/api/x-profile',
         expect.any(Object)
       );
     });
@@ -279,28 +279,28 @@ describe('API Client', () => {
     it('API_BASE_URLが未設定の場合相対パスを使用する', async () => {
       // windowオブジェクトをモック（モジュールロード前に設定が必要）
       (global as unknown as { window?: unknown }).window = {};
-      
+
       delete process.env.NEXT_PUBLIC_API_BASE_URL;
-      
+
       // windowが定義されている状態でモジュールを再読み込み
       jest.resetModules();
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { apiClient } = require('../api-client');
-      
+
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ success: true }),
+        json: async () => ({ success: true, data: { basic: { username: 'test' } } }),
       });
 
-      await apiClient.prairie.fetch('test', { enableRetry: false });
-      
+      await apiClient.xProfile.fetch('test');
+
       // 相対パスでfetchが呼ばれることを確認
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/prairie',
+        '/api/x-profile',
         expect.any(Object)
       );
-      
+
       // クリーンアップ
       delete (global as unknown as { window?: unknown }).window;
       jest.resetModules();
@@ -316,7 +316,7 @@ describe('API Client', () => {
         new Error('Network error')
       );
 
-      await expect(apiClient.prairie.fetch('test', { enableRetry: true }))
+      await expect(apiClient.xProfile.fetch('test'))
         .rejects.toThrow('Network error');
     });
 
@@ -329,7 +329,7 @@ describe('API Client', () => {
         json: async () => { throw new Error('Invalid JSON'); },
       });
 
-      await expect(apiClient.prairie.fetch('test', { enableRetry: true }))
+      await expect(apiClient.xProfile.fetch('test'))
         .rejects.toThrow('Invalid JSON');
     });
 
@@ -341,7 +341,7 @@ describe('API Client', () => {
         new Error('Request timeout')
       );
 
-      await expect(apiClient.prairie.fetch('test', { enableRetry: true }))
+      await expect(apiClient.xProfile.fetch('test'))
         .rejects.toThrow('Request timeout');
     });
   });

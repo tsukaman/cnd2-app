@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { PrairieProfile, DiagnosisResult } from '@/types';
+import { XProfile, DiagnosisResult } from '@/types';
 import { logger } from '@/lib/logger';
 import { apiClient } from '@/lib/api-client';
 
@@ -7,7 +7,7 @@ interface UseDiagnosisReturn {
   loading: boolean;
   error: string | null;
   result: DiagnosisResult | null;
-  generateDiagnosis: (profiles: PrairieProfile[], mode: 'duo' | 'group') => Promise<DiagnosisResult | null>;
+  generateDiagnosis: (profiles: XProfile[], mode: 'duo' | 'group') => Promise<DiagnosisResult | null>;
   clearError: () => void;
   clearResult: () => void;
 }
@@ -18,7 +18,7 @@ export function useDiagnosis(): UseDiagnosisReturn {
   const [result, setResult] = useState<DiagnosisResult | null>(null);
 
   const generateDiagnosis = useCallback(async (
-    profiles: PrairieProfile[], 
+    profiles: XProfile[],
     mode: 'duo' | 'group'
   ): Promise<DiagnosisResult | null> => {
     setLoading(true);

@@ -3,8 +3,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import DuoPage from '../page';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createLocalStorageMock, createMockPrairieProfile } from '@/test-utils/mocks';
-import type { PrairieProfile, DiagnosisResult } from '@/types';
+import { createLocalStorageMock } from '@/test-utils/mocks';
+import { XProfileFactory } from '@/test-utils/x-profile-factory';
+import type { XProfile, DiagnosisResult } from '@/types';
 
 // Next.js navigationモック
 jest.mock('next/navigation', () => ({
@@ -25,7 +26,7 @@ global.localStorage = localStorageMock as unknown as Storage;
 // API clientモック
 jest.mock('@/lib/api-client', () => ({
   apiClient: {
-    prairie: {
+    xProfile: {
       fetch: jest.fn(),
     },
     diagnosis: {
@@ -35,29 +36,30 @@ jest.mock('@/lib/api-client', () => ({
 }));
 
 // コンポーネントモック
-jest.mock('@/components/prairie/PrairieCardInput', () => ({
+jest.mock('@/components/x-profile/XProfileInput', () => ({
   __esModule: true,
-  default: function MockPrairieCardInput({ onProfileLoaded, disabled }: { onProfileLoaded: (profile: PrairieProfile) => void; disabled?: boolean }) {
+  default: function MockXProfileInput({ onProfileLoaded, disabled }: { onProfileLoaded: (profile: XProfile) => void; disabled?: boolean }) {
     const React = jest.requireActual('react') as typeof import('react');
     const [error, setError] = React.useState<string | null>(null);
-    
+
     const handleClick = async () => {
       if (disabled) return;
       setError(null);
-      
-      // Simulate Prairie card loading
+
+      // Simulate X profile loading
       try {
         // Always use the mock profile for tests
-        onProfileLoaded(createMockPrairieProfile('Test User'));
+        const { XProfileFactory } = jest.requireActual('@/test-utils/x-profile-factory') as typeof import('@/test-utils/x-profile-factory');
+        onProfileLoaded(XProfileFactory.createDeveloper('Test User'));
       } catch {
         // Show error message like the real component
-        setError('Prairie Cardの読み込みに失敗しました');
+        setError('X プロフィールの読み込みに失敗しました');
       }
     };
-    
+
     return (
-      <div data-testid="prairie-card-input">
-        <input type="text" placeholder="Prairie Card URL" />
+      <div data-testid="x-profile-input">
+        <input type="text" placeholder="@username または username" />
         <button onClick={handleClick} disabled={disabled}>
           スキャン
         </button>
@@ -96,37 +98,8 @@ describe.skip('DuoPage', () => {
     refresh: jest.fn(),
   };
 
-  const mockProfile1 = {
-    ...createMockPrairieProfile('Test User 1'),
-    basic: {
-      ...createMockPrairieProfile('Test User 1').basic,
-      name: 'Test User 1',
-      title: 'Engineer',
-      company: 'Tech Corp',
-      bio: 'Bio 1',
-    },
-    details: {
-      ...createMockPrairieProfile('Test User 1').details,
-      skills: ['JavaScript'],
-      interests: ['Web'],
-    },
-  };
-
-  const mockProfile2 = {
-    ...createMockPrairieProfile('Test User 2'),
-    basic: {
-      ...createMockPrairieProfile('Test User 2').basic,
-      name: 'Test User 2',
-      title: 'Designer',
-      company: 'Design Inc',
-      bio: 'Bio 2',
-    },
-    details: {
-      ...createMockPrairieProfile('Test User 2').details,
-      skills: ['Figma'],
-      interests: ['UI/UX'],
-    },
-  };
+  const mockProfile1 = XProfileFactory.createDeveloper('Test User 1');
+  const mockProfile2 = XProfileFactory.createDesigner('Test User 2');
 
   const mockDiagnosisResult = {
     id: 'test-123',
@@ -217,7 +190,7 @@ describe.skip('DuoPage', () => {
     });
 
     it('プロファイル取得エラーを処理する', async () => {
-      (apiClient.prairie.fetch as jest.Mock).mockRejectedValueOnce(
+      (apiClient.xProfile.fetch as jest.Mock).mockRejectedValueOnce(
         new Error('Failed to fetch profile')
       );
 
@@ -227,14 +200,14 @@ describe.skip('DuoPage', () => {
       fireEvent.click(scanButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/Prairie Cardの読み込みに失敗/)).toBeInTheDocument();
+        expect(screen.getByText(/X プロフィールの読み込みに失敗/)).toBeInTheDocument();
       });
     });
   });
 
   describe('診断実行', () => {
     beforeEach(async () => {
-      (apiClient.prairie.fetch as jest.Mock)
+      (apiClient.xProfile.fetch as jest.Mock)
         .mockResolvedValueOnce({ success: true, data: mockProfile1 })
         .mockResolvedValueOnce({ success: true, data: mockProfile2 });
 
@@ -252,7 +225,7 @@ describe.skip('DuoPage', () => {
       fireEvent.click(screen.getAllByText('スキャン')[1]);
 
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(2);
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledTimes(2);
       });
 
       // 診断開始
@@ -285,7 +258,7 @@ describe.skip('DuoPage', () => {
       fireEvent.click(screen.getAllByText('スキャン')[1]);
 
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(2);
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledTimes(2);
       });
 
       // 診断開始
@@ -312,7 +285,7 @@ describe.skip('DuoPage', () => {
       fireEvent.click(screen.getAllByText('スキャン')[1]);
 
       await waitFor(() => {
-        expect(apiClient.prairie.fetch).toHaveBeenCalledTimes(2);
+        expect(apiClient.xProfile.fetch).toHaveBeenCalledTimes(2);
       });
 
       // 診断開始

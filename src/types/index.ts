@@ -25,29 +25,67 @@ export type DiagnosisApiResponse = ApiResponse<{
   result: DiagnosisResult;
 }>;
 
-export type PrairieApiResponse = ApiResponse<PrairieProfile>;
+export type XProfileApiResponse = ApiResponse<XProfile>;
 
 export type ResultApiResponse = ApiResponse<{
   result: DiagnosisResult;
 }>;
 
-export interface PrairieProfile {
+// X (Twitter) Profile structure
+export interface XProfile {
   basic: {
-    name: string;
-    title: string;
-    company: string;
-    bio: string;
-    avatar?: string;
+    id?: string;
+    username: string;       // @なしのユーザー名
+    name: string;           // 表示名
+    bio: string;            // 自己紹介
+    location?: string;
+    website?: string;
+    avatar?: string;        // プロフィール画像URL
+    banner?: string;        // ヘッダー画像URL
+    verified?: boolean;
+    protected?: boolean;    // 非公開アカウント
+    createdAt?: string;     // アカウント作成日
+  };
+  metrics: {
+    followers: number;
+    following: number;
+    tweets: number;
+    listed?: number;
   };
   details: {
-    tags: string[];
-    skills: string[];
-    interests: string[];
-    certifications: string[];
-    communities: string[];
-    motto?: string;
+    recentTweets: Array<{
+      id: string;
+      text: string;
+      createdAt: string;
+      metrics?: {
+        likes: number;
+        retweets: number;
+        replies: number;
+      };
+    }>;
+    topics: string[];         // 投稿から抽出した技術トピック
+    hashtags: string[];       // 使用頻度の高いハッシュタグ
+    mentionedUsers: string[]; // よくメンションするユーザー
+    languages?: string[];     // 検出された言語
+    activeHours?: number[];   // アクティブな時間帯
   };
-  social: {
+  analysis?: {
+    techStack: string[];      // 推定される技術スタック
+    interests: string[];      // 興味のある分野
+    personality?: string;     // コミュニケーションスタイル
+  };
+  metadata?: {
+    fetchedAt: string;
+    cacheAge: number;
+    embedAvailable: boolean;
+    scrapingAvailable: boolean;
+  };
+}
+
+// Legacy Prairie Profile type for backward compatibility during migration
+export interface PrairieProfile extends XProfile {
+  // Maps old Prairie structure to new X structure
+  social?: {
     twitter?: string;
     github?: string;
     linkedin?: string;
@@ -56,8 +94,8 @@ export interface PrairieProfile {
     qiita?: string;
     zenn?: string;
   };
-  custom: Record<string, unknown>;
-  meta: {
+  custom?: Record<string, unknown>;
+  meta?: {
     createdAt?: string;
     updatedAt?: string;
     connectedBy?: string;
@@ -110,7 +148,7 @@ export interface DiagnosisResult {
   type: string;
   compatibility: number;
   summary: string;
-  participants: PrairieProfile[];
+  participants: XProfile[];
   createdAt: string;
   aiPowered?: boolean;
   fortuneTelling?: FortuneTelling;
@@ -157,8 +195,8 @@ export interface CND2State {
 
 export interface Participant {
   id: string;
-  url: string;
-  profile: PrairieProfile | null;
+  username: string;  // URLからusernameに変更
+  profile: XProfile | null;
   status: 'empty' | 'loading' | 'loaded' | 'error';
 }
 

@@ -6,7 +6,7 @@ import { generateId, validateId } from '../utils/id.js';
 import { KV_TTL, safeParseInt, METRICS_KEYS } from '../utils/constants.js';
 import { generateFortuneDiagnosis } from './diagnosis-v4-openai.js';
 import { createSafeDebugLogger, getSafeKeyInfo, getFilteredEnvKeys } from '../utils/debug-helpers.js';
-import { convertProfilesToFullFormat } from '../utils/profile-converter.js';
+import { convertXProfilesToDiagnosisFormat } from '../utils/x-profile-converter.js';
 import { createErrorResponse, createSuccessResponse, ERROR_CODES } from '../utils/error-messages.js';
 import { kvPut, isDevelopment } from '../utils/kv-helpers.js';
 
@@ -65,11 +65,11 @@ export async function onRequestPost({ request, env }) {
         participantCount: profiles.length 
       });
       
-      // Convert profiles to PrairieProfile format
-      const prairieProfiles = convertProfilesToFullFormat(profiles);
-      
+      // Convert XProfiles to diagnosis format
+      const diagnosisProfiles = convertXProfilesToDiagnosisFormat(profiles);
+
       // Generate diagnosis result using V4 engine
-      const result = await generateFortuneDiagnosis(prairieProfiles, mode, env);
+      const result = await generateFortuneDiagnosis(diagnosisProfiles, mode, env);
       
       // Skip KV storage in development
       if (!isDevelopment(env)) {
