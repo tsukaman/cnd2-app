@@ -107,10 +107,8 @@ describe('useXProfile', () => {
 
     it('should use sample data in development', async () => {
       const originalEnv = process.env.NODE_ENV;
-      Object.defineProperty(process.env, 'NODE_ENV', {
-        value: 'development',
-        writable: true
-      });
+      // @ts-expect-error - NODE_ENV is readonly but we need to test it
+      process.env.NODE_ENV = 'development';
       mockGetSampleXProfile.mockReturnValueOnce(sampleProfile);
 
       const { result } = renderHook(() => useXProfile());
@@ -129,10 +127,8 @@ describe('useXProfile', () => {
         })
       );
 
-      Object.defineProperty(process.env, 'NODE_ENV', {
-        value: originalEnv,
-        writable: true
-      });
+      // @ts-expect-error - NODE_ENV is readonly but we need to test it
+      process.env.NODE_ENV = originalEnv;
     });
 
     it('should handle API errors', async () => {

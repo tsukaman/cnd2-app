@@ -294,10 +294,8 @@ describe('XProfileInput', () => {
 
   it('should show sample data button in development', () => {
     const originalEnv = process.env.NODE_ENV;
-    Object.defineProperty(process.env, 'NODE_ENV', {
-      value: 'development',
-      writable: true
-    });
+    // @ts-expect-error - NODE_ENV is readonly but we need to test it
+    process.env.NODE_ENV = 'development';
 
     (useXProfile as jest.Mock).mockReturnValue({
       loading: false,
@@ -318,10 +316,8 @@ describe('XProfileInput', () => {
     fireEvent.click(sampleDataButton);
     expect(mockUseSampleData).toHaveBeenCalled();
 
-    Object.defineProperty(process.env, 'NODE_ENV', {
-      value: originalEnv,
-      writable: true
-    });
+    // @ts-expect-error - NODE_ENV is readonly but we need to test it
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('should clear input after successful load', async () => {
