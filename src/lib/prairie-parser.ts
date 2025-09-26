@@ -68,10 +68,17 @@ export class PrairieCardParser {
       
       // XSS対策: プロフィールデータをサニタイズ
       const sanitizedProfile = sanitizer.sanitizePrairieProfile(profile) as PrairieProfile;
-      
+
       // CND²メタデータを追加
-      sanitizedProfile.meta.connectedBy = 'CND²';
-      sanitizedProfile.meta.hashtag = CND2_CONFIG.app.hashtag;
+      if (sanitizedProfile.meta) {
+        sanitizedProfile.meta.connectedBy = 'CND²';
+        sanitizedProfile.meta.hashtag = CND2_CONFIG.app.hashtag;
+      } else {
+        sanitizedProfile.meta = {
+          connectedBy: 'CND²',
+          hashtag: CND2_CONFIG.app.hashtag,
+        };
+      }
       
       // キャッシュに保存
       await this.cacheManager.save(normalizedUrl, sanitizedProfile);
@@ -177,21 +184,36 @@ export class PrairieCardParser {
   private extractProfile(html: string): PrairieProfile {
     const $ = cheerio.load(html);
     
+    // Prairie Card specific fields that will be mapped
+    const prairieTitle = this.extractText($, '.profile-title, .title, .job-title, [data-field="title"]') || '';
+    const prairieCompany = this.extractText($, '.profile-company, .company, .organization, [data-field="company"]') || '';
+    const prairieTags = this.extractTags($);
+    const prairieSkills = this.extractSkills($);
+    const prairieInterests = this.extractInterests($);
+
     return {
       basic: {
         name: this.extractText($, '.profile-name, .name, h1.name, [data-field="name"]') || '名前未設定',
-        title: this.extractText($, '.profile-title, .title, .job-title, [data-field="title"]') || '',
-        company: this.extractText($, '.profile-company, .company, .organization, [data-field="company"]') || '',
+        username: this.extractText($, '.username, .handle, [data-field="username"]') || '',
         bio: this.extractFullText($, '.profile-bio, .bio, .description, .about, [data-field="bio"]') || '',
+        location: this.extractText($, '.location, .place, [data-field="location"]') || '',
         avatar: this.extractImage($, '.profile-avatar img, .avatar img, .profile-image img, [data-field="avatar"] img'),
       },
+      metrics: {
+        followers: 0,
+        following: 0,
+        tweets: 0,
+        listed: 0,
+      },
       details: {
-        tags: this.extractTags($),
-        skills: this.extractSkills($),
-        interests: this.extractInterests($),
-        certifications: this.extractCertifications($),
-        communities: this.extractCommunities($),
-        motto: this.extractText($, '.motto, .slogan, [data-field="motto"]'),
+        recentTweets: [],
+        topics: [...prairieTags, ...prairieSkills], // Combine tags and skills as topics
+        hashtags: [],
+        mentionedUsers: [],
+      },
+      analysis: {
+        techStack: prairieSkills, // Skills become techStack
+        interests: prairieInterests, // Interests stay as interests
       },
       social: {
         twitter: this.extractSocialLink($, 'twitter', 'x.com'),
@@ -237,16 +259,20 @@ export class PrairieCardParser {
       const minimalProfile: PrairieProfile = {
         basic: {
           name: $('h1, h2, .name').first().text().trim() || 'Unknown',
-          title: $('.title, .role').first().text().trim() || '',
-          company: $('.company, .organization').first().text().trim() || '',
+          username: '',
           bio: $('.bio, .description, p').first().text().trim() || '',
         },
+        metrics: {
+          followers: 0,
+          following: 0,
+          tweets: 0,
+          listed: 0,
+        },
         details: {
-          tags: [],
-          skills: [],
-          interests: [],
-          certifications: [],
-          communities: [],
+          recentTweets: [],
+          topics: [],
+          hashtags: [],
+          mentionedUsers: [],
         },
         social: {},
         custom: {},

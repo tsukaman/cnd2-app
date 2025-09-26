@@ -216,6 +216,12 @@ describe('AstrologicalDiagnosisEngineV4', () => {
           username: 'Very Long Title That Should Be Truncated',
           bio: 'A'.repeat(300), // Very long bio
         },
+        metrics: {
+          followers: 1000,
+          following: 500,
+          tweets: 2000,
+          listed: 10,
+        },
         details: {
           topics: Array(20).fill('topic'), // 20 topics
           hashtags: Array(10).fill('#hashtag'), // 10 hashtags

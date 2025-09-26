@@ -1,6 +1,6 @@
 /**
  * Prairie Profile変換ユーティリティ
- * 
+ *
  * 複数箇所に重複していたプロフィール変換ロジックを共通化
  * - src/app/api/diagnosis/route.ts
  * - functions/api/diagnosis-v4-openai.js
@@ -12,8 +12,8 @@ import type { PrairieProfile } from '@/types';
  * プロフィールデータの型を判定
  */
 export function isPrairieProfile(profile: any): profile is PrairieProfile {
-  return !!(profile && 
-         typeof profile === 'object' && 
+  return !!(profile &&
+         typeof profile === 'object' &&
          'basic' in profile &&
          profile.basic &&
          typeof profile.basic === 'object');
@@ -21,7 +21,7 @@ export function isPrairieProfile(profile: any): profile is PrairieProfile {
 
 /**
  * 最小形式のプロフィールを完全なPrairieProfile形式に変換
- * 
+ *
  * @param profile - 変換対象のプロフィール（最小形式または完全形式）
  * @returns 完全なPrairieProfile形式
  */
@@ -30,22 +30,36 @@ export function convertToFullProfile(profile: any): PrairieProfile {
   if (isPrairieProfile(profile)) {
     return profile;
   }
-  
+
   // 最小形式から完全形式に変換
+  // Prairie Card specific fields will be mapped to X Profile structure
+  const topics: string[] = [];
+
+  // Collect topics from various Prairie Card fields
+  if (profile?.skills) topics.push(...profile.skills);
+  if (profile?.interests) topics.push(...profile.interests);
+  if (profile?.tags) topics.push(...profile.tags);
+  if (profile?.certifications) topics.push(...profile.certifications);
+
   return {
     basic: {
       name: profile?.name || '名称未設定',
-      title: profile?.title || '',
-      company: profile?.company || '',
-      bio: profile?.bio || ''
+      username: profile?.username || profile?.twitter?.replace('@', '') || '',
+      bio: profile?.bio || profile?.motto || '',
+      location: profile?.location,
+      website: profile?.website
+    },
+    metrics: {
+      followers: 0,
+      following: 0,
+      tweets: 0,
+      listed: 0
     },
     details: {
-      tags: profile?.tags || [],
-      skills: profile?.skills || [],
-      interests: profile?.interests || [],
-      certifications: profile?.certifications || [],
-      communities: profile?.communities || [],
-      motto: profile?.motto
+      recentTweets: [],
+      topics,
+      hashtags: profile?.hashtags || [],
+      mentionedUsers: []
     },
     social: {
       twitter: profile?.twitter,
@@ -88,30 +102,32 @@ export function convertProfilesToFullFormat(profiles: any[]): PrairieProfile[] {
  */
 export function extractMinimalProfile(profile: PrairieProfile | any): {
   name: string;
-  title?: string;
-  company?: string;
+  username?: string;
   bio?: string;
-  skills?: string[];
-  interests?: string[];
+  topics?: string[];
+  hashtags?: string[];
 } {
   if (isPrairieProfile(profile)) {
     return {
       name: profile.basic.name,
-      title: profile.basic.title,
-      company: profile.basic.company,
+      username: profile.basic.username,
       bio: profile.basic.bio,
-      skills: profile.details?.skills || [],
-      interests: profile.details?.interests || []
+      topics: profile.details?.topics || [],
+      hashtags: profile.details?.hashtags || []
     };
   }
-  
+
   // 最小形式の場合
+  const topics: string[] = [];
+  if (profile?.skills) topics.push(...profile.skills);
+  if (profile?.interests) topics.push(...profile.interests);
+  if (profile?.tags) topics.push(...profile.tags);
+
   return {
     name: profile?.name || '名称未設定',
-    title: profile?.title,
-    company: profile?.company,
-    bio: profile?.bio,
-    skills: profile?.skills || [],
-    interests: profile?.interests || []
+    username: profile?.username,
+    bio: profile?.bio || profile?.motto,
+    topics,
+    hashtags: profile?.hashtags || []
   };
 }
