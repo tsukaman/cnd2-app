@@ -39,10 +39,16 @@ export async function onRequestPost({ request, env }) {
         });
       }
 
-      // Validate username format
-      if (!/^[A-Za-z0-9_]{1,15}$/.test(username)) {
+      // Validate username format with enhanced checks
+      if (!/^[A-Za-z0-9_]{1,15}$/.test(username) ||
+          username.startsWith('_') ||
+          username.endsWith('_') ||
+          username.includes('__')) {
         logger.warn('Invalid username format', { username });
-        const errorResp = createErrorResponse(ERROR_CODES.VALIDATION_ERROR, 'Invalid username format');
+        const errorResp = createErrorResponse(
+          ERROR_CODES.VALIDATION_ERROR,
+          'Invalid username format: must be 1-15 characters, alphanumeric and underscore only, cannot start/end with underscore or have consecutive underscores'
+        );
         return new Response(JSON.stringify(errorResp), {
           status: 400,
           headers: corsHeaders

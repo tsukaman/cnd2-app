@@ -4,6 +4,23 @@
  * Prairie Card スクレイピングの仕組みを流用したWebスクレイピング実装
  */
 
+// User agent rotation for bot detection avoidance
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15'
+];
+
+/**
+ * Get random user agent for requests
+ * @returns {string} Random user agent string
+ */
+function getRandomUserAgent() {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
 /**
  * Extract value using regex pattern
  * @param {string} html - HTML content
@@ -40,7 +57,7 @@ export async function scrapeXProfile(username, env) {
   try {
     const response = await fetch(`https://x.com/${username}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': getRandomUserAgent(),
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'ja,en;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
@@ -56,9 +73,32 @@ export async function scrapeXProfile(username, env) {
 
     const html = await response.text();
 
-    // Check if account is suspended or doesn't exist
-    if (html.includes('account has been suspended') || html.includes('This account doesn't exist')) {
-      throw new Error(`Account @${username} is suspended or does not exist`);
+    // Enhanced error detection patterns
+    const errorPatterns = {
+      suspended: /account.*suspended|suspended.*account/i,
+      notFound: /this account.*exist|user.*not.*found|page.*not.*found/i,
+      rateLimit: /rate.*limit|too.*many.*requests|temporarily.*unavailable/i,
+      protected: /protected.*tweets|account.*protected|tweets.*protected/i
+    };
+
+    // Check for various error conditions with enhanced detection
+    for (const [errorType, pattern] of Object.entries(errorPatterns)) {
+      if (pattern.test(html)) {
+        switch (errorType) {
+          case 'suspended':
+            logger.warn(`[X Scraper] Suspended account detected: @${username}`);
+            throw new Error(`Account @${username} has been suspended`);
+          case 'notFound':
+            logger.warn(`[X Scraper] User not found: @${username}`);
+            throw new Error(`User @${username} not found`);
+          case 'rateLimit':
+            logger.warn(`[X Scraper] Rate limit hit for @${username}`);
+            throw new Error('Rate limit exceeded. Please try again later.');
+          case 'protected':
+            logger.info(`[X Scraper] Protected account: @${username}`);
+            throw new Error(`Account @${username} is protected`);
+        }
+      }
     }
 
     // Try to extract JSON-LD data first (more reliable)
@@ -81,6 +121,12 @@ export async function scrapeXProfile(username, env) {
     return { ...profileData, tweets };
   } catch (error) {
     logger.error(`[X Scraper] Error scraping @${username}:`, error);
+
+    // Enhance error messages for better debugging
+    if (error.message.includes('fetch')) {
+      throw new Error(`Network error while fetching @${username}'s profile`);
+    }
+
     throw error;
   }
 }

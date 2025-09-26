@@ -69,13 +69,38 @@ export function transformToXProfile(username, embedData, scrapedData) {
     },
     metadata: {
       fetchedAt: new Date().toISOString(),
-      cacheAge: embedData?.cache_age || 3600,
+      cacheAge: calculateDynamicCacheAge(embedData, scrapedData),
       embedAvailable: !!embedData,
       scrapingAvailable: !!scrapedData
     }
   };
 
   return xProfile;
+}
+
+/**
+ * Calculate dynamic cache age based on profile data
+ * @param {Object} embedData - oEmbed API data
+ * @param {Object} scrapedData - Scraped profile data
+ * @returns {number} Cache age in seconds
+ */
+function calculateDynamicCacheAge(embedData, scrapedData) {
+  // Base cache age from embed API or default
+  const baseCacheAge = embedData?.cache_age || 3600;
+
+  // Verified accounts get longer cache (more stable)
+  const isVerified = embedData?.author_verified || scrapedData?.verified;
+  const verifiedMultiplier = isVerified ? 2 : 1;
+
+  // High follower count profiles get longer cache (less likely to change frequently)
+  const followers = scrapedData?.followers || embedData?.author_followers || 0;
+  const followerMultiplier = followers > 100000 ? 1.5 : 1;
+
+  // Calculate final cache age with min/max bounds
+  const dynamicCacheAge = baseCacheAge * verifiedMultiplier * followerMultiplier;
+
+  // Ensure cache is between 5 minutes (300s) and 24 hours (86400s)
+  return Math.max(300, Math.min(dynamicCacheAge, 86400));
 }
 
 /**
