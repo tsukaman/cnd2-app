@@ -2,12 +2,17 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import type { Room, Player } from '@/lib/senryu/types';
+import type { Room, Player, PublicationPreference } from '@/lib/senryu/types';
 import { SenryuCard } from './SenryuCard';
+import { PublicationModal } from './PublicationModal';
 import Confetti from 'react-confetti';
+import { senryuApi } from '@/lib/senryu/api-client';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface ResultsBoardProps {
   room: Room;
+  playerId?: string;
 }
 
 // ダミーデータ（開発用）
@@ -49,9 +54,15 @@ const DUMMY_RESULTS = [
   }
 ];
 
-export function ResultsBoard({ room }: ResultsBoardProps) {
+export function ResultsBoard({ room, playerId }: ResultsBoardProps) {
+  const router = useRouter();
   const [showConfetti, setShowConfetti] = useState(true);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [showPublicationModal, setShowPublicationModal] = useState(false);
+  const [hasPublished, setHasPublished] = useState(false);
+  
+  // 現在のプレイヤー情報を取得
+  const currentPlayer = room.players?.find(p => p.id === playerId);
   
   useEffect(() => {
     // ウィンドウサイズを取得
@@ -62,8 +73,19 @@ export function ResultsBoard({ room }: ResultsBoardProps) {
     
     // 5秒後に紙吹雪を停止
     const timer = setTimeout(() => setShowConfetti(false), 5000);
-    return () => clearTimeout(timer);
-  }, []);
+    
+    // 3秒後に公開設定モーダルを表示（自分の作品がある場合のみ）
+    const modalTimer = setTimeout(() => {
+      if (currentPlayer?.senryu && !hasPublished) {
+        setShowPublicationModal(true);
+      }
+    }, 3000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(modalTimer);
+    };
+  }, [currentPlayer, hasPublished]);
   
   // ランキングメダルの取得
   const getMedal = (rank: number) => {
@@ -82,6 +104,28 @@ export function ResultsBoard({ room }: ResultsBoardProps) {
       case 2: return 'bg-gradient-to-r from-gray-100 to-gray-50';
       case 3: return 'bg-gradient-to-r from-orange-100 to-orange-50';
       default: return 'bg-white';
+    }
+  };
+  
+  // 公開設定の送信処理
+  const handlePublicationSubmit = async (preference: PublicationPreference) => {
+    if (!room.id || !playerId) {
+      toast.error('ルーム情報が取得できません');
+      return;
+    }
+    
+    try {
+      const result = await senryuApi.publishToGallery(room.id, playerId, preference);
+      
+      if (preference.shareToGallery) {
+        toast.success('作品をギャラリーに公開しました！');
+      }
+      
+      setHasPublished(true);
+      setShowPublicationModal(false);
+    } catch (error) {
+      console.error('Failed to publish:', error);
+      toast.error('公開処理に失敗しました');
     }
   };
   
@@ -199,6 +243,7 @@ export function ResultsBoard({ room }: ResultsBoardProps) {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={() => window.location.reload()}
           className="flex-1 p-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           もう一度プレイ
@@ -207,19 +252,32 @@ export function ResultsBoard({ room }: ResultsBoardProps) {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex-1 p-4 bg-gradient-to-r from-purple-400 to-purple-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          onClick={() => router.push('/senryu/gallery')}
+          className="flex-1 p-4 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
-          ランキングを見る
+          ギャラリーを見る
         </motion.button>
         
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={() => router.push('/senryu')}
           className="flex-1 p-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           部屋を出る
         </motion.button>
       </div>
+      
+      {/* 公開設定モーダル */}
+      {currentPlayer?.senryu && (
+        <PublicationModal
+          isOpen={showPublicationModal}
+          onClose={() => setShowPublicationModal(false)}
+          senryu={currentPlayer.senryu}
+          playerName={currentPlayer.name}
+          onSubmit={handlePublicationSubmit}
+        />
+      )}
     </div>
   );
 }

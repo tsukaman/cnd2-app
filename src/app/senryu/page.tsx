@@ -246,18 +246,18 @@ export default function SenryuLobby() {
                 </div>
               </motion.button>
 
-              {/* ランキングを見るボタン */}
+              {/* ギャラリーを見るボタン */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => router.push('/senryu/ranking')}
-                className="w-full p-6 bg-gradient-to-r from-purple-400 to-purple-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                onClick={() => router.push('/senryu/gallery')}
+                className="w-full p-6 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
               >
                 <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">🏆</span>
+                  <span className="text-3xl">🎨</span>
                   <div className="text-left">
-                    <p className="text-xl font-bold">ランキング</p>
-                    <p className="text-sm opacity-90">歴代の名作を見る</p>
+                    <p className="text-xl font-bold">ギャラリー</p>
+                    <p className="text-sm opacity-90">みんなの作品を見る</p>
                   </div>
                 </div>
               </motion.button>
