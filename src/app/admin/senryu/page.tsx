@@ -75,7 +75,7 @@ export default function AdminSenryuDashboard() {
   // Edit dialog states
   const [editingPost, setEditingPost] = useState<SenryuPost | null>(null);
   const [editingPhrase, setEditingPhrase] = useState<Phrase | null>(null);
-  const [newPhrase, setNewPhrase] = useState({ text: '', type: 'upper' as const, category: '' });
+  const [newPhrase, setNewPhrase] = useState<{ text: string; type: 'upper' | 'middle' | 'lower'; category: string }>({ text: '', type: 'upper', category: '' });
 
   // 簡易認証（本番環境では適切な認証システムを使用してください）
   const handleLogin = async () => {
@@ -294,8 +294,8 @@ export default function AdminSenryuDashboard() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleLogin()}
                 placeholder="管理者パスワード"
               />
             </div>
@@ -324,10 +324,10 @@ export default function AdminSenryuDashboard() {
               エクスポート
             </Button>
             <Label htmlFor="import" className="cursor-pointer">
-              <Button variant="outline" size="sm" as="span">
+              <span className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 cursor-pointer">
                 <Upload className="w-4 h-4 mr-2" />
                 インポート
-              </Button>
+              </span>
               <Input
                 id="import"
                 type="file"
@@ -357,7 +357,7 @@ export default function AdminSenryuDashboard() {
                 <Input
                   placeholder="検索..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                   className="max-w-sm"
                 />
               </div>
@@ -444,7 +444,7 @@ export default function AdminSenryuDashboard() {
                           <Input
                             id="new-text"
                             value={newPhrase.text}
-                            onChange={(e) => setNewPhrase({ ...newPhrase, text: e.target.value, type })}
+                            onChange={(e) => setNewPhrase({ ...newPhrase, text: e.target.value, type: type as 'upper' | 'middle' | 'lower' })}
                             placeholder={`${type === 'upper' ? '5音' : type === 'middle' ? '7音' : '5-7音'}の句`}
                           />
                         </div>

@@ -277,8 +277,8 @@ class SenryuAdminClient {
 
       // LocalStorageも更新
       const phrases = await this.getAllPhrases();
-      const type = updated.type;
-      const index = phrases[type].findIndex(p => p.id === id);
+      const type = updated.type as 'upper' | 'middle' | 'lower';
+      const index = phrases[type].findIndex((p: Phrase) => p.id === id);
 
       if (index !== -1) {
         phrases[type][index] = updated;
