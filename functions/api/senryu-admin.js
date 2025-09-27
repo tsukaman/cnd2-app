@@ -4,35 +4,59 @@
  */
 
 // 認証チェック
-function checkAuth(request) {
+function checkAuth(request, env) {
   const authHeader = request.headers.get('Authorization');
-  const expectedToken = 'Bearer cndw2025-admin-token'; // 本番環境では環境変数を使用
+  // 環境変数から認証トークンを取得（NEXT_PUBLIC_を使用しない）
+  const expectedToken = env.ADMIN_AUTH_TOKEN || env.SENRYU_ADMIN_TOKEN;
 
-  if (!authHeader || authHeader !== expectedToken) {
+  // 開発環境のみのフォールバック
+  const isDevelopment = !env.ADMIN_AUTH_TOKEN && !env.SENRYU_ADMIN_TOKEN;
+  if (isDevelopment && process.env.NODE_ENV !== 'production') {
+    // 開発環境のみ、環境変数が設定されていない場合の警告
+    console.warn('Warning: Using development auth token. Set ADMIN_AUTH_TOKEN in production.');
+    return authHeader === 'Bearer dev-token-only';
+  }
+
+  if (!expectedToken) {
+    console.error('ADMIN_AUTH_TOKEN is not configured');
+    return false;
+  }
+
+  if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
     return false;
   }
   return true;
 }
 
-// CORSヘッダー
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+// CORSヘッダーを環境に応じて設定
+function getCorsHeaders(env) {
+  // 許可するオリジンを環境変数から取得、または本番/開発環境で切り替え
+  const allowedOrigin = env.ALLOWED_ORIGIN ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://cnd2.cloudnativedays.jp'
+      : 'http://localhost:3000');
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true'
+  };
+}
 
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname.split('/').filter(Boolean);
+  const corsHeaders = getCorsHeaders(env);
 
   // CORS対応
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // 認証チェック
-  if (!checkAuth(request)) {
+  // 認証チェック（envを渡す）
+  if (!checkAuth(request, env)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -46,19 +70,19 @@ export async function onRequest(context) {
     // 開発環境用のモックデータ
     if (!KV) {
       console.log('KV not available, using mock data');
-      return handleMockRequests(request, path);
+      return handleMockRequests(request, path, corsHeaders);
     }
 
     // リクエストメソッドに応じた処理
     switch (request.method) {
       case 'GET':
-        return handleGet(KV, path);
+        return handleGet(KV, path, corsHeaders);
       case 'POST':
-        return handlePost(KV, request, path);
+        return handlePost(KV, request, path, corsHeaders);
       case 'PUT':
-        return handlePut(KV, request, path);
+        return handlePut(KV, request, path, corsHeaders);
       case 'DELETE':
-        return handleDelete(KV, path);
+        return handleDelete(KV, path, corsHeaders);
       default:
         return new Response('Method not allowed', {
           status: 405,
@@ -78,7 +102,7 @@ export async function onRequest(context) {
 }
 
 // GET処理
-async function handleGet(KV, path) {
+async function handleGet(KV, path, corsHeaders) {
   const [, , resource, id] = path;
 
   if (resource === 'posts') {
@@ -137,7 +161,7 @@ async function handleGet(KV, path) {
 }
 
 // POST処理（新規作成）
-async function handlePost(KV, request, path) {
+async function handlePost(KV, request, path, corsHeaders) {
   const [, , resource] = path;
   const data = await request.json();
 
@@ -188,7 +212,7 @@ async function handlePost(KV, request, path) {
 }
 
 // PUT処理（更新）
-async function handlePut(KV, request, path) {
+async function handlePut(KV, request, path, corsHeaders) {
   const [, , resource, id] = path;
   const data = await request.json();
 
@@ -210,9 +234,30 @@ async function handlePut(KV, request, path) {
   }
 
   if (resource === 'phrases' && id) {
-    // idからタイプを推測
-    const type = id.startsWith('u') ? 'upper' : id.startsWith('m') ? 'middle' : 'lower';
-    const existing = await KV.get(`phrase:${type}:${id}`, 'json');
+    // まず全タイプから該当する句を検索（より確実な方法）
+    let existing = null;
+    let type = null;
+
+    // 各タイプから検索
+    for (const t of ['upper', 'middle', 'lower']) {
+      const phrase = await KV.get(`phrase:${t}:${id}`, 'json');
+      if (phrase) {
+        existing = phrase;
+        type = t;
+        break;
+      }
+    }
+
+    // フォールバック: IDプレフィックスから推測
+    if (!existing && !type) {
+      type = id.startsWith('u') ? 'upper' :
+             id.startsWith('m') ? 'middle' :
+             id.startsWith('l') ? 'lower' : null;
+
+      if (type) {
+        existing = await KV.get(`phrase:${type}:${id}`, 'json');
+      }
+    }
 
     if (!existing) {
       return new Response('Not Found', {
@@ -236,7 +281,7 @@ async function handlePut(KV, request, path) {
 }
 
 // DELETE処理
-async function handleDelete(KV, path) {
+async function handleDelete(KV, path, corsHeaders) {
   const [, , resource, id] = path;
 
   if (resource === 'posts' && id) {
@@ -247,9 +292,28 @@ async function handleDelete(KV, path) {
   }
 
   if (resource === 'phrases' && id) {
-    // idからタイプを推測
-    const type = id.startsWith('u') ? 'upper' : id.startsWith('m') ? 'middle' : 'lower';
-    await KV.delete(`phrase:${type}:${id}`);
+    // 全タイプから該当する句を検索して削除
+    let deleted = false;
+
+    for (const type of ['upper', 'middle', 'lower']) {
+      const key = `phrase:${type}:${id}`;
+      const existing = await KV.get(key, 'json');
+      if (existing) {
+        await KV.delete(key);
+        deleted = true;
+        break;
+      }
+    }
+
+    // 見つからなかった場合もフォールバック試行
+    if (!deleted) {
+      const type = id.startsWith('u') ? 'upper' :
+                   id.startsWith('m') ? 'middle' :
+                   id.startsWith('l') ? 'lower' : null;
+      if (type) {
+        await KV.delete(`phrase:${type}:${id}`);
+      }
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -263,7 +327,7 @@ async function handleDelete(KV, path) {
 }
 
 // 開発環境用モック処理
-function handleMockRequests(request, path) {
+function handleMockRequests(request, path, corsHeaders) {
   // モックデータ
   const mockData = {
     posts: [

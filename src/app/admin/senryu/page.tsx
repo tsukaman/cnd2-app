@@ -78,13 +78,35 @@ export default function AdminSenryuDashboard() {
   const [newPhrase, setNewPhrase] = useState({ text: '', type: 'upper' as const, category: '' });
 
   // 簡易認証（本番環境では適切な認証システムを使用してください）
-  const handleLogin = () => {
-    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD || password === 'cndw2025admin') {
-      setIsAuthenticated(true);
-      toast.success('ログインしました');
-      loadData();
-    } else {
-      toast.error('パスワードが正しくありません');
+  const handleLogin = async () => {
+    try {
+      // サーバー側で認証を行うAPIを呼び出す
+      // 開発環境では簡易的な認証を許可
+      if (process.env.NODE_ENV === 'development' && password === 'dev-password') {
+        setIsAuthenticated(true);
+        toast.success('開発環境でログインしました');
+        loadData();
+        return;
+      }
+
+      // 本番環境では環境変数や認証サービスを使用
+      // TODO: 実際の認証APIエンドポイントに置き換える
+      const response = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      if (response.ok) {
+        setIsAuthenticated(true);
+        toast.success('ログインしました');
+        loadData();
+      } else {
+        toast.error('パスワードが正しくありません');
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      toast.error('ログインに失敗しました');
     }
   };
 

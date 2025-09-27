@@ -6,7 +6,10 @@ const API_BASE = process.env.NODE_ENV === 'production'
   ? '/api/senryu-admin'
   : 'http://localhost:3000/api/senryu-admin';
 
-const AUTH_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN || 'Bearer cndw2025-admin-token';
+// 開発環境用のトークン（本番環境では適切な認証メカニズムを使用）
+const AUTH_TOKEN = process.env.NODE_ENV === 'development'
+  ? 'Bearer dev-token-only'
+  : ''; // 本番環境では動的に取得する必要がある
 
 interface SenryuPost {
   id: string;
@@ -285,6 +288,28 @@ class SenryuAdminClient {
       return updated;
     } catch (error) {
       console.error('Error updating phrase:', error);
+
+      // フォールバック: LocalStorageで更新を試みる
+      try {
+        const phrases = await this.getAllPhrases();
+        // IDから型を推測（改善が必要）
+        const type = id.startsWith('u') ? 'upper' :
+                    id.startsWith('m') ? 'middle' :
+                    id.startsWith('l') ? 'lower' : null;
+
+        if (type && phrases[type]) {
+          const index = phrases[type].findIndex(p => p.id === id);
+          if (index !== -1) {
+            const updated = { ...phrases[type][index], ...data };
+            phrases[type][index] = updated;
+            localStorage.setItem('senryu-phrases', JSON.stringify(phrases));
+            return updated;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback update also failed:', fallbackError);
+      }
+
       throw error;
     }
   }

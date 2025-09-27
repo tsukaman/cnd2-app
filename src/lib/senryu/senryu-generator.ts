@@ -4,6 +4,7 @@
  */
 
 import { KAMI_NO_KU, NAKA_NO_KU, SHIMO_NO_KU } from './senryu-data-large';
+import { TECH_KEYWORDS, DAILY_KEYWORDS } from '@/lib/constants/senryu-keywords';
 
 export interface Senryu {
   upper: string;   // 上の句（5文字）
@@ -64,47 +65,19 @@ export function generateUniqueSenryus(count: number): Senryu[] {
  * カテゴリを判定
  */
 function determineCategory(upper: string, middle: string, lower: string): 'tech' | 'daily' | 'mixed' {
-  const techKeywords = [
-    'k8s', 'pod', 'docker', 'git', 'deploy', 'build', 'test', 'ci', 'cd',
-    'yaml', 'json', 'api', 'db', 'sql', 'nosql', 'cloud', 'aws', 'gcp', 'azure',
-    'server', 'client', 'frontend', 'backend', 'node', 'react', 'vue', 'angular',
-    'python', 'java', 'go', 'rust', 'javascript', 'typescript', 'code', 'bug',
-    'error', 'debug', 'log', 'monitor', 'alert', 'metric', 'trace', 'span',
-    'container', 'kubernetes', 'helm', 'terraform', 'ansible', 'jenkins',
-    'github', 'gitlab', 'slack', 'zoom', 'teams', 'jira', 'confluence',
-    'cpu', 'memory', 'disk', 'network', 'storage', 'cache', 'queue', 'stream',
-    'service', 'microservice', 'function', 'lambda', 'endpoint', 'webhook',
-    'auth', 'oauth', 'jwt', 'ssl', 'tls', 'https', 'security', 'firewall',
-    'コンテナ', 'ポッド', 'クラスタ', 'ノード', 'デプロイ', 'ビルド',
-    'テスト', 'リリース', 'ロールバック', 'スケール', 'ログ', 'メトリクス'
-  ];
-
-  const dailyKeywords = [
-    '朝', '昼', '夜', '夕', '夜中', '深夜', '早朝', '午後', '午前',
-    '会社', '家', '電車', 'バス', 'カフェ', '公園', '駅', '職場', 'オフィス',
-    '食事', '朝食', '昼食', '夕食', 'ランチ', 'ディナー', 'おやつ', '弁当',
-    'コーヒー', 'お茶', 'ビール', 'ワイン', '水', 'ジュース',
-    '子供', '親', '友達', '同僚', '上司', '部下', '家族', 'ペット',
-    '犬', '猫', '鳥', '魚',
-    '休憩', '休み', '休日', '週末', '平日', '月曜', '金曜',
-    '睡眠', '昼寝', '仮眠', '寝る', '起きる', '目覚め',
-    '散歩', '運動', 'ジム', 'ヨガ', 'ランニング', 'ウォーキング',
-    '映画', 'ドラマ', 'アニメ', '音楽', '本', '漫画', 'ゲーム',
-    '買い物', 'ショッピング', '旅行', '温泉', '銭湯', 'サウナ'
-  ];
-
   const combinedText = (upper + middle + lower).toLowerCase();
 
   let techScore = 0;
   let dailyScore = 0;
 
-  for (const keyword of techKeywords) {
+  // インポートしたキーワードを使用
+  for (const keyword of TECH_KEYWORDS) {
     if (combinedText.includes(keyword.toLowerCase())) {
       techScore++;
     }
   }
 
-  for (const keyword of dailyKeywords) {
+  for (const keyword of DAILY_KEYWORDS) {
     if (combinedText.includes(keyword)) {
       dailyScore++;
     }
