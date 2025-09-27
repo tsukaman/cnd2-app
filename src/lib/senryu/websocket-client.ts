@@ -2,8 +2,12 @@
  * WebSocket client for Senryu game
  */
 
+import type { Room, Player } from './types';
+
 export type WebSocketEventType = 
   | 'connected'
+  | 'join'
+  | 'leave'
   | 'player_joined'
   | 'player_left'
   | 'player_online'
@@ -16,12 +20,13 @@ export type WebSocketEventType =
   | 'scores_submitted'
   | 'game_completed'
   | 'error'
+  | 'ping'
   | 'pong';
 
 export interface WebSocketMessage {
   type: WebSocketEventType;
-  room?: any;
-  player?: any;
+  room?: Room;
+  player?: Player;
   playerId?: string;
   message?: string;
   timestamp?: number;
@@ -31,7 +36,7 @@ export class SenryuWebSocketClient {
   private ws: WebSocket | null = null;
   private roomId: string;
   private playerId: string;
-  private listeners: Map<string, Set<(data: any) => void>> = new Map();
+  private listeners: Map<string, Set<(data: WebSocketMessage) => void>> = new Map();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
@@ -88,7 +93,11 @@ export class SenryuWebSocketClient {
           this.startPing();
 
           // Emit connected event
-          this.emit('connected', { roomId: this.roomId, playerId: this.playerId });
+          this.emit('connected', { 
+            type: 'connected',
+            playerId: this.playerId,
+            timestamp: Date.now()
+          });
 
           resolve();
         };
@@ -99,13 +108,24 @@ export class SenryuWebSocketClient {
             console.log('[WebSocket] Message received:', data.type);
             this.handleMessage(data);
           } catch (error) {
-            console.error('[WebSocket] Failed to parse message:', error);
+            console.error('[WebSocket] Invalid JSON:', event.data, error);
+            this.emit('error', { 
+              type: 'error',
+              message: 'Invalid message format',
+              playerId: this.playerId,
+              timestamp: Date.now()
+            });
           }
         };
 
         this.ws.onerror = (event) => {
           console.error('[WebSocket] Error:', event);
-          this.emit('error', { message: 'WebSocket connection error' });
+          this.emit('error', { 
+            type: 'error',
+            message: 'WebSocket connection error',
+            playerId: this.playerId,
+            timestamp: Date.now()
+          });
         };
 
         this.ws.onclose = (event) => {
@@ -125,8 +145,10 @@ export class SenryuWebSocketClient {
           } else {
             console.error('[WebSocket] Max reconnection attempts reached');
             this.emit('error', { 
+              type: 'error',
               message: 'Connection lost. Please refresh the page.',
-              fatal: true
+              playerId: this.playerId,
+              timestamp: Date.now()
             });
           }
         };
@@ -162,7 +184,7 @@ export class SenryuWebSocketClient {
   /**
    * Send message
    */
-  send(data: any) {
+  send(data: Partial<WebSocketMessage>) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));
     } else {
@@ -203,7 +225,7 @@ export class SenryuWebSocketClient {
   /**
    * Add event listener
    */
-  on(event: string, callback: (data: any) => void) {
+  on(event: string, callback: (data: WebSocketMessage) => void) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
@@ -218,14 +240,14 @@ export class SenryuWebSocketClient {
   /**
    * Remove event listener
    */
-  off(event: string, callback: (data: any) => void) {
+  off(event: string, callback: (data: WebSocketMessage) => void) {
     this.listeners.get(event)?.delete(callback);
   }
 
   /**
    * Emit event to listeners
    */
-  private emit(event: string, data: any) {
+  private emit(event: string, data: WebSocketMessage) {
     const listeners = this.listeners.get(event);
     if (listeners) {
       listeners.forEach(callback => {

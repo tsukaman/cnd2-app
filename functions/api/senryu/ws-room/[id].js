@@ -7,19 +7,37 @@
 const rooms = new Map();
 const connections = new Map(); // roomId -> Set of WebSocket connections
 
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+// CORS headers - environment specific
+const getAllowedOrigin = (request) => {
+  const origin = request.headers.get('Origin');
+  const isDevelopment = origin?.includes('localhost') || origin?.includes('127.0.0.1');
+  
+  if (isDevelopment) {
+    return origin || '*';
+  }
+  
+  // Production origins
+  const allowedOrigins = [
+    'https://cnd2.cloudnativedays.jp',
+    'https://cnd2-app.pages.dev'
+  ];
+  
+  return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+};
+
+const getCorsHeaders = (request) => ({
+  'Access-Control-Allow-Origin': getAllowedOrigin(request),
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Upgrade, Connection',
   'Access-Control-Max-Age': '86400'
-};
+});
 
 // Handle OPTIONS request
-export async function onRequestOptions() {
+export async function onRequestOptions(context) {
+  const { request } = context;
   return new Response(null, {
     status: 204,
-    headers: corsHeaders
+    headers: getCorsHeaders(request)
   });
 }
 
@@ -38,7 +56,7 @@ export async function onRequestGet(context) {
         status: 404,
         headers: {
           'Content-Type': 'application/json',
-          ...corsHeaders
+          ...getCorsHeaders(request)
         }
       });
     }
@@ -47,7 +65,7 @@ export async function onRequestGet(context) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        ...corsHeaders
+        ...getCorsHeaders(request)
       }
     });
   }
@@ -80,7 +98,7 @@ export async function onRequestPost(context) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        ...corsHeaders
+        ...getCorsHeaders(request)
       }
     });
   }
@@ -89,7 +107,7 @@ export async function onRequestPost(context) {
     status: 400,
     headers: {
       'Content-Type': 'application/json',
-      ...corsHeaders
+      ...getCorsHeaders(request)
     }
   });
 }
