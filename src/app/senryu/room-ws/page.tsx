@@ -118,10 +118,13 @@ export default function SenryuGameRoomWS() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+        {/* CND² Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            川柳ゲーム (WebSocket版)
+          <div className="text-sm font-medium text-purple-600 uppercase tracking-wide mb-1">
+            CND² - Connect 'n' Devise
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+            Senryu Creation Room
           </h1>
           <div className="flex items-center gap-4 text-sm">
             <span className="px-3 py-1 bg-gray-100 rounded-lg">
