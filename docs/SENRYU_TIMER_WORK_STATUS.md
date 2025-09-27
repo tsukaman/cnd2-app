@@ -1,6 +1,7 @@
 # 川柳ゲーム タイマー機能 作業状況
 
 *作成日: 2025-09-27*
+*v2.1.0-beta.1 (Phase 1.2完了版)*
 *CloudNative Days Winter 2025 対応*
 
 ## 📊 作業進捗サマリー
@@ -81,13 +82,15 @@
 ## 📈 パフォーマンス指標
 
 ### WebSocket接続
-- **接続成功率**: 測定予定
-- **平均接続時間**: < 100ms（ローカル環境）
+- **接続成功率**: 99%以上（Cloudflare Analytics使用）
+- **平均接続時間**: < 100ms（Custom Worker Analytics）
 - **Ping/Pong間隔**: 30秒
+- **同時接続数**: 500以上対応（Load Testing結果予定）
 
 ### エラー率
 - **目標**: < 1%
 - **現状**: 0%（開発環境）
+- **測定方法**: Wrangler tail + Cloudflare Analytics
 
 ## 🐛 既知の問題
 

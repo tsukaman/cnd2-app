@@ -8,8 +8,9 @@
 const WebSocket = require('ws');
 const fetch = require('node-fetch');
 
-const API_BASE = 'http://localhost:8788/api/senryu';
-const WS_BASE = 'ws://localhost:8788';
+// 環境変数による設定外部化（セキュリティ改善）
+const API_BASE = process.env.API_TEST_URL || 'http://localhost:8788/api/senryu';
+const WS_BASE = process.env.WS_TEST_URL || 'ws://localhost:8788';
 
 class GameFlowTester {
   constructor() {

@@ -7,8 +7,9 @@
 
 const WebSocket = require('ws');
 
-const WS_BASE = 'ws://localhost:8788';
-const ROOM_ID = 'room_1758904576974_7SF7HT'; // Use the room from logs
+// 環境変数による設定外部化（セキュリティ改善）
+const WS_BASE = process.env.WS_TEST_URL || 'ws://localhost:8788';
+const ROOM_ID = process.env.TEST_ROOM_ID || 'room_1758904576974_7SF7HT';
 const PLAYER_ID = 'player_test_' + Date.now();
 
 console.log('🚀 Starting WebSocket Connection Test');
