@@ -1,41 +1,57 @@
-// Senryu card data for Cloudflare Functions
-// Total: 100 x 100 x 100 = 1,000,000 combinations
+/**
+ * CloudNative川柳カードゲーム - カードデータ（1000×1000×1000）
+ * 10億通りの組み合わせを生成可能
+ * CNDW2025用に拡張版
+ */
 
-export const UPPER_CARDS = [
-  { id: 'u001', text: 'Kubernetes', category: 'cloudnative', type: 'upper' },
-  { id: 'u002', text: 'Docker', category: 'cloudnative', type: 'upper' },
-  { id: 'u003', text: 'Prometheus', category: 'cloudnative', type: 'upper' },
-  { id: 'u004', text: 'Grafana', category: 'cloudnative', type: 'upper' },
-  { id: 'u005', text: 'Terraform', category: 'cloudnative', type: 'upper' },
-  { id: 'u006', text: 'CI/CD', category: 'cloudnative', type: 'upper' },
-  { id: 'u007', text: 'マイクロサービス', category: 'cloudnative', type: 'upper' },
-  { id: 'u008', text: 'サーバーレス', category: 'cloudnative', type: 'upper' },
-  { id: 'u009', text: 'オブザーバビリティ', category: 'cloudnative', type: 'upper' },
-  { id: 'u010', text: 'GitOps', category: 'cloudnative', type: 'upper' },
-];
+// Import the expanded data
+import { KAMI_NO_KU, NAKA_NO_KU, SHIMO_NO_KU } from './senryu-data-large.js';
 
-export const MIDDLE_CARDS = [
-  { id: 'm001', text: '朝から夜まで', category: 'temporal', type: 'middle' },
-  { id: 'm002', text: 'コンテナいっぱい', category: 'quantity', type: 'middle' },
-  { id: 'm003', text: 'スケールアウトして', category: 'action', type: 'middle' },
-  { id: 'm004', text: 'ローリングアップデート', category: 'action', type: 'middle' },
-  { id: 'm005', text: 'レプリカ増やして', category: 'action', type: 'middle' },
-  { id: 'm006', text: 'メトリクス見ながら', category: 'action', type: 'middle' },
-  { id: 'm007', text: 'ログを追いかけ', category: 'action', type: 'middle' },
-  { id: 'm008', text: 'アラート鳴りまくり', category: 'state', type: 'middle' },
-  { id: 'm009', text: '障害対応', category: 'action', type: 'middle' },
-  { id: 'm010', text: 'デプロイ失敗', category: 'result', type: 'middle' },
-];
+// Convert to the format expected by the game API
+// Add id, category and type fields for compatibility
+function convertToCards(phrases, type, prefix) {
+  return phrases.map((text, index) => {
+    // Determine category based on content
+    const category = determineCategory(text, type);
+    return {
+      id: `${prefix}${String(index + 1).padStart(3, '0')}`,
+      text: text,
+      category: category,
+      type: type
+    };
+  });
+}
 
-export const LOWER_CARDS = [
-  { id: 'l001', text: 'ずっとエラー', category: 'result', type: 'lower' },
-  { id: 'l002', text: '腹ペコだ', category: 'daily', type: 'lower' },
-  { id: 'l003', text: '成功した', category: 'result', type: 'lower' },
-  { id: 'l004', text: '失敗した', category: 'result', type: 'lower' },
-  { id: 'l005', text: '動いた！', category: 'result', type: 'lower' },
-  { id: 'l006', text: '動かない', category: 'result', type: 'lower' },
-  { id: 'l007', text: 'なぜだろう', category: 'emotion', type: 'lower' },
-  { id: 'l008', text: 'わからない', category: 'emotion', type: 'lower' },
-  { id: 'l009', text: 'できた！', category: 'result', type: 'lower' },
-  { id: 'l010', text: 'やったね！', category: 'emotion', type: 'lower' },
-];
+// Category detection logic
+function determineCategory(text, type) {
+  const techKeywords = ['k8s', 'pod', 'docker', 'git', 'deploy', 'build', 'test', 'ci', 'cd',
+    'yaml', 'json', 'api', 'db', 'sql', 'nosql', 'cloud', 'aws', 'gcp', 'azure',
+    'server', 'client', 'frontend', 'backend', 'node', 'react', 'vue', 'angular',
+    'コンテナ', 'ポッド', 'クラスタ', 'ノード', 'デプロイ', 'ビルド'];
+  const timeKeywords = ['朝', '昼', '夜', '今日', '明日', '週末', '月曜', '金曜'];
+  const emotionKeywords = ['嬉し', '楽し', '辛', '疲れ', '笑', '泣', '怒', '喜'];
+
+  const lowerText = text.toLowerCase();
+
+  if (type === 'upper') {
+    if (techKeywords.some(k => lowerText.includes(k))) return 'cloudnative';
+    if (timeKeywords.some(k => text.includes(k))) return 'daily';
+    if (emotionKeywords.some(k => text.includes(k))) return 'emotion';
+    return 'action';
+  } else if (type === 'middle') {
+    if (timeKeywords.some(k => text.includes(k))) return 'temporal';
+    if (text.includes('いっぱい') || text.includes('全部') || text.includes('満載')) return 'quantity';
+    if (text.includes('して') || text.includes('した')) return 'action';
+    return 'state';
+  } else {
+    if (text.includes('成功') || text.includes('失敗') || text.includes('完了')) return 'result';
+    if (emotionKeywords.some(k => text.includes(k))) return 'emotion';
+    if (text.includes('ご飯') || text.includes('コーヒー') || text.includes('ビール')) return 'daily';
+    return 'humor';
+  }
+}
+
+// Export the converted cards
+export const UPPER_CARDS = convertToCards(KAMI_NO_KU, 'upper', 'u');
+export const MIDDLE_CARDS = convertToCards(NAKA_NO_KU, 'middle', 'm');
+export const LOWER_CARDS = convertToCards(SHIMO_NO_KU, 'lower', 'l');

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { PlayerRegistration } from '@/components/senryu/PlayerRegistration';
 import { senryuApi } from '@/lib/senryu/api-client';
+import { Settings } from 'lucide-react';
 
 export default function SenryuLobby() {
   const [mode, setMode] = useState<'menu' | 'create' | 'join' | 'register'>('menu');
@@ -159,17 +160,31 @@ export default function SenryuLobby() {
         </div>
         
         <div className="relative z-10 px-6 py-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.h1 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent mb-2"
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center">
+              <motion.h1
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent mb-2"
+              >
+                CloudNative川柳道場
+              </motion.h1>
+              <p className="text-gray-600">
+                〜 技術と笑いの交流会 〜
+              </p>
+            </div>
+
+            {/* 管理者ダッシュボードリンク */}
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              onClick={() => router.push('/admin/senryu')}
+              className="absolute top-8 right-6 p-2 bg-white/90 rounded-lg shadow-md hover:shadow-lg transition-shadow group"
+              title="管理者ダッシュボード"
             >
-              CloudNative川柳道場
-            </motion.h1>
-            <p className="text-gray-600">
-              〜 技術と笑いの交流会 〜
-            </p>
+              <Settings className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
+            </motion.button>
           </div>
         </div>
       </header>
