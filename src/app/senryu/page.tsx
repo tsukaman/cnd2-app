@@ -77,7 +77,7 @@ export default function SenryuLobby() {
       
       // Navigate to room
       setTimeout(() => {
-        router.push(`/senryu/room?id=${room.id}`);
+        router.push(`/senryu/room-ws?id=${room.id}`);
       }, 2000);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '部屋の作成に失敗しました');
@@ -117,7 +117,7 @@ export default function SenryuLobby() {
       }
 
       toast.success('部屋に参加しました！');
-      router.push(`/senryu/room?id=${room.id}`);
+      router.push(`/senryu/room-ws?id=${room.id}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '部屋への参加に失敗しました');
     } finally {

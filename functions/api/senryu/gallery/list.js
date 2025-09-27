@@ -3,6 +3,22 @@
  * ギャラリー作品一覧取得エンドポイント
  */
 
+// CORS headers for local development
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400'
+};
+
+// Handle OPTIONS request for CORS preflight
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders
+  });
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -174,7 +190,8 @@ export async function onRequestGet(context) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60' // 1分キャッシュ
+        'Cache-Control': 'public, max-age=60', // 1分キャッシュ
+        ...corsHeaders
       }
     });
     
@@ -184,7 +201,10 @@ export async function onRequestGet(context) {
       error: 'ギャラリーの取得に失敗しました'
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
     });
   }
 }

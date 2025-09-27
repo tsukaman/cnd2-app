@@ -70,7 +70,20 @@ export function convertToFullProfile(profile: any): PrairieProfile {
       qiita: profile?.qiita,
       zenn: profile?.zenn
     },
-    custom: profile?.custom || {},
+    custom: profile?.custom || (
+      (profile?.title || profile?.company || profile?.skills || profile?.interests || 
+       profile?.certifications || profile?.communities || profile?.motto) 
+      ? {
+        title: profile?.title || '',
+        company: profile?.company || '',
+        skills: profile?.skills || [],
+        interests: profile?.interests || [],
+        certifications: profile?.certifications || [],
+        communities: profile?.communities || [],
+        motto: profile?.motto
+      }
+      : {}
+    ),
     meta: {
       sourceUrl: profile?.sourceUrl || '',
       createdAt: profile?.createdAt || new Date().toISOString(),

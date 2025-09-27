@@ -1,5 +1,21 @@
 import { sanitizePlayerName, sanitizeRoomCode } from '../../../utils/sanitize.js';
 
+// CORS headers for local development
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Max-Age': '86400'
+};
+
+// Handle OPTIONS request for CORS preflight
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders
+  });
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   
@@ -12,7 +28,10 @@ export async function onRequestPost(context) {
         error: '部屋コードとプレイヤー名は必須です'
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -25,7 +44,10 @@ export async function onRequestPost(context) {
         error: '有効なプレイヤー名を入力してください'
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -40,7 +62,10 @@ export async function onRequestPost(context) {
         error: '部屋が見つかりません'
       }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -58,7 +83,10 @@ export async function onRequestPost(context) {
         error: '部屋が見つかりません'
       }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -68,7 +96,10 @@ export async function onRequestPost(context) {
         error: 'ゲームは既に開始されています'
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -78,7 +109,10 @@ export async function onRequestPost(context) {
         error: '部屋が満員です（最大10人）'
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -88,7 +122,10 @@ export async function onRequestPost(context) {
         error: 'その名前は既に使用されています'
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
       });
     }
     
@@ -123,7 +160,8 @@ export async function onRequestPost(context) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache',
+        ...corsHeaders
       }
     });
     
@@ -133,7 +171,10 @@ export async function onRequestPost(context) {
       error: '部屋への参加に失敗しました'
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
     });
   }
 }

@@ -193,8 +193,8 @@ export class PrairieCardParser {
 
     return {
       basic: {
+        username: this.extractText($, '.profile-username, .username, .handle, [data-field="username"]') || '',
         name: this.extractText($, '.profile-name, .name, h1.name, [data-field="name"]') || '名前未設定',
-        username: this.extractText($, '.username, .handle, [data-field="username"]') || '',
         bio: this.extractFullText($, '.profile-bio, .bio, .description, .about, [data-field="bio"]') || '',
         location: this.extractText($, '.location, .place, [data-field="location"]') || '',
         avatar: this.extractImage($, '.profile-avatar img, .avatar img, .profile-image img, [data-field="avatar"] img'),
@@ -258,8 +258,8 @@ export class PrairieCardParser {
       // 最小限の情報でもプロファイルを作成
       const minimalProfile: PrairieProfile = {
         basic: {
-          name: $('h1, h2, .name').first().text().trim() || 'Unknown',
           username: '',
+          name: $('h1, h2, .name').first().text().trim() || 'Unknown',
           bio: $('.bio, .description, p').first().text().trim() || '',
         },
         metrics: {
@@ -275,7 +275,10 @@ export class PrairieCardParser {
           mentionedUsers: [],
         },
         social: {},
-        custom: {},
+        custom: {
+          title: $('.title, .role').first().text().trim() || '',
+          company: $('.company, .organization').first().text().trim() || '',
+        },
         meta: {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -430,6 +433,21 @@ export class PrairieCardParser {
 
   private extractCustomFields($: cheerio.CheerioAPI): Record<string, unknown> {
     const custom: Record<string, unknown> = {};
+    
+    // Extract title and company
+    const title = this.extractText($, '.profile-title, .title, .job-title, [data-field="title"]');
+    const company = this.extractText($, '.profile-company, .company, .organization, [data-field="company"]');
+    
+    if (title) custom.title = title;
+    if (company) custom.company = company;
+    
+    // Extract Prairie-specific fields
+    custom.skills = this.extractSkills($);
+    custom.interests = this.extractInterests($);
+    custom.certifications = this.extractCertifications($);
+    custom.communities = this.extractCommunities($);
+    const motto = this.extractText($, '.motto, .slogan, [data-field="motto"]');
+    if (motto) custom.motto = motto;
     
     // カスタムフィールドを探す
     $('[data-custom-field]').each((_, elem) => {
