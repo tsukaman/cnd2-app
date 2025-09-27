@@ -2,11 +2,14 @@ export const CND2_CONFIG = {
   app: {
     name: 'CND²',
     displayName: 'CND Squared',
-    version: '4.0.0',
-    tagline: 'CND × CnD = Your Connection²',
+    fullName: "CloudNative Days × Connect 'n' Devise",
+    subtitle: "Connect 'n' Devise",
+    version: '2.1.0',
+    tagline: 'Devise Your Verse, Connect Your World',
+    description: 'クラウドネイティブ川柳クリエイター',
     hashtag: '#CNDxCnD',
     hashtagRaw: 'CNDxCnD',
-    poweredBy: 'Prairie Card'  // Note: "Works with" is prepended when displayed
+    poweredBy: 'CloudNative Days Winter 2025'
   },
   
   domains: {

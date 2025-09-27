@@ -122,13 +122,17 @@ export default function SenryuGallery() {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b-2 border-orange-300">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent"
             >
-              🎨 川柳ギャラリー
-            </motion.h1>
+              <div className="text-sm font-medium text-purple-600 uppercase tracking-wide mb-1">
+                CND² Gallery
+              </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent">
+                🎨 Verses Connected
+              </h1>
+            </motion.div>
             
             <button
               onClick={() => router.push('/senryu')}
