@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { PlayerRegistration } from '@/components/senryu/PlayerRegistration';
 import { senryuApi } from '@/lib/senryu/api-client';
+import { Settings } from 'lucide-react';
 
 export default function SenryuLobby() {
   const [mode, setMode] = useState<'menu' | 'create' | 'join' | 'register'>('menu');
@@ -162,45 +163,59 @@ export default function SenryuLobby() {
         </div>
 
         <div className="relative z-10 px-6 py-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-2"
-            >
-              <span className="text-sm font-medium text-purple-600 uppercase tracking-wide">
-                CloudNative Days Winter 2025
-              </span>
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="text-5xl font-black mb-2"
-            >
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent">
-                CND²
-              </span>
-              <span className="text-3xl font-bold text-gray-700 block mt-1">
-                Connect 'n' Devise
-              </span>
-            </motion.h1>
-            <motion.p
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-2"
+              >
+                <span className="text-sm font-medium text-purple-600 uppercase tracking-wide">
+                  CloudNative Days Winter 2025
+                </span>
+              </motion.div>
+              <motion.h1
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="text-5xl font-black mb-2"
+              >
+                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent">
+                  CND²
+                </span>
+                <span className="text-3xl font-bold text-gray-700 block mt-1">
+                  Connect 'n' Devise
+                </span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-lg text-gray-600 font-medium"
+              >
+                Devise Your Verse, Connect Your World
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-sm text-gray-500 mt-2"
+              >
+                〜 クラウドネイティブ川柳クリエイター 〜
+              </motion.p>
+            </div>
+
+            {/* 管理者ダッシュボードリンク */}
+            <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-lg text-gray-600 font-medium"
+              transition={{ delay: 0.5 }}
+              onClick={() => router.push('/admin/senryu')}
+              className="absolute top-8 right-6 p-2 bg-white/90 rounded-lg shadow-md hover:shadow-lg transition-shadow group"
+              title="管理者ダッシュボード"
             >
-              Devise Your Verse, Connect Your World
-            </motion.p>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-sm text-gray-500 mt-2"
-            >
-              〜 クラウドネイティブ川柳クリエイター 〜
-            </motion.p>
+              <Settings className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors" />
+            </motion.button>
           </div>
         </div>
       </header>

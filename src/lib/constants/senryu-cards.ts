@@ -20,8 +20,55 @@ export const SCORING_CRITERIA = [
   { id: 'rhythm', label: 'リズム感', emoji: '🎵', color: 'orange', description: '5-7-5の響きが良いか' }
 ] as const;
 
-// 上の句データ（100種類）
-const UPPER_CARDS: Omit<SenryuCard, 'type'>[] = [
+// Import the expanded data from our 1000-phrase generator
+import { KAMI_NO_KU, NAKA_NO_KU, SHIMO_NO_KU } from '@/lib/senryu/senryu-data-large';
+
+// Convert to card format with IDs and categories
+function convertToCards(
+  phrases: string[],
+  type: 'upper' | 'middle' | 'lower',
+  prefix: string
+): Omit<SenryuCard, 'type'>[] {
+  return phrases.map((text, index) => ({
+    id: `${prefix}${String(index + 1).padStart(3, '0')}`,
+    text,
+    category: determineCategory(text, type)
+  }));
+}
+
+function determineCategory(text: string, type: 'upper' | 'middle' | 'lower'): string {
+  const techKeywords = ['k8s', 'pod', 'docker', 'git', 'deploy', 'build', 'test', 'ci', 'cd',
+    'yaml', 'json', 'api', 'db', 'sql', 'nosql', 'cloud', 'aws', 'gcp', 'azure',
+    'server', 'client', 'frontend', 'backend', 'node', 'react', 'vue', 'angular',
+    'コンテナ', 'ポッド', 'クラスタ', 'ノード', 'デプロイ', 'ビルド'];
+  const timeKeywords = ['朝', '昼', '夜', '今日', '明日', '週末', '月曜', '金曜'];
+  const emotionKeywords = ['嬉し', '楽し', '辛', '疲れ', '笑', '泣', '怒', '喜'];
+
+  const lowerText = text.toLowerCase();
+
+  if (type === 'upper') {
+    if (techKeywords.some(k => lowerText.includes(k))) return 'cloudnative';
+    if (timeKeywords.some(k => text.includes(k))) return 'daily';
+    if (emotionKeywords.some(k => text.includes(k))) return 'emotion';
+    return 'action';
+  } else if (type === 'middle') {
+    if (timeKeywords.some(k => text.includes(k))) return 'temporal';
+    if (text.includes('いっぱい') || text.includes('全部') || text.includes('満載')) return 'quantity';
+    if (text.includes('して') || text.includes('した')) return 'action';
+    return 'state';
+  } else {
+    if (text.includes('成功') || text.includes('失敗') || text.includes('完了')) return 'result';
+    if (emotionKeywords.some(k => text.includes(k))) return 'emotion';
+    if (text.includes('ご飯') || text.includes('コーヒー') || text.includes('ビール')) return 'daily';
+    return 'humor';
+  }
+}
+
+// 上の句データ（1000種類）
+const UPPER_CARDS: Omit<SenryuCard, 'type'>[] = convertToCards(KAMI_NO_KU, 'upper', 'u');
+
+// Legacy cards for reference (can be removed later)
+const LEGACY_UPPER_CARDS: Omit<SenryuCard, 'type'>[] = [
   // CloudNative技術系（40個）
   { id: 'u001', text: 'Kubernetes', category: 'cloudnative' },
   { id: 'u002', text: 'Docker', category: 'cloudnative' },
@@ -131,8 +178,11 @@ const UPPER_CARDS: Omit<SenryuCard, 'type'>[] = [
   { id: 'u100', text: 'よろしくです', category: 'emotion' }
 ];
 
-// 中の句データ（100種類）
-const MIDDLE_CARDS: Omit<SenryuCard, 'type'>[] = [
+// 中の句データ（1000種類）
+const MIDDLE_CARDS: Omit<SenryuCard, 'type'>[] = convertToCards(NAKA_NO_KU, 'middle', 'm');
+
+// Legacy middle cards (can be removed later)
+const LEGACY_MIDDLE_CARDS: Omit<SenryuCard, 'type'>[] = [
   // 時間表現系（30個）
   { id: 'm001', text: '朝から夜まで', category: 'temporal' },
   { id: 'm002', text: '一日中', category: 'temporal' },
@@ -242,8 +292,11 @@ const MIDDLE_CARDS: Omit<SenryuCard, 'type'>[] = [
   { id: 'm100', text: 'なんということか', category: 'state' }
 ];
 
-// 下の句データ（100種類）
-const LOWER_CARDS: Omit<SenryuCard, 'type'>[] = [
+// 下の句データ（1000種類）
+const LOWER_CARDS: Omit<SenryuCard, 'type'>[] = convertToCards(SHIMO_NO_KU, 'lower', 'l');
+
+// Legacy lower cards (can be removed later)
+const LEGACY_LOWER_CARDS: Omit<SenryuCard, 'type'>[] = [
   // 結果系（35個）
   { id: 'l001', text: 'ずっとエラー', category: 'result' },
   { id: 'l002', text: 'やっと動いた', category: 'result' },
@@ -376,10 +429,10 @@ export function generateSenryu(): { upper: SenryuCard; middle: SenryuCard; lower
   };
 }
 
-// カード総数の統計
+// カード総数の統計 - Updated for 1000x1000x1000
 export const CARD_STATISTICS = {
-  total: UPPER_CARDS.length + MIDDLE_CARDS.length + LOWER_CARDS.length,
-  combinations: UPPER_CARDS.length * MIDDLE_CARDS.length * LOWER_CARDS.length,
+  total: UPPER_CARDS.length + MIDDLE_CARDS.length + LOWER_CARDS.length,  // 3000 cards total
+  combinations: UPPER_CARDS.length * MIDDLE_CARDS.length * LOWER_CARDS.length, // 1 billion combinations!
   byType: {
     upper: UPPER_CARDS.length,
     middle: MIDDLE_CARDS.length,
