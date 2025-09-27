@@ -148,28 +148,59 @@ export default function SenryuLobby() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-      {/* 和風装飾ヘッダー */}
-      <header className="relative bg-white/80 backdrop-blur-md border-b-2 border-orange-300">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50">
+      {/* Connect 'n' Devise ブランドヘッダー */}
+      <header className="relative bg-gradient-to-r from-blue-50 via-purple-50 to-cyan-50 backdrop-blur-md border-b-2 border-purple-300">
         <div className="absolute inset-0 overflow-hidden opacity-10">
-          {/* 波模様のSVGパターン */}
+          {/* 5-7-5のリズムを表現するパターン */}
           <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1200 120">
-            <path d="M0,0 Q300,60 600,30 T1200,0 L1200,120 L0,120 Z" fill="#60A5FA" />
+            <path d="M0,60 Q150,30 300,60 T600,60 Q750,30 900,60 T1200,60" stroke="#9B59B6" strokeWidth="2" fill="none" />
+            <circle cx="300" cy="60" r="3" fill="#9B59B6" />
+            <circle cx="600" cy="60" r="3" fill="#9B59B6" />
+            <circle cx="900" cy="60" r="3" fill="#9B59B6" />
           </svg>
         </div>
-        
+
         <div className="relative z-10 px-6 py-8">
           <div className="max-w-4xl mx-auto text-center">
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent mb-2"
+              className="mb-2"
             >
-              CloudNative川柳道場
+              <span className="text-sm font-medium text-purple-600 uppercase tracking-wide">
+                CloudNative Days Winter 2025
+              </span>
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="text-5xl font-black mb-2"
+            >
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent">
+                CND²
+              </span>
+              <span className="text-3xl font-bold text-gray-700 block mt-1">
+                Connect 'n' Devise
+              </span>
             </motion.h1>
-            <p className="text-gray-600">
-              〜 技術と笑いの交流会 〜
-            </p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-lg text-gray-600 font-medium"
+            >
+              Devise Your Verse, Connect Your World
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-sm text-gray-500 mt-2"
+            >
+              〜 クラウドネイティブ川柳クリエイター 〜
+            </motion.p>
           </div>
         </div>
       </header>
@@ -214,34 +245,34 @@ export default function SenryuLobby() {
             )}
 
             <div className="space-y-4">
-              {/* 部屋を作るボタン */}
+              {/* Deviseボタン - 部屋を創作 */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => playerName ? handleCreateRoom() : setMode('register')}
-                className="w-full p-6 bg-gradient-to-r from-blue-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                className="w-full p-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
               >
                 <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">🎴</span>
+                  <span className="text-3xl">✏️</span>
                   <div className="text-left">
-                    <p className="text-xl font-bold">部屋を作る</p>
-                    <p className="text-sm opacity-90">ホストとしてゲームを開始</p>
+                    <p className="text-xl font-bold">Devise a Room</p>
+                    <p className="text-sm opacity-90">川柳ルームを創作する</p>
                   </div>
                 </div>
               </motion.button>
 
-              {/* 部屋に参加ボタン */}
+              {/* Connectボタン - 部屋につながる */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setMode('join')}
-                className="w-full p-6 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                className="w-full p-6 bg-gradient-to-r from-cyan-400 to-cyan-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
               >
                 <div className="flex items-center justify-center gap-3">
-                  <span className="text-3xl">🤝</span>
+                  <span className="text-3xl">🔗</span>
                   <div className="text-left">
-                    <p className="text-xl font-bold">部屋に参加</p>
-                    <p className="text-sm opacity-90">部屋コードで参加</p>
+                    <p className="text-xl font-bold">Connect to Room</p>
+                    <p className="text-sm opacity-90">仲間とつながる</p>
                   </div>
                 </div>
               </motion.button>
