@@ -77,19 +77,25 @@ export default function AdminSenryuDashboard() {
   const [editingPhrase, setEditingPhrase] = useState<Phrase | null>(null);
   const [newPhrase, setNewPhrase] = useState<{ text: string; type: 'upper' | 'middle' | 'lower'; category: string }>({ text: '', type: 'upper', category: '' });
 
-  // 簡易認証（本番環境では適切な認証システムを使用してください）
+  // 認証処理（本番環境では適切な認証システムを使用してください）
   const handleLogin = async () => {
     try {
-      // サーバー側で認証を行うAPIを呼び出す
-      // 開発環境では簡易的な認証を許可
-      if (process.env.NODE_ENV === 'development' && password === 'dev-password') {
-        setIsAuthenticated(true);
-        toast.success('開発環境でログインしました');
-        loadData();
-        return;
+      // 開発環境でのみ簡易認証を許可
+      if (process.env.NODE_ENV === 'development') {
+        // 開発用の固定トークンを使用
+        if (password === 'dev-password') {
+          senryuAdminClient.setAuthToken('dev-token-only');
+          setIsAuthenticated(true);
+          toast.success('開発環境でログインしました');
+          loadData();
+          return;
+        } else {
+          toast.error('開発用パスワードが正しくありません');
+          return;
+        }
       }
 
-      // 本番環境では環境変数や認証サービスを使用
+      // 本番環境では認証APIを呼び出す
       // TODO: 実際の認証APIエンドポイントに置き換える
       const response = await fetch('/api/admin/auth', {
         method: 'POST',
@@ -98,6 +104,11 @@ export default function AdminSenryuDashboard() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        // 認証成功時にトークンを設定
+        if (data.token) {
+          senryuAdminClient.setAuthToken(data.token);
+        }
         setIsAuthenticated(true);
         toast.success('ログインしました');
         loadData();
@@ -258,6 +269,15 @@ export default function AdminSenryuDashboard() {
     }
   };
 
+  // ログアウト処理
+  const handleLogout = () => {
+    senryuAdminClient.clearAuthToken();
+    setIsAuthenticated(false);
+    setPosts([]);
+    setPhrases({ upper: [], middle: [], lower: [] });
+    toast.success('ログアウトしました');
+  };
+
   // データのインポート
   const importData = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -315,6 +335,10 @@ export default function AdminSenryuDashboard() {
         <div className="flex items-center justify-between">
           <p className="text-gray-600">投稿と句データの管理</p>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <Shield className="w-4 h-4 mr-2" />
+              ログアウト
+            </Button>
             <Button variant="outline" size="sm" onClick={loadData}>
               <RefreshCw className="w-4 h-4 mr-2" />
               更新
