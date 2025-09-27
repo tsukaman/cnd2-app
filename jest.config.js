@@ -22,6 +22,7 @@ const customJestConfig = {
     '/e2e/',  // Exclude E2E tests from Jest
     '/.next/',
     '/out/',
+    '/archive/',  // Exclude archived code from tests
   ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
