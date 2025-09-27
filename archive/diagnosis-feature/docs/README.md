@@ -1,61 +1,60 @@
-# 川柳ゲーム - CloudNative Days Winter 2025
+# CND² - CloudNative Days × Connect 'n' Discover
 
 <div align="center">
   <img src="public/images/trademark@4x.png" alt="CloudNative Days Winter 2025" width="200"/>
-
-  **エンジニアリング川柳で楽しむ言葉遊び**
-
-  [![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black?logo=next.js)](https://nextjs.org/)
+  
+  **エンジニアの出会いを、データで可視化する**
+  
+  [![Next.js](https://img.shields.io/badge/Next.js-15.5.0-black?logo=next.js)](https://nextjs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%20strict-blue?logo=typescript)](https://www.typescriptlang.org/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
   [![Jest](https://img.shields.io/badge/Jest-30.0-C21325?logo=jest)](https://jestjs.io/)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-
+  [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
+  
+  **#CNDxCnD**
+  
   🎯 [CloudNative Days Winter 2025公式サイト](https://event.cloudnativedays.jp/cndw2025)
 </div>
 
 ## 📋 概要
 
-**川柳ゲーム** は、CloudNative Days Winter 2025（11月18-19日 @ 東京）のための公式イベントアプリケーションです。技術用語や日常の出来事を5-7-5（または5-7-7）のリズムで表現する言葉遊びを通じて、参加者同士が楽しく交流できます。
+**CND²（CloudNative Days × Connect 'n' Discover）** は、CloudNative Days Winter 2025（11月18-19日 @ 東京）のための特別な相性診断アプリケーションです。X (Twitter)のプロフィール情報を基に、エンジニア同士の技術的な相性や協働の可能性を可視化し、「出会いを二乗でスケール」します。
 
-> **最終更新**: 2025-09-27
+> **最終更新**: 2025-09-07 - v1.12.1
 
 ### ✨ 主な機能
 
-- **ソロプレイモード**: 一人で川柳を作成して楽しむモード
-  - 自由に創作を楽しめる環境
-  - 作品をギャラリーに投稿可能
-  - 技術系・日常系の幅広いテーマ
-
-- **対戦モード**: リアルタイムマルチプレイヤー対戦
-  - WebSocketによる低遅延通信
-  - ルーム機能で友達と対戦
-  - タイマー機能で緊張感ある勝負
-
-- **ランキング・投票システム**:
-  - 作品への「いいね」機能
-  - 人気作品ランキング表示
-  - カテゴリ別（技術系/日常系）の分類
-
-- **川柳自動生成**: 18億通りの組み合わせ
-  - 上の句・中の句・下の句各1000パターン
-  - 技術系60%、日常系40%のバランス
-  - リミックス機能でプレイヤー間で句を交換
-
-- **管理者ダッシュボード**:
-  - `/admin/senryu` で川柳データの管理
-  - 投稿の編集・削除機能
-  - 句データのエクスポート/インポート
-
+- **Let's Connect 'n' Discover!**: 2人のエンジニアの相性を詳細に分析🤝
+  - CND²のコンセプトを体現するメイン機能
+  - 「つながり」と「発見」を強調したアクション感あるネーミング
+- **動的スコアリング**: 0-100%の全範囲で相性を評価（低スコアでもポジティブな体験）
+- **X (Twitter)プロフィール連携**: ハイブリッドAPI（oEmbed + スクレイピング）で自動プロフィール取得
+  - @username入力の簡単な操作（@あり/なし両対応）
+  - リトライ機能（最大3回、指数バックオフ）
+  - 開発環境でのサンプルデータサポート（elonmusk, naval, paul_graham等）
+  - **無料API利用**: X oEmbed API（認証不要）+ Webスクレイピング
+  - **豊富なデータ取得**: プロフィール、フォロワー数、最近のツイート、トピック、ハッシュタグ
+    - ツイート内容から技術スタックを自動推測
+    - エンゲージメント率の計算
+- **AI診断**: 
+  - OpenAI GPT-4o-miniを使用した高度な相性分析
+  - **OpenRouter統合**: 地域制限回避機能（v1.8.0）
+  - Cloudflare AI Gateway経由でのキャッシングと分析
+- **結果共有**: QRコードやNFC、URLでの診断結果シェア機能（静的エクスポート対応）
 - **美しいUI**: ダークテーマベースの洗練されたデザイン
-  - モバイル最適化されたレスポンシブデザイン
-  - Framer Motionによる滑らかなアニメーション
-  - アクセシビリティ対応
-
-- **セキュリティ対策**:
-  - 環境変数による認証トークン管理
-  - CORS設定による適切なアクセス制御
-  - XSS protection完備
+  - **モバイル最適化**（v1.11.0）:
+    - 診断結果のアコーディオンUI（CollapsibleSection）
+    - レスポンシブなテキストサイズ（sm/md breakpoints）
+    - タッチターゲット最小60px確保
+  - **QRスキャナー改善**（v1.11.0 + v1.12.1）:
+    - Android対応強化（qr-scanner library統合）
+    - iOS/Android両対応の権限処理
+    - エラーハンドリング強化
+    - **Android Chrome特別対応**（v1.12.1）: ユーザージェスチャー保持によるカメラアクセス修正
+  - アクセシビリティ対応（WCAG 2.1 Level AA準拠）
+- **プライバシー配慮**: 診断結果は7日後に自動削除
+- **セキュリティ対策**: HTML sanitization & XSS protection完備
+- **レート制限**: 10 requests/minute per IP（悪用防止）
 
 ## 🔧 開発ガイドライン
 
