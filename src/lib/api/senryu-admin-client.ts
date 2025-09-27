@@ -6,10 +6,15 @@ const API_BASE = process.env.NODE_ENV === 'production'
   ? '/api/senryu-admin'
   : 'http://localhost:3000/api/senryu-admin';
 
-// 開発環境用のトークン（本番環境では適切な認証メカニズムを使用）
-const AUTH_TOKEN = process.env.NODE_ENV === 'development'
-  ? 'Bearer dev-token-only'
-  : ''; // 本番環境では動的に取得する必要がある
+// 環境変数からトークンを取得（クライアントサイドでは設定しない）
+// サーバーサイドまたは認証後に動的に設定する必要がある
+const getAuthToken = (): string => {
+  // クライアントサイドでは localStorage から取得
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('senryu-admin-token') || '';
+  }
+  return '';
+};
 
 interface SenryuPost {
   id: string;
@@ -30,16 +35,33 @@ interface Phrase {
 }
 
 class SenryuAdminClient {
-  private headers = {
-    'Content-Type': 'application/json',
-    'Authorization': AUTH_TOKEN
-  };
+  private getHeaders() {
+    const token = getAuthToken();
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    };
+  }
+
+  // 認証トークンを設定するメソッド
+  setAuthToken(token: string) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('senryu-admin-token', token);
+    }
+  }
+
+  // 認証トークンをクリアするメソッド
+  clearAuthToken() {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('senryu-admin-token');
+    }
+  }
 
   // 投稿関連
   async getAllPosts(): Promise<SenryuPost[]> {
     try {
       const response = await fetch(`${API_BASE}/posts`, {
-        headers: this.headers
+        headers: this.getHeaders()
       });
 
       if (!response.ok) {
@@ -58,7 +80,7 @@ class SenryuAdminClient {
   async getPost(id: string): Promise<SenryuPost | null> {
     try {
       const response = await fetch(`${API_BASE}/posts/${id}`, {
-        headers: this.headers
+        headers: this.getHeaders()
       });
 
       if (!response.ok) {
@@ -76,7 +98,7 @@ class SenryuAdminClient {
     try {
       const response = await fetch(`${API_BASE}/posts`, {
         method: 'POST',
-        headers: this.headers,
+        headers: this.getHeaders(),
         body: JSON.stringify(data)
       });
 
@@ -114,7 +136,7 @@ class SenryuAdminClient {
     try {
       const response = await fetch(`${API_BASE}/posts/${id}`, {
         method: 'PUT',
-        headers: this.headers,
+        headers: this.getHeaders(),
         body: JSON.stringify(data)
       });
 
@@ -153,7 +175,7 @@ class SenryuAdminClient {
     try {
       const response = await fetch(`${API_BASE}/posts/${id}`, {
         method: 'DELETE',
-        headers: this.headers
+        headers: this.getHeaders()
       });
 
       if (!response.ok) {
@@ -177,7 +199,7 @@ class SenryuAdminClient {
   async getAllPhrases(): Promise<{ upper: Phrase[], middle: Phrase[], lower: Phrase[] }> {
     try {
       const response = await fetch(`${API_BASE}/phrases`, {
-        headers: this.headers
+        headers: this.getHeaders()
       });
 
       if (!response.ok) {
@@ -205,7 +227,7 @@ class SenryuAdminClient {
   async getPhrasesByType(type: 'upper' | 'middle' | 'lower'): Promise<Phrase[]> {
     try {
       const response = await fetch(`${API_BASE}/phrases/${type}`, {
-        headers: this.headers
+        headers: this.getHeaders()
       });
 
       if (!response.ok) {
@@ -225,7 +247,7 @@ class SenryuAdminClient {
     try {
       const response = await fetch(`${API_BASE}/phrases`, {
         method: 'POST',
-        headers: this.headers,
+        headers: this.getHeaders(),
         body: JSON.stringify(data)
       });
 
@@ -265,7 +287,7 @@ class SenryuAdminClient {
     try {
       const response = await fetch(`${API_BASE}/phrases/${id}`, {
         method: 'PUT',
-        headers: this.headers,
+        headers: this.getHeaders(),
         body: JSON.stringify(data)
       });
 
@@ -277,8 +299,8 @@ class SenryuAdminClient {
 
       // LocalStorageも更新
       const phrases = await this.getAllPhrases();
-      const type = updated.type;
-      const index = phrases[type].findIndex(p => p.id === id);
+      const type = updated.type as 'upper' | 'middle' | 'lower';
+      const index = phrases[type].findIndex((p: Phrase) => p.id === id);
 
       if (index !== -1) {
         phrases[type][index] = updated;
@@ -318,7 +340,7 @@ class SenryuAdminClient {
     try {
       const response = await fetch(`${API_BASE}/phrases/${id}`, {
         method: 'DELETE',
-        headers: this.headers
+        headers: this.getHeaders()
       });
 
       if (!response.ok) {

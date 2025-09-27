@@ -75,21 +75,27 @@ export default function AdminSenryuDashboard() {
   // Edit dialog states
   const [editingPost, setEditingPost] = useState<SenryuPost | null>(null);
   const [editingPhrase, setEditingPhrase] = useState<Phrase | null>(null);
-  const [newPhrase, setNewPhrase] = useState({ text: '', type: 'upper' as const, category: '' });
+  const [newPhrase, setNewPhrase] = useState<{ text: string; type: 'upper' | 'middle' | 'lower'; category: string }>({ text: '', type: 'upper', category: '' });
 
-  // 簡易認証（本番環境では適切な認証システムを使用してください）
+  // 認証処理（本番環境では適切な認証システムを使用してください）
   const handleLogin = async () => {
     try {
-      // サーバー側で認証を行うAPIを呼び出す
-      // 開発環境では簡易的な認証を許可
-      if (process.env.NODE_ENV === 'development' && password === 'dev-password') {
-        setIsAuthenticated(true);
-        toast.success('開発環境でログインしました');
-        loadData();
-        return;
+      // 開発環境でのみ簡易認証を許可
+      if (process.env.NODE_ENV === 'development') {
+        // 開発用の固定トークンを使用
+        if (password === 'dev-password') {
+          senryuAdminClient.setAuthToken('dev-token-only');
+          setIsAuthenticated(true);
+          toast.success('開発環境でログインしました');
+          loadData();
+          return;
+        } else {
+          toast.error('開発用パスワードが正しくありません');
+          return;
+        }
       }
 
-      // 本番環境では環境変数や認証サービスを使用
+      // 本番環境では認証APIを呼び出す
       // TODO: 実際の認証APIエンドポイントに置き換える
       const response = await fetch('/api/admin/auth', {
         method: 'POST',
@@ -98,6 +104,11 @@ export default function AdminSenryuDashboard() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        // 認証成功時にトークンを設定
+        if (data.token) {
+          senryuAdminClient.setAuthToken(data.token);
+        }
         setIsAuthenticated(true);
         toast.success('ログインしました');
         loadData();
@@ -258,6 +269,15 @@ export default function AdminSenryuDashboard() {
     }
   };
 
+  // ログアウト処理
+  const handleLogout = () => {
+    senryuAdminClient.clearAuthToken();
+    setIsAuthenticated(false);
+    setPosts([]);
+    setPhrases({ upper: [], middle: [], lower: [] });
+    toast.success('ログアウトしました');
+  };
+
   // データのインポート
   const importData = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -294,8 +314,8 @@ export default function AdminSenryuDashboard() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleLogin()}
                 placeholder="管理者パスワード"
               />
             </div>
@@ -315,6 +335,10 @@ export default function AdminSenryuDashboard() {
         <div className="flex items-center justify-between">
           <p className="text-gray-600">投稿と句データの管理</p>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <Shield className="w-4 h-4 mr-2" />
+              ログアウト
+            </Button>
             <Button variant="outline" size="sm" onClick={loadData}>
               <RefreshCw className="w-4 h-4 mr-2" />
               更新
@@ -324,10 +348,10 @@ export default function AdminSenryuDashboard() {
               エクスポート
             </Button>
             <Label htmlFor="import" className="cursor-pointer">
-              <Button variant="outline" size="sm" as="span">
+              <span className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 cursor-pointer">
                 <Upload className="w-4 h-4 mr-2" />
                 インポート
-              </Button>
+              </span>
               <Input
                 id="import"
                 type="file"
@@ -357,7 +381,7 @@ export default function AdminSenryuDashboard() {
                 <Input
                   placeholder="検索..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                   className="max-w-sm"
                 />
               </div>
@@ -444,7 +468,7 @@ export default function AdminSenryuDashboard() {
                           <Input
                             id="new-text"
                             value={newPhrase.text}
-                            onChange={(e) => setNewPhrase({ ...newPhrase, text: e.target.value, type })}
+                            onChange={(e) => setNewPhrase({ ...newPhrase, text: e.target.value, type: type as 'upper' | 'middle' | 'lower' })}
                             placeholder={`${type === 'upper' ? '5音' : type === 'middle' ? '7音' : '5-7音'}の句`}
                           />
                         </div>
