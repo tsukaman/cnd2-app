@@ -1,64 +1,69 @@
 @import "tailwindcss";
 
 :root {
-  /* CloudNative Days Winter 2025 Brand Colors - Dark Theme */
-  --cnd-primary: #60A5FA; /* Bright blue for dark bg */
-  --cnd-primary-light: #93C5FD; /* Light blue */
-  --cnd-secondary: #22D3EE; /* Bright cyan */
-  --cnd-accent: #FB923C; /* Bright orange */
-  --cnd-purple: #C084FC; /* Bright purple */
-  --cnd-purple-light: #E9D5FF; /* Light purple */
-  --cnd-pink: #F9A8D4; /* Soft pink */
-  
-  /* Dark Theme Colors */
-  --dark-navy: #0F172A; /* Deep navy */
-  --dark-purple: #1E1B4B; /* Deep purple */
-  --dark-indigo: #1E293B; /* Deep indigo */
-  --dark-gradient: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #1E293B 100%);
-  
-  /* Text Colors for Dark Theme */
-  --text-primary: #F1F5F9; /* Light gray for main text */
-  --text-secondary: #CBD5E1; /* Medium gray for secondary text */
-  --text-muted: #94A3B8; /* Muted gray text */
-  --text-on-light: #1E293B; /* Dark text on light backgrounds */
-  
-  /* Background Colors - Dark Theme */
-  --bg-primary: #0F172A; /* Deep navy background */
-  --bg-secondary: #1E1B4B; /* Deep purple background */
-  --bg-accent: #1E293B; /* Deep indigo accent */
-  --bg-card: rgba(30, 41, 59, 0.5); /* Semi-transparent card */
-  --bg-card-solid: #1E293B; /* Solid card background */
-  
-  /* Gradients - Vibrant for Dark Theme */
-  --gradient-main: linear-gradient(135deg, #60A5FA 0%, #C084FC 50%, #F9A8D4 100%);
-  --gradient-fortune: linear-gradient(135deg, #C084FC 0%, #F9A8D4 50%, #FDE68A 100%);
-  --gradient-vibrant: linear-gradient(135deg, #FB923C 0%, #F97316 50%, #EA580C 100%);
-  --gradient-orange-soft: linear-gradient(90deg, #FBBF24 0%, #FB923C 35%, #F97316 65%, #DC2626 100%);
-  --gradient-sunset: linear-gradient(135deg, #FDE68A 0%, #FDBA74 20%, #FB923C 40%, #F97316 60%, #EA580C 80%, #DC2626 100%);
-  --gradient-card: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(30, 27, 75, 0.8) 100%);
-  
-  /* Effects for Dark Theme */
-  --glow-blue: 0 0 40px rgba(96, 165, 250, 0.4);
-  --glow-purple: 0 0 40px rgba(192, 132, 252, 0.4);
-  --glow-orange: 0 0 40px rgba(251, 146, 60, 0.4);
-  
+  /* CloudNative Days Winter 2025 Brand Colors - Bright Theme */
+  --cnd-primary: #0EA5E9; /* Sky blue */
+  --cnd-primary-light: #7DD3FC; /* Light sky */
+  --cnd-secondary: #10B981; /* Emerald green */
+  --cnd-accent: #F59E0B; /* Amber */
+  --cnd-coral: #FB7185; /* Coral pink */
+  --cnd-coral-light: #FDA4AF; /* Light coral */
+  --cnd-purple: #8B5CF6; /* Vibrant purple (accent only) */
+
+  /* Bright Theme Colors */
+  --bright-sky: #E0F2FE; /* Very light sky */
+  --bright-cream: #FEF3C7; /* Soft cream */
+  --bright-peach: #FED7AA; /* Light peach */
+  --bright-gradient: linear-gradient(135deg, #E0F2FE 0%, #FEF3C7 50%, #FED7AA 100%);
+
+  /* Text Colors for Bright Theme */
+  --text-primary: #1E293B; /* Dark slate for main text - high contrast */
+  --text-secondary: #475569; /* Medium slate for secondary text */
+  --text-muted: #64748B; /* Muted slate text */
+  --text-on-dark: #FFFFFF; /* Pure white text on dark backgrounds */
+
+  /* Background Colors - Bright Theme */
+  --bg-primary: #FFFFFF; /* Pure white background */
+  --bg-secondary: #F8FAFC; /* Very light gray background */
+  --bg-accent: #F1F5F9; /* Light gray accent */
+  --bg-card: rgba(255, 255, 255, 0.95); /* Almost solid white card */
+  --bg-card-solid: #FFFFFF; /* Solid white card background */
+
+  /* Gradients - Vibrant and Fun */
+  --gradient-main: linear-gradient(135deg, #0EA5E9 0%, #10B981 50%, #F59E0B 100%);
+  --gradient-creative: linear-gradient(135deg, #8B5CF6 0%, #FB7185 50%, #FCD34D 100%);
+  --gradient-fun: linear-gradient(135deg, #F59E0B 0%, #FB7185 50%, #10B981 100%);
+  --gradient-orange-soft: linear-gradient(90deg, #FCD34D 0%, #FBBF24 35%, #F59E0B 65%, #F97316 100%);
+  --gradient-sunset: linear-gradient(135deg, #FCD34D 0%, #FBBF24 20%, #F59E0B 40%, #FB7185 60%, #F472B6 80%, #8B5CF6 100%);
+  --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 249, 255, 0.9) 100%);
+
+  /* Gradient Overlays for Hover Effects */
+  --gradient-overlay-purple: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(251, 113, 133, 0.1) 100%);
+  --gradient-overlay-green: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 211, 238, 0.1) 100%);
+  --gradient-overlay-orange: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 146, 60, 0.1) 100%);
+
+  /* Effects for Bright Theme */
+  --glow-blue: 0 0 40px rgba(14, 165, 233, 0.3);
+  --glow-green: 0 0 40px rgba(16, 185, 129, 0.3);
+  --glow-amber: 0 0 40px rgba(245, 158, 11, 0.3);
+
   /* Borders and Shadows */
-  --border-light: rgba(148, 163, 184, 0.2); /* Subtle border */
-  --border-medium: rgba(148, 163, 184, 0.3); /* Medium border */
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 60px rgba(192, 132, 252, 0.3);
-  
-  /* Glass Effect - Dark Theme */
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-bg-colored: rgba(30, 27, 75, 0.7);
-  --glass-border: rgba(148, 163, 184, 0.2);
+  --border-light: rgba(148, 163, 184, 0.3); /* Subtle border */
+  --border-medium: rgba(100, 116, 139, 0.4); /* Medium border */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 60px rgba(14, 165, 233, 0.2);
+
+  /* Glass Effect - Bright Theme */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-colored: rgba(240, 249, 255, 0.7);
+  --glass-border: rgba(148, 163, 184, 0.3);
   --glass-blur: 12px;
-  
+
   /* Interactive States */
-  --hover-bg: rgba(96, 165, 250, 0.1);
-  --focus-ring: #C084FC;
+  --hover-bg: rgba(14, 165, 233, 0.1);
+  --focus-ring: #0EA5E9;
   --focus-ring-offset: 2px;
 }
 
@@ -70,7 +75,7 @@
 }
 
 body {
-  background: var(--dark-gradient);
+  background: linear-gradient(135deg, #E0F2FE 0%, #DBEAFE 25%, #FEF3C7 50%, #FED7AA 75%, #FECACA 100%);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, sans-serif;
   min-height: 100vh;
@@ -87,16 +92,16 @@ body {
   font-weight: 700;
 }
 
-.gradient-text-fortune {
-  background: var(--gradient-fortune);
+.gradient-text-creative {
+  background: var(--gradient-creative);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 700;
 }
 
-.gradient-text-vibrant {
-  background: var(--gradient-vibrant);
+.gradient-text-fun {
+  background: var(--gradient-fun);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -160,7 +165,7 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(192, 132, 252, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.5), transparent);
 }
 
 /* Glow Effects */
@@ -168,18 +173,18 @@ body {
   box-shadow: var(--glow-blue);
 }
 
-.glow-purple {
-  box-shadow: var(--glow-purple);
+.glow-green {
+  box-shadow: var(--glow-green);
 }
 
-.glow-orange {
-  box-shadow: var(--glow-orange);
+.glow-amber {
+  box-shadow: var(--glow-amber);
 }
 
-/* Button Styles - Dark Theme */
+/* Button Styles - Bright Theme */
 .btn-primary {
-  background: var(--gradient-vibrant);
-  color: var(--text-primary);
+  background: var(--gradient-fun);
+  color: white;
   border: 1px solid transparent;
   font-weight: 600;
   transition: all 0.3s ease-in-out;
@@ -187,12 +192,12 @@ body {
 }
 
 .btn-primary:hover {
-  box-shadow: var(--glow-orange);
+  box-shadow: var(--glow-amber);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: rgba(96, 165, 250, 0.1);
+  background: rgba(14, 165, 233, 0.15);
   color: var(--text-primary);
   border: 1px solid var(--border-medium);
   font-weight: 600;
@@ -200,8 +205,8 @@ body {
 }
 
 .btn-secondary:hover {
-  background: rgba(96, 165, 250, 0.2);
-  border-color: var(--cnd-purple);
+  background: rgba(14, 165, 233, 0.25);
+  border-color: var(--cnd-primary);
   box-shadow: var(--shadow-md);
 }
 
@@ -211,17 +216,18 @@ body {
   outline-offset: var(--focus-ring-offset);
 }
 
-/* Starry Night Background */
+/* Bright Sparkles Background */
 .stars-bg {
-  background-image: 
-    radial-gradient(1px 1px at 20px 30px, #60A5FA, transparent),
-    radial-gradient(1px 1px at 40px 70px, #C084FC, transparent),
-    radial-gradient(2px 2px at 50px 50px, #F9A8D4, transparent),
-    radial-gradient(1px 1px at 80px 10px, #FB923C, transparent),
-    radial-gradient(1px 1px at 90px 60px, #60A5FA, transparent),
-    radial-gradient(2px 2px at 130px 40px, #C084FC, transparent);
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #0EA5E9, transparent),
+    radial-gradient(1px 1px at 40px 70px, #10B981, transparent),
+    radial-gradient(2px 2px at 50px 50px, #F59E0B, transparent),
+    radial-gradient(1px 1px at 80px 10px, #FB7185, transparent),
+    radial-gradient(1px 1px at 90px 60px, #8B5CF6, transparent),
+    radial-gradient(2px 2px at 130px 40px, #0EA5E9, transparent);
   background-repeat: repeat;
   background-size: 150px 150px;
+  opacity: 0.6;
 }
 
 /* Animations */
@@ -249,7 +255,7 @@ body {
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(192, 132, 252, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.3), transparent);
   background-size: 200% 100%;
   animation: shimmer 3s linear infinite;
 }
