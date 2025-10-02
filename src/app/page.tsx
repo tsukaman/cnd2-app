@@ -19,7 +19,29 @@ const taglines = [
   { en: "Where Code Meets Haiku", ja: "コードが俳句になる", sub: "Tech Senryu Game" }
 ];
 
-const gameFeatures = [
+// Tailwind動的クラス生成を避けるため、色の組み合わせを事前定義
+const tagColorClasses = {
+  purple: "bg-purple-100 border-purple-300 text-purple-700 group-hover:bg-purple-200",
+  blue: "bg-blue-100 border-blue-300 text-blue-700 group-hover:bg-blue-200",
+  green: "bg-green-100 border-green-300 text-green-700 group-hover:bg-green-200",
+  cyan: "bg-cyan-100 border-cyan-300 text-cyan-700 group-hover:bg-cyan-200",
+  yellow: "bg-yellow-100 border-yellow-300 text-yellow-700 group-hover:bg-yellow-200",
+  orange: "bg-orange-100 border-orange-300 text-orange-700 group-hover:bg-orange-200",
+} as const;
+
+type TagColor = keyof typeof tagColorClasses;
+
+interface GameFeature {
+  icon: typeof Sparkles | typeof Users | typeof Trophy;
+  title: string;
+  description: string;
+  link: string;
+  gradient: string;
+  glowColor: string;
+  tags: Array<{ label: string; color: TagColor }>;
+}
+
+const gameFeatures: GameFeature[] = [
   {
     icon: Sparkles,
     title: "ソロプレイ",
@@ -219,7 +241,7 @@ export default function Home() {
                           {feature.tags.map((tag) => (
                             <span
                               key={tag.label}
-                              className={`px-3 py-1.5 bg-${tag.color}-100 border border-${tag.color}-300 rounded-full text-xs font-semibold text-${tag.color}-700 group-hover:bg-${tag.color}-200 transition-colors`}
+                              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${tagColorClasses[tag.color]}`}
                             >
                               {tag.label}
                             </span>
