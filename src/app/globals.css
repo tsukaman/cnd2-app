@@ -37,6 +37,11 @@
   --gradient-sunset: linear-gradient(135deg, #FCD34D 0%, #FBBF24 20%, #F59E0B 40%, #FB7185 60%, #F472B6 80%, #8B5CF6 100%);
   --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 249, 255, 0.9) 100%);
 
+  /* Gradient Overlays for Hover Effects */
+  --gradient-overlay-purple: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(251, 113, 133, 0.1) 100%);
+  --gradient-overlay-green: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 211, 238, 0.1) 100%);
+  --gradient-overlay-orange: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 146, 60, 0.1) 100%);
+
   /* Effects for Bright Theme */
   --glow-blue: 0 0 40px rgba(14, 165, 233, 0.3);
   --glow-green: 0 0 40px rgba(16, 185, 129, 0.3);

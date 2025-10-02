@@ -37,6 +37,7 @@ interface GameFeature {
   description: string;
   link: string;
   gradient: string;
+  gradientOverlay: string;
   glowColor: string;
   tags: Array<{ label: string; color: TagColor }>;
 }
@@ -48,6 +49,7 @@ const gameFeatures: GameFeature[] = [
     description: "一人で川柳を作って楽しむモード。自由に創作を楽しもう！",
     link: "/senryu",
     gradient: "from-purple-500 to-pink-500",
+    gradientOverlay: "var(--gradient-overlay-purple)",
     glowColor: "rgba(192, 132, 252, 0.4)",
     tags: [
       { label: "創作", color: "purple" },
@@ -60,6 +62,7 @@ const gameFeatures: GameFeature[] = [
     description: "友達と川柳バトル！リアルタイムで競い合おう",
     link: "/senryu/room",
     gradient: "from-green-500 to-cyan-500",
+    gradientOverlay: "var(--gradient-overlay-green)",
     glowColor: "rgba(34, 211, 238, 0.4)",
     tags: [
       { label: "マルチプレイ", color: "green" },
@@ -72,6 +75,7 @@ const gameFeatures: GameFeature[] = [
     description: "みんなの川柳を見て投票！人気作品をチェック",
     link: "/senryu/ranking",
     gradient: "from-yellow-500 to-orange-500",
+    gradientOverlay: "var(--gradient-overlay-orange)",
     glowColor: "rgba(251, 146, 60, 0.4)",
     tags: [
       { label: "投票", color: "yellow" },
@@ -213,7 +217,8 @@ export default function Home() {
                     >
                       {/* Gradient overlay on hover */}
                       <div
-                        className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{ background: feature.gradientOverlay }}
                       />
 
                       {/* Icon & Arrow */}
