@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useSenryuWebSocket } from '@/hooks/useSenryuWebSocket';
 import type { Room, Player } from '@/lib/senryu/types';
+import { SenryuHeader } from '@/components/senryu/SenryuHeader';
 
 // Extended Room type for WebSocket implementation
 interface WSRoom extends Room {
@@ -65,17 +66,20 @@ export default function SenryuGameRoomWS() {
   // Set player ID from localStorage on mount
   useEffect(() => {
     if (roomId) {
-      const storedPlayerId = localStorage.getItem(`senryu-player-${roomId}`);
+      // Use unified key 'senryu-player-id' (same as lobby page)
+      const storedPlayerId = localStorage.getItem('senryu-player-id');
+      console.log('[Room WS] Retrieved player ID from localStorage:', storedPlayerId);
+
       if (storedPlayerId) {
         setPlayerId(storedPlayerId);
       } else {
-        // Generate a new player ID if none exists
-        const newPlayerId = `player_${Date.now()}`;
-        localStorage.setItem(`senryu-player-${roomId}`, newPlayerId);
-        setPlayerId(newPlayerId);
+        // If no player ID exists, redirect to lobby
+        console.warn('[Room WS] No player ID found, redirecting to lobby');
+        toast.error('プレイヤー情報が見つかりません。ロビーから入り直してください。');
+        router.push('/senryu');
       }
     }
-  }, [roomId]);
+  }, [roomId, router]);
   
   // Cast room to WSRoom for extended fields
   const wsRoom = room as WSRoom | null;
@@ -117,6 +121,16 @@ export default function SenryuGameRoomWS() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
+      {/* Navigation Header */}
+      <SenryuHeader
+        showBackButton={true}
+        backTo="/senryu"
+        backLabel="ロビーへ戻る"
+        confirmBack={wsRoom?.status !== 'waiting'}
+        confirmMessage="ゲーム中です。本当に退出しますか？"
+        title="対戦ルーム"
+      />
+
       <div className="container mx-auto px-4 py-8">
         {/* CND² Header */}
         <div className="mb-8">

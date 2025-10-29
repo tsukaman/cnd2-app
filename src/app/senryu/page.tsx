@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { PlayerRegistration } from '@/components/senryu/PlayerRegistration';
 import { senryuApi } from '@/lib/senryu/api-client';
 import { Settings } from 'lucide-react';
+import { SenryuHeader } from '@/components/senryu/SenryuHeader';
 
 export default function SenryuLobby() {
   const [mode, setMode] = useState<'menu' | 'create' | 'join' | 'register'>('menu');
@@ -150,6 +151,14 @@ export default function SenryuLobby() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-cyan-50">
+      {/* Navigation Header */}
+      <SenryuHeader
+        showBackButton={true}
+        backTo="/"
+        backLabel="トップへ戻る"
+        title="川柳ゲーム ロビー"
+      />
+
       {/* Connect 'n' Devise ブランドヘッダー */}
       <header className="relative bg-gradient-to-r from-blue-50 via-purple-50 to-cyan-50 backdrop-blur-md border-b-2 border-purple-300">
         <div className="absolute inset-0 overflow-hidden opacity-10">
