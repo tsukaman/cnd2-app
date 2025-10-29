@@ -66,13 +66,12 @@ export class SenryuWebSocketClient {
       this.isConnecting = true;
 
       // WebSocket URL configuration
-      const WS_BASE = process.env.NODE_ENV === 'development'
-        ? 'ws://localhost:8788'
-        : window.location.protocol === 'https:' 
-          ? `wss://${window.location.host}`
-          : `ws://${window.location.host}`;
+      // Connect to separate Durable Objects Worker
+      const WORKER_URL = process.env.NEXT_PUBLIC_DURABLE_OBJECTS_WORKER_URL
+        || 'https://cnd2-app-durable-objects.tsukaman.workers.dev';
 
-      const url = `${WS_BASE}/api/senryu/ws-room/${this.roomId}`;
+      const WS_BASE = WORKER_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+      const url = `${WS_BASE}/ws?roomId=${this.roomId}&playerId=${this.playerId}`;
 
       try {
         console.log('[WebSocket] Connecting to:', url);
