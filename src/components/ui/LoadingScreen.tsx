@@ -1,13 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
+import {
+  BACKGROUND_GRADIENT,
+  LOGO_GRADIENT,
+  DOT_COLORS,
+} from "@/lib/constants/loading-colors";
 
 export function LoadingScreen() {
   return (
     <div
       className="min-h-screen flex items-center justify-center"
       style={{
-        background: "linear-gradient(135deg, #E0F2FE 0%, #DBEAFE 25%, #FEF3C7 50%, #FED7AA 75%, #FECACA 100%)"
+        background: BACKGROUND_GRADIENT,
       }}
     >
       <motion.div
@@ -19,13 +24,13 @@ export function LoadingScreen() {
         <motion.h1
           className="text-8xl font-black mb-4"
           style={{
-            background: "linear-gradient(135deg, #0EA5E9 0%, #10B981 50%, #F59E0B 100%)",
+            background: LOGO_GRADIENT,
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
             color: "transparent",
+            willChange: "transform", // GPU加速を明示的に要求
           }}
           animate={{
-            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
             scale: [1, 1.1, 1],
           }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -39,15 +44,14 @@ export function LoadingScreen() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          {[
-            { color: "#0EA5E9" }, // Sky blue
-            { color: "#10B981" }, // Emerald
-            { color: "#F59E0B" }, // Amber
-          ].map((dot, i) => (
+          {DOT_COLORS.map((dot, i) => (
             <motion.div
-              key={i}
+              key={dot.label}
               className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: dot.color }}
+              style={{
+                backgroundColor: dot.color,
+                willChange: "transform", // GPU加速
+              }}
               animate={{
                 y: [0, -10, 0],
               }}
