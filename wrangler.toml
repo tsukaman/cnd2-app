@@ -8,9 +8,13 @@ binding = "SENRYU_KV"
 id = "7eadda14d02b4bb389edaf21f94d1fc8"
 preview_id = "7eadda14d02b4bb389edaf21f94d1fc8"
 
-# Durable Objects for WebSocket game rooms (未実装のため一時コメントアウト)
-# TODO: Phase 3で実装予定
-# [[durable_objects.bindings]]
-# name = "SENRYU_ROOM"
-# class_name = "SenryuRoom"
-# script_name = "senryu-room"
+# Durable Objects for WebSocket game rooms
+[[durable_objects.bindings]]
+name = "SENRYU_ROOM"
+class_name = "SenryuRoom"
+script_name = "cnd2-app"
+
+# Durable Object migrations
+[[migrations]]
+tag = "v1"
+new_classes = ["SenryuRoom"]
