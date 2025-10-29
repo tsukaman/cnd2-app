@@ -3,6 +3,15 @@
  * Manages WebSocket connections and game state for a single room
  */
 
+// Constants
+const CONSTANTS = {
+  MIN_PLAYERS: 2,
+  MAX_PLAYERS_PER_ROOM: 20,
+  WEBSOCKET_READY_STATE_OPEN: 1,
+  RATE_LIMIT_WINDOW_MS: 60000, // 1 minute
+  RATE_LIMIT_MAX_MESSAGES: 60 // 60 messages per minute
+};
+
 export class SenryuRoom {
   constructor(state, env) {
     this.state = state;
@@ -10,6 +19,9 @@ export class SenryuRoom {
 
     // WebSocket sessions: Map<WebSocket, SessionData>
     this.sessions = new Map();
+
+    // Rate limiting: Map<playerId, {count: number, resetTime: number}>
+    this.rateLimits = new Map();
 
     // Room data
     this.roomData = {
@@ -66,9 +78,6 @@ export class SenryuRoom {
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
 
-    // Accept WebSocket connection
-    server.accept();
-
     // Get player ID from URL query parameter
     const url = new URL(request.url);
     const playerId = url.searchParams.get('playerId');
@@ -80,6 +89,18 @@ export class SenryuRoom {
         webSocket: client
       });
     }
+
+    // Check room capacity
+    if (this.sessions.size >= CONSTANTS.MAX_PLAYERS_PER_ROOM) {
+      server.close(1013, 'Room is full');
+      return new Response(null, {
+        status: 101,
+        webSocket: client
+      });
+    }
+
+    // Accept WebSocket connection
+    server.accept();
 
     // Set up session
     const session = {
@@ -110,11 +131,11 @@ export class SenryuRoom {
       room: this.roomData
     });
 
-    // Notify other players
+    // Notify other players (use actual session count)
     this.broadcast({
       type: 'player_joined',
       playerId,
-      playerCount: this.roomData.players?.length || 0
+      playerCount: this.sessions.size // Now includes the newly connected player
     }, server);
 
     // Return WebSocket response
@@ -125,10 +146,44 @@ export class SenryuRoom {
   }
 
   /**
+   * Check rate limit for a player
+   */
+  checkRateLimit(playerId) {
+    const now = Date.now();
+    const limit = this.rateLimits.get(playerId);
+
+    if (!limit || now > limit.resetTime) {
+      // Reset rate limit
+      this.rateLimits.set(playerId, {
+        count: 1,
+        resetTime: now + CONSTANTS.RATE_LIMIT_WINDOW_MS
+      });
+      return true;
+    }
+
+    if (limit.count >= CONSTANTS.RATE_LIMIT_MAX_MESSAGES) {
+      return false; // Rate limit exceeded
+    }
+
+    // Increment count
+    limit.count++;
+    return true;
+  }
+
+  /**
    * Handle incoming WebSocket message
    */
   async handleMessage(ws, data, session) {
     try {
+      // Check rate limit
+      if (!this.checkRateLimit(session.playerId)) {
+        this.sendToClient(ws, {
+          type: 'error',
+          message: 'Rate limit exceeded. Please slow down.'
+        });
+        return;
+      }
+
       const message = JSON.parse(data);
       console.log('[Senryu Room] Received message:', message.type, 'from', session.playerId);
 
@@ -168,9 +223,20 @@ export class SenryuRoom {
   /**
    * Handle player disconnect
    */
-  handleDisconnect(ws, session) {
+  async handleDisconnect(ws, session) {
     console.log('[Senryu Room] Player disconnected:', session.playerId);
     this.sessions.delete(ws);
+
+    // Remove player from roomData as well
+    if (this.roomData.players) {
+      this.roomData.players = this.roomData.players.filter(
+        p => p.id !== session.playerId
+      );
+      await this.saveRoomData();
+    }
+
+    // Clean up rate limit
+    this.rateLimits.delete(session.playerId);
 
     // Notify other players
     this.broadcast({
@@ -191,8 +257,8 @@ export class SenryuRoom {
     }
 
     // Verify minimum players
-    if (this.roomData.players.length < 2) {
-      throw new Error('Need at least 2 players to start');
+    if (this.roomData.players.length < CONSTANTS.MIN_PLAYERS) {
+      throw new Error(`Need at least ${CONSTANTS.MIN_PLAYERS} players to start`);
     }
 
     // Update room config
@@ -393,7 +459,7 @@ export class SenryuRoom {
   broadcast(message, exclude = null) {
     const data = JSON.stringify(message);
     for (const [ws, session] of this.sessions) {
-      if (ws !== exclude && ws.readyState === 1) { // 1 = OPEN
+      if (ws !== exclude && ws.readyState === CONSTANTS.WEBSOCKET_READY_STATE_OPEN) {
         try {
           ws.send(data);
         } catch (error) {
