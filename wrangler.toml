@@ -7,13 +7,3 @@ pages_build_output_dir = "out"
 binding = "SENRYU_KV"
 id = "7eadda14d02b4bb389edaf21f94d1fc8"
 preview_id = "7eadda14d02b4bb389edaf21f94d1fc8"
-
-# Durable Objects for WebSocket game rooms
-[[durable_objects.bindings]]
-name = "SENRYU_ROOM"
-class_name = "SenryuRoom"
-
-# Durable Object migrations
-[[migrations]]
-tag = "v1"
-new_classes = ["SenryuRoom"]
