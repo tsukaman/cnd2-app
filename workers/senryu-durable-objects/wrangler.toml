@@ -1,0 +1,13 @@
+name = "cnd2-app-durable-objects"
+main = "index.js"
+compatibility_date = "2025-01-25"
+
+# Durable Objects binding
+[[durable_objects.bindings]]
+name = "SENRYU_ROOM"
+class_name = "SenryuRoom"
+
+# Durable Objects migrations
+[[migrations]]
+tag = "v1"
+new_classes = ["SenryuRoom"]
